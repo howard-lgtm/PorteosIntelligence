@@ -1,0 +1,175 @@
+---
+description: Core architecture and design rules for Porteos Intelligence
+globs: **/*.swift
+alwaysApply: true
+---
+
+# Porteos Intelligence - AI Development Rules
+
+## CRITICAL CONTEXT
+Before writing ANY code, you MUST read these files in the project root:
+- `01_TERMINAL_DESIGN_SYSTEM.md`
+- `02_DATA_METRICS_AND_LOGIC.md`
+- `complete_profile_metrics_spec.md`
+
+## Core Principles
+- ALWAYS use native SwiftUI, NEVER UIKit wrappers unless explicitly required.
+- NEVER use rounded corners. Use `.cornerRadius(0)` or `.clipShape(Rectangle())` everywhere.
+- ALWAYS use JetBrains Mono for numbers with `.monospacedDigit()`.
+- NEVER assign unique colors to specific metrics (only state-based coloring: Green/Amber/Red for thresholds).
+- ALWAYS follow the 8pt grid system and 28pt fixed row heights.
+- ALWAYS use MVVM architecture with `@Observable` ViewModels (Swift 5.9+).
+
+## TERMINAL AESTHETIC (STRICT ENFORCEMENT)
+
+### CLI Headers
+- EVERY view MUST start with a CLI-style command header
+- Format: `porteos@system ~ % [command_name]`
+- Example: `porteos@system ~ % profile --real-estate --asset="Vanguard"`
+- Font: JetBrains Mono 11pt
+- Color: Profile accent color (Gold for RE, Teal for Hospitality, etc.)
+
+### Numbered Modules
+- ALL content blocks MUST be numbered
+- Format: `01 // MODULE_NAME`, `02 // MODULE_NAME`
+- Examples: `01 // CORE_FINANCIALS_REVENUE`, `02 // EXPENSE_AUDIT_OPEX`
+
+### Color System (EXACT HEX VALUES - NEVER DEVIATE)
+
+**Base Colors:**
+- Background: `#0F1115`
+- Surface: `#1A1D24`
+- Border: `#2E333F`
+- Text Primary: `#F8F9FA`
+- Text Secondary: `#94A3B8`
+- Text Tertiary: `#64748B`
+
+**Profile Accents (Identity ONLY):**
+- Real Estate: `#D4AF37` (Gold)
+- Hospitality: `#14B8A6` (Teal)
+- Design: `#A855F7` (Purple)
+- Circular Economy: `#10B981` (Green)
+
+**Semantic Colors (Thresholds ONLY):**
+- Success: `#10B981` (DSCR ≥ 1.25)
+- Warning: `#F59E0B` (DSCR 1.10-1.24)
+- Danger: `#EF4444` (DSCR < 1.10)
+- NEVER use these for standard metric labels
+
+### Typography System
+
+**Primary Metrics:**
+- Font: JetBrains Mono 14pt Bold
+- `.monospacedDigit()`
+- Color: `text-primary`
+
+**Labels:**
+- Font: Inter 11pt Bold UPPERCASE
+- Tracking: 0.08
+- Color: `text-tertiary`
+
+**Secondary Metrics:**
+- Font: JetBrains Mono 12pt Regular
+- Color: `text-secondary`
+
+### Component Rules
+
+**Terminal Metric Row:**
+- Height: 28pt (FIXED)
+- Layout: [Left Border if Danger] [Label LEFT] [Spacer] [Value RIGHT]
+- Label: Inter Bold 11pt UPPERCASE, `text-tertiary`
+- Value: JetBrains Mono 14pt Bold, `monospacedDigit()`
+
+**Buttons:**
+- Primary: `[ ACTION_NAME ]` - Gold bg (`#D4AF37`), Black text, JetBrains Mono Bold 11pt
+- Secondary: `./action_name` - Transparent bg, Green text (`#10B981`)
+- NO rounded corners
+
+**Input Fields:**
+- Height: 28pt (FIXED)
+- Background: `shell-bg`
+- Border: 1px `shell-border`
+- Focus: Profile accent color
+- Font: JetBrains Mono 14pt
+
+**Terminal Block:**
+- Background: `shell-surface`
+- Border: 1px `shell-border`
+- Padding: 16pt
+- Header: CLI command format (see above)
+
+### Layout Structure
+
+**3-Pane Terminal:**
+- Navigation Pane (Left): 220pt fixed width
+- Main Content (Center): Flexible width
+- Inspector Pane (Right): 320pt fixed width
+- Separators: 1px `shell-border`
+
+**Global Command Bar (Bottom):**
+- Height: 32pt fixed
+- Left: `porteos@system ~ %` + input
+- Right: `UTF-8 LN: [count]`
+
+## WORKFLOW RULES (NON-NEGOTIABLE)
+
+### Import-First Design
+- Deals are primarily imported via CSV/JSON/Google Sheets (Section 7.1 of spec)
+- Manual entry is SECONDARY
+- ALWAYS provide import UI before manual forms
+- Column mapping interface required
+
+### Profile Separation
+- Real Estate, Hospitality, Design, Circular Economy are SEPARATE tabs/views
+- Do NOT mix all inputs in one giant form
+- Each profile has its own dashboard view with numbered modules
+
+### Pipeline Management
+- Imported deals go to "Pending" status
+- User must explicitly "Load to Analysis"
+- Status options: Pipeline, Viable, Review, Rejected, Acquired
+
+### Iterative Data Entry
+- Do NOT require all fields upfront
+- Allow saving with minimal data
+- Profiles can be filled in later
+
+## WHAT TO REJECT IMMEDIATELY
+
+**Reject and rewrite if you see:**
+- ❌ Rounded corners (`.cornerRadius(8)`)
+- ❌ SF Pro for numbers (must be JetBrains Mono)
+- ❌ Green/Red colors on normal metrics (only for thresholds)
+- ❌ One giant form with all profile inputs mixed
+- ❌ No import functionality
+- ❌ Manual entry as primary workflow
+- ❌ Missing CLI headers (`porteos@system ~ %`)
+- ❌ Standard SwiftUI buttons (must be terminal-style)
+- ❌ Missing numbered modules (`01 //`, `02 //`)
+- ❌ Wrong color hex values (use exact values from spec)
+
+## DEVELOPMENT PROTOCOL
+
+**Before writing ANY UI code:**
+1. Check `01_TERMINAL_DESIGN_SYSTEM.md` for component specs
+2. Verify color usage (identity vs. state)
+3. Confirm typography (JetBrains Mono vs. Inter)
+4. Ensure zero rounded corners
+
+**Before writing ANY calculator:**
+1. Check `02_DATA_METRICS_AND_LOGIC.md` for formula
+2. Write unit tests FIRST
+3. Handle edge cases (division by zero, negative values)
+4. Keep calculators pure (no side effects)
+
+**Before writing ANY data model:**
+1. All properties need default values
+2. Use SwiftData `@Model` macro
+3. Include createdAt/updatedAt timestamps
+4. Add UUID for unique identification
+
+## ENFORCEMENT
+
+If you violate these rules, the user will reject your code.
+When in doubt, ASK before proceeding.
+Reference the specific section of the design system in your responses.

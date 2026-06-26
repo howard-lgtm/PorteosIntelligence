@@ -1,0 +1,81 @@
+# Porteos Intelligence - Strict Enforcement Rules
+
+## YOU MUST ENFORCE THESE AT ALL TIMES:
+
+### 1. ZERO ROUNDED CORNERS
+- `cornerRadius: 0` EVERYWHERE
+- Use `.clipShape(Rectangle())` if needed
+- If you write `.cornerRadius()` without 0, you have FAILED
+
+### 2. TERMINAL AESTHETIC (NON-NEGOTIABLE)
+- ALL views MUST have CLI headers: `porteos@system ~ % [command]`
+- ALL content blocks MUST be numbered: `01 // MODULE_NAME`, `02 // MODULE_NAME`
+- JetBrains Mono for 95% of UI (numbers, metrics, buttons, inputs)
+- Inter ONLY for AI narratives >3 lines
+- ALL numbers: `.monospacedDigit()`
+
+### 3. EXACT COLOR VALUES (NEVER DEVIATE)
+**Base Colors:**
+- Background: `#0F1115`
+- Surface: `#1A1D24`
+- Border: `#2E333F`
+- Text Primary: `#F8F9FA`
+- Text Secondary: `#94A3B8`
+- Text Tertiary: `#64748B`
+
+**Profile Accents (Identity ONLY):**
+- Real Estate: `#D4AF37` (Gold)
+- Hospitality: `#14B8A6` (Teal)
+- Design: `#A855F7` (Purple)
+- Circular: `#10B981` (Green)
+
+**Semantic Colors (Thresholds ONLY):**
+- Success: `#10B981` (DSCR ≥ 1.25)
+- Warning: `#F59E0B` (DSCR 1.10-1.24)
+- Danger: `#EF4444` (DSCR < 1.10)
+- NEVER use for standard metric labels
+
+### 4. COMPONENT RULES
+
+**Terminal Metric Row:**
+- Height: 28pt (FIXED)
+- Layout: [Left Border if Danger] [Label LEFT] [Spacer] [Value RIGHT]
+- Label: Inter Bold 11pt UPPERCASE, `text-tertiary`
+- Value: JetBrains Mono 14pt Bold, `monospacedDigit()`
+
+**Buttons:**
+- Primary: `[ ACTION_NAME ]` - Gold bg, Black text, JetBrains Mono Bold 11pt
+- Secondary: `./action_name` - Transparent bg, Green text
+- NO rounded corners
+
+**Input Fields:**
+- Height: 28pt (FIXED)
+- Background: `shell-bg`
+- Border: 1px `shell-border`
+- Focus: Profile accent color
+- Font: JetBrains Mono 14pt
+
+### 5. WORKFLOW (CRITICAL)
+- Import system FIRST (CSV/JSON/Google Sheets) - Section 7.1
+- Profile separation (separate tabs, NOT mixed forms)
+- Pipeline management (Pending → Load → Analysis) - Section 8
+- Iterative data entry (minimal fields upfront)
+- DO NOT require all profile data in one form
+
+### 6. REFERENCE DOCUMENTS (ALWAYS READ FIRST)
+BEFORE writing ANY code, you MUST read:
+- `01_TERMINAL_DESIGN_SYSTEM.md` - UI/UX source of truth
+- `02_DATA_METRICS_AND_LOGIC.md` - All metrics and formulas
+- `complete_profile_metrics_spec.md` - Detailed profile specs
+
+### 7. WHAT TO REJECT IMMEDIATELY
+- ❌ Rounded corners
+- ❌ SF Pro for numbers (must be JetBrains Mono)
+- ❌ Green/Red on normal metrics (only for thresholds)
+- ❌ One giant form with all profiles mixed
+- ❌ No import functionality
+- ❌ Missing CLI headers (`porteos@system ~ %`)
+- ❌ Standard SwiftUI buttons
+- ❌ Missing numbered modules (`01 //`, `02 //`)
+
+## VIOLATIONS = REJECT AND REWRITE
