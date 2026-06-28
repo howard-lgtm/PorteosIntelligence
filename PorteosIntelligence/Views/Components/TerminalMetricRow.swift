@@ -5,9 +5,9 @@ import SwiftUI
 
 enum MetricState {
     case neutral
-    case optimal    // green text + green 2px left border + 5% green tint
-    case warning    // amber text + amber 2px left border + 5% amber tint
-    case danger     // red text   + red   2px left border + 5% red   tint
+    case optimal    // green value text
+    case warning    // amber value text
+    case danger     // red value text + red 2px left border
     case critical   // alias for .danger
 }
 
@@ -19,40 +19,30 @@ struct TerminalMetricRow: View {
     let value: String
     let state: MetricState
 
-    // MARK: Semantic Colors
+    // MARK: Colors
 
     private let colorOptimal  = Color(hex: "#10B981")
     private let colorWarning  = Color(hex: "#F59E0B")
     private let colorDanger   = Color(hex: "#EF4444")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textTertiary  = Color(hex: "#64748B")
+    private let valueBright   = Color(hex: "#FFFFFF")
+    private let labelDim      = Color(hex: "#475569")   // Slate-600
 
     // MARK: Derived
 
     private var valueColor: Color {
         switch state {
-        case .neutral:              return textPrimary
-        case .optimal:              return colorOptimal
-        case .warning:              return colorWarning
-        case .danger, .critical:    return colorDanger
+        case .neutral:           return valueBright
+        case .optimal:           return colorOptimal
+        case .warning:           return colorWarning
+        case .danger, .critical: return colorDanger
         }
     }
 
-    private var borderColor: Color? {
+    // Left border: danger/critical only
+    private var dangerBorder: Color? {
         switch state {
-        case .optimal:              return colorOptimal
-        case .warning:              return colorWarning
-        case .danger, .critical:    return colorDanger
-        default:                    return nil
-        }
-    }
-
-    private var backgroundTint: Color? {
-        switch state {
-        case .optimal:              return colorOptimal
-        case .warning:              return colorWarning
-        case .danger, .critical:    return colorDanger
-        default:                    return nil
+        case .danger, .critical: return colorDanger
+        default:                 return nil
         }
     }
 
@@ -60,8 +50,7 @@ struct TerminalMetricRow: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // 2px left border for all non-neutral states
-            if let border = borderColor {
+            if let border = dangerBorder {
                 Rectangle()
                     .fill(border)
                     .frame(width: 2)
@@ -69,26 +58,23 @@ struct TerminalMetricRow: View {
 
             HStack(spacing: 0) {
                 Text(label.uppercased())
-                    .font(.custom("Inter", size: 11).weight(.bold))
-                    .tracking(0.08)
-                    .foregroundStyle(textTertiary)
+                    .font(.custom("JetBrains Mono", size: 13).weight(.regular))
+                    .tracking(0.02)
+                    .foregroundStyle(labelDim)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
 
                 Spacer()
 
                 Text(value)
-                    .font(.custom("JetBrains Mono", size: 14).weight(.bold))
+                    .font(.custom("JetBrains Mono", size: 17).weight(.bold))
                     .monospacedDigit()
                     .tracking(-0.02)
                     .foregroundStyle(valueColor)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 8)
         }
-        .frame(height: 28)
-        .background {
-            if let tint = backgroundTint {
-                tint.opacity(0.05)
-            }
-        }
+        .frame(height: 40)
         .clipShape(Rectangle())
     }
 }
@@ -96,13 +82,14 @@ struct TerminalMetricRow: View {
 // MARK: - Preview
 
 #Preview {
-    VStack(spacing: 0) {
-        TerminalMetricRow(label: "Net Operating Income", value: "€125,000.00", state: .neutral)
-        TerminalMetricRow(label: "Cap Rate",             value: "6.20%",        state: .optimal)
-        TerminalMetricRow(label: "Vacancy Rate",         value: "9.50%",        state: .warning)
-        TerminalMetricRow(label: "DSCR",                 value: "0.98",         state: .danger)
-        TerminalMetricRow(label: "LTV Ratio",            value: "94.10%",       state: .critical)
+    VStack(spacing: 12) {
+        TerminalMetricRow(label: "Net Operating Income", value: "€125,000",  state: .neutral)
+        TerminalMetricRow(label: "Cap Rate",             value: "6.20%",     state: .optimal)
+        TerminalMetricRow(label: "Vacancy Rate",         value: "9.50%",     state: .warning)
+        TerminalMetricRow(label: "DSCR",                 value: "0.98x",     state: .danger)
+        TerminalMetricRow(label: "LTV Ratio",            value: "94.10%",    state: .critical)
     }
-    .frame(width: 400)
-    .background(Color(hex: "#1A1D24"))
+    .frame(width: 420)
+    .padding(16)
+    .background(Color(hex: "#0F1115"))
 }

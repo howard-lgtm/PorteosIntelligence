@@ -25,8 +25,8 @@ struct CmdCenterView: View {
     }
 
     private var avgScore: Double? {
-        guard !deals.isEmpty else { return nil }
-        let scores = deals.map { PropertyDealViewModel(deal: $0).porteosScore.finalScore }
+        let scores = deals.compactMap(\.porteosScore).filter { $0 > 0 }
+        guard !scores.isEmpty else { return nil }
         return scores.reduce(0, +) / Double(scores.count)
     }
 
@@ -61,7 +61,7 @@ struct CmdCenterView: View {
                 emptyState
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 24) {
                         module01PortfolioSummary
                         module02ProfileDistribution
                         module03RecentActivity
@@ -79,15 +79,15 @@ struct CmdCenterView: View {
     private var cliHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 11))
+                .font(.custom("JetBrains Mono", size: 13))
                 .foregroundStyle(textTertiary)
             Text("portfolio --overview")
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
                 .foregroundStyle(accentGrey)
             Spacer()
         }
         .padding(.horizontal, 16)
-        .frame(height: 32)
+        .frame(height: 36)
         .background(shellSurface)
     }
 
@@ -97,25 +97,18 @@ struct CmdCenterView: View {
 
     private var module01PortfolioSummary: some View {
         TerminalBlock(command: "01 // PORTFOLIO_SUMMARY", accentColor: accentGrey, contentPadding: 0) {
-            VStack(spacing: 0) {
+            VStack(spacing: 12) {
                 summaryRow(label: "Total Portfolio Value", value: eur(totalValue))
-                rowDivider
                 TerminalMetricRow(label: "Total Deals",       value: "\(deals.count)", state: .neutral)
-                rowDivider
                 TerminalMetricRow(
                     label: "Avg Porteos Score",
-                    value: avgScore.map { "\($0.formatted(.number.precision(.fractionLength(1))))/100" } ?? "—",
+                    value: avgScore.map { "\(Int($0.rounded()))" } ?? "—",
                     state: .neutral
                 )
-                rowDivider
                 TerminalMetricRow(label: "Pipeline",  value: "\(count(.pipeline))",  state: .neutral)
-                rowDivider
                 TerminalMetricRow(label: "Under Review", value: "\(count(.review))", state: count(.review)   > 0 ? .warning : .neutral)
-                rowDivider
                 TerminalMetricRow(label: "Viable",    value: "\(count(.viable))",    state: count(.viable)   > 0 ? .optimal : .neutral)
-                rowDivider
                 TerminalMetricRow(label: "Acquired",  value: "\(count(.acquired))",  state: count(.acquired) > 0 ? .optimal : .neutral)
-                rowDivider
                 TerminalMetricRow(label: "Rejected",  value: "\(count(.rejected))",  state: count(.rejected) > 0 ? .danger  : .neutral)
             }
         }
@@ -134,10 +127,9 @@ struct CmdCenterView: View {
             ("Circular",     w.circular, Color(hex: "#3B82F6")),
         ]
         return TerminalBlock(command: "02 // PROFILE_DISTRIBUTION", accentColor: accentGrey, contentPadding: 0) {
-            VStack(spacing: 0) {
+            VStack(spacing: 12) {
                 ForEach(Array(profiles.enumerated()), id: \.offset) { idx, profile in
                     weightRow(label: profile.label, pct: profile.pct, accent: profile.color)
-                    if idx < profiles.count - 1 { rowDivider }
                 }
             }
         }
@@ -146,10 +138,10 @@ struct CmdCenterView: View {
     private func weightRow(label: String, pct: Double, accent: Color) -> some View {
         HStack(spacing: 12) {
             Text(label.uppercased())
-                .font(.custom("Inter", size: 11).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
                 .tracking(0.08)
                 .foregroundStyle(textTertiary)
-                .frame(width: 110, alignment: .leading)
+                .frame(width: 120, alignment: .leading)
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
@@ -163,13 +155,13 @@ struct CmdCenterView: View {
             .frame(height: 6)
 
             Text("\(pct.formatted(.number.precision(.fractionLength(1))))%")
-                .font(.custom("JetBrains Mono", size: 12).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 14).weight(.bold))
                 .monospacedDigit()
                 .foregroundStyle(accent)
-                .frame(width: 48, alignment: .trailing)
+                .frame(width: 52, alignment: .trailing)
         }
         .padding(.horizontal, 12)
-        .frame(height: 36)
+        .frame(height: 40)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -178,10 +170,9 @@ struct CmdCenterView: View {
 
     private var module03RecentActivity: some View {
         TerminalBlock(command: "03 // RECENT_ACTIVITY  [last 5]", accentColor: accentGrey, contentPadding: 0) {
-            VStack(spacing: 0) {
+            VStack(spacing: 12) {
                 ForEach(Array(recentDeals.enumerated()), id: \.element.id) { idx, deal in
                     activityRow(deal)
-                    if idx < recentDeals.count - 1 { rowDivider }
                 }
             }
         }
@@ -190,24 +181,24 @@ struct CmdCenterView: View {
     private func activityRow(_ deal: PropertyDeal) -> some View {
         HStack(spacing: 0) {
             Text(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)
-                .font(.custom("JetBrains Mono", size: 11))
+                .font(.custom("JetBrains Mono", size: 13))
                 .foregroundStyle(textSecondary)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.leading, 12)
 
             Text(deal.status.rawValue.uppercased())
-                .font(.custom("JetBrains Mono", size: 10))
+                .font(.custom("JetBrains Mono", size: 12))
                 .foregroundStyle(statusColor(deal.status))
-                .frame(width: 72, alignment: .center)
+                .frame(width: 80, alignment: .center)
 
             Text(deal.updatedAt, style: .date)
-                .font(.custom("JetBrains Mono", size: 10))
+                .font(.custom("JetBrains Mono", size: 12))
                 .foregroundStyle(textTertiary)
-                .frame(width: 96, alignment: .trailing)
+                .frame(width: 104, alignment: .trailing)
                 .padding(.trailing, 12)
         }
-        .frame(height: 28)
+        .frame(height: 32)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -219,13 +210,13 @@ struct CmdCenterView: View {
             Spacer()
             VStack(spacing: 8) {
                 Text("porteos@system ~ % ls ./deals")
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .font(.custom("JetBrains Mono", size: 13))
                     .foregroundStyle(textTertiary)
                 Text("No deals in portfolio")
                     .font(.custom("JetBrains Mono", size: 14))
                     .foregroundStyle(textSecondary)
                 Text("Click [ ./NEW_DEAL ] or [ ./IMPORT_DEALS ] to begin")
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .font(.custom("JetBrains Mono", size: 13))
                     .foregroundStyle(textSecondary)
             }
             Spacer()
@@ -248,17 +239,17 @@ struct CmdCenterView: View {
         }()
         return HStack(spacing: 0) {
             Text(label.uppercased())
-                .font(.custom("Inter", size: 11).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
                 .tracking(0.08)
                 .foregroundStyle(textSecondary)
             Spacer()
             Text(value)
-                .font(.custom("JetBrains Mono", size: 16).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 17).weight(.bold))
                 .monospacedDigit()
                 .foregroundStyle(valueColor)
         }
         .padding(.horizontal, 12)
-        .frame(height: 36)
+        .frame(height: 40)
         .background(shellElevated)
     }
 

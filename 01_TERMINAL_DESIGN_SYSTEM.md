@@ -2,7 +2,7 @@
 
 **Purpose:** The absolute source of truth for all UI, layout, typography, and component styling.
 **Target Platform:** macOS 14.0+ (SwiftUI)
-**Last Updated:** June 25, 2026
+**Last Updated:** June 27, 2026
 
 ---
 
@@ -12,7 +12,7 @@ We are building a native macOS application that mimics the aesthetic and density
 
 - **Core Aesthetic:** Institutional Brutalist / Terminal TUI Hybrid.
 - **Zero Rounded Corners:** `cornerRadius: 0` everywhere. Sharp rectangles only.
-- **Monospace Dominance:** JetBrains Mono (or SF Mono) for 95% of the UI.
+- **Monospace Dominance:** JetBrains Mono exclusively for 100% of the UI. No proportional fonts.
 - **Strict Grid Alignment:** Every element snaps to an 8pt character/cell grid.
 - **Native Implementation:** Use standard SwiftUI views (`VStack`, `HStack`, `Grid`) styled to *look* like a terminal. **DO NOT** use `NSTextView` or raw TUI libraries.
 
@@ -79,15 +79,15 @@ When a metric hits a Warning/Danger state:
 
 ### 2.1 Font Families
 
-- **Primary (Data & UI):** JetBrains Mono (or SF Mono). Used for ALL financial values, metrics, percentages, dates, inputs, tables, and buttons. Weights: Regular (400), Bold (700).
-- **Secondary (Prose):** Inter. Used ONLY for long-form AI narratives or paragraphs exceeding 3 lines.
+- **Exclusive Font:** JetBrains Mono. Used for ALL UI elements — financial values, metrics, percentages, labels, inputs, buttons, navigation, and headers. Weights: Regular (400), Bold (700).
+- **Inter has been removed entirely.** No proportional fonts anywhere in the application.
 
 ### 2.2 Typographic Hierarchy for Data Density
 
 - **Hero Numbers (The "Pinpoints"):** JetBrains Mono, 48pt, Weight: Bold. Color: Profile Accent or `text-primary`. Usage: Porteos Score, Efficiency Score, Global Circularity Index.
 - **Primary Metrics:** JetBrains Mono, 14pt, Weight: Bold. Color: `text-primary`. Usage: NOI, Cap Rate, RevPAR.
 - **Secondary Metrics:** JetBrains Mono, 12pt, Weight: Regular. Color: `text-secondary`. Usage: Supporting metrics, historical data.
-- **Tertiary/Contextual Data (Labels):** JetBrains Mono, 11pt, Weight: Bold, Uppercase, Tracking 0.08. Color: `text-tertiary`. Usage: Metric labels, units, column headers, module titles.
+- **Tertiary/Contextual Data (Labels):** JetBrains Mono, 10pt, Weight: Bold, Uppercase, Tracking 0.08. Color: `text-tertiary`. Usage: Metric labels, units, column headers, module titles, section headers, field labels.
 
 ### 2.3 Numeric Style (All Numbers)
 

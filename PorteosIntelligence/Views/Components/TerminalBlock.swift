@@ -14,7 +14,6 @@ struct TerminalBlock<Content: View>: View {
 
     // MARK: Tokens
 
-    private let shellSurface = Color(hex: "#1A1D24")
     private let shellBorder  = Color(hex: "#2E333F")
     private let textTertiary = Color(hex: "#64748B")
 
@@ -26,10 +25,6 @@ struct TerminalBlock<Content: View>: View {
             Rectangle().fill(shellBorder).frame(height: 1)
             contentArea
         }
-        .background(shellSurface)
-        .overlay {
-            Rectangle().strokeBorder(shellBorder, lineWidth: 1)
-        }
         .clipShape(Rectangle())
     }
 
@@ -38,17 +33,17 @@ struct TerminalBlock<Content: View>: View {
     private var blockHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 11))
+                .font(.custom("JetBrains Mono", size: 13))
                 .foregroundStyle(textTertiary)
 
             Text(command)
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                .foregroundStyle(accentColor)
+                .font(.custom("JetBrains Mono", size: 13).weight(.medium))
+                .foregroundStyle(textTertiary)
 
             Spacer()
         }
         .padding(.horizontal, 12)
-        .frame(height: 24)
+        .frame(height: 28)
     }
 
     // MARK: Content Area (16pt padding)

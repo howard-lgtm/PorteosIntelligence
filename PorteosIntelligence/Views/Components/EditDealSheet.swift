@@ -233,7 +233,7 @@ struct EditDealSheet: View {
     private var sheetHeader: some View {
         HStack {
             Text("EDIT DEAL")
-                .font(.custom("Inter", size: 14).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 12).weight(.bold))
                 .textCase(.uppercase)
                 .foregroundStyle(textPrimary)
 
@@ -256,7 +256,7 @@ struct EditDealSheet: View {
     private func inputGroup(title: String, @ViewBuilder fields: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.custom("Inter", size: 10).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
                 .tracking(0.08)
                 .foregroundStyle(textTertiary)
                 .textCase(.uppercase)

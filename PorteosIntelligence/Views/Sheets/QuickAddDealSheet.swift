@@ -2,9 +2,11 @@ import SwiftUI
 import SwiftData
 
 // MARK: - QuickAddDealSheet
+// Handles both create (deal == nil) and edit (deal != nil) modes.
 
 struct QuickAddDealSheet: View {
 
+    private let editingDeal: PropertyDeal?
     var onSave: ((UUID) -> Void)? = nil
 
     @Environment(\.modelContext) private var modelContext
@@ -20,21 +22,36 @@ struct QuickAddDealSheet: View {
     private let textSecondary = Color(hex: "#94A3B8")
     private let textTertiary  = Color(hex: "#64748B")
 
-    // MARK: State
+    // MARK: State — initialised from deal if editing
 
-    @State private var name:         String    = ""
-    @State private var location:     String    = ""
-    @State private var propertyType: String    = "Commercial"
-    @State private var purchasePrice: String   = ""
-    @State private var totalArea:    String    = ""
-    @State private var status:       DealStatus = .pipeline
-    @State private var notes:        String    = ""
+    @State private var name:          String
+    @State private var location:      String
+    @State private var propertyType:  String
+    @State private var purchasePrice: String
+    @State private var totalArea:     String
+    @State private var status:        DealStatus
+    @State private var notes:         String
 
     private let propertyTypes: [String] = [
         "Residential", "Commercial", "Mixed-Use", "Hospitality", "Industrial", "Other"
     ]
 
-    private var canSave: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
+    private var isEditing: Bool { editingDeal != nil }
+    private var canSave:   Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
+
+    // MARK: Init
+
+    init(deal: PropertyDeal? = nil, onSave: ((UUID) -> Void)? = nil) {
+        self.editingDeal = deal
+        self.onSave      = onSave
+        _name          = State(initialValue: deal?.propertyName ?? "")
+        _location      = State(initialValue: deal?.locationCity ?? "")
+        _propertyType  = State(initialValue: deal?.propertyType.isEmpty == false ? deal!.propertyType : "Commercial")
+        _purchasePrice = State(initialValue: deal.map { $0.purchasePrice > 0 ? "\(Int($0.purchasePrice))" : "" } ?? "")
+        _totalArea     = State(initialValue: deal.map { $0.totalArea     > 0 ? "\(Int($0.totalArea))"     : "" } ?? "")
+        _status        = State(initialValue: deal?.status ?? .pipeline)
+        _notes         = State(initialValue: deal?.notes ?? "")
+    }
 
     // MARK: Body
 
@@ -45,8 +62,8 @@ struct QuickAddDealSheet: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    TerminalInputField(label: "Property Name", placeholder: "Asset Name",    prefix: nil, suffix: nil, text: $name)
-                    TerminalInputField(label: "Location",      placeholder: "City, Country", prefix: nil, suffix: nil, text: $location)
+                    TerminalInputField(label: "Property Name",  placeholder: "Asset Name",    prefix: nil, suffix: nil,  text: $name)
+                    TerminalInputField(label: "Location",       placeholder: "City, Country", prefix: nil, suffix: nil,  text: $location)
                     pickerField(label: "Property Type") {
                         Picker("", selection: $propertyType) {
                             ForEach(propertyTypes, id: \.self) { Text($0).tag($0) }
@@ -54,8 +71,8 @@ struct QuickAddDealSheet: View {
                         .pickerStyle(.menu)
                         .labelsHidden()
                     }
-                    TerminalInputField(label: "Purchase Price", placeholder: "0", prefix: "€", suffix: nil, text: $purchasePrice)
-                    TerminalInputField(label: "Total Area",     placeholder: "0", prefix: nil, suffix: "m²", text: $totalArea)
+                    TerminalInputField(label: "Purchase Price", placeholder: "0",             prefix: "€", suffix: nil,  text: $purchasePrice)
+                    TerminalInputField(label: "Total Area",     placeholder: "0",             prefix: nil, suffix: "m²", text: $totalArea)
                     pickerField(label: "Status") {
                         Picker("", selection: $status) {
                             ForEach(DealStatus.allCases, id: \.self) {
@@ -85,9 +102,12 @@ struct QuickAddDealSheet: View {
             Text("porteos@system ~ % ")
                 .font(.custom("JetBrains Mono", size: 11))
                 .foregroundStyle(textTertiary)
-            Text("deal --create")
+            Text(isEditing
+                 ? "deal --edit --asset=\"\(editingDeal?.propertyName.isEmpty == false ? editingDeal!.propertyName : "Untitled")\""
+                 : "deal --create")
                 .font(.custom("JetBrains Mono", size: 11).weight(.bold))
                 .foregroundStyle(accentRust)
+                .lineLimit(1)
             Spacer()
             Button { dismiss() } label: {
                 Text("✕")
@@ -106,7 +126,7 @@ struct QuickAddDealSheet: View {
     private func pickerField<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label.uppercased())
-                .font(.custom("Inter", size: 11).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
                 .tracking(0.05)
                 .foregroundStyle(textTertiary)
 
@@ -127,7 +147,7 @@ struct QuickAddDealSheet: View {
     private var notesField: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("NOTES")
-                .font(.custom("Inter", size: 11).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
                 .tracking(0.05)
                 .foregroundStyle(textTertiary)
 
@@ -158,12 +178,12 @@ struct QuickAddDealSheet: View {
             Spacer()
 
             Button { saveDeal() } label: {
-                Text("[ DEPLOY_DEAL ]")
+                Text(isEditing ? "[ UPDATE_DEAL ]" : "[ DEPLOY_DEAL ]")
                     .font(.custom("JetBrains Mono", size: 11).weight(.bold))
                     .foregroundStyle(Color(hex: "#0F1115"))
                     .padding(.horizontal, 16)
                     .frame(height: 28)
-                    .background(canSave ? accentRust : Color(hex: "#2E333F"))
+                    .background(canSave ? accentRust : shellBorder)
                     .clipShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -178,24 +198,53 @@ struct QuickAddDealSheet: View {
 
     private func saveDeal() {
         guard canSave else { return }
-        let deal = PropertyDeal(
-            propertyName:   name.trimmingCharacters(in: .whitespaces),
-            propertyType:   propertyType,
-            totalArea:      Double(totalArea.filter    { $0.isNumber || $0 == "." }) ?? 0,
-            locationCity:   location,
-            purchasePrice:  Double(purchasePrice.filter { $0.isNumber || $0 == "." }) ?? 0,
-            notes:          notes,
-            status:         status
-        )
-        modelContext.insert(deal)
-        onSave?(deal.id)
+        let cleanName = name.trimmingCharacters(in: .whitespaces)
+        let price     = Double(purchasePrice.filter { $0.isNumber || $0 == "." }) ?? 0
+        let area      = Double(totalArea.filter     { $0.isNumber || $0 == "." }) ?? 0
+
+        if let deal = editingDeal {
+            deal.propertyName  = cleanName
+            deal.locationCity  = location
+            deal.propertyType  = propertyType
+            deal.purchasePrice = price
+            deal.totalArea     = area
+            deal.status        = status
+            deal.notes         = notes
+            deal.updatedAt     = Date()
+            deal.porteosScore  = PropertyDealViewModel(deal: deal).porteosScore.finalScore
+        } else {
+            let deal = PropertyDeal(
+                propertyName:  cleanName,
+                propertyType:  propertyType,
+                totalArea:     area,
+                locationCity:  location,
+                purchasePrice: price,
+                notes:         notes,
+                status:        status
+            )
+            deal.porteosScore = PropertyDealViewModel(deal: deal).porteosScore.finalScore
+            modelContext.insert(deal)
+            onSave?(deal.id)
+        }
         dismiss()
     }
 }
 
 // MARK: - Preview
 
-#Preview {
+#Preview("Create") {
     QuickAddDealSheet()
+        .background(Color(hex: "#0F1115"))
+}
+
+#Preview("Edit") {
+    let deal = PropertyDeal(
+        propertyName: "Lisbon Office Block A",
+        propertyType: "Commercial",
+        locationCity: "Lisbon",
+        purchasePrice: 1_250_000,
+        status: .viable
+    )
+    return QuickAddDealSheet(deal: deal)
         .background(Color(hex: "#0F1115"))
 }

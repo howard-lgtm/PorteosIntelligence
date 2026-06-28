@@ -55,7 +55,7 @@ struct PorteosScoreBlock: View {
     private var gradeDisplay: some View {
         VStack(alignment: .trailing, spacing: 4) {
             Text("PORTEOS SCORE")
-                .font(.custom("Inter", size: 11).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
                 .tracking(0.05)
                 .foregroundStyle(textTertiary)
 

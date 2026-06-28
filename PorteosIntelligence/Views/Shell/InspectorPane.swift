@@ -6,9 +6,9 @@ import SwiftData
 struct InspectorPane: View {
 
     @Bindable var deal: PropertyDeal
-    @Binding var showEditSheet: Bool
 
-    @State private var selectedTab = "weights"
+    @State private var selectedTab        = "weights"
+    @State private var showFullEditSheet  = false
 
     // MARK: Tokens
 
@@ -47,12 +47,10 @@ struct InspectorPane: View {
         .frame(width: 320)
         .frame(maxHeight: .infinity)
         .background(shellSurface)
-        .overlay(alignment: .leading) {
-            Rectangle()
-                .fill(shellBorder)
-                .frame(width: 1)
-        }
         .clipShape(Rectangle())
+        .sheet(isPresented: $showFullEditSheet) {
+            FullDealEditSheet(deal: deal)
+        }
     }
 
     // MARK: Pane Header
@@ -61,7 +59,7 @@ struct InspectorPane: View {
         VStack(spacing: 0) {
             // Module header line
             Text("./INSPECTOR_V2")
-                .font(.custom("JetBrains Mono", size: 10))
+                .font(.custom("JetBrains Mono", size: 11))
                 .foregroundStyle(textTertiary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16)
@@ -71,7 +69,7 @@ struct InspectorPane: View {
 
             // Action button – Rust bg, black text
             Button {
-                showEditSheet = true
+                showFullEditSheet = true
             } label: {
                 Text("[ EDIT DEAL DATA ]")
                     .font(.custom("JetBrains Mono", size: 11).weight(.bold))
@@ -176,7 +174,7 @@ struct InspectorPane: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(label.uppercased())
-                    .font(.custom("Inter", size: 11).weight(.bold))
+                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
                     .tracking(0.08)
                     .foregroundStyle(textTertiary)
 
@@ -206,7 +204,7 @@ struct InspectorPane: View {
 
         return HStack {
             Text("TOTAL")
-                .font(.custom("Inter", size: 11).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
                 .tracking(0.08)
                 .foregroundStyle(textTertiary)
 
@@ -376,7 +374,7 @@ private struct TerminalSlider: View {
 
     return HStack(spacing: 0) {
         Spacer()
-        InspectorPane(deal: deal, showEditSheet: .constant(false))
+        InspectorPane(deal: deal)
     }
     .frame(width: 600, height: 700)
     .background(Color(hex: "#0F1115"))

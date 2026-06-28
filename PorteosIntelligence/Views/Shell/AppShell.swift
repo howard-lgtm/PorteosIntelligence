@@ -7,21 +7,21 @@ struct AppShell: View {
     @Query(sort: \PropertyDeal.createdAt, order: .reverse) private var deals: [PropertyDeal]
 
     @State private var showNewDealSheet = false
-    @State private var showEditSheet    = false
-    @State private var selectedDealID: UUID?
+    @State private var selectedDeal: PropertyDeal?
+    @State private var pendingDealID: UUID?        // set by NewDealSheet; resolved once @Query fires
     @State private var activeProfile: ProfileType = .cmdCenter
 
     // MARK: Tokens
 
     private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
+    private let shellSurface  = Color(hex: "#0F1115")
     private let shellBorder   = Color(hex: "#2E333F")
     private let textSecondary = Color(hex: "#94A3B8")
     private let textTertiary  = Color(hex: "#64748B")
 
     // MARK: Layout Constants
 
-    private let navPaneWidth:       CGFloat = 220
+    private let navPaneWidth:       CGFloat = 280
     private let inspectorPaneWidth: CGFloat = 320
     private let dividerWidth:       CGFloat = 1
 
@@ -34,7 +34,7 @@ struct AppShell: View {
             HStack(spacing: 0) {
                 NavigationPane(
                     showNewDealSheet: $showNewDealSheet,
-                    selectedDealID: $selectedDealID,
+                    selectedDeal: $selectedDeal,
                     activeProfile: $activeProfile
                 )
 
@@ -52,14 +52,19 @@ struct AppShell: View {
         }
         .background(shellBg)
         .clipShape(Rectangle())
-        .sheet(isPresented: $showNewDealSheet) {
-            NewDealSheet { newID in
-                selectedDealID = newID
+        .onChange(of: deals) {
+            // Resolve a pending selection created by NewDealSheet
+            if let id = pendingDealID,
+               let deal = deals.first(where: { $0.id == id }) {
+                selectedDeal = deal
+                pendingDealID = nil
             }
         }
-        .sheet(isPresented: $showEditSheet) {
-            if let deal = deals.first(where: { $0.id == selectedDealID }) {
-                EditDealSheet(deal: deal)
+        .sheet(isPresented: $showNewDealSheet) {
+            NewDealSheet { newID in
+                // @Query may not yet contain the new deal; defer resolution
+                pendingDealID  = newID
+                activeProfile  = .realEstate
             }
         }
     }
@@ -72,7 +77,7 @@ struct AppShell: View {
             CmdCenterView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(shellBg)
-        } else if let deal = deals.first(where: { $0.id == selectedDealID }) {
+        } else if let deal = selectedDeal {
             let viewModel = PropertyDealViewModel(deal: deal)
             VStack(spacing: 0) {
                 PorteosScoreBlock(metrics: viewModel.porteosScore)
@@ -112,12 +117,12 @@ struct AppShell: View {
                         .font(.custom("JetBrains Mono", size: 14))
                         .foregroundStyle(textSecondary)
                     Text("Select a deal from the sidebar or click [ ./NEW_DEAL ]")
-                        .font(.custom("JetBrains Mono", size: 11))
+                        .font(.custom("JetBrains Mono", size: 13))
                         .foregroundStyle(textTertiary)
                     Rectangle().fill(shellBorder).frame(height: 1)
                     Button(action: loadSampleDeal) {
                         Text("[ ./LOAD_SAMPLE_DEAL ]")
-                            .font(.custom("JetBrains Mono", size: 11))
+                            .font(.custom("JetBrains Mono", size: 13))
                             .foregroundStyle(Color(hex: "#10B981"))
                     }
                     .buttonStyle(.plain)
@@ -152,7 +157,7 @@ struct AppShell: View {
             opexCapitalReserves:    3_500
         )
         modelContext.insert(deal)
-        selectedDealID = deal.id
+        selectedDeal  = deal
         activeProfile = .realEstate
     }
 
@@ -162,10 +167,10 @@ struct AppShell: View {
             Spacer()
             VStack(spacing: 4) {
                 Text("01 // \(activeProfile.displayName)")
-                    .font(.custom("JetBrains Mono", size: 12).weight(.bold))
+                    .font(.custom("JetBrains Mono", size: 14).weight(.bold))
                     .foregroundStyle(activeProfile.accentColor)
                 Text("MODULE NOT YET IMPLEMENTED")
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .font(.custom("JetBrains Mono", size: 13))
                     .foregroundStyle(textTertiary)
             }
             Spacer()
@@ -180,10 +185,10 @@ struct AppShell: View {
             Spacer()
             VStack(spacing: 8) {
                 Text("porteos@system ~ % ls ./deals")
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .font(.custom("JetBrains Mono", size: 13))
                     .foregroundStyle(textTertiary)
                 Text("select or create a deal to begin")
-                    .font(.custom("JetBrains Mono", size: 12))
+                    .font(.custom("JetBrains Mono", size: 14))
                     .foregroundStyle(textSecondary)
             }
             Spacer()
@@ -196,22 +201,19 @@ struct AppShell: View {
 
     @ViewBuilder
     private var inspectorPane: some View {
-        if let deal = deals.first(where: { $0.id == selectedDealID }) {
-            InspectorPane(deal: deal, showEditSheet: $showEditSheet)
+        if let deal = selectedDeal {
+            InspectorPane(deal: deal)
         } else {
             VStack {
                 Spacer()
                 Text("./INSPECTOR_V2")
-                    .font(.custom("JetBrains Mono", size: 10))
+                    .font(.custom("JetBrains Mono", size: 11))
                     .foregroundStyle(textTertiary)
                 Spacer()
             }
             .frame(width: inspectorPaneWidth)
             .frame(maxHeight: .infinity)
             .background(shellSurface)
-            .overlay(alignment: .leading) {
-                Rectangle().fill(shellBorder).frame(width: 1)
-            }
         }
     }
 

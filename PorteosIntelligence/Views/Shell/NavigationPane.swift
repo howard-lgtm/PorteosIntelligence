@@ -6,7 +6,7 @@ import SwiftData
 struct NavigationPane: View {
 
     @Binding var showNewDealSheet: Bool
-    @Binding var selectedDealID: UUID?
+    @Binding var selectedDeal: PropertyDeal?
     @Binding var activeProfile: ProfileType
 
     @Environment(\.modelContext) private var modelContext
@@ -14,12 +14,20 @@ struct NavigationPane: View {
 
     @State private var dealToEdit:        PropertyDeal? = nil
     @State private var showImportSheet:   Bool          = false
+    @State private var showExportSheet:   Bool          = false
     @State private var statusFilter:      DealStatus?   = nil   // nil = ALL
     @State private var showDeleteConfirm: Bool          = false
 
     private var filteredDeals: [PropertyDeal] {
         guard let filter = statusFilter else { return deals }
         return deals.filter { $0.status == filter }
+    }
+
+    private func profileFor(_ deal: PropertyDeal) -> ProfileType {
+        if deal.hospitalityRoomCount > 0 || deal.hospitalityADR > 0 {
+            return .hospitality
+        }
+        return .realEstate
     }
 
     // MARK: Tokens
@@ -49,7 +57,7 @@ struct NavigationPane: View {
             Spacer(minLength: 0)
             footerActions
         }
-        .frame(width: 220)
+        .frame(width: 280)
         .frame(maxHeight: .infinity)
         .background(shellSurface)
         .overlay(alignment: .trailing) {
@@ -64,6 +72,9 @@ struct NavigationPane: View {
         .sheet(isPresented: $showImportSheet) {
             ImportDealSheet()
         }
+        .sheet(isPresented: $showExportSheet) {
+            BulkExportSheet(allDeals: deals, filteredDeals: filteredDeals)
+        }
     }
 
     // MARK: Header
@@ -71,11 +82,11 @@ struct NavigationPane: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text("PORTEOS@SYSTEM")
-                .font(.custom("JetBrains Mono", size: 12).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
                 .foregroundStyle(textPrimary)
 
             Text("STATUS: ENCRYPTED")
-                .font(.custom("JetBrains Mono", size: 10))
+                .font(.custom("JetBrains Mono", size: 13))
                 .foregroundStyle(accentRust)
         }
         .padding(.top, 16)
@@ -112,13 +123,13 @@ struct NavigationPane: View {
                     .frame(width: 2)
 
                 Text(profile.navPath)
-                    .font(.custom("JetBrains Mono", size: 12).weight(isActive ? .bold : .regular))
+                    .font(.custom("JetBrains Mono", size: 13).weight(isActive ? .bold : .regular))
                     .foregroundStyle(isActive ? textPrimary : textSecondary)
                     .padding(.leading, 14)
 
                 Spacer()
             }
-            .frame(height: 24)
+            .frame(height: 28)
             .background(isActive ? shellElevated : Color.clear)
             .clipShape(Rectangle())
         }
@@ -139,7 +150,7 @@ struct NavigationPane: View {
             // Deal list
             if filteredDeals.isEmpty {
                 Text(deals.isEmpty ? "no deals yet" : "no \(statusFilter?.rawValue ?? "") deals")
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .font(.custom("JetBrains Mono", size: 13))
                     .foregroundStyle(textSecondary)
                     .padding(.leading, 16)
                     .padding(.vertical, 8)
@@ -162,7 +173,7 @@ struct NavigationPane: View {
         ) {
             Button("Delete", role: .destructive) {
                 for deal in filteredDeals { modelContext.delete(deal) }
-                selectedDealID = nil
+                selectedDeal = nil
             }
         } message: {
             Text("This cannot be undone.")
@@ -184,15 +195,15 @@ struct NavigationPane: View {
                     Button { statusFilter = option.filter } label: {
                         VStack(spacing: 0) {
                             Text(option.label)
-                                .font(.custom("JetBrains Mono", size: 9).weight(isActive ? .bold : .regular))
+                                .font(.custom("JetBrains Mono", size: 13).weight(isActive ? .bold : .regular))
                                 .foregroundStyle(isActive ? textPrimary : textTertiary)
-                                .frame(height: 20)
+                                .frame(height: 24)
                                 .padding(.horizontal, 8)
                             Rectangle()
                                 .fill(isActive ? accentRust : Color.clear)
                                 .frame(height: 2)
                         }
-                        .frame(height: 24)
+                        .frame(height: 28)
                         .clipShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -204,14 +215,12 @@ struct NavigationPane: View {
 
     private var bulkActions: some View {
         HStack(spacing: 0) {
-            Button {
-                // BULK_EXPORT: phase 2
-            } label: {
+            Button { showExportSheet = true } label: {
                 Text("[ ./BULK_EXPORT ]")
-                    .font(.custom("JetBrains Mono", size: 9))
+                    .font(.custom("JetBrains Mono", size: 13))
                     .foregroundStyle(filteredDeals.isEmpty ? textTertiary : accentGreen)
                     .padding(.leading, 16)
-                    .frame(height: 28, alignment: .leading)
+                    .frame(height: 32, alignment: .leading)
             }
             .buttonStyle(.plain)
             .disabled(filteredDeals.isEmpty)
@@ -220,10 +229,10 @@ struct NavigationPane: View {
 
             Button { showDeleteConfirm = true } label: {
                 Text("[ ./BULK_DELETE ]")
-                    .font(.custom("JetBrains Mono", size: 9))
+                    .font(.custom("JetBrains Mono", size: 13))
                     .foregroundStyle(filteredDeals.isEmpty ? textTertiary : Color(hex: "#EF4444"))
                     .padding(.trailing, 12)
-                    .frame(height: 28, alignment: .trailing)
+                    .frame(height: 32, alignment: .trailing)
             }
             .buttonStyle(.plain)
             .disabled(filteredDeals.isEmpty)
@@ -231,10 +240,11 @@ struct NavigationPane: View {
     }
 
     private func dealRow(_ deal: PropertyDeal) -> some View {
-        let isSelected = deal.id == selectedDealID
+        let isSelected = deal.id == selectedDeal?.id
 
         return Button {
-            selectedDealID = deal.id
+            selectedDeal  = deal
+            activeProfile = profileFor(deal)
         } label: {
             HStack(spacing: 0) {
                 // 2pt selection accent border
@@ -244,21 +254,21 @@ struct NavigationPane: View {
 
                 HStack(spacing: 4) {
                     Text(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)
-                        .font(.custom("JetBrains Mono", size: 11))
+                        .font(.custom("JetBrains Mono", size: 13))
                         .foregroundStyle(isSelected ? textPrimary : textSecondary)
                         .lineLimit(1)
 
                     Spacer()
 
                     Text(deal.status.rawValue.uppercased())
-                        .font(.custom("JetBrains Mono", size: 10))
+                        .font(.custom("JetBrains Mono", size: 13))
                         .foregroundStyle(statusColor(deal.status))
                 }
                 .padding(.leading, 10)
                 .padding(.trailing, 12)
                 .padding(.vertical, 6)
             }
-            .frame(height: 28)
+            .frame(height: 32)
             .background(isSelected ? shellElevated : Color.clear)
             .clipShape(Rectangle())
         }
@@ -286,7 +296,7 @@ struct NavigationPane: View {
 
     private func sectionHeader(_ title: String) -> some View {
         Text(title)
-            .font(.custom("Inter", size: 11).weight(.bold))
+            .font(.custom("JetBrains Mono", size: 13).weight(.bold))
             .tracking(0.08)
             .foregroundStyle(textTertiary)
             .textCase(.uppercase)
@@ -319,11 +329,11 @@ struct NavigationPane: View {
     private func scriptButton(label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
-                .font(.custom("JetBrains Mono", size: 11))
+                .font(.custom("JetBrains Mono", size: 13))
                 .foregroundStyle(accentGreen)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.leading, 16)
-                .frame(height: 28)
+                .frame(height: 32)
         }
         .buttonStyle(.plain)
         .clipShape(Rectangle())
@@ -342,7 +352,7 @@ struct NavigationPane: View {
     return HStack(spacing: 0) {
         NavigationPane(
             showNewDealSheet: .constant(false),
-            selectedDealID: .constant(deal.id),
+            selectedDeal: .constant(deal),
             activeProfile: .constant(.realEstate)
         )
         Spacer()

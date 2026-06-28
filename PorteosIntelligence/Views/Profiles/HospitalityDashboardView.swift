@@ -20,7 +20,15 @@ struct HospitalityDashboardView: View {
 
     // MARK: Computed
 
-    private var hasData: Bool { deal.hospitalityRoomCount > 0 }
+    private var hasData: Bool {
+        deal.hospitalityRoomCount > 0 ||
+        deal.hospitalityADR > 0 ||
+        deal.hospitalityOccupancyRate > 0 ||
+        deal.hospitalityFBRevenue > 0 ||
+        deal.hospitalitySpaRevenue > 0
+    }
+
+    private let columns = [GridItem(.adaptive(minimum: 160, maximum: 250), spacing: 16, alignment: .leading)]
 
     private var metrics: HospitalityCalculator.FullMetrics {
         HospitalityCalculator.calculateFull(inputs: HospitalityCalculator.FullInputs(
@@ -47,7 +55,7 @@ struct HospitalityDashboardView: View {
 
             if hasData {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 24) {
                         module01OperationalStats
                         module02ProfitabilityMatrix
                         module03DistributionLog
@@ -67,16 +75,16 @@ struct HospitalityDashboardView: View {
     private var cliHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 11))
+                .font(.custom("JetBrains Mono", size: 13))
                 .foregroundStyle(textTertiary)
             Text("profile --hospitality --asset=\"\(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)\"")
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
                 .foregroundStyle(accentTeal)
                 .lineLimit(1)
             Spacer()
         }
         .padding(.horizontal, 16)
-        .frame(height: 32)
+        .frame(height: 36)
         .background(shellSurface)
     }
 
@@ -85,15 +93,12 @@ struct HospitalityDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module01OperationalStats: some View {
-        TerminalBlock(command: "01 // OPERATIONAL_STATS", accentColor: accentTeal, contentPadding: 0) {
-            VStack(spacing: 0) {
-                TerminalMetricRow(label: "ADR (Avg Daily Rate)", value: eur(metrics.adr),           state: .neutral)
-                rowDivider
-                TerminalMetricRow(label: "Occupancy Rate",       value: pct(metrics.occupancyRate), state: occupancyState(metrics.occupancyRate))
-                rowDivider
-                TerminalMetricRow(label: "RevPAR",               value: eur(metrics.revPAR),        state: .neutral)
-                rowDivider
-                TerminalMetricRow(label: "TrevPAR",              value: eur(metrics.trevPAR),       state: .neutral)
+        TerminalBlock(command: "01 // OPERATIONAL_STATS", accentColor: accentTeal, contentPadding: 16) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+                MetricGridCell(label: "ADR (Avg Daily Rate)", value: eur(metrics.adr))
+                MetricGridCell(label: "Occupancy Rate",       value: pct(metrics.occupancyRate), state: occupancyState(metrics.occupancyRate))
+                MetricGridCell(label: "RevPAR",               value: eur(metrics.revPAR))
+                MetricGridCell(label: "TrevPAR",              value: eur(metrics.trevPAR))
             }
         }
     }
@@ -103,15 +108,12 @@ struct HospitalityDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module02ProfitabilityMatrix: some View {
-        TerminalBlock(command: "02 // PROFITABILITY_MATRIX", accentColor: accentTeal, contentPadding: 0) {
-            VStack(spacing: 0) {
-                summaryRow(label: "GOP (Gross Operating Profit)", value: eur(metrics.gop))
-                rowDivider
-                TerminalMetricRow(label: "GOP Margin",       value: pct(metrics.gopMargin),    state: gopMarginState(metrics.gopMargin))
-                rowDivider
-                TerminalMetricRow(label: "GOPPAR",           value: eur(metrics.gopPAR),       state: .neutral)
-                rowDivider
-                TerminalMetricRow(label: "EBITDA Margin (est.)", value: pct(metrics.ebitdaMargin), state: ebitdaMarginState(metrics.ebitdaMargin))
+        TerminalBlock(command: "02 // PROFITABILITY_MATRIX", accentColor: accentTeal, contentPadding: 16) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+                MetricGridCell(label: "GOP (Gross Operating Profit)", value: eur(metrics.gop))
+                MetricGridCell(label: "GOP Margin",                   value: pct(metrics.gopMargin),    state: gopMarginState(metrics.gopMargin))
+                MetricGridCell(label: "GOPPAR",                       value: eur(metrics.gopPAR))
+                MetricGridCell(label: "EBITDA Margin (est.)",         value: pct(metrics.ebitdaMargin), state: ebitdaMarginState(metrics.ebitdaMargin))
             }
         }
     }
@@ -121,15 +123,12 @@ struct HospitalityDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module03DistributionLog: some View {
-        TerminalBlock(command: "03 // DISTRIBUTION_LOG", accentColor: accentTeal, contentPadding: 0) {
-            VStack(spacing: 0) {
-                TerminalMetricRow(label: "Direct Booking",     value: pct(metrics.directBookingPct), state: metrics.directBookingPct >= 50 ? .optimal : .neutral)
-                rowDivider
-                TerminalMetricRow(label: "OTA Booking",        value: pct(metrics.otaBookingPct),    state: metrics.otaBookingPct > 40 ? .warning : .neutral)
-                rowDivider
-                TerminalMetricRow(label: "Distribution Cost",  value: eur(metrics.distributionCost), state: .neutral)
-                rowDivider
-                TerminalMetricRow(label: "Cost of Acquisition", value: pct(metrics.costOfAcquisition, dp: 2), state: .neutral)
+        TerminalBlock(command: "03 // DISTRIBUTION_LOG", accentColor: accentTeal, contentPadding: 16) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+                MetricGridCell(label: "Direct Booking",      value: pct(metrics.directBookingPct),         state: metrics.directBookingPct >= 50 ? .optimal : .neutral)
+                MetricGridCell(label: "OTA Booking",         value: pct(metrics.otaBookingPct),             state: metrics.otaBookingPct > 40 ? .warning : .neutral)
+                MetricGridCell(label: "Distribution Cost",   value: eur(metrics.distributionCost))
+                MetricGridCell(label: "Cost of Acquisition", value: pct(metrics.costOfAcquisition, dp: 2))
             }
         }
     }
@@ -143,13 +142,13 @@ struct HospitalityDashboardView: View {
             Spacer()
             VStack(spacing: 8) {
                 Text("porteos@system ~ % ls ./hospitality_data")
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .font(.custom("JetBrains Mono", size: 13))
                     .foregroundStyle(textTertiary)
                 Text("No hospitality data available")
                     .font(.custom("JetBrains Mono", size: 14))
                     .foregroundStyle(textSecondary)
                 Text("Click [ ./EDIT_DEAL ] to add operational metrics")
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .font(.custom("JetBrains Mono", size: 13))
                     .foregroundStyle(textSecondary)
             }
             Spacer()
@@ -172,7 +171,7 @@ struct HospitalityDashboardView: View {
         }()
         return HStack(spacing: 0) {
             Text(label.uppercased())
-                .font(.custom("Inter", size: 11).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
                 .tracking(0.08)
                 .foregroundStyle(textSecondary)
             Spacer()

@@ -20,7 +20,9 @@ struct DesignDashboardView: View {
 
     // MARK: Computed
 
-    private var hasData: Bool { deal.designGFA > 0 }
+    private var hasData: Bool { deal.designGFA > 0 || deal.designNIA > 0 || deal.designSpaceUtilization > 0 }
+
+    private let columns = [GridItem(.adaptive(minimum: 160, maximum: 250), spacing: 16, alignment: .leading)]
 
     private var metrics: DesignCalculator.FullMetrics {
         DesignCalculator.calculateFull(inputs: DesignCalculator.FullInputs(
@@ -52,7 +54,7 @@ struct DesignDashboardView: View {
 
             if hasData {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 24) {
                         module01SpaceEfficiency
                         module02Wellness
                         module03Biophilic
@@ -73,16 +75,16 @@ struct DesignDashboardView: View {
     private var cliHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 11))
+                .font(.custom("JetBrains Mono", size: 13))
                 .foregroundStyle(textTertiary)
             Text("profile --design --asset=\"\(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)\"")
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
                 .foregroundStyle(accentPurple)
                 .lineLimit(1)
             Spacer()
         }
         .padding(.horizontal, 16)
-        .frame(height: 32)
+        .frame(height: 36)
         .background(shellSurface)
     }
 
@@ -91,17 +93,13 @@ struct DesignDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module01SpaceEfficiency: some View {
-        TerminalBlock(command: "01 // SPACE_EFFICIENCY", accentColor: accentPurple, contentPadding: 0) {
-            VStack(spacing: 0) {
-                TerminalMetricRow(label: "Gross Floor Area (GFA)",   value: m2(metrics.gfa),             state: .neutral)
-                rowDivider
-                TerminalMetricRow(label: "Net Internal Area (NIA)",  value: m2(metrics.nia),             state: .neutral)
-                rowDivider
-                TerminalMetricRow(label: "Net-to-Gross Ratio",       value: pct(metrics.netToGrossRatio), state: netToGrossState(metrics.netToGrossRatio))
-                rowDivider
-                TerminalMetricRow(label: "Circulation",              value: pct(metrics.circulationPct), state: metrics.circulationPct > 20 ? .warning : .neutral)
-                rowDivider
-                TerminalMetricRow(label: "Space Utilization Rate",   value: pct(metrics.spaceUtilization), state: metrics.spaceUtilization >= 90 ? .optimal : .neutral)
+        TerminalBlock(command: "01 // SPACE_EFFICIENCY", accentColor: accentPurple, contentPadding: 16) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+                MetricGridCell(label: "Gross Floor Area (GFA)",  value: m2(metrics.gfa))
+                MetricGridCell(label: "Net Internal Area (NIA)", value: m2(metrics.nia))
+                MetricGridCell(label: "Net-to-Gross Ratio",      value: pct(metrics.netToGrossRatio),   state: netToGrossState(metrics.netToGrossRatio))
+                MetricGridCell(label: "Circulation",             value: pct(metrics.circulationPct),    state: metrics.circulationPct > 20 ? .warning : .neutral)
+                MetricGridCell(label: "Space Utilization Rate",  value: pct(metrics.spaceUtilization),  state: metrics.spaceUtilization >= 90 ? .optimal : .neutral)
             }
         }
     }
@@ -111,17 +109,13 @@ struct DesignDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module02Wellness: some View {
-        TerminalBlock(command: "02 // WELLNESS_METRICS", accentColor: accentPurple, contentPadding: 0) {
-            VStack(spacing: 0) {
-                TerminalMetricRow(label: "Daylighting Coverage",     value: pct(metrics.daylighting),    state: metrics.daylighting >= 80 ? .optimal : .neutral)
-                rowDivider
-                TerminalMetricRow(label: "CO2 Levels",               value: "\(metrics.co2ppm.formatted(.number.precision(.fractionLength(0)))) ppm", state: co2State(metrics.co2ppm))
-                rowDivider
-                TerminalMetricRow(label: "Air Changes Per Hour",     value: "\(metrics.ach.formatted(.number.precision(.fractionLength(1)))) ACH",  state: metrics.ach >= 4 ? .optimal : .neutral)
-                rowDivider
-                TerminalMetricRow(label: "Thermal Comfort Score",    value: pct(metrics.thermalComfort), state: metrics.thermalComfort >= 90 ? .optimal : .neutral)
-                rowDivider
-                TerminalMetricRow(label: "Acoustic Comfort Score",   value: pct(metrics.acousticComfort), state: metrics.acousticComfort >= 85 ? .optimal : .neutral)
+        TerminalBlock(command: "02 // WELLNESS_METRICS", accentColor: accentPurple, contentPadding: 16) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+                MetricGridCell(label: "Daylighting Coverage",   value: pct(metrics.daylighting),                                                       state: metrics.daylighting >= 80 ? .optimal : .neutral)
+                MetricGridCell(label: "CO2 Levels",             value: "\(metrics.co2ppm.formatted(.number.precision(.fractionLength(0)))) ppm",        state: co2State(metrics.co2ppm))
+                MetricGridCell(label: "Air Changes Per Hour",   value: "\(metrics.ach.formatted(.number.precision(.fractionLength(1)))) ACH",           state: metrics.ach >= 4 ? .optimal : .neutral)
+                MetricGridCell(label: "Thermal Comfort Score",  value: pct(metrics.thermalComfort),                                                    state: metrics.thermalComfort >= 90 ? .optimal : .neutral)
+                MetricGridCell(label: "Acoustic Comfort Score", value: pct(metrics.acousticComfort),                                                   state: metrics.acousticComfort >= 85 ? .optimal : .neutral)
             }
         }
     }
@@ -131,15 +125,12 @@ struct DesignDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module03Biophilic: some View {
-        TerminalBlock(command: "03 // BIOPHILIC_ELEMENTS", accentColor: accentPurple, contentPadding: 0) {
-            VStack(spacing: 0) {
-                TerminalMetricRow(label: "Biophilic Elements",       value: "\(metrics.biophilicCount)",  state: .neutral)
-                rowDivider
-                TerminalMetricRow(label: "Green Wall Coverage",      value: m2(metrics.greenWallM2),      state: .neutral)
-                rowDivider
-                TerminalMetricRow(label: "Views to Nature",          value: pct(metrics.viewsToNaturePct), state: metrics.viewsToNaturePct >= 70 ? .optimal : .neutral)
-                rowDivider
-                TerminalMetricRow(label: "Natural Materials",        value: pct(metrics.naturalMaterialsPct), state: metrics.naturalMaterialsPct >= 40 ? .optimal : .neutral)
+        TerminalBlock(command: "03 // BIOPHILIC_ELEMENTS", accentColor: accentPurple, contentPadding: 16) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+                MetricGridCell(label: "Biophilic Elements",  value: "\(metrics.biophilicCount)")
+                MetricGridCell(label: "Green Wall Coverage", value: m2(metrics.greenWallM2))
+                MetricGridCell(label: "Views to Nature",     value: pct(metrics.viewsToNaturePct),    state: metrics.viewsToNaturePct >= 70 ? .optimal : .neutral)
+                MetricGridCell(label: "Natural Materials",   value: pct(metrics.naturalMaterialsPct), state: metrics.naturalMaterialsPct >= 40 ? .optimal : .neutral)
             }
         }
     }
@@ -149,13 +140,11 @@ struct DesignDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module04Adaptability: some View {
-        TerminalBlock(command: "04 // ADAPTABILITY", accentColor: accentPurple, contentPadding: 0) {
-            VStack(spacing: 0) {
-                TerminalMetricRow(label: "Movable Partition",        value: pct(metrics.movablePartitionPct), state: metrics.movablePartitionPct >= 30 ? .optimal : .neutral)
-                rowDivider
-                TerminalMetricRow(label: "Multi-Use Spaces",         value: "\(metrics.multiUseSpaces)",  state: .neutral)
-                rowDivider
-                summaryRow(label: "Adaptability Score", value: "\(metrics.adaptabilityScore.formatted(.number.precision(.fractionLength(0))))/100", state: adaptabilityState(metrics.adaptabilityScore))
+        TerminalBlock(command: "04 // ADAPTABILITY", accentColor: accentPurple, contentPadding: 16) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+                MetricGridCell(label: "Movable Partition",  value: pct(metrics.movablePartitionPct), state: metrics.movablePartitionPct >= 30 ? .optimal : .neutral)
+                MetricGridCell(label: "Multi-Use Spaces",   value: "\(metrics.multiUseSpaces)")
+                MetricGridCell(label: "Adaptability Score", value: "\(metrics.adaptabilityScore.formatted(.number.precision(.fractionLength(0))))/100", state: adaptabilityState(metrics.adaptabilityScore))
             }
         }
     }
@@ -169,13 +158,13 @@ struct DesignDashboardView: View {
             Spacer()
             VStack(spacing: 8) {
                 Text("porteos@system ~ % ls ./design_data")
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .font(.custom("JetBrains Mono", size: 13))
                     .foregroundStyle(textTertiary)
                 Text("No design data available")
                     .font(.custom("JetBrains Mono", size: 14))
                     .foregroundStyle(textSecondary)
                 Text("Click [ ./EDIT_DEAL ] to add design metrics")
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .font(.custom("JetBrains Mono", size: 13))
                     .foregroundStyle(textSecondary)
             }
             Spacer()
@@ -198,7 +187,7 @@ struct DesignDashboardView: View {
         }()
         return HStack(spacing: 0) {
             Text(label.uppercased())
-                .font(.custom("Inter", size: 11).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
                 .tracking(0.08)
                 .foregroundStyle(textSecondary)
             Spacer()
