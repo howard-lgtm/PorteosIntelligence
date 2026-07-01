@@ -9,6 +9,7 @@ import SwiftUI
 struct TopHeaderBar: View {
 
     let activeProfile: ProfileType
+    var onServerTap: () -> Void = {}
 
     // MARK: Tokens
 
@@ -64,16 +65,9 @@ struct TopHeaderBar: View {
     // MARK: Status Indicators
 
     private var statusIndicators: some View {
-        HStack(spacing: 16) {
-            // Search indicator
-            HStack(spacing: 5) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 10, weight: .regular))
-                    .foregroundStyle(textTertiary)
-                Text("SEARCH: QUERY_SYSTEM...")
-                    .font(.custom("JetBrains Mono", size: 10))
-                    .foregroundStyle(textTertiary)
-            }
+        HStack(spacing: 12) {
+            // Ingestion server status — click opens config sheet
+            ServerStatusIndicator(onTap: onServerTap)
 
             // Divider pip
             Rectangle()

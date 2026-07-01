@@ -28,7 +28,7 @@ struct RealEstateDashboardView: View {
 
     private var hasData: Bool { localDeal.grossPotentialIncome > 0 || localDeal.operatingExpenses > 0 }
 
-    private let columns = [GridItem(.adaptive(minimum: 160, maximum: 250), spacing: 16, alignment: .leading)]
+    private let columns = [GridItem(.adaptive(minimum: 140, maximum: 220), spacing: 8, alignment: .leading)]
 
     private var metrics: RealEstateCalculator.FullMetrics {
         RealEstateCalculator.calculateFull(inputs: RealEstateCalculator.FullInputs(
@@ -61,12 +61,17 @@ struct RealEstateDashboardView: View {
 
             if hasData {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        let logs = DataValidator.validate(deal: localDeal)
+                        SystemLogBlock(messages: logs)
                         module01Revenue
                         module02OpEx
                         module03Profitability
                         module04Leverage
                         module05Returns
+                        SensitivityAnalysisBlock(deal: localDeal)
+                        MarketTrendModule(city: localDeal.locationCity, profile: "realEstate",
+                                          accent: Color(hex: "#C25E30"))
                     }
                     .padding(16)
                 }
@@ -104,8 +109,8 @@ struct RealEstateDashboardView: View {
     private var module01Revenue: some View {
         TerminalBlock(command: "01 // CORE_FINANCIALS_REVENUE",
                       accentColor: accentRust,
-                      contentPadding: 16) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+                      contentPadding: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
                 MetricGridCell(label: "Gross Potential Income", value: eur(metrics.grossPotentialIncome))
                 MetricGridCell(label: "Vacancy Loss",           value: "(\(eur(metrics.vacancyLoss)))", state: localDeal.vacancyRate > 10 ? .warning : .neutral)
                 MetricGridCell(label: "Effective Gross Income", value: eur(metrics.effectiveGrossIncome))
@@ -122,8 +127,8 @@ struct RealEstateDashboardView: View {
     private var module02OpEx: some View {
         TerminalBlock(command: "02 // EXPENSE_AUDIT_OPEX",
                       accentColor: accentRust,
-                      contentPadding: 16) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+                      contentPadding: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
                 MetricGridCell(label: "Property Management",   value: localDeal.opexPropertyManagement > 0 ? eur(metrics.opexPropertyManagement) : "—")
                 MetricGridCell(label: "Property Tax",          value: localDeal.opexPropertyTax > 0 ? eur(metrics.opexPropertyTax) : "—")
                 MetricGridCell(label: "Insurance",             value: localDeal.opexInsurance > 0 ? eur(metrics.opexInsurance) : "—")
@@ -143,13 +148,34 @@ struct RealEstateDashboardView: View {
     private var module03Profitability: some View {
         TerminalBlock(command: "03 // PROFITABILITY_TELEMETRY",
                       accentColor: accentRust,
-                      contentPadding: 16) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
-                MetricGridCell(label: "NOI",                      value: eur(metrics.netOperatingIncome))
-                MetricGridCell(label: "EBITDA (est.)",            value: eur(metrics.ebitda))
-                MetricGridCell(label: "Cap Rate",                 value: pct(metrics.capRate, dp: 2),         state: capRateState(metrics.capRate))
-                MetricGridCell(label: "Cash Flow Before Tax",     value: eur(metrics.cashFlowBeforeTax),      state: metrics.cashFlowBeforeTax < 0 ? .danger : .neutral)
-                MetricGridCell(label: "Cash Flow After Tax",      value: eur(metrics.cashFlowAfterTax),       state: metrics.cashFlowAfterTax < 0 ? .danger : .neutral)
+                      contentPadding: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
+                let noiTrend  = mockTrend(from: metrics.netOperatingIncome)
+                let capTrend  = mockTrend(from: metrics.capRate)
+                let cfbtTrend = mockTrend(from: metrics.cashFlowBeforeTax)
+                let cfatTrend = mockTrend(from: metrics.cashFlowAfterTax)
+
+                MetricWithTrend(label: "NOI",
+                                value: eur(metrics.netOperatingIncome),
+                                trend: noiTrend,
+                                trendColor: sparkColor(noiTrend))
+                MetricGridCell( label: "EBITDA (est.)",
+                                value: eur(metrics.ebitda))
+                MetricWithTrend(label: "Cap Rate",
+                                value: pct(metrics.capRate, dp: 2),
+                                trend: capTrend,
+                                trendColor: sparkColor(capTrend),
+                                state: capRateState(metrics.capRate))
+                MetricWithTrend(label: "Cash Flow Before Tax",
+                                value: eur(metrics.cashFlowBeforeTax),
+                                trend: cfbtTrend,
+                                trendColor: sparkColor(cfbtTrend),
+                                state: metrics.cashFlowBeforeTax < 0 ? .danger : .neutral)
+                MetricWithTrend(label: "Cash Flow After Tax",
+                                value: eur(metrics.cashFlowAfterTax),
+                                trend: cfatTrend,
+                                trendColor: sparkColor(cfatTrend),
+                                state: metrics.cashFlowAfterTax < 0 ? .danger : .neutral)
             }
         }
     }
@@ -161,8 +187,8 @@ struct RealEstateDashboardView: View {
     private var module04Leverage: some View {
         TerminalBlock(command: "04 // LEVERAGE_ENGINE",
                       accentColor: accentRust,
-                      contentPadding: 16) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+                      contentPadding: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
                 MetricGridCell(label: "Loan Amount",         value: eur(metrics.loanAmount))
                 MetricGridCell(label: "Loan-to-Value (LTV)", value: pct(metrics.loanToValue, dp: 1),  state: ltvState(metrics.loanToValue))
                 MetricGridCell(label: "Loan-to-Cost (LTC)",  value: pct(metrics.loanToCost, dp: 1),   state: ltvState(metrics.loanToCost))
@@ -182,13 +208,28 @@ struct RealEstateDashboardView: View {
     private var module05Returns: some View {
         TerminalBlock(command: "05 // RETURN_METRICS  [5yr hold]",
                       accentColor: accentRust,
-                      contentPadding: 16) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
-                MetricGridCell(label: "Total Equity Invested",  value: eur(metrics.totalEquityInvested))
-                MetricGridCell(label: "Cash-on-Cash Return",    value: pct(metrics.cashOnCashReturn, dp: 2),                                             state: cocState(metrics.cashOnCashReturn))
-                MetricGridCell(label: "Equity Multiple (5Y)",  value: "\(metrics.equityMultiple5Y.formatted(.number.precision(.fractionLength(2))))x",  state: emState(metrics.equityMultiple5Y))
-                MetricGridCell(label: "Unlevered IRR (est.)",  value: pct(metrics.unleveredIRR, dp: 1),                                                 state: irrState(metrics.unleveredIRR))
-                MetricGridCell(label: "Levered IRR (est.)",    value: pct(metrics.leveredIRR, dp: 1),                                                   state: irrState(metrics.leveredIRR))
+                      contentPadding: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
+                let cocTrend = mockTrend(from: metrics.cashOnCashReturn)
+                let irrTrend = mockTrend(from: metrics.leveredIRR)
+
+                MetricGridCell(  label: "Total Equity Invested", value: eur(metrics.totalEquityInvested))
+                MetricWithTrend( label: "Cash-on-Cash Return",
+                                 value: pct(metrics.cashOnCashReturn, dp: 2),
+                                 trend: cocTrend,
+                                 trendColor: sparkColor(cocTrend),
+                                 state: cocState(metrics.cashOnCashReturn))
+                MetricGridCell(  label: "Equity Multiple (5Y)",
+                                 value: "\(metrics.equityMultiple5Y.formatted(.number.precision(.fractionLength(2))))x",
+                                 state: emState(metrics.equityMultiple5Y))
+                MetricGridCell(  label: "Unlevered IRR (est.)",
+                                 value: pct(metrics.unleveredIRR, dp: 1),
+                                 state: irrState(metrics.unleveredIRR))
+                MetricWithTrend( label: "Levered IRR (est.)",
+                                 value: pct(metrics.leveredIRR, dp: 1),
+                                 trend: irrTrend,
+                                 trendColor: sparkColor(irrTrend),
+                                 state: irrState(metrics.leveredIRR))
             }
         }
     }

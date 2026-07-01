@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Porteos Importer",
+  "version": "2.0.0",
+  "description": "Send property listings from Idealista, Zillow, and Hemnet into the Porteos Intelligence Terminal.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://www.idealista.pt/*",
+    "*://www.zillow.com/*",
+    "*://www.hemnet.se/*",
+    "http://localhost:9000/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://www.idealista.pt/*",
+        "*://www.zillow.com/*",
+        "*://www.hemnet.se/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Porteos Importer"
+  }
+}

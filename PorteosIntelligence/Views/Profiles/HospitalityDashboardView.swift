@@ -28,7 +28,7 @@ struct HospitalityDashboardView: View {
         deal.hospitalitySpaRevenue > 0
     }
 
-    private let columns = [GridItem(.adaptive(minimum: 160, maximum: 250), spacing: 16, alignment: .leading)]
+    private let columns = [GridItem(.adaptive(minimum: 140, maximum: 220), spacing: 8, alignment: .leading)]
 
     private var metrics: HospitalityCalculator.FullMetrics {
         HospitalityCalculator.calculateFull(inputs: HospitalityCalculator.FullInputs(
@@ -55,10 +55,15 @@ struct HospitalityDashboardView: View {
 
             if hasData {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        let logs = DataValidator.validate(deal: deal)
+                        SystemLogBlock(messages: logs)
                         module01OperationalStats
                         module02ProfitabilityMatrix
                         module03DistributionLog
+                        HospitalitySensitivityBlock(deal: deal)
+                        MarketTrendModule(city: deal.locationCity, profile: "hospitality",
+                                          accent: Color(hex: "#14B8A6"))
                     }
                     .padding(16)
                 }
@@ -93,12 +98,27 @@ struct HospitalityDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module01OperationalStats: some View {
-        TerminalBlock(command: "01 // OPERATIONAL_STATS", accentColor: accentTeal, contentPadding: 16) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
-                MetricGridCell(label: "ADR (Avg Daily Rate)", value: eur(metrics.adr))
-                MetricGridCell(label: "Occupancy Rate",       value: pct(metrics.occupancyRate), state: occupancyState(metrics.occupancyRate))
-                MetricGridCell(label: "RevPAR",               value: eur(metrics.revPAR))
-                MetricGridCell(label: "TrevPAR",              value: eur(metrics.trevPAR))
+        TerminalBlock(command: "01 // OPERATIONAL_STATS", accentColor: accentTeal, contentPadding: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
+                let adrTrend = mockTrend(from: metrics.adr)
+                let occTrend = mockTrend(from: metrics.occupancyRate)
+                let revTrend = mockTrend(from: metrics.revPAR)
+
+                MetricWithTrend(label: "ADR (Avg Daily Rate)",
+                                value: eur(metrics.adr),
+                                trend: adrTrend,
+                                trendColor: sparkColor(adrTrend))
+                MetricWithTrend(label: "Occupancy Rate",
+                                value: pct(metrics.occupancyRate),
+                                trend: occTrend,
+                                trendColor: sparkColor(occTrend),
+                                state: occupancyState(metrics.occupancyRate))
+                MetricWithTrend(label: "RevPAR",
+                                value: eur(metrics.revPAR),
+                                trend: revTrend,
+                                trendColor: sparkColor(revTrend))
+                MetricGridCell( label: "TrevPAR",
+                                value: eur(metrics.trevPAR))
             }
         }
     }
@@ -108,8 +128,8 @@ struct HospitalityDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module02ProfitabilityMatrix: some View {
-        TerminalBlock(command: "02 // PROFITABILITY_MATRIX", accentColor: accentTeal, contentPadding: 16) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+        TerminalBlock(command: "02 // PROFITABILITY_MATRIX", accentColor: accentTeal, contentPadding: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
                 MetricGridCell(label: "GOP (Gross Operating Profit)", value: eur(metrics.gop))
                 MetricGridCell(label: "GOP Margin",                   value: pct(metrics.gopMargin),    state: gopMarginState(metrics.gopMargin))
                 MetricGridCell(label: "GOPPAR",                       value: eur(metrics.gopPAR))
@@ -123,8 +143,8 @@ struct HospitalityDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module03DistributionLog: some View {
-        TerminalBlock(command: "03 // DISTRIBUTION_LOG", accentColor: accentTeal, contentPadding: 16) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+        TerminalBlock(command: "03 // DISTRIBUTION_LOG", accentColor: accentTeal, contentPadding: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
                 MetricGridCell(label: "Direct Booking",      value: pct(metrics.directBookingPct),         state: metrics.directBookingPct >= 50 ? .optimal : .neutral)
                 MetricGridCell(label: "OTA Booking",         value: pct(metrics.otaBookingPct),             state: metrics.otaBookingPct > 40 ? .warning : .neutral)
                 MetricGridCell(label: "Distribution Cost",   value: eur(metrics.distributionCost))

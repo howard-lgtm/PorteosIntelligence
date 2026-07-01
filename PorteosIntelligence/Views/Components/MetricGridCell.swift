@@ -27,22 +27,22 @@ struct MetricGridCell: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 2) {
             Text(label.uppercased())
-                .font(.custom("JetBrains Mono", size: 13).weight(.medium))
+                .font(.custom("JetBrains Mono", size: 11).weight(.medium))
                 .tracking(0.02)
                 .foregroundStyle(labelDim)
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
 
             Text(value)
-                .font(.custom("JetBrains Mono", size: 17).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 14).weight(.bold))
                 .monospacedDigit()
                 .tracking(-0.02)
                 .foregroundStyle(valueColor)
                 .lineLimit(1)
         }
-        .padding(.vertical, 10)
+        .padding(.vertical, 6)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

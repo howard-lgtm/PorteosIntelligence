@@ -22,7 +22,7 @@ struct DesignDashboardView: View {
 
     private var hasData: Bool { deal.designGFA > 0 || deal.designNIA > 0 || deal.designSpaceUtilization > 0 }
 
-    private let columns = [GridItem(.adaptive(minimum: 160, maximum: 250), spacing: 16, alignment: .leading)]
+    private let columns = [GridItem(.adaptive(minimum: 140, maximum: 220), spacing: 8, alignment: .leading)]
 
     private var metrics: DesignCalculator.FullMetrics {
         DesignCalculator.calculateFull(inputs: DesignCalculator.FullInputs(
@@ -54,11 +54,16 @@ struct DesignDashboardView: View {
 
             if hasData {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        let logs = DataValidator.validate(deal: deal)
+                        SystemLogBlock(messages: logs)
                         module01SpaceEfficiency
                         module02Wellness
                         module03Biophilic
                         module04Adaptability
+                        DesignSensitivityBlock(deal: deal)
+                        MarketTrendModule(city: deal.locationCity, profile: "design",
+                                          accent: Color(hex: "#A855F7"))
                     }
                     .padding(16)
                 }
@@ -93,13 +98,26 @@ struct DesignDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module01SpaceEfficiency: some View {
-        TerminalBlock(command: "01 // SPACE_EFFICIENCY", accentColor: accentPurple, contentPadding: 16) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
-                MetricGridCell(label: "Gross Floor Area (GFA)",  value: m2(metrics.gfa))
-                MetricGridCell(label: "Net Internal Area (NIA)", value: m2(metrics.nia))
-                MetricGridCell(label: "Net-to-Gross Ratio",      value: pct(metrics.netToGrossRatio),   state: netToGrossState(metrics.netToGrossRatio))
-                MetricGridCell(label: "Circulation",             value: pct(metrics.circulationPct),    state: metrics.circulationPct > 20 ? .warning : .neutral)
-                MetricGridCell(label: "Space Utilization Rate",  value: pct(metrics.spaceUtilization),  state: metrics.spaceUtilization >= 90 ? .optimal : .neutral)
+        TerminalBlock(command: "01 // SPACE_EFFICIENCY", accentColor: accentPurple, contentPadding: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
+                let ntgTrend  = mockTrend(from: metrics.netToGrossRatio)
+                let utilTrend = mockTrend(from: metrics.spaceUtilization)
+
+                MetricGridCell(  label: "Gross Floor Area (GFA)",  value: m2(metrics.gfa))
+                MetricGridCell(  label: "Net Internal Area (NIA)", value: m2(metrics.nia))
+                MetricWithTrend( label: "Net-to-Gross Ratio",
+                                 value: pct(metrics.netToGrossRatio),
+                                 trend: ntgTrend,
+                                 trendColor: sparkColor(ntgTrend),
+                                 state: netToGrossState(metrics.netToGrossRatio))
+                MetricGridCell(  label: "Circulation",
+                                 value: pct(metrics.circulationPct),
+                                 state: metrics.circulationPct > 20 ? .warning : .neutral)
+                MetricWithTrend( label: "Space Utilization Rate",
+                                 value: pct(metrics.spaceUtilization),
+                                 trend: utilTrend,
+                                 trendColor: sparkColor(utilTrend),
+                                 state: metrics.spaceUtilization >= 90 ? .optimal : .neutral)
             }
         }
     }
@@ -109,13 +127,30 @@ struct DesignDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module02Wellness: some View {
-        TerminalBlock(command: "02 // WELLNESS_METRICS", accentColor: accentPurple, contentPadding: 16) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
-                MetricGridCell(label: "Daylighting Coverage",   value: pct(metrics.daylighting),                                                       state: metrics.daylighting >= 80 ? .optimal : .neutral)
-                MetricGridCell(label: "CO2 Levels",             value: "\(metrics.co2ppm.formatted(.number.precision(.fractionLength(0)))) ppm",        state: co2State(metrics.co2ppm))
-                MetricGridCell(label: "Air Changes Per Hour",   value: "\(metrics.ach.formatted(.number.precision(.fractionLength(1)))) ACH",           state: metrics.ach >= 4 ? .optimal : .neutral)
-                MetricGridCell(label: "Thermal Comfort Score",  value: pct(metrics.thermalComfort),                                                    state: metrics.thermalComfort >= 90 ? .optimal : .neutral)
-                MetricGridCell(label: "Acoustic Comfort Score", value: pct(metrics.acousticComfort),                                                   state: metrics.acousticComfort >= 85 ? .optimal : .neutral)
+        TerminalBlock(command: "02 // WELLNESS_METRICS", accentColor: accentPurple, contentPadding: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
+                let dayTrend     = mockTrend(from: metrics.daylighting)
+                let thermalTrend = mockTrend(from: metrics.thermalComfort)
+
+                MetricWithTrend( label: "Daylighting Coverage",
+                                 value: pct(metrics.daylighting),
+                                 trend: dayTrend,
+                                 trendColor: sparkColor(dayTrend),
+                                 state: metrics.daylighting >= 80 ? .optimal : .neutral)
+                MetricGridCell(  label: "CO2 Levels",
+                                 value: "\(metrics.co2ppm.formatted(.number.precision(.fractionLength(0)))) ppm",
+                                 state: co2State(metrics.co2ppm))
+                MetricGridCell(  label: "Air Changes Per Hour",
+                                 value: "\(metrics.ach.formatted(.number.precision(.fractionLength(1)))) ACH",
+                                 state: metrics.ach >= 4 ? .optimal : .neutral)
+                MetricWithTrend( label: "Thermal Comfort Score",
+                                 value: pct(metrics.thermalComfort),
+                                 trend: thermalTrend,
+                                 trendColor: sparkColor(thermalTrend),
+                                 state: metrics.thermalComfort >= 90 ? .optimal : .neutral)
+                MetricGridCell(  label: "Acoustic Comfort Score",
+                                 value: pct(metrics.acousticComfort),
+                                 state: metrics.acousticComfort >= 85 ? .optimal : .neutral)
             }
         }
     }
@@ -125,8 +160,8 @@ struct DesignDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module03Biophilic: some View {
-        TerminalBlock(command: "03 // BIOPHILIC_ELEMENTS", accentColor: accentPurple, contentPadding: 16) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+        TerminalBlock(command: "03 // BIOPHILIC_ELEMENTS", accentColor: accentPurple, contentPadding: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
                 MetricGridCell(label: "Biophilic Elements",  value: "\(metrics.biophilicCount)")
                 MetricGridCell(label: "Green Wall Coverage", value: m2(metrics.greenWallM2))
                 MetricGridCell(label: "Views to Nature",     value: pct(metrics.viewsToNaturePct),    state: metrics.viewsToNaturePct >= 70 ? .optimal : .neutral)
@@ -140,8 +175,8 @@ struct DesignDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module04Adaptability: some View {
-        TerminalBlock(command: "04 // ADAPTABILITY", accentColor: accentPurple, contentPadding: 16) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+        TerminalBlock(command: "04 // ADAPTABILITY", accentColor: accentPurple, contentPadding: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
                 MetricGridCell(label: "Movable Partition",  value: pct(metrics.movablePartitionPct), state: metrics.movablePartitionPct >= 30 ? .optimal : .neutral)
                 MetricGridCell(label: "Multi-Use Spaces",   value: "\(metrics.multiUseSpaces)")
                 MetricGridCell(label: "Adaptability Score", value: "\(metrics.adaptabilityScore.formatted(.number.precision(.fractionLength(0))))/100", state: adaptabilityState(metrics.adaptabilityScore))

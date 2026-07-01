@@ -141,7 +141,10 @@ struct RealEstateCalculator {
                     + inputs.opexInsurance + inputs.opexUtilities
                     + inputs.opexMaintenance + inputs.opexCapitalReserves
         let totalOpEx = lineSum > 0 ? lineSum : inputs.operatingExpenses
-        let opExRatio = safeDivide(totalOpEx, by: totalRev) * 100
+        // OpEx ratio is expressed as % of EGI (not total revenue) per standard
+        // real estate convention. Using totalRev inflated this toward 240% when
+        // otherIncome was zero but operatingExpenses was entered as a large sum.
+        let opExRatio = safeDivide(totalOpEx, by: egi) * 100
 
         // ── Module 03 – Profitability ─────────────────────────────────────────
         let noi         = totalRev - totalOpEx
@@ -194,6 +197,16 @@ struct RealEstateCalculator {
         let uIRR = totalCost > 0 ? irr(cashFlows: unlevCFs) : 0
         let lIRR = equity    > 0 ? irr(cashFlows: levCFs)   : 0
 
+        // ── Sanity guards ─────────────────────────────────────────────────────
+        // Values outside these ranges indicate bad input data or diverged
+        // iteration. Return 0 so the UI shows "—" rather than a nonsense number.
+        let safeCapRate  = sanityCheck(capRate,   min: -50,   max:  50,  label: "capRate")
+        let safeLTV      = sanityCheck(ltv,        min:   0,   max: 150,  label: "LTV")
+        let safeLTC      = sanityCheck(ltc,        min:   0,   max: 150,  label: "LTC")
+        let safeCoC      = sanityCheck(cocReturn,  min: -500,  max: 500,  label: "CoCReturn")
+        let safeULevIRR  = sanityCheck(uIRR,       min: -100,  max: 500,  label: "unleveredIRR")
+        let safeLevIRR   = sanityCheck(lIRR,       min: -100,  max: 500,  label: "leveredIRR")
+
         return FullMetrics(
             grossPotentialIncome:     gpi,
             vacancyLoss:              vacancyLoss,
@@ -210,22 +223,22 @@ struct RealEstateCalculator {
             opExRatio:                opExRatio,
             netOperatingIncome:       noi,
             ebitda:                   ebitda,
-            capRate:                  capRate,
+            capRate:                  safeCapRate,
             cashFlowBeforeTax:        cfbt,
             cashFlowAfterTax:         cfat,
             loanAmount:               inputs.loanAmount,
-            loanToValue:              ltv,
-            loanToCost:               ltc,
+            loanToValue:              safeLTV,
+            loanToCost:               safeLTC,
             annualInterestRate:       inputs.interestRate,
             amortizationMonths:       inputs.amortizationMonths,
             annualDebtService:        ads,
             debtServiceCoverageRatio: dscr,
             debtYield:                debtYield,
             totalEquityInvested:      equity,
-            cashOnCashReturn:         cocReturn,
+            cashOnCashReturn:         safeCoC,
             equityMultiple5Y:         equityMultiple,
-            unleveredIRR:             uIRR,
-            leveredIRR:               lIRR
+            unleveredIRR:             safeULevIRR,
+            leveredIRR:               safeLevIRR
         )
     }
 
@@ -269,21 +282,68 @@ struct RealEstateCalculator {
 
     private static func irr(cashFlows: [Double], guess: Double = 0.10) -> Double {
         guard cashFlows.count >= 2 else { return 0 }
+
+        // Require at least one sign change — without it IRR is undefined
+        let hasPositive = cashFlows.contains { $0 > 0 }
+        let hasNegative = cashFlows.contains { $0 < 0 }
+        guard hasPositive && hasNegative else { return 0 }
+
         var rate = guess
-        for _ in 0..<100 {
+        for _ in 0..<150 {
+            // Guard against rate collapsing to -1 (log(0) territory)
+            if rate <= -1 { rate = -0.9999 }
+
             var npv  = 0.0
             var dNpv = 0.0
             for (i, cf) in cashFlows.enumerated() {
                 let t      = Double(i)
-                let factor = pow(1 + rate, t)
+                let base   = 1 + rate
+                guard base > 0 else { return 0 }
+                let factor = pow(base, t)
+                guard factor.isFinite, factor > 0 else { return 0 }
                 npv  +=  cf / factor
-                dNpv -= t * cf / (factor * (1 + rate))
+                dNpv -= t * cf / (factor * base)
             }
+
             guard abs(dNpv) > 1e-12 else { break }
             let delta = npv / dNpv
             rate -= delta
+
+            // Divergence guard — if rate has escaped plausible range, bail
+            guard rate.isFinite, rate > -1, rate < 50 else { return 0 }
             if abs(delta) < 1e-9 { break }
         }
-        return max(-999, min(999, rate * 100))
+
+        // Final convergence check: NPV should be near zero
+        var finalNPV = 0.0
+        for (i, cf) in cashFlows.enumerated() {
+            let base = 1 + rate
+            guard base > 0 else { return 0 }
+            finalNPV += cf / pow(base, Double(i))
+        }
+        // If NPV is still material (>0.1% of first cash flow), iteration diverged
+        let threshold = abs(cashFlows[0]) * 0.001
+        if abs(finalNPV) > threshold { return 0 }
+
+        return rate * 100
+    }
+
+    /// Returns `value` if it is within [min, max]; otherwise logs a warning and
+    /// returns 0. Prevents nonsense display values from bad data or diverged IRR.
+    private static func sanityCheck(
+        _ value: Double,
+        min minVal: Double,
+        max maxVal: Double,
+        label: String
+    ) -> Double {
+        guard value.isFinite else {
+            print("[RealEstateCalculator] \(label) is NaN/Inf — returning 0")
+            return 0
+        }
+        if value < minVal || value > maxVal {
+            print("[RealEstateCalculator] \(label) = \(value) outside [\(minVal), \(maxVal)] — returning 0")
+            return 0
+        }
+        return value
     }
 }

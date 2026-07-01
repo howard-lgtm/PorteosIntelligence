@@ -8,6 +8,9 @@ struct NavigationPane: View {
     @Binding var showNewDealSheet: Bool
     @Binding var selectedDeal: PropertyDeal?
     @Binding var activeProfile: ProfileType
+    /// Drives ComparisonView in AppShell's center pane.
+    @Binding var showComparison: Bool
+    @Binding var compareDeals: [PropertyDeal]
 
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \PropertyDeal.createdAt, order: .reverse) var deals: [PropertyDeal]
@@ -17,10 +20,22 @@ struct NavigationPane: View {
     @State private var showExportSheet:   Bool          = false
     @State private var statusFilter:      DealStatus?   = nil   // nil = ALL
     @State private var showDeleteConfirm: Bool          = false
+    @State private var compareMode:       Bool          = false
+    @State private var pendingCompare:    Set<UUID>     = []
+    @State private var filters:           DealFilters   = DealFilters()
+    @State private var showFilterPanel:   Bool          = false
+    @State private var showTriage:        Bool          = false
 
     private var filteredDeals: [PropertyDeal] {
-        guard let filter = statusFilter else { return deals }
-        return deals.filter { $0.status == filter }
+        deals.filter { deal in
+            guard matchesStatus(deal) else { return false }
+            return filters.matches(deal: deal)
+        }
+    }
+
+    private func matchesStatus(_ deal: PropertyDeal) -> Bool {
+        guard let filter = statusFilter else { return true }
+        return deal.status == filter
     }
 
     private func profileFor(_ deal: PropertyDeal) -> ProfileType {
@@ -57,7 +72,7 @@ struct NavigationPane: View {
             Spacer(minLength: 0)
             footerActions
         }
-        .frame(width: 280)
+        .frame(width: 260)
         .frame(maxHeight: .infinity)
         .background(shellSurface)
         .overlay(alignment: .trailing) {
@@ -74,6 +89,13 @@ struct NavigationPane: View {
         }
         .sheet(isPresented: $showExportSheet) {
             BulkExportSheet(allDeals: deals, filteredDeals: filteredDeals)
+        }
+        // Keyboard shortcut receivers
+        .onReceive(NotificationCenter.default.publisher(for: .showImportDeals)) { _ in
+            showImportSheet = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showExportSheet)) { _ in
+            showExportSheet = true
         }
     }
 
@@ -141,15 +163,73 @@ struct NavigationPane: View {
     private var dealsSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             Rectangle().fill(shellBorder).frame(height: 1).padding(.bottom, 8)
-            sectionHeader("DEALS").padding(.bottom, 6)
 
-            // Filter tabs
+            // Deals header + compare toggle + filter toggle
+            HStack(spacing: 0) {
+                sectionHeader("DEALS")
+                Spacer()
+
+                // Filter toggle — badge dot when active
+                Button {
+                    showFilterPanel.toggle()
+                } label: {
+                    HStack(spacing: 2) {
+                        Text("[ FILTER\(filters.isActive ? "•" : "") ]")
+                            .font(.custom("JetBrains Mono", size: 11).weight(showFilterPanel ? .bold : .regular))
+                            .foregroundStyle(filters.isActive ? accentRust : (showFilterPanel ? textSecondary : textTertiary))
+                    }
+                    .padding(.trailing, 4)
+                }
+                .buttonStyle(.plain)
+
+                // Triage — batch pipeline review
+                Button {
+                    showTriage = true
+                } label: {
+                    Text("[ TRIAGE ]")
+                        .font(.custom("JetBrains Mono", size: 11))
+                        .foregroundStyle(textTertiary)
+                        .padding(.trailing, 4)
+                }
+                .buttonStyle(.plain)
+                .sheet(isPresented: $showTriage) {
+                    BatchTriageView()
+                }
+
+                Button {
+                    compareMode.toggle()
+                    if !compareMode { pendingCompare.removeAll() }
+                } label: {
+                    Text(compareMode ? "[ EXIT ]" : "[ CMP ]")
+                        .font(.custom("JetBrains Mono", size: 11).weight(compareMode ? .bold : .regular))
+                        .foregroundStyle(compareMode ? accentRust : textTertiary)
+                        .padding(.trailing, 12)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.bottom, 4)
+
+            // Inline text search bar
+            searchBar
+                .padding(.horizontal, 12)
+                .padding(.bottom, 4)
+
+            // Collapsible advanced filter panel
+            if showFilterPanel {
+                AdvancedFilterPanel(filters: $filters)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 4)
+            }
+
+            // Status filter tabs
             filterTabs.padding(.bottom, 4)
             Rectangle().fill(shellBorder).frame(height: 1)
 
             // Deal list
             if filteredDeals.isEmpty {
-                Text(deals.isEmpty ? "no deals yet" : "no \(statusFilter?.rawValue ?? "") deals")
+                Text(deals.isEmpty ? "no deals yet"
+                     : filters.isActive ? "no matches"
+                     : "no \(statusFilter?.rawValue ?? "") deals")
                     .font(.custom("JetBrains Mono", size: 13))
                     .foregroundStyle(textSecondary)
                     .padding(.leading, 16)
@@ -160,6 +240,28 @@ struct NavigationPane: View {
                         dealRow(deal)
                     }
                 }
+            }
+
+            // Launch compare button (visible when 2+ deals selected)
+            if compareMode && pendingCompare.count >= 2 {
+                Rectangle().fill(shellBorder).frame(height: 1)
+                Button {
+                    compareDeals  = deals.filter { pendingCompare.contains($0.id) }
+                    showComparison = true
+                    compareMode    = false
+                    pendingCompare.removeAll()
+                } label: {
+                    Text("[ LAUNCH_COMPARE (\(pendingCompare.count)) ]")
+                        .font(.custom("JetBrains Mono", size: 13).weight(.bold))
+                        .foregroundStyle(Color(hex: "#0F1115"))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 36)
+                        .background(accentRust)
+                        .clipShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
             }
 
             // Bulk actions
@@ -178,6 +280,42 @@ struct NavigationPane: View {
         } message: {
             Text("This cannot be undone.")
         }
+    }
+
+    // MARK: Search Bar
+
+    private var searchBar: some View {
+        HStack(spacing: 0) {
+            Text("↳ ")
+                .font(.custom("JetBrains Mono", size: 10))
+                .foregroundStyle(textTertiary)
+                .padding(.leading, 8)
+
+            TextField("search…", text: $filters.searchText)
+                .font(.custom("JetBrains Mono", size: 11))
+                .foregroundStyle(textPrimary)
+                .textFieldStyle(.plain)
+                .frame(maxWidth: .infinity)
+
+            if !filters.searchText.isEmpty {
+                Button {
+                    filters.searchText = ""
+                } label: {
+                    Text("×")
+                        .font(.custom("JetBrains Mono", size: 13))
+                        .foregroundStyle(textTertiary)
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, 6)
+            }
+        }
+        .frame(height: 26)
+        .background(Color(hex: "#0F1115"))
+        .overlay(Rectangle().stroke(
+            filters.searchText.isEmpty ? shellBorder : accentRust,
+            lineWidth: 1
+        ))
+        .clipShape(Rectangle())
     }
 
     private var filterTabs: some View {
@@ -240,22 +378,43 @@ struct NavigationPane: View {
     }
 
     private func dealRow(_ deal: PropertyDeal) -> some View {
-        let isSelected = deal.id == selectedDeal?.id
+        let isSelected   = deal.id == selectedDeal?.id
+        let isChecked    = pendingCompare.contains(deal.id)
+        let pipColor: Color = compareMode
+            ? (isChecked ? accentGreen : Color(hex: "#2E333F"))
+            : (isSelected ? accentRust : Color.clear)
 
         return Button {
-            selectedDeal  = deal
-            activeProfile = profileFor(deal)
+            if compareMode {
+                if isChecked { pendingCompare.remove(deal.id) }
+                else         { pendingCompare.insert(deal.id) }
+            } else {
+                selectedDeal  = deal
+                activeProfile = profileFor(deal)
+            }
         } label: {
             HStack(spacing: 0) {
-                // 2pt selection accent border
+                // Left pip: Rust when selected (normal), Green when checked (compare)
                 Rectangle()
-                    .fill(isSelected ? accentRust : Color.clear)
+                    .fill(pipColor)
                     .frame(width: 2)
 
                 HStack(spacing: 4) {
+                    // Checkbox indicator in compare mode
+                    if compareMode {
+                        Rectangle()
+                            .fill(isChecked ? accentGreen : Color.clear)
+                            .frame(width: 8, height: 8)
+                            .overlay(Rectangle().strokeBorder(isChecked ? accentGreen : textTertiary, lineWidth: 1))
+                            .clipShape(Rectangle())
+                    }
+
                     Text(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)
                         .font(.custom("JetBrains Mono", size: 13))
-                        .foregroundStyle(isSelected ? textPrimary : textSecondary)
+                        .foregroundStyle(
+                            compareMode ? (isChecked ? textPrimary : textSecondary)
+                                        : (isSelected ? textPrimary : textSecondary)
+                        )
                         .lineLimit(1)
 
                     Spacer()
@@ -269,14 +428,15 @@ struct NavigationPane: View {
                 .padding(.vertical, 6)
             }
             .frame(height: 32)
-            .background(isSelected ? shellElevated : Color.clear)
+            .background(
+                compareMode ? (isChecked ? shellElevated : Color.clear)
+                            : (isSelected ? shellElevated : Color.clear)
+            )
             .clipShape(Rectangle())
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button {
-                dealToEdit = deal
-            } label: {
+            Button { dealToEdit = deal } label: {
                 Label("Edit Deal", systemImage: "pencil")
             }
         }
@@ -352,8 +512,10 @@ struct NavigationPane: View {
     return HStack(spacing: 0) {
         NavigationPane(
             showNewDealSheet: .constant(false),
-            selectedDeal: .constant(deal),
-            activeProfile: .constant(.realEstate)
+            selectedDeal:     .constant(deal),
+            activeProfile:    .constant(.realEstate),
+            showComparison:   .constant(false),
+            compareDeals:     .constant([])
         )
         Spacer()
     }

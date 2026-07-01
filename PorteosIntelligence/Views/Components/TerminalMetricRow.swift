@@ -58,7 +58,7 @@ struct TerminalMetricRow: View {
 
             HStack(spacing: 0) {
                 Text(label.uppercased())
-                    .font(.custom("JetBrains Mono", size: 13).weight(.regular))
+                    .font(.custom("JetBrains Mono", size: 11).weight(.regular))
                     .tracking(0.02)
                     .foregroundStyle(labelDim)
                     .lineLimit(1)
@@ -67,14 +67,14 @@ struct TerminalMetricRow: View {
                 Spacer()
 
                 Text(value)
-                    .font(.custom("JetBrains Mono", size: 17).weight(.bold))
+                    .font(.custom("JetBrains Mono", size: 14).weight(.bold))
                     .monospacedDigit()
                     .tracking(-0.02)
                     .foregroundStyle(valueColor)
             }
             .padding(.horizontal, 8)
         }
-        .frame(height: 40)
+        .frame(height: 30)
         .clipShape(Rectangle())
     }
 }

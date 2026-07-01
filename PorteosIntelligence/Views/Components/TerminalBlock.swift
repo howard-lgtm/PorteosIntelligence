@@ -9,7 +9,7 @@ struct TerminalBlock<Content: View>: View {
     let command: String
     let accentColor: Color
     /// Padding applied around the content area. Pass `0` for full-bleed lists of TerminalMetricRows.
-    var contentPadding: CGFloat = 16
+    var contentPadding: CGFloat = 12
     @ViewBuilder let content: () -> Content
 
     // MARK: Tokens
@@ -28,22 +28,22 @@ struct TerminalBlock<Content: View>: View {
         .clipShape(Rectangle())
     }
 
-    // MARK: Header (24pt)
+    // MARK: Header
 
     private var blockHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 13))
+                .font(.custom("JetBrains Mono", size: 11))
                 .foregroundStyle(textTertiary)
 
             Text(command)
-                .font(.custom("JetBrains Mono", size: 13).weight(.medium))
+                .font(.custom("JetBrains Mono", size: 11).weight(.medium))
                 .foregroundStyle(textTertiary)
 
             Spacer()
         }
         .padding(.horizontal, 12)
-        .frame(height: 28)
+        .frame(height: 24)
     }
 
     // MARK: Content Area (16pt padding)

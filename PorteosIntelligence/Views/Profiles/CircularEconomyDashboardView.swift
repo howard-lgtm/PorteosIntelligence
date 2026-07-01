@@ -22,7 +22,7 @@ struct CircularEconomyDashboardView: View {
 
     private var hasData: Bool { deal.circularKgMaterialsUsed > 0 || deal.circularRecycledContentPct > 0 || deal.circularCO2Embodied > 0 }
 
-    private let columns = [GridItem(.adaptive(minimum: 160, maximum: 250), spacing: 16, alignment: .leading)]
+    private let columns = [GridItem(.adaptive(minimum: 140, maximum: 220), spacing: 8, alignment: .leading)]
 
     private var metrics: CircularEconomyCalculator.FullMetrics {
         CircularEconomyCalculator.calculateFull(inputs: CircularEconomyCalculator.FullInputs(
@@ -50,10 +50,15 @@ struct CircularEconomyDashboardView: View {
 
             if hasData {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        let logs = DataValidator.validate(deal: deal)
+                        SystemLogBlock(messages: logs)
                         module01MaterialFlow
                         module02CarbonLifecycle
                         module03ResourceEfficiency
+                        CircularSensitivityBlock(deal: deal)
+                        MarketTrendModule(city: deal.locationCity, profile: "circular",
+                                          accent: Color(hex: "#3B82F6"))
                     }
                     .padding(16)
                 }
@@ -88,13 +93,29 @@ struct CircularEconomyDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module01MaterialFlow: some View {
-        TerminalBlock(command: "01 // MATERIAL_FLOW_LOG", accentColor: accentBlue, contentPadding: 16) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
-                MetricGridCell(label: "Recycled Content",     value: pct(metrics.recycledContentPct),  state: recycledState(metrics.recycledContentPct))
-                MetricGridCell(label: "Renewable Content",    value: pct(metrics.renewableContentPct), state: metrics.renewableContentPct >= 20 ? .optimal : .neutral)
-                MetricGridCell(label: "Virgin Material Input",value: kg(metrics.virginMaterialInput))
-                MetricGridCell(label: "Waste Generated",      value: kg(metrics.wasteGenerated),       state: wasteState(metrics.wasteGenerated))
-                MetricGridCell(label: "Recovery Rate",        value: pct(metrics.recoveryRate),        state: metrics.recoveryRate >= 80 ? .optimal : .neutral)
+        TerminalBlock(command: "01 // MATERIAL_FLOW_LOG", accentColor: accentBlue, contentPadding: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
+                let recycledTrend  = mockTrend(from: metrics.recycledContentPct)
+                let recoveryTrend  = mockTrend(from: metrics.recoveryRate)
+
+                MetricWithTrend( label: "Recycled Content",
+                                 value: pct(metrics.recycledContentPct),
+                                 trend: recycledTrend,
+                                 trendColor: sparkColor(recycledTrend),
+                                 state: recycledState(metrics.recycledContentPct))
+                MetricGridCell(  label: "Renewable Content",
+                                 value: pct(metrics.renewableContentPct),
+                                 state: metrics.renewableContentPct >= 20 ? .optimal : .neutral)
+                MetricGridCell(  label: "Virgin Material Input",
+                                 value: kg(metrics.virginMaterialInput))
+                MetricGridCell(  label: "Waste Generated",
+                                 value: kg(metrics.wasteGenerated),
+                                 state: wasteState(metrics.wasteGenerated))
+                MetricWithTrend( label: "Recovery Rate",
+                                 value: pct(metrics.recoveryRate),
+                                 trend: recoveryTrend,
+                                 trendColor: sparkColor(recoveryTrend),
+                                 state: metrics.recoveryRate >= 80 ? .optimal : .neutral)
             }
         }
     }
@@ -104,13 +125,25 @@ struct CircularEconomyDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module02CarbonLifecycle: some View {
-        TerminalBlock(command: "02 // CARBON_LIFECYCLE_SUMMARY", accentColor: accentBlue, contentPadding: 16) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
-                MetricGridCell(label: "Embodied Carbon",              value: tco2e(metrics.embodiedCarbon))
-                MetricGridCell(label: "Operational Carbon (Annual)",  value: "\(tco2e(metrics.operationalCarbon))/yr")
-                MetricGridCell(label: "Total Lifecycle Carbon (30Y)", value: tco2e(metrics.totalLifecycle30Y))
-                MetricGridCell(label: "Carbon Intensity",             value: "\(metrics.carbonIntensity.formatted(.number.precision(.fractionLength(3)))) tCO2e/m²", state: carbonIntensityState(metrics.carbonIntensity))
-                MetricGridCell(label: "MCI Score",                    value: metrics.mciScore.formatted(.number.precision(.fractionLength(2))),                      state: mciState(metrics.mciScore))
+        TerminalBlock(command: "02 // CARBON_LIFECYCLE_SUMMARY", accentColor: accentBlue, contentPadding: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
+                // Carbon Intensity: lower is better → invert sparkColor comparison
+                let ciTrend = mockTrend(from: metrics.carbonIntensity)
+
+                MetricGridCell(  label: "Embodied Carbon",
+                                 value: tco2e(metrics.embodiedCarbon))
+                MetricGridCell(  label: "Operational Carbon (Annual)",
+                                 value: "\(tco2e(metrics.operationalCarbon))/yr")
+                MetricGridCell(  label: "Total Lifecycle Carbon (30Y)",
+                                 value: tco2e(metrics.totalLifecycle30Y))
+                MetricWithTrend( label: "Carbon Intensity",
+                                 value: "\(metrics.carbonIntensity.formatted(.number.precision(.fractionLength(3)))) tCO2e/m²",
+                                 trend: ciTrend,
+                                 trendColor: sparkColor(ciTrend, higherIsBetter: false),
+                                 state: carbonIntensityState(metrics.carbonIntensity))
+                MetricGridCell(  label: "MCI Score",
+                                 value: metrics.mciScore.formatted(.number.precision(.fractionLength(2))),
+                                 state: mciState(metrics.mciScore))
             }
         }
     }
@@ -120,8 +153,8 @@ struct CircularEconomyDashboardView: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var module03ResourceEfficiency: some View {
-        TerminalBlock(command: "03 // RESOURCE_EFFICIENCY", accentColor: accentBlue, contentPadding: 16) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+        TerminalBlock(command: "03 // RESOURCE_EFFICIENCY", accentColor: accentBlue, contentPadding: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
                 MetricGridCell(label: "Water Recycling Rate",        value: pct(metrics.waterRecyclingRate),                                                           state: metrics.waterRecyclingRate >= 60 ? .optimal : .neutral)
                 MetricGridCell(label: "Material Circularity Score",  value: "\(metrics.materialCircularityScore.formatted(.number.precision(.fractionLength(1))))/100")
                 MetricGridCell(label: "Carbon Efficiency Score",     value: "\(metrics.carbonEfficiencyScore.formatted(.number.precision(.fractionLength(1))))/100")

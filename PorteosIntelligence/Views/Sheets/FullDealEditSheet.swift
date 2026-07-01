@@ -101,6 +101,15 @@ struct FullDealEditSheet: View {
         .background(shellBg)
         .clipShape(Rectangle())
         .frame(width: 560)
+        .onAppear {
+            // Capture state before the user makes any edits.
+            // Because FullDealEditSheet uses @Bindable, fields update the deal
+            // in real-time; we must snapshot here, not at commit time.
+            DealHistoryManager.shared.push(
+                deal:  deal,
+                label: "Edit: \(deal.propertyName.isEmpty ? "Untitled" : deal.propertyName)"
+            )
+        }
     }
 
     // MARK: Header
@@ -361,6 +370,7 @@ struct FullDealEditSheet: View {
                     .clipShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .keyboardShortcut(.return, modifiers: .command)
         }
         .padding(.horizontal, 16)
         .frame(height: 56)
@@ -381,6 +391,8 @@ struct FullDealEditSheet: View {
         } catch {
             print("[ERROR] Failed to save: \(error)")
         }
+        // Record metrics into the trend time-series for this city
+        TrendRecorder.record(deal, context: modelContext, source: "portfolio")
         dismiss()
     }
 

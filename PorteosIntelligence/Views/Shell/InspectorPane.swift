@@ -6,9 +6,16 @@ import SwiftData
 struct InspectorPane: View {
 
     @Bindable var deal: PropertyDeal
+    @Environment(\.modelContext) private var modelContext
 
     @State private var selectedTab        = "weights"
     @State private var showFullEditSheet  = false
+    @State private var showingPDFReport   = false
+    /// Bumped every time deal data changes. Forwarded to AIVibePanel so it can
+    /// invalidate its in-memory result without InspectorPane reaching into its state.
+    @State private var vibeRefreshID      = UUID()
+
+    private var history: DealHistoryManager { DealHistoryManager.shared }
 
     // MARK: Tokens
 
@@ -31,6 +38,8 @@ struct InspectorPane: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             paneHeader
+            historyBar
+            Rectangle().fill(shellBorder).frame(height: 1)
             tabBar
 
             Rectangle()
@@ -44,12 +53,38 @@ struct InspectorPane: View {
 
             Spacer(minLength: 0)
         }
-        .frame(width: 320)
+        .frame(width: 280)
         .frame(maxHeight: .infinity)
         .background(shellSurface)
         .clipShape(Rectangle())
         .sheet(isPresented: $showFullEditSheet) {
             FullDealEditSheet(deal: deal)
+        }
+        .sheet(isPresented: $showingPDFReport) {
+            PDFReportSheet(deal: deal)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showEditDeal)) { _ in
+            showFullEditSheet = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showPDFReport)) { _ in
+            showingPDFReport = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .undoDealEdit)) { _ in
+            performUndo()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .redoDealEdit)) { _ in
+            performRedo()
+        }
+        .onChange(of: deal.updatedAt) {
+            deal.aiAnalysisText = nil
+            vibeRefreshID       = UUID()
+        }
+        // Auto-trigger AI analysis when a deal is imported via browser extension / server
+        .onReceive(NotificationCenter.default.publisher(for: .autoTriggerAI)) { notif in
+            guard let id = notif.userInfo?["dealID"] as? UUID,
+                  deal.id == id else { return }
+            deal.aiAnalysisText = nil
+            vibeRefreshID       = UUID()
         }
     }
 
@@ -59,7 +94,7 @@ struct InspectorPane: View {
         VStack(spacing: 0) {
             // Module header line
             Text("./INSPECTOR_V2")
-                .font(.custom("JetBrains Mono", size: 11))
+                .font(.custom("JetBrains Mono", size: 13))
                 .foregroundStyle(textTertiary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16)
@@ -67,22 +102,102 @@ struct InspectorPane: View {
 
             Rectangle().fill(shellBorder).frame(height: 1)
 
-            // Action button – Rust bg, black text
-            Button {
-                showFullEditSheet = true
-            } label: {
-                Text("[ EDIT DEAL DATA ]")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                    .foregroundStyle(Color(hex: "#0F1115"))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 28)
-                    .background(accentRust)
-                    .clipShape(Rectangle())
+            // Action buttons row
+            HStack(spacing: 8) {
+                // Primary: EDIT DEAL DATA (Rust fill)
+                Button { showFullEditSheet = true } label: {
+                    Text("[ EDIT DEAL DATA ]")
+                        .font(.custom("JetBrains Mono", size: 13).weight(.bold))
+                        .foregroundStyle(Color(hex: "#0F1115"))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 28)
+                        .background(accentRust)
+                        .clipShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                // Secondary: PDF (bordered, no fill)
+                Button { showingPDFReport = true } label: {
+                    Text("[ PDF ]")
+                        .font(.custom("JetBrains Mono", size: 13).weight(.bold))
+                        .foregroundStyle(accentRust)
+                        .frame(width: 64, height: 28)
+                        .background(accentRust.opacity(0.08))
+                        .overlay(
+                            Rectangle()
+                                .stroke(accentRust.opacity(0.45), lineWidth: 1)
+                        )
+                        .clipShape(Rectangle())
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
         }
+    }
+
+    // MARK: History Bar
+
+    private var historyBar: some View {
+        HStack(spacing: 0) {
+            // ── Undo ───────────────────────────────────────────────────────
+            Button { performUndo() } label: {
+                Text("[ ↩ ]")
+                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                    .foregroundStyle(history.canUndo ? textSecondary : textTertiary.opacity(0.35))
+            }
+            .buttonStyle(.plain)
+            .disabled(!history.canUndo)
+            .padding(.leading, 16)
+
+            if history.canUndo {
+                Text(history.undoLabel)
+                    .font(.custom("JetBrains Mono", size: 10))
+                    .foregroundStyle(textTertiary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .padding(.leading, 5)
+            }
+
+            Spacer()
+
+            // ── Redo ───────────────────────────────────────────────────────
+            if history.canRedo {
+                Text(history.redoLabel)
+                    .font(.custom("JetBrains Mono", size: 10))
+                    .foregroundStyle(textTertiary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .padding(.trailing, 5)
+            }
+
+            Button { performRedo() } label: {
+                Text("[ ↪ ]")
+                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                    .foregroundStyle(history.canRedo ? textSecondary : textTertiary.opacity(0.35))
+            }
+            .buttonStyle(.plain)
+            .disabled(!history.canRedo)
+            .padding(.trailing, 16)
+        }
+        .frame(height: 26)
+        .background(shellBg)
+    }
+
+    // MARK: Undo / Redo Execution
+
+    private func performUndo() {
+        guard let snap = history.undo(currentState: deal) else { return }
+        history.apply(snap, to: deal)
+        deal.updatedAt = Date()
+        try? modelContext.save()
+    }
+
+    private func performRedo() {
+        guard let snap = history.redo(currentState: deal) else { return }
+        history.apply(snap, to: deal)
+        deal.updatedAt = Date()
+        try? modelContext.save()
     }
 
     // MARK: Tab Bar
@@ -107,7 +222,7 @@ struct InspectorPane: View {
                 Spacer()
 
                 Text("[\(title)]")
-                    .font(.custom("JetBrains Mono", size: 11).weight(isActive ? .bold : .regular))
+                    .font(.custom("JetBrains Mono", size: 13).weight(isActive ? .bold : .regular))
                     .foregroundStyle(isActive ? textPrimary : textTertiary)
                     .padding(.horizontal, 4)
 
@@ -174,14 +289,14 @@ struct InspectorPane: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(label.uppercased())
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                    .font(.custom("JetBrains Mono", size: 13).weight(.bold))
                     .tracking(0.08)
                     .foregroundStyle(textTertiary)
 
                 Spacer()
 
                 Text("\(value, specifier: "%.1f")%")
-                    .font(.custom("JetBrains Mono", size: 14).weight(.bold))
+                    .font(.custom("JetBrains Mono", size: 17).weight(.bold))
                     .monospacedDigit()
                     .foregroundStyle(textPrimary)
             }
@@ -204,14 +319,14 @@ struct InspectorPane: View {
 
         return HStack {
             Text("TOTAL")
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
                 .tracking(0.08)
                 .foregroundStyle(textTertiary)
 
             Spacer()
 
             Text("\(total, specifier: "%.1f")%")
-                .font(.custom("JetBrains Mono", size: 14).weight(.bold))
+                .font(.custom("JetBrains Mono", size: 17).weight(.bold))
                 .monospacedDigit()
                 .foregroundStyle(abs(total - 100) < 0.01 ? textPrimary : Color(hex: "#EF4444"))
         }
@@ -229,44 +344,7 @@ struct InspectorPane: View {
     // MARK: AI Vibe Content
 
     private var aiVibeContent: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                // Module header
-                HStack {
-                    Text("01 // AI_VIBE_CHECK")
-                        .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                        .foregroundStyle(textTertiary)
-                    Spacer()
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-
-                Rectangle().fill(shellBorder).frame(height: 1)
-
-                // System log placeholder
-                VStack(alignment: .leading, spacing: 6) {
-                    logLine(prefix: ">", text: "INSPECTOR CONTENT")
-                    logLine(prefix: ">", text: "awaiting ai analysis...")
-                    logLine(prefix: ">", text: "run: porteos analyze --deal")
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-
-                Spacer()
-            }
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    private func logLine(prefix: String, text: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            Text(prefix)
-                .font(.custom("JetBrains Mono", size: 11))
-                .foregroundStyle(accentRust)
-            Text(text)
-                .font(.custom("JetBrains Mono", size: 11))
-                .foregroundStyle(textSecondary)
-        }
+        AIVibePanel(deal: deal, refreshID: vibeRefreshID)
     }
 
     // MARK: Rebalance Logic

@@ -7,6 +7,9 @@ struct PorteosIntelligenceApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             PropertyDeal.self,
+            DealScenario.self,
+            EmailImportRecord.self,
+            MarketTrend.self,
         ])
         
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
@@ -46,6 +49,14 @@ struct PorteosIntelligenceApp: App {
         WindowGroup {
             AppShell()
                 .modelContainer(sharedModelContainer)
+                // Stop ingestion server cleanly when the app quits
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
+                    DealIngestionServer.shared.stop()
+                    EmailMonitorService.shared.stopMonitoring()
+                }
+        }
+        .commands {
+            AppCommandsProvider()
         }
     }
 }

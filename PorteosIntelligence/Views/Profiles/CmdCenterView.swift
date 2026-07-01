@@ -24,10 +24,25 @@ struct CmdCenterView: View {
         deals.reduce(0) { $0 + $1.purchasePrice }
     }
 
-    private var avgScore: Double? {
-        let scores = deals.compactMap(\.porteosScore).filter { $0 > 0 }
-        guard !scores.isEmpty else { return nil }
-        return scores.reduce(0, +) / Double(scores.count)
+    /// True average across all deals that carry a Porteos Score.
+    /// Returns 0 when no scored deals exist (distinguishable from a real 0 via
+    /// the companion `hasScoredDeals` guard used at call sites).
+    private var portfolioAverageScore: Double {
+        let validScores = deals.compactMap { $0.porteosScore }
+        guard !validScores.isEmpty else { return 0 }
+        return validScores.reduce(0, +) / Double(validScores.count)
+    }
+
+    private var hasScoredDeals: Bool {
+        deals.contains { $0.porteosScore != nil }
+    }
+
+    private var scoreState: MetricState {
+        guard hasScoredDeals else { return .neutral }
+        let s = portfolioAverageScore
+        if s >= 80 { return .optimal }
+        if s >= 60 { return .warning }
+        return .danger
     }
 
     private func count(_ status: DealStatus) -> Int {
@@ -36,6 +51,119 @@ struct CmdCenterView: View {
 
     private var recentDeals: [PropertyDeal] {
         Array(deals.sorted { $0.updatedAt > $1.updatedAt }.prefix(5))
+    }
+
+    // ── Per-profile sub-scores (same normalization used by PorteosScoreCalculator) ──
+
+    /// Normalised cap-rate score: (capRate / 10) × 100, clamped 0–100.
+    private func realEstateSubScore(_ deal: PropertyDeal) -> Double? {
+        guard deal.grossPotentialIncome > 0 else { return nil }
+        let m = RealEstateCalculator.calculateFull(inputs: .init(
+            grossPotentialIncome:   deal.grossPotentialIncome,
+            vacancyRate:            deal.vacancyRate,
+            otherIncome:            deal.otherIncome,
+            operatingExpenses:      deal.operatingExpenses,
+            opexPropertyManagement: deal.opexPropertyManagement,
+            opexPropertyTax:        deal.opexPropertyTax,
+            opexInsurance:          deal.opexInsurance,
+            opexUtilities:          deal.opexUtilities,
+            opexMaintenance:        deal.opexMaintenance,
+            opexCapitalReserves:    deal.opexCapitalReserves,
+            purchasePrice:          deal.purchasePrice,
+            closingCosts:           deal.closingCosts,
+            renovationBudget:       deal.renovationBudget,
+            loanAmount:             deal.loanAmount,
+            interestRate:           deal.interestRate,
+            amortizationMonths:     deal.amortizationMonths,
+            exitCapRate:            deal.exitCapRate
+        ))
+        return min(max((m.capRate / 10.0) * 100, 0), 100)
+    }
+
+    /// Normalised RevPAR score: (revPAR / 200) × 100, clamped 0–100.
+    private func hospitalitySubScore(_ deal: PropertyDeal) -> Double? {
+        guard deal.hospitalityADR > 0, deal.hospitalityRoomCount > 0 else { return nil }
+        let m = HospitalityCalculator.calculate(inputs: .init(
+            roomCount:      deal.hospitalityRoomCount,
+            adr:            deal.hospitalityADR,
+            occupancyRate:  deal.hospitalityOccupancyRate,
+            fbRevenue:      deal.hospitalityFBRevenue,
+            spaRevenue:     deal.hospitalitySpaRevenue,
+            meetingRevenue: deal.hospitalityMeetingRevenue,
+            otherRevenue:   deal.hospitalityOtherRevenue,
+            opExRatio:      deal.hospitalityOpExRatio
+        ))
+        return min(max((m.revPAR / 200.0) * 100, 0), 100)
+    }
+
+    /// Weighted composite of wellness + efficiency metrics (0–100).
+    /// DesignCalculator.calculateFull does not return a single overallDesignScore,
+    /// so it is derived here using the same spirit as PorteosScoreCalculator.
+    private func designSubScore(_ deal: PropertyDeal) -> Double? {
+        guard deal.designGFA > 0 || deal.designNIA > 0 else { return nil }
+        let m = DesignCalculator.calculateFull(inputs: .init(
+            gfa:                 deal.designGFA,
+            nia:                 deal.designNIA,
+            circulationPct:      deal.designCirculationPct,
+            spaceUtilization:    deal.designSpaceUtilization,
+            daylighting:         deal.designDaylighting,
+            co2ppm:              deal.designCO2ppm,
+            ach:                 deal.designACH,
+            thermalComfort:      deal.designThermalComfort,
+            acousticComfort:     deal.designAcousticComfort,
+            biophilicCount:      deal.designBiophilicCount,
+            greenWallM2:         deal.designGreenWallM2,
+            viewsToNaturePct:    deal.designViewsToNaturePct,
+            naturalMaterialsPct: deal.designNaturalMaterialsPct,
+            movablePartitionPct: deal.designMovablePartitionPct,
+            multiUseSpaces:      deal.designMultiUseSpaces,
+            adaptabilityScore:   deal.designAdaptabilityScore
+        ))
+        let s = (m.netToGrossRatio   * 0.20)
+              + (m.spaceUtilization  * 0.20)
+              + (m.daylighting       * 0.20)
+              + (m.thermalComfort    * 0.20)
+              + (m.acousticComfort   * 0.15)
+              + (m.adaptabilityScore * 0.05)
+        return min(max(s, 0), 100)
+    }
+
+    /// `overallCEScore` from CircularEconomyCalculator.calculateFull (already 0–100).
+    private func circularSubScore(_ deal: PropertyDeal) -> Double? {
+        guard deal.circularKgMaterialsUsed > 0 || deal.circularRecycledContentPct > 0 else { return nil }
+        let m = CircularEconomyCalculator.calculateFull(inputs: .init(
+            totalConstructionCost:  deal.circularTotalConstructionCost,
+            repurposedMaterialCost: deal.circularRepurposedMaterialCost,
+            co2Embodied:            deal.circularCO2Embodied,
+            kgMaterialsUsed:        deal.circularKgMaterialsUsed,
+            kgMaterialsReturned:    deal.circularKgMaterialsReturned,
+            kgMaterialsDisposed:    deal.circularKgMaterialsDisposed,
+            recycledContentPct:     deal.circularRecycledContentPct,
+            renewableContentPct:    deal.circularRenewableContentPct,
+            wasteGenerated:         deal.circularWasteGenerated,
+            operationalCarbon:      deal.circularOperationalCarbon,
+            buildingAreaM2:         deal.circularBuildingAreaM2,
+            waterRecyclingRate:     deal.circularWaterRecyclingRate
+        ))
+        return min(max(m.overallCEScore, 0), 100)
+    }
+
+    /// Returns (avg score 0-100, qualifying deal count) for each profile.
+    private var avgRealEstateScore: (score: Double, count: Int) {
+        let s = deals.compactMap { realEstateSubScore($0) }
+        return s.isEmpty ? (0, 0) : (s.reduce(0, +) / Double(s.count), s.count)
+    }
+    private var avgHospitalityScore: (score: Double, count: Int) {
+        let s = deals.compactMap { hospitalitySubScore($0) }
+        return s.isEmpty ? (0, 0) : (s.reduce(0, +) / Double(s.count), s.count)
+    }
+    private var avgDesignScore: (score: Double, count: Int) {
+        let s = deals.compactMap { designSubScore($0) }
+        return s.isEmpty ? (0, 0) : (s.reduce(0, +) / Double(s.count), s.count)
+    }
+    private var avgCircularScore: (score: Double, count: Int) {
+        let s = deals.compactMap { circularSubScore($0) }
+        return s.isEmpty ? (0, 0) : (s.reduce(0, +) / Double(s.count), s.count)
     }
 
     // Average profile weights across all deals (fallback: 25% each)
@@ -61,12 +189,14 @@ struct CmdCenterView: View {
                 emptyState
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 8) {
                         module01PortfolioSummary
-                        module02ProfileDistribution
-                        module03RecentActivity
+                        module02ProfileHealth
+                        module03ProfileDistribution
+                        module04RecentActivity
+                        module05SystemStatus
                     }
-                    .padding(16)
+                    .padding(12)
                 }
             }
         }
@@ -97,28 +227,100 @@ struct CmdCenterView: View {
 
     private var module01PortfolioSummary: some View {
         TerminalBlock(command: "01 // PORTFOLIO_SUMMARY", accentColor: accentGrey, contentPadding: 0) {
-            VStack(spacing: 12) {
+            VStack(spacing: 0) {
                 summaryRow(label: "Total Portfolio Value", value: eur(totalValue))
-                TerminalMetricRow(label: "Total Deals",       value: "\(deals.count)", state: .neutral)
+                TerminalMetricRow(label: "Total Deals",    value: "\(deals.count)", state: .neutral)
                 TerminalMetricRow(
                     label: "Avg Porteos Score",
-                    value: avgScore.map { "\(Int($0.rounded()))" } ?? "—",
-                    state: .neutral
+                    value: hasScoredDeals ? String(format: "%.1f / 100", portfolioAverageScore) : "—",
+                    state: scoreState
                 )
-                TerminalMetricRow(label: "Pipeline",  value: "\(count(.pipeline))",  state: .neutral)
-                TerminalMetricRow(label: "Under Review", value: "\(count(.review))", state: count(.review)   > 0 ? .warning : .neutral)
-                TerminalMetricRow(label: "Viable",    value: "\(count(.viable))",    state: count(.viable)   > 0 ? .optimal : .neutral)
-                TerminalMetricRow(label: "Acquired",  value: "\(count(.acquired))",  state: count(.acquired) > 0 ? .optimal : .neutral)
-                TerminalMetricRow(label: "Rejected",  value: "\(count(.rejected))",  state: count(.rejected) > 0 ? .danger  : .neutral)
+                TerminalMetricRow(label: "Pipeline",     value: "\(count(.pipeline))",  state: .neutral)
+                TerminalMetricRow(label: "Under Review", value: "\(count(.review))",    state: count(.review)   > 0 ? .warning : .neutral)
+                TerminalMetricRow(label: "Viable",       value: "\(count(.viable))",    state: count(.viable)   > 0 ? .optimal : .neutral)
+                TerminalMetricRow(label: "Acquired",     value: "\(count(.acquired))",  state: count(.acquired) > 0 ? .optimal : .neutral)
+                TerminalMetricRow(label: "Rejected",     value: "\(count(.rejected))",  state: count(.rejected) > 0 ? .danger  : .neutral)
             }
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Module 02 // PROFILE_DISTRIBUTION
+    // MARK: Module 02 // PROFILE_HEALTH
     // ─────────────────────────────────────────────────────────────────────────
 
-    private var module02ProfileDistribution: some View {
+    private var module02ProfileHealth: some View {
+        let re   = avgRealEstateScore
+        let hosp = avgHospitalityScore
+        let des  = avgDesignScore
+        let circ = avgCircularScore
+        return TerminalBlock(command: "02 // PROFILE_HEALTH  [avg score per profile]",
+                             accentColor: accentGrey, contentPadding: 0) {
+            VStack(spacing: 0) {
+                profileHealthRow(key: "REAL_ESTATE_AVG",  score: re.score,   count: re.count,   accent: Color(hex: "#C25E30"))
+                profileHealthRow(key: "HOSPITALITY_AVG",  score: hosp.score, count: hosp.count, accent: Color(hex: "#14B8A6"))
+                profileHealthRow(key: "DESIGN_AVG",       score: des.score,  count: des.count,  accent: Color(hex: "#A855F7"))
+                profileHealthRow(key: "CIRCULAR_AVG",     score: circ.score, count: circ.count, accent: Color(hex: "#3B82F6"))
+            }
+        }
+    }
+
+    /// Renders one profile health row:
+    ///   KEY:    value (color-coded by ≥80/≥60/<60)
+    ///   ────    1px score bar below
+    private func profileHealthRow(key: String, score: Double, count: Int, accent: Color) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 0) {
+                Text(key)
+                    .font(.custom("JetBrains Mono", size: 11).weight(.medium))
+                    .tracking(0.04)
+                    .foregroundStyle(textTertiary)
+
+                Text(":")
+                    .font(.custom("JetBrains Mono", size: 11))
+                    .foregroundStyle(textTertiary)
+
+                Spacer()
+
+                Text(count > 0 ? String(format: "%.1f", score) : "—")
+                    .font(.custom("JetBrains Mono", size: 14).weight(.bold))
+                    .monospacedDigit()
+                    .foregroundStyle(count > 0 ? profileScoreColor(score) : textTertiary)
+
+                if count > 0 {
+                    Text("  /100  (\(count))")
+                        .font(.custom("JetBrains Mono", size: 11))
+                        .foregroundStyle(textTertiary)
+                }
+            }
+            .padding(.horizontal, 12)
+            .frame(height: 28)
+
+            // 1px score bar — accent fill up to score/100, shell-border remainder
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Rectangle().fill(shellBorder)
+                    Rectangle()
+                        .fill(count > 0 ? accent : shellBorder)
+                        .frame(width: count > 0 ? max(0, geo.size.width * (score / 100)) : 0)
+                }
+                .clipShape(Rectangle())
+            }
+            .frame(height: 1)
+        }
+    }
+
+    /// Color thresholds for per-profile scores: ≥80 green, ≥60 amber, <60 red.
+    private func profileScoreColor(_ score: Double) -> Color {
+        if score >= 80 { return Color(hex: "#10B981") }
+        if score >= 60 { return Color(hex: "#F59E0B") }
+        return Color(hex: "#EF4444")
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: Module 03 // PROFILE_DISTRIBUTION
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var module03ProfileDistribution: some View {
         let w = avgWeights
         let profiles: [(label: String, pct: Double, color: Color)] = [
             ("Real Estate",  w.re,       Color(hex: "#C25E30")),
@@ -126,7 +328,7 @@ struct CmdCenterView: View {
             ("Design",       w.design,   Color(hex: "#A855F7")),
             ("Circular",     w.circular, Color(hex: "#3B82F6")),
         ]
-        return TerminalBlock(command: "02 // PROFILE_DISTRIBUTION", accentColor: accentGrey, contentPadding: 0) {
+        return TerminalBlock(command: "03 // PROFILE_DISTRIBUTION", accentColor: accentGrey, contentPadding: 0) {
             VStack(spacing: 12) {
                 ForEach(Array(profiles.enumerated()), id: \.offset) { idx, profile in
                     weightRow(label: profile.label, pct: profile.pct, accent: profile.color)
@@ -138,10 +340,10 @@ struct CmdCenterView: View {
     private func weightRow(label: String, pct: Double, accent: Color) -> some View {
         HStack(spacing: 12) {
             Text(label.uppercased())
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                .tracking(0.08)
+                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .tracking(0.06)
                 .foregroundStyle(textTertiary)
-                .frame(width: 120, alignment: .leading)
+                .frame(width: 112, alignment: .leading)
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
@@ -152,7 +354,7 @@ struct CmdCenterView: View {
                 }
                 .clipShape(Rectangle())
             }
-            .frame(height: 6)
+            .frame(height: 4)
 
             Text("\(pct.formatted(.number.precision(.fractionLength(1))))%")
                 .font(.custom("JetBrains Mono", size: 14).weight(.bold))
@@ -161,15 +363,15 @@ struct CmdCenterView: View {
                 .frame(width: 52, alignment: .trailing)
         }
         .padding(.horizontal, 12)
-        .frame(height: 40)
+        .frame(height: 32)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Module 03 // RECENT_ACTIVITY
+    // MARK: Module 04 // RECENT_ACTIVITY
     // ─────────────────────────────────────────────────────────────────────────
 
-    private var module03RecentActivity: some View {
-        TerminalBlock(command: "03 // RECENT_ACTIVITY  [last 5]", accentColor: accentGrey, contentPadding: 0) {
+    private var module04RecentActivity: some View {
+        TerminalBlock(command: "04 // RECENT_ACTIVITY  [last 5]", accentColor: accentGrey, contentPadding: 0) {
             VStack(spacing: 12) {
                 ForEach(Array(recentDeals.enumerated()), id: \.element.id) { idx, deal in
                     activityRow(deal)
@@ -199,6 +401,90 @@ struct CmdCenterView: View {
                 .padding(.trailing, 12)
         }
         .frame(height: 32)
+    }
+
+    // MARK: Module 05 // SYSTEM_STATUS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var module05SystemStatus: some View {
+        let srv = DealIngestionServer.shared
+        let ems = EmailMonitorService.shared
+
+        return TerminalBlock(command: "05 // SYSTEM_STATUS", accentColor: Color(hex: "#3B82F6")) {
+            VStack(spacing: 0) {
+                // Ingestion server row
+                HStack(spacing: 0) {
+                    Text("INGESTION_SERVER")
+                        .font(.custom("JetBrains Mono", size: 10))
+                        .foregroundStyle(textTertiary)
+                        .frame(width: 148, alignment: .leading)
+                    HStack(spacing: 5) {
+                        Circle()
+                            .fill(srv.isRunning ? Color(hex: "#10B981") : textTertiary)
+                            .frame(width: 5, height: 5)
+                        Text(srv.isRunning
+                             ? "ACTIVE (localhost:\(srv.port))  [\(srv.requestCount) req]"
+                             : "STOPPED")
+                            .font(.custom("JetBrains Mono", size: 11))
+                            .foregroundStyle(srv.isRunning ? Color(hex: "#10B981") : textTertiary)
+                    }
+                    Spacer()
+                    Button {
+                        if srv.isRunning { srv.stop() } else { srv.start() }
+                    } label: {
+                        Text(srv.isRunning ? "[ STOP ]" : "[ START ]")
+                            .font(.custom("JetBrains Mono", size: 9))
+                            .foregroundStyle(srv.isRunning ? Color(hex: "#EF4444") : Color(hex: "#10B981"))
+                    }
+                    .buttonStyle(.plain)
+                }
+                .frame(height: 28)
+
+                Rectangle().fill(Color(hex: "#2E333F")).frame(height: 1)
+
+                // Email monitor row
+                HStack(spacing: 0) {
+                    Text("EMAIL_MONITOR")
+                        .font(.custom("JetBrains Mono", size: 10))
+                        .foregroundStyle(textTertiary)
+                        .frame(width: 148, alignment: .leading)
+                    HStack(spacing: 5) {
+                        Circle()
+                            .fill(ems.isMonitoring ? Color(hex: "#10B981") : textTertiary)
+                            .frame(width: 5, height: 5)
+                        Text(ems.isMonitoring
+                             ? "ACTIVE  [last: \(ems.lastCheckDate.map { relativeTime($0) } ?? "—")]"
+                             : (ems.isConfigured ? "STOPPED" : "NOT_CONFIGURED"))
+                            .font(.custom("JetBrains Mono", size: 11))
+                            .foregroundStyle(ems.isMonitoring ? Color(hex: "#10B981") : textTertiary)
+                    }
+                    Spacer()
+                }
+                .frame(height: 28)
+
+                if let err = srv.errorMessage {
+                    Rectangle().fill(Color(hex: "#2E333F")).frame(height: 1)
+                    HStack {
+                        Text("SERVER_ERR")
+                            .font(.custom("JetBrains Mono", size: 9))
+                            .foregroundStyle(textTertiary)
+                            .frame(width: 148, alignment: .leading)
+                        Text(err)
+                            .font(.custom("JetBrains Mono", size: 9))
+                            .foregroundStyle(Color(hex: "#EF4444"))
+                            .lineLimit(2)
+                    }
+                    .frame(minHeight: 24).padding(.vertical, 2)
+                }
+            }
+        }
+    }
+
+    private func relativeTime(_ date: Date) -> String {
+        let s = Int(-date.timeIntervalSinceNow)
+        if s < 60   { return "\(s)s ago" }
+        if s < 3600 { return "\(s / 60)m ago" }
+        return "\(s / 3600)h ago"
     }
 
     // ─────────────────────────────────────────────────────────────────────────
