@@ -2,6 +2,10 @@
 
 Design tokens and component specs for the UI look-and-feel overhaul.
 
+## Figma file
+
+**[Porteos Intelligence — UI Redesign](https://www.figma.com/design/7XdLK0I2aWj7KVkvhnJEyE/Porteos-Intelligence---UI-Redesign?node-id=4-7&t=0lfVUZC5FjHwcEHI-1)** — live design file (file ID `7XdLK0I2aWj7KVkvhnJEyE`).
+
 **Phase 0 status:** Cursor deliverables complete (July 2026). See `PHASE-0-FIGMA-CHECKLIST.md` for your Figma steps.
 
 ## Cursor execution (start here)
