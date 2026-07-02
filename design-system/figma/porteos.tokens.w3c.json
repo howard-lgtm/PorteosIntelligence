@@ -1,0 +1,136 @@
+{
+  "$description": "W3C Design Tokens Community Group format. Import via Figma plugins that support DTCG JSON (e.g. Tokens Studio, Variables Import).",
+  "color": {
+    "shell": {
+      "bg": { "$value": "#0F1115", "$type": "color" },
+      "surface": { "$value": "#1A1D24", "$type": "color" },
+      "elevated": { "$value": "#23262E", "$type": "color" },
+      "border": { "$value": "#2E333F", "$type": "color" }
+    },
+    "text": {
+      "primary": { "$value": "#F8F9FA", "$type": "color" },
+      "secondary": { "$value": "#94A3B8", "$type": "color" },
+      "tertiary": { "$value": "#64748B", "$type": "color" },
+      "on-accent": { "$value": "#0F1115", "$type": "color" }
+    },
+    "semantic": {
+      "success": { "$value": "#10B981", "$type": "color" },
+      "warning": { "$value": "#F59E0B", "$type": "color" },
+      "danger": { "$value": "#EF4444", "$type": "color" },
+      "info": { "$value": "#3B82F6", "$type": "color" }
+    },
+    "status": {
+      "pipeline": { "$value": "#64748B", "$type": "color" },
+      "review": { "$value": "#F59E0B", "$type": "color" },
+      "viable": { "$value": "#10B981", "$type": "color" },
+      "rejected": { "$value": "#EF4444", "$type": "color" },
+      "acquired": { "$value": "#3B82F6", "$type": "color" }
+    },
+    "profile": {
+      "cmd-center": { "$value": "#94A3B8", "$type": "color" },
+      "real-estate": { "$value": "#C25E30", "$type": "color" },
+      "real-estate-spec": { "$value": "#D4AF37", "$type": "color", "$description": "Design doc v3.0 gold" },
+      "hospitality": { "$value": "#14B8A6", "$type": "color" },
+      "design": { "$value": "#A855F7", "$type": "color" },
+      "circular": { "$value": "#3B82F6", "$type": "color" },
+      "mixed-use": { "$value": "#F59E0B", "$type": "color" }
+    },
+    "grade": {
+      "a": { "$value": "#10B981", "$type": "color" },
+      "b": { "$value": "#D4AF37", "$type": "color" },
+      "c": { "$value": "#F8F9FA", "$type": "color" },
+      "d": { "$value": "#F59E0B", "$type": "color" },
+      "f": { "$value": "#EF4444", "$type": "color" }
+    }
+  },
+  "dimension": {
+    "layout": {
+      "nav-pane-width": { "$value": "260px", "$type": "dimension" },
+      "inspector-pane-width": { "$value": "280px", "$type": "dimension" },
+      "header-height": { "$value": "40px", "$type": "dimension" },
+      "command-bar-height": { "$value": "32px", "$type": "dimension" },
+      "row-height": { "$value": "28px", "$type": "dimension" },
+      "block-header-height": { "$value": "24px", "$type": "dimension" },
+      "score-ring-size": { "$value": "120px", "$type": "dimension" },
+      "window-width": { "$value": "1200px", "$type": "dimension" },
+      "window-height": { "$value": "800px", "$type": "dimension" }
+    },
+    "spacing": {
+      "xs": { "$value": "4px", "$type": "dimension" },
+      "sm": { "$value": "8px", "$type": "dimension" },
+      "md": { "$value": "12px", "$type": "dimension" },
+      "lg": { "$value": "16px", "$type": "dimension" },
+      "xl": { "$value": "24px", "$type": "dimension" },
+      "2xl": { "$value": "32px", "$type": "dimension" }
+    },
+    "border": {
+      "thin": { "$value": "1px", "$type": "dimension" },
+      "accent": { "$value": "2px", "$type": "dimension" },
+      "ring": { "$value": "4px", "$type": "dimension" }
+    },
+    "radius": {
+      "none": { "$value": "0px", "$type": "dimension" }
+    }
+  },
+  "fontFamily": {
+    "mono": { "$value": "JetBrains Mono", "$type": "fontFamily" },
+    "sans": { "$value": "Inter", "$type": "fontFamily" }
+  },
+  "fontSize": {
+    "2xs": { "$value": "8px", "$type": "dimension" },
+    "xs": { "$value": "9px", "$type": "dimension" },
+    "sm": { "$value": "10px", "$type": "dimension" },
+    "md": { "$value": "11px", "$type": "dimension" },
+    "base": { "$value": "12px", "$type": "dimension" },
+    "lg": { "$value": "13px", "$type": "dimension" },
+    "xl": { "$value": "14px", "$type": "dimension" },
+    "2xl": { "$value": "16px", "$type": "dimension" },
+    "3xl": { "$value": "17px", "$type": "dimension" },
+    "4xl": { "$value": "20px", "$type": "dimension" },
+    "5xl": { "$value": "24px", "$type": "dimension" },
+    "6xl": { "$value": "48px", "$type": "dimension" }
+  },
+  "fontWeight": {
+    "regular": { "$value": 400, "$type": "fontWeight" },
+    "medium": { "$value": 500, "$type": "fontWeight" },
+    "bold": { "$value": 700, "$type": "fontWeight" }
+  },
+  "typography": {
+    "metric-label": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{fontFamily.mono}",
+        "fontWeight": "{fontWeight.medium}",
+        "fontSize": "{fontSize.md}",
+        "letterSpacing": "0.02em",
+        "textCase": "uppercase"
+      }
+    },
+    "metric-value": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{fontFamily.mono}",
+        "fontWeight": "{fontWeight.bold}",
+        "fontSize": "{fontSize.xl}",
+        "letterSpacing": "-0.02em"
+      }
+    },
+    "score-hero": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{fontFamily.mono}",
+        "fontWeight": "{fontWeight.bold}",
+        "fontSize": "{fontSize.6xl}"
+      }
+    },
+    "button-primary": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{fontFamily.mono}",
+        "fontWeight": "{fontWeight.bold}",
+        "fontSize": "{fontSize.md}",
+        "textCase": "uppercase"
+      }
+    }
+  }
+}
