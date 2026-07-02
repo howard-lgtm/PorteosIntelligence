@@ -98,6 +98,14 @@ struct AnalysisResult {
     }
 }
 
+// MARK: - AnalysisPhase
+
+enum AnalysisPhase: Equatable {
+    case analyzingRules
+    case generatingNarrative
+    case done(llmOffline: Bool)
+}
+
 // MARK: - AIAnalysisService
 
 final class AIAnalysisService {
@@ -107,7 +115,18 @@ final class AIAnalysisService {
 
     // MARK: Public API
 
-    func analyze(_ deal: PropertyDeal, context: ModelContext? = nil) async -> AnalysisResult {
+    /// Runs rule-based signal analysis then attempts an LLM narrative via Ollama.
+    /// `llmStatus` is set on `MainActor` so the UI can reflect loading phases.
+    /// If Ollama is offline or times out, falls back to rule-based summary only.
+    func analyze(
+        _ deal: PropertyDeal,
+        context: ModelContext? = nil,
+        onPhaseChange: (@MainActor (AnalysisPhase) -> Void)? = nil
+    ) async -> AnalysisResult {
+
+        // ── Phase 1: rule-based signals ───────────────────────────────────────
+        await onPhaseChange?(.analyzingRules)
+
         let re   = analyzeRealEstate(deal)
         let hosp = analyzeHospitality(deal)
         let des  = analyzeDesign(deal)
@@ -115,10 +134,32 @@ final class AIAnalysisService {
         let mkt  = context.map { analyzeMarketIntelligence(deal, context: $0) } ?? []
         let grade    = VibeGrade.from(score: deal.porteosScore)
         let headline = buildHeadline(deal: deal, grade: grade)
-        let summary  = buildSummary(re: re, hosp: hosp, des: des, circ: circ, mkt: mkt, grade: grade)
-        let text     = formatText(deal: deal, grade: grade,
-                                  re: re, hosp: hosp, des: des, circ: circ, mkt: mkt,
-                                  summary: summary)
+        let ruleSummary = buildSummary(re: re, hosp: hosp, des: des, circ: circ, mkt: mkt, grade: grade)
+
+        // ── Phase 2: LLM narrative (optional, non-blocking) ───────────────────
+        await onPhaseChange?(.generatingNarrative)
+
+        let allSignals = (re + hosp + des + circ + mkt).map(\.message)
+        var finalSummary = ruleSummary
+        var llmOffline   = false
+
+        do {
+            let narrative = try await LLMAnalysisService.shared.generateVibeNarrative(
+                dealName: deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName,
+                grade:    "\(grade.rawValue) — \(grade.label)",
+                score:    deal.porteosScore,
+                signals:  allSignals
+            )
+            finalSummary = narrative + "\n\n" + ruleSummary
+        } catch {
+            llmOffline = true
+        }
+
+        await onPhaseChange?(.done(llmOffline: llmOffline))
+
+        let text = formatText(deal: deal, grade: grade,
+                              re: re, hosp: hosp, des: des, circ: circ, mkt: mkt,
+                              summary: finalSummary)
         return AnalysisResult(
             grade:                     grade,
             headline:                  headline,
@@ -127,7 +168,7 @@ final class AIAnalysisService {
             designSignals:             des,
             circularSignals:           circ,
             marketIntelligenceSignals: mkt,
-            summary:                   summary,
+            summary:                   finalSummary,
             formattedText:             text
         )
     }

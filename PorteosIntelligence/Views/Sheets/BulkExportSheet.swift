@@ -6,14 +6,10 @@ import UniformTypeIdentifiers
 
 struct BulkExportSheet: View {
 
-    /// All deals in the store (unfiltered).
     let allDeals: [PropertyDeal]
-    /// Deals currently visible in the NavigationPane status filter.
     let filteredDeals: [PropertyDeal]
 
     @Environment(\.dismiss) private var dismiss
-
-    // MARK: State
 
     @State private var format: ExportFormat   = .csv
     @State private var depth: ExportDepth     = .financials
@@ -36,103 +32,68 @@ struct BulkExportSheet: View {
         }
     }
 
-    // MARK: Tokens
-
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellElevated = Color(hex: "#23262E")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let accentRust    = Color(hex: "#C25E30")
-    private let accentGreen   = Color(hex: "#10B981")
-    private let textPrimary   = Color(hex: "#F8FAFC")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-
-    // MARK: Body
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            cliHeader
-            Rectangle().fill(shellBorder).frame(height: 1)
+            TerminalCLIHeader(
+                command: "deal --export --format=\(format.rawValue.lowercased())",
+                accentColor: DesignTokens.accentRust
+            )
+            TerminalStructuralDivider()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     formatRow
-                    Rectangle().fill(shellBorder).frame(height: 1)
+                    TerminalStructuralDivider()
                     depthRow
-                    Rectangle().fill(shellBorder).frame(height: 1)
+                    TerminalStructuralDivider()
                     scopeSection
-                    Rectangle().fill(shellBorder).frame(height: 1)
+                    TerminalStructuralDivider()
                     previewSection
                 }
             }
 
-            Rectangle().fill(shellBorder).frame(height: 1)
+            TerminalStructuralDivider()
             footerRow
         }
         .frame(width: 640, height: 560)
-        .background(shellBg)
+        .background(DesignTokens.canvasBase)
         .clipShape(Rectangle())
     }
 
-    // MARK: CLI Header
-
-    private var cliHeader: some View {
-        HStack(spacing: 0) {
-            Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 13))
-                .foregroundStyle(textTertiary)
-            Text("deal --export --format=\(format.rawValue.lowercased())")
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                .foregroundStyle(accentRust)
-                .lineLimit(1)
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .frame(height: 36)
-        .background(shellSurface)
-    }
-
-    // MARK: Format Row
-
     private var formatRow: some View {
         HStack(spacing: 0) {
-            sectionLabel("FORMAT")
+            TerminalSectionLabel(text: "FORMAT")
             Spacer()
             HStack(spacing: 8) {
                 ForEach(ExportFormat.allCases, id: \.self) { f in
-                    formatButton(label: f.rawValue, isActive: format == f) { format = f }
+                    toggleButton(label: f.rawValue, isActive: format == f) { format = f }
                 }
             }
-            .padding(.trailing, 16)
+            .padding(.trailing, DesignTokens.blockGutter)
         }
-        .padding(.leading, 16)
+        .padding(.leading, DesignTokens.blockGutter)
         .frame(height: 44)
     }
-
-    // MARK: Depth Row
 
     private var depthRow: some View {
         HStack(spacing: 0) {
-            sectionLabel("FIELD DEPTH")
+            TerminalSectionLabel(text: "FIELD DEPTH")
             Spacer()
             HStack(spacing: 8) {
                 ForEach(ExportDepth.allCases, id: \.self) { d in
-                    formatButton(label: d.rawValue, isActive: depth == d) { depth = d }
+                    toggleButton(label: d.rawValue, isActive: depth == d) { depth = d }
                 }
             }
-            .padding(.trailing, 16)
+            .padding(.trailing, DesignTokens.blockGutter)
         }
-        .padding(.leading, 16)
+        .padding(.leading, DesignTokens.blockGutter)
         .frame(height: 44)
     }
 
-    // MARK: Scope Section
-
     private var scopeSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("SCOPE")
-                .padding(.horizontal, 16)
+            TerminalSectionLabel(text: "SCOPE")
+                .padding(.horizontal, DesignTokens.blockGutter)
                 .padding(.top, 12)
                 .padding(.bottom, 10)
 
@@ -140,7 +101,7 @@ struct BulkExportSheet: View {
                 ForEach(ScopeOption.allCases, id: \.self) { option in
                     scopeRow(option)
                     if option != ScopeOption.allCases.last {
-                        Rectangle().fill(shellBorder).frame(height: 1).padding(.leading, 16)
+                        TerminalStructuralDivider().padding(.leading, DesignTokens.blockGutter)
                     }
                 }
             }
@@ -155,22 +116,22 @@ struct BulkExportSheet: View {
         return Button { scope = option } label: {
             HStack(spacing: 8) {
                 Rectangle()
-                    .fill(isActive ? accentGreen : Color.clear)
+                    .fill(isActive ? DesignTokens.statusGo : Color.clear)
                     .frame(width: 2, height: 14)
 
                 Text("[ \(option.rawValue) ]")
-                    .font(.custom("JetBrains Mono", size: 13).weight(isActive ? .bold : .regular))
-                    .foregroundStyle(isActive ? accentGreen : textTertiary)
+                    .font(DesignTokens.mono(size: 11, weight: isActive ? .bold : .regular))
+                    .foregroundStyle(isActive ? DesignTokens.statusGo : DesignTokens.textDim)
 
                 Spacer()
 
                 Text("\(count) deal\(count == 1 ? "" : "s")")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(isActive ? accentGreen : textTertiary)
-                    .padding(.trailing, 16)
+                    .font(DesignTokens.mono(size: 11))
+                    .foregroundStyle(isActive ? DesignTokens.statusGo : DesignTokens.textDim)
+                    .padding(.trailing, DesignTokens.blockGutter)
             }
-            .frame(height: 32)
-            .background(isActive ? shellElevated : Color.clear)
+            .frame(height: DesignTokens.rowHeightData)
+            .background(isActive ? DesignTokens.surfaceElevated : Color.clear)
             .clipShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -185,100 +146,72 @@ struct BulkExportSheet: View {
         }
     }
 
-    // MARK: Preview Section
-
     private var previewSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
-                Text("PREVIEW")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                    .tracking(0.08)
-                    .foregroundStyle(textTertiary)
+                TerminalSectionLabel(text: "PREVIEW")
                 Text("// first 3 rows · \(dealsToExport.count) deal\(dealsToExport.count == 1 ? "" : "s") selected")
-                    .font(.custom("JetBrains Mono", size: 11))
-                    .foregroundStyle(textTertiary)
+                    .font(DesignTokens.mono(size: 10))
+                    .foregroundStyle(DesignTokens.textDim)
                 Spacer()
             }
-            .padding(.horizontal, 16)
-            .frame(height: 32)
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .frame(height: DesignTokens.rowHeightData)
 
-            Rectangle().fill(shellBorder).frame(height: 1)
+            TerminalStructuralDivider()
 
             if dealsToExport.isEmpty {
                 Text("no deals match the current scope")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textSecondary)
-                    .padding(16)
+                    .font(DesignTokens.mono(size: 11))
+                    .foregroundStyle(DesignTokens.textSecondary)
+                    .padding(DesignTokens.blockGutter)
             } else {
                 ScrollView([.horizontal, .vertical]) {
                     Text(previewText)
-                        .font(.custom("JetBrains Mono", size: 11))
-                        .foregroundStyle(textSecondary)
+                        .font(DesignTokens.mono(size: 10))
+                        .foregroundStyle(DesignTokens.textSecondary)
                         .padding(12)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(height: 180)
-                .background(shellElevated)
+                .background(DesignTokens.surfaceElevated)
             }
         }
     }
 
     private var previewText: String {
         guard !dealsToExport.isEmpty else { return "" }
-        return DealExporter.previewLines(
-            deals: dealsToExport,
-            depth: depth,
-            format: format,
-            maxRows: 3
-        )
+        return DealExporter.previewLines(deals: dealsToExport, depth: depth, format: format, maxRows: 3)
     }
-
-    // MARK: Footer
 
     private var footerRow: some View {
         HStack(spacing: 12) {
-            // Status / error message
             if exportMessage.isEmpty {
                 Text("\(dealsToExport.count) deal\(dealsToExport.count == 1 ? "" : "s") · \(depth.rawValue) · \(format.rawValue)")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textTertiary)
+                    .font(DesignTokens.mono(size: 10))
+                    .foregroundStyle(DesignTokens.textDim)
             } else {
                 Text(exportMessage)
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(exportMessage.hasPrefix("✓") ? accentGreen : Color(hex: "#EF4444"))
+                    .font(DesignTokens.mono(size: 10))
+                    .foregroundStyle(exportMessage.hasPrefix("✓") ? DesignTokens.statusGo : DesignTokens.statusCritical)
                     .lineLimit(1)
             }
 
             Spacer()
 
-            // Cancel
-            Button { dismiss() } label: {
-                Text("[ CANCEL ]")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textSecondary)
-                    .frame(height: 32)
-            }
-            .buttonStyle(.plain)
+            Button("[ CANCEL ]") { dismiss() }
+                .font(DesignTokens.mono(size: 11))
+                .foregroundStyle(DesignTokens.textSecondary)
+                .buttonStyle(.plain)
 
-            // Export
-            Button { triggerExport() } label: {
-                Text("[ EXPORT_FILE ]")
-                    .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                    .foregroundStyle(dealsToExport.isEmpty ? textTertiary : Color(hex: "#0F1115"))
-                    .padding(.horizontal, 16)
-                    .frame(height: 32)
-                    .background(dealsToExport.isEmpty ? shellElevated : accentRust)
-                    .clipShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .disabled(dealsToExport.isEmpty)
+            Button("[ EXPORT_FILE ]") { triggerExport() }
+                .buttonStyle(TerminalButtonStyle(color: dealsToExport.isEmpty ? .muted : .rust))
+                .disabled(dealsToExport.isEmpty)
         }
-        .padding(.horizontal, 16)
-        .frame(height: 56)
-        .background(shellSurface)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightPaneBar + 16)
+        .background(DesignTokens.surfacePanel)
     }
-
-    // MARK: Export Action
 
     private func triggerExport() {
         let data: Data
@@ -311,56 +244,25 @@ struct BulkExportSheet: View {
         return f.string(from: Date())
     }
 
-    // MARK: Shared Sub-views
-
-    private func sectionLabel(_ text: String) -> some View {
-        Text(text)
-            .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-            .tracking(0.08)
-            .foregroundStyle(textTertiary)
-    }
-
-    private func formatButton(label: String, isActive: Bool, action: @escaping () -> Void) -> some View {
+    private func toggleButton(label: String, isActive: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text("[ \(label) ]")
-                .font(.custom("JetBrains Mono", size: 13).weight(isActive ? .bold : .regular))
-                .foregroundStyle(isActive ? Color(hex: "#0F1115") : textTertiary)
+                .font(DesignTokens.mono(size: 11, weight: isActive ? .bold : .regular))
+                .foregroundStyle(isActive ? DesignTokens.canvasBase : DesignTokens.textDim)
                 .padding(.horizontal, 12)
-                .frame(height: 28)
-                .background(isActive ? accentRust : shellElevated)
+                .frame(height: DesignTokens.rowHeightData)
+                .background(isActive ? DesignTokens.accentRust : DesignTokens.surfaceElevated)
                 .clipShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
 }
 
-// MARK: - Preview
-
 #Preview {
     let deals: [PropertyDeal] = [
-        PropertyDeal(
-            propertyName:         "Lisbon Office Block A",
-            address:              "Av. da Liberdade, Lisboa",
-            propertyType:         "Commercial",
-            locationCity:         "Lisboa",
-            purchasePrice:        2_400_000,
-            grossPotentialIncome: 210_000,
-            vacancyRate:          5,
-            operatingExpenses:    72_000,
-            loanAmount:           1_680_000,
-            interestRate:         4.25,
-            amortizationMonths:   360,
-            porteosScore:         78,
-            status:               .viable
-        ),
-        PropertyDeal(
-            propertyName:  "Porto Hotel",
-            address:       "Rua de Santa Catarina, Porto",
-            propertyType:  "Hospitality",
-            locationCity:  "Porto",
-            purchasePrice: 4_800_000,
-            status:        .pipeline
-        )
+        PropertyDeal(propertyName: "Lisbon Office Block A", purchasePrice: 2_400_000, status: .viable),
+        PropertyDeal(propertyName: "Porto Hotel", purchasePrice: 4_800_000, status: .pipeline)
     ]
     BulkExportSheet(allDeals: deals, filteredDeals: deals)
+        .background(DesignTokens.canvasBase)
 }

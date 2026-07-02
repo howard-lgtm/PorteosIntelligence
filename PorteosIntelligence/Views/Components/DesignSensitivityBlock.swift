@@ -15,23 +15,7 @@ struct DesignSensitivityBlock: View {
     @State private var biophilicAdj:       Int    = 0   // count (−5…+10)
     @State private var spaceUtilizationAdj: Double = 0  // pp   (−20…+20)
 
-    // ── Design tokens ─────────────────────────────────────────────────────────
-
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let accentPurple  = Color(hex: "#A855F7")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let colorGreen    = Color(hex: "#10B981")
-    private let colorRed      = Color(hex: "#EF4444")
-
-    // ── Column widths ─────────────────────────────────────────────────────────
-
-    private let colLabel: CGFloat = 168
-    private let colBase:  CGFloat = 110
-    private let colSim:   CGFloat = 110
+    private var accent: Color { ProfileType.design.accentColor }
 
     // MARK: Computed Scores
 
@@ -70,11 +54,11 @@ struct DesignSensitivityBlock: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             TerminalBlock(command: "05 // SENSITIVITY_SIMULATION",
-                          accentColor: accentPurple,
+                          accentColor: accent,
                           contentPadding: 0) {
                 VStack(alignment: .leading, spacing: 0) {
                     adjustmentSection
-                    Rectangle().fill(shellBorder).frame(height: 1)
+                    TerminalStructuralDivider()
                     resultsSection
                 }
             }
@@ -82,7 +66,7 @@ struct DesignSensitivityBlock: View {
             ScenarioManagerBlock(
                 deal:               deal,
                 profile:            "design",
-                accentColor:        accentPurple,
+                accentColor:        accent,
                 moduleLabel:        "06 // SAVED_SCENARIOS",
                 currentAdjustments: [
                     "daylightingAdj":      daylightingAdj,
@@ -102,7 +86,7 @@ struct DesignSensitivityBlock: View {
 
     private var adjustmentSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("ADJUST INPUTS")
+            TerminalSensitivityStyles.sectionLabel("ADJUST INPUTS")
 
             stepperRow(
                 label:        "DAYLIGHTING",
@@ -145,12 +129,12 @@ struct DesignSensitivityBlock: View {
                     spaceUtilizationAdj = 0
                 } label: {
                     Text("[ RESET ]")
-                        .font(.custom("JetBrains Mono", size: 13))
-                        .foregroundStyle(textTertiary)
+                        .font(DesignTokens.mono(size: 13))
+                        .foregroundStyle(DesignTokens.textDim)
                 }
                 .buttonStyle(.plain)
                 .disabled(daylightingAdj == 0 && biophilicAdj == 0 && spaceUtilizationAdj == 0)
-                .padding(.trailing, 16)
+                .padding(.trailing, DesignTokens.blockGutter)
                 .padding(.bottom, 10)
             }
         }
@@ -166,73 +150,73 @@ struct DesignSensitivityBlock: View {
     ) -> some View {
         HStack(spacing: 0) {
             Text(label)
-                .font(.custom("JetBrains Mono", size: 13).weight(.medium))
+                .font(DesignTokens.mono(size: 13, weight: .medium))
                 .tracking(0.02)
-                .foregroundStyle(textTertiary)
-                .frame(width: colLabel, alignment: .leading)
-                .padding(.leading, 16)
+                .foregroundStyle(DesignTokens.textDim)
+                .frame(width: TerminalSensitivityStyles.colLabel, alignment: .leading)
+                .padding(.leading, DesignTokens.blockGutter)
 
             Spacer()
 
             Button { onDecrement() } label: {
                 Text("[ − ]")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(canDecrement ? textSecondary : textTertiary)
+                    .font(DesignTokens.mono(size: 13))
+                    .foregroundStyle(canDecrement ? DesignTokens.textSecondary : DesignTokens.textDim)
             }
             .buttonStyle(.plain)
             .disabled(!canDecrement)
 
             Text(display)
-                .font(.custom("JetBrains Mono", size: 17).weight(.bold))
+                .font(DesignTokens.primaryMetricFont())
                 .monospacedDigit()
-                .foregroundStyle(adjColor(display))
+                .foregroundStyle(TerminalSensitivityStyles.adjColor(display))
                 .frame(width: 76, alignment: .center)
 
             Button { onIncrement() } label: {
                 Text("[ + ]")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(canIncrement ? textSecondary : textTertiary)
+                    .font(DesignTokens.mono(size: 13))
+                    .foregroundStyle(canIncrement ? DesignTokens.textSecondary : DesignTokens.textDim)
             }
             .buttonStyle(.plain)
             .disabled(!canIncrement)
-            .padding(.trailing, 16)
+            .padding(.trailing, DesignTokens.blockGutter)
         }
-        .frame(height: 40)
+        .frame(height: DesignTokens.rowHeightHeader)
     }
 
     // MARK: – Results Section
 
     private var resultsSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("SIMULATION RESULTS")
+            TerminalSensitivityStyles.sectionLabel("SIMULATION RESULTS")
 
             HStack(spacing: 0) {
                 Text("METRIC")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                    .font(DesignTokens.mono(size: 11, weight: .bold))
                     .tracking(0.06)
-                    .foregroundStyle(textTertiary)
-                    .frame(width: colLabel, alignment: .leading)
-                    .padding(.leading, 16)
+                    .foregroundStyle(DesignTokens.textDim)
+                    .frame(width: TerminalSensitivityStyles.colLabel, alignment: .leading)
+                    .padding(.leading, DesignTokens.blockGutter)
                 Text("BASE")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                    .font(DesignTokens.mono(size: 11, weight: .bold))
                     .tracking(0.06)
-                    .foregroundStyle(textTertiary)
-                    .frame(width: colBase, alignment: .trailing)
+                    .foregroundStyle(DesignTokens.textDim)
+                    .frame(width: TerminalSensitivityStyles.colBase, alignment: .trailing)
                 Text("SIMULATED")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                    .font(DesignTokens.mono(size: 11, weight: .bold))
                     .tracking(0.06)
-                    .foregroundStyle(textTertiary)
-                    .frame(width: colSim, alignment: .trailing)
+                    .foregroundStyle(DesignTokens.textDim)
+                    .frame(width: TerminalSensitivityStyles.colSim, alignment: .trailing)
                 Text("DELTA")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                    .font(DesignTokens.mono(size: 11, weight: .bold))
                     .tracking(0.06)
-                    .foregroundStyle(textTertiary)
-                    .padding(.leading, 16)
-                    .padding(.trailing, 16)
+                    .foregroundStyle(DesignTokens.textDim)
+                    .padding(.leading, DesignTokens.blockGutter)
+                    .padding(.trailing, DesignTokens.blockGutter)
             }
             .frame(height: 28)
 
-            Rectangle().fill(shellBorder).frame(height: 1)
+            TerminalStructuralDivider()
 
             resultRow(
                 label:        "DESIGN SCORE",
@@ -285,60 +269,48 @@ struct DesignSensitivityBlock: View {
         let positive   = delta > 0
         let neutral    = abs(delta) < 0.001
         let good       = higherBetter ? positive : !positive
-        let deltaColor: Color = neutral ? textTertiary : (good ? colorGreen : colorRed)
+        let deltaColor = TerminalSensitivityStyles.deltaColor(delta: delta, higherBetter: higherBetter)
         let indicator  = neutral ? "  " : (positive ? "▲" : "▼")
 
         return HStack(spacing: 0) {
             Text(label)
-                .font(.custom("JetBrains Mono", size: 13))
+                .font(DesignTokens.mono(size: 13))
                 .tracking(0.02)
-                .foregroundStyle(textSecondary)
-                .frame(width: colLabel, alignment: .leading)
-                .padding(.leading, 16)
+                .foregroundStyle(DesignTokens.textSecondary)
+                .frame(width: TerminalSensitivityStyles.colLabel, alignment: .leading)
+                .padding(.leading, DesignTokens.blockGutter)
 
             Text(base)
-                .font(.custom("JetBrains Mono", size: 13))
+                .font(DesignTokens.mono(size: 13))
                 .monospacedDigit()
-                .foregroundStyle(textSecondary)
-                .frame(width: colBase, alignment: .trailing)
+                .foregroundStyle(DesignTokens.textSecondary)
+                .frame(width: TerminalSensitivityStyles.colBase, alignment: .trailing)
 
             Text(sim)
-                .font(.custom("JetBrains Mono", size: 17).weight(.bold))
+                .font(DesignTokens.primaryMetricFont())
                 .monospacedDigit()
-                .foregroundStyle(neutral ? textPrimary : (good ? colorGreen : colorRed))
-                .frame(width: colSim, alignment: .trailing)
+                .foregroundStyle(neutral ? DesignTokens.textPrimary : (good ? DesignTokens.statusGo : DesignTokens.statusCritical))
+                .frame(width: TerminalSensitivityStyles.colSim, alignment: .trailing)
 
             HStack(spacing: 4) {
                 Text(indicator)
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .font(DesignTokens.mono(size: 11))
                     .foregroundStyle(deltaColor)
                 Text(neutral ? "—" : format(delta))
-                    .font(.custom("JetBrains Mono", size: 13))
+                    .font(DesignTokens.mono(size: 13))
                     .monospacedDigit()
                     .foregroundStyle(deltaColor)
             }
-            .padding(.leading, 16)
-            .padding(.trailing, 16)
+            .padding(.leading, DesignTokens.blockGutter)
+            .padding(.trailing, DesignTokens.blockGutter)
 
             Spacer()
         }
-        .frame(height: 40)
+        .frame(height: DesignTokens.rowHeightHeader)
         .background(Color.clear)
         .overlay(alignment: .bottom) {
-            Rectangle().fill(shellBorder.opacity(0.4)).frame(height: 1)
+            TerminalStructuralDivider().opacity(0.4)
         }
-    }
-
-    // MARK: – Section Label
-
-    private func sectionLabel(_ text: String) -> some View {
-        Text(text)
-            .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-            .tracking(0.08)
-            .foregroundStyle(textTertiary)
-            .padding(.leading, 16)
-            .padding(.top, 10)
-            .padding(.bottom, 4)
     }
 
     // MARK: – Formatters
@@ -370,12 +342,6 @@ struct DesignSensitivityBlock: View {
         if v < 0 { return "−\(s)" }
         return "0.0"
     }
-
-    private func adjColor(_ display: String) -> Color {
-        if display.hasPrefix("+") { return colorGreen }
-        if display.hasPrefix("−") { return colorRed   }
-        return textPrimary
-    }
 }
 
 // MARK: - Preview
@@ -397,5 +363,5 @@ struct DesignSensitivityBlock: View {
             .padding(16)
     }
     .frame(width: 700, height: 600)
-    .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
 }

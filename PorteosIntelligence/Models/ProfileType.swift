@@ -27,6 +27,29 @@ enum ProfileType: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Short module label for V2.06 workspace header: `[ PROFILE // MODULE ]`.
+    var moduleHeaderLabel: String {
+        switch self {
+        case .cmdCenter:   return "CMD_CENTER"
+        case .realEstate:  return "REAL_ESTATE"
+        case .hospitality: return "HOSPITALITY"
+        case .design:      return "DESIGN"
+        case .circular:    return "CIRCULAR_ECONOMY"
+        }
+    }
+
+    var moduleSubLabel: String {
+        switch self {
+        case .cmdCenter:   return "OVERVIEW"
+        default:           return "DASHBOARD"
+        }
+    }
+
+    /// V2.06 bracketed workspace header string.
+    var workspaceHeaderTitle: String {
+        "[ \(moduleHeaderLabel) // \(moduleSubLabel) ]"
+    }
+
     /// Shell-style command shown in TopHeaderBar center slot.
     var commandLine: String {
         switch self {

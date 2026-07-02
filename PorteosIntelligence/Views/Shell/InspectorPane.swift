@@ -14,24 +14,24 @@ struct InspectorPane: View {
     /// Bumped every time deal data changes. Forwarded to AIVibePanel so it can
     /// invalidate its in-memory result without InspectorPane reaching into its state.
     @State private var vibeRefreshID      = UUID()
+    @State private var convictionLevel:  Int = 1   // 0=low ( ), 1=med (•), 2=high (*)
 
     private var history: DealHistoryManager { DealHistoryManager.shared }
 
-    // MARK: Tokens
+    // MARK: Tokens (V2.06)
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let accentRust    = Color(hex: "#C25E30")   // V3.1 primary accent
+    private var shellBg:       Color { DesignTokens.canvasBase }
+    private var shellSurface:  Color { DesignTokens.surfacePanel }
+    private var shellBorder:   Color { DesignTokens.dividerStructural }
+    private var textPrimary:   Color { DesignTokens.textPrimary }
+    private var textSecondary: Color { DesignTokens.textSecondary }
+    private var textTertiary:  Color { DesignTokens.textDim }
+    private var accentRust:    Color { DesignTokens.accentRust }
 
-    // V3.1 per-profile slider accent colors
-    private let accentRe = Color(hex: "#C25E30")   // Rust  – Real Estate
-    private let accentHo = Color(hex: "#14B8A6")   // Teal  – Hospitality
-    private let accentDe = Color(hex: "#A855F7")   // Purple – Design
-    private let accentCi = Color(hex: "#3B82F6")   // Blue  – Circular Economy
+    private var accentRe: Color { ProfileType.realEstate.accentColor }
+    private var accentHo: Color { ProfileType.hospitality.accentColor }
+    private var accentDe: Color { ProfileType.design.accentColor }
+    private var accentCi: Color { ProfileType.circular.accentColor }
 
     // MARK: Body
 
@@ -86,6 +86,8 @@ struct InspectorPane: View {
             deal.aiAnalysisText = nil
             vibeRefreshID       = UUID()
         }
+        .onAppear { loadConvictionFromTags() }
+        .onChange(of: deal.id) { _, _ in loadConvictionFromTags() }
     }
 
     // MARK: Pane Header
@@ -108,7 +110,7 @@ struct InspectorPane: View {
                 Button { showFullEditSheet = true } label: {
                     Text("[ EDIT DEAL DATA ]")
                         .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                        .foregroundStyle(Color(hex: "#0F1115"))
+                        .foregroundStyle(DesignTokens.canvasBase)
                         .frame(maxWidth: .infinity)
                         .frame(height: 28)
                         .background(accentRust)
@@ -273,9 +275,89 @@ struct InspectorPane: View {
                 )
                 rowDivider
                 totalRow
+                rowDivider
+                founderLensSection
+                if !displayTags.isEmpty {
+                    rowDivider
+                    tagRepositorySection
+                }
             }
             .padding(.top, 8)
         }
+    }
+
+    // MARK: Founder Lens (V2.06 Tier C)
+
+    private var founderLensSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("// FOUNDER_LENS")
+                .font(DesignTokens.sectionLabelFont())
+                .tracking(0.08)
+                .foregroundStyle(textTertiary)
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+
+            HStack(spacing: 16) {
+                convictionNode(level: 0, marker: "( )", label: "LOW")
+                convictionNode(level: 1, marker: "(•)", label: "MED")
+                convictionNode(level: 2, marker: "(*)", label: "HIGH")
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 12)
+        }
+    }
+
+    private func convictionNode(level: Int, marker: String, label: String) -> some View {
+        let isActive = convictionLevel == level
+        return Button {
+            convictionLevel = level
+            persistConviction(level)
+        } label: {
+            HStack(spacing: 6) {
+                Text(marker)
+                    .font(DesignTokens.mono(size: 13, weight: .bold))
+                    .foregroundStyle(isActive ? accentRust : textTertiary)
+                Text(label)
+                    .font(DesignTokens.mono(size: 10, weight: .bold))
+                    .foregroundStyle(isActive ? textPrimary : textTertiary)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var displayTags: [String] {
+        deal.tags.filter { !$0.hasPrefix("conviction:") }
+    }
+
+    private var tagRepositorySection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("// TAG_REPOSITORY")
+                .font(DesignTokens.sectionLabelFont())
+                .tracking(0.08)
+                .foregroundStyle(textTertiary)
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+
+            FlowLayoutTags(tags: displayTags)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 12)
+        }
+    }
+
+    private func loadConvictionFromTags() {
+        if deal.tags.contains("conviction:high")      { convictionLevel = 2 }
+        else if deal.tags.contains("conviction:low") { convictionLevel = 0 }
+        else                                         { convictionLevel = 1 }
+    }
+
+    private func persistConviction(_ level: Int) {
+        deal.tags.removeAll { $0.hasPrefix("conviction:") }
+        switch level {
+        case 0:  deal.tags.append("conviction:low")
+        case 2:  deal.tags.append("conviction:high")
+        default: deal.tags.append("conviction:med")
+        }
+        try? modelContext.save()
     }
 
     // MARK: Weight Row
@@ -439,6 +521,24 @@ private struct TerminalSlider: View {
             )
         }
         .frame(height: thumbHeight)
+    }
+}
+
+// MARK: - FlowLayoutTags
+
+private struct FlowLayoutTags: View {
+    let tags: [String]
+
+    var body: some View {
+        LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: 90), spacing: 6)],
+            alignment: .leading,
+            spacing: 6
+        ) {
+            ForEach(tags, id: \.self) { tag in
+                TerminalTagChip(name: tag)
+            }
+        }
     }
 }
 

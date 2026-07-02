@@ -4,78 +4,52 @@ struct PorteosScoreBlock: View {
 
     let metrics: PorteosScoreCalculator.PorteosMetrics
 
-    // MARK: Tokens
-
-    private let shellSurface = Color(hex: "#1A1D24")
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let textTertiary = Color(hex: "#64748B")
-
-    // MARK: Grade Color
-
     private var gradeColor: Color {
         switch metrics.scoreGrade {
-        case "A": return Color(hex: "#10B981")  // Green
-        case "B": return Color(hex: "#D4AF37")  // Gold
-        case "C": return Color(hex: "#F8F9FA")  // White
-        case "D": return Color(hex: "#F59E0B")  // Amber
-        default:  return Color(hex: "#EF4444")  // Red  ("F")
+        case "A": return DesignTokens.statusGo
+        case "B": return DesignTokens.statusWarn
+        case "C": return DesignTokens.textPrimary
+        case "D": return DesignTokens.statusWarn
+        default:  return DesignTokens.statusCritical
         }
     }
-
-    // MARK: Body
 
     var body: some View {
-        HStack(alignment: .center, spacing: 24) {
-            scoreDisplay
-            Spacer()
-            gradeDisplay
-        }
-        .padding(16)
-        .background(shellSurface)
-        .overlay(
-            Rectangle()
-                .strokeBorder(shellBorder, lineWidth: 1)
-        )
-        .cornerRadius(0)
-        .padding(.horizontal, 16)
-        .padding(.top, 16)
-    }
-
-    // MARK: Score (left)
-
-    private var scoreDisplay: some View {
-        Text(String(format: "%.0f", metrics.finalScore))
-            .font(.custom("JetBrains Mono", size: 48).weight(.bold))
-            .monospacedDigit()
-            .foregroundStyle(gradeColor)
-    }
-
-    // MARK: Grade + Label (right)
-
-    private var gradeDisplay: some View {
-        VStack(alignment: .trailing, spacing: 4) {
-            Text("PORTEOS SCORE")
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
-                .tracking(0.05)
-                .foregroundStyle(textTertiary)
-
-            Text(metrics.scoreGrade)
-                .font(.custom("JetBrains Mono", size: 24).weight(.bold))
+        HStack(alignment: .firstTextBaseline, spacing: 16) {
+            Text(String(format: "%.0f", metrics.finalScore))
+                .font(DesignTokens.heroScoreFont())
+                .monospacedDigit()
                 .foregroundStyle(gradeColor)
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("PORTEOS SCORE")
+                    .font(DesignTokens.metricLabelFont())
+                    .tracking(0.02)
+                    .foregroundStyle(DesignTokens.textDim)
+
+                Text(metrics.scoreGrade)
+                    .font(DesignTokens.heroGradeFont())
+                    .foregroundStyle(gradeColor)
+            }
         }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, DesignTokens.blockGutter)
+        .background(DesignTokens.surfacePanel)
+        .overlay(alignment: .bottom) {
+            TerminalStructuralDivider()
+        }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.top, DesignTokens.blockGutter)
     }
 }
-
-// MARK: - Preview
 
 #Preview {
     VStack(spacing: 0) {
         PorteosScoreBlock(metrics: .init(finalScore: 87, scoreGrade: "A"))
-        PorteosScoreBlock(metrics: .init(finalScore: 63, scoreGrade: "B"))
-        PorteosScoreBlock(metrics: .init(finalScore: 44, scoreGrade: "C"))
-        PorteosScoreBlock(metrics: .init(finalScore: 22, scoreGrade: "D"))
-        PorteosScoreBlock(metrics: .init(finalScore:  8, scoreGrade: "F"))
+        PorteosScoreBlock(metrics: .init(finalScore: 41, scoreGrade: "F"))
     }
-    .frame(width: 480)
-    .background(Color(hex: "#0F1115"))
+    .frame(width: 720)
+    .background(DesignTokens.canvasBase)
 }

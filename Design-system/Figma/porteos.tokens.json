@@ -1,0 +1,433 @@
+{
+  "$metadata": {
+    "tokenSetOrder": ["porteos/global", "porteos/semantic", "porteos/profile", "porteos/component", "porteos/legacy"],
+    "version": "2.06.0",
+    "source": "Reconciled Phase 0 — V2.06 color spec + DesignTokens.swift + execution plan defaults",
+    "platform": "macOS SwiftUI",
+    "importPlugin": "Tokens Studio for Figma",
+    "phase0Completed": "2026-07-02",
+    "resolvedDecisions": {
+      "re-accent": { "id": "rust", "value": "#C25E30" },
+      "aesthetic-direction": { "id": "hybrid" },
+      "button-format": { "id": "cli" },
+      "cli-headers": { "id": "keep" },
+      "density": { "id": "dense" },
+      "nav-width": { "id": "260", "value": 260 },
+      "inspector-width": { "id": "280", "value": 280 }
+    },
+    "notes": "Canonical shell/semantic = V2.06. porteos/legacy = v1.0.4 export (disabled in theme). Import theme Porteos Dark."
+  },
+  "porteos/global": {
+    "color": {
+      "shell": {
+        "canvasBase": { "value": "#0A0A0A", "type": "color", "description": "V2.06 — main window background (The Void)" },
+        "surfacePanel": { "value": "#111111", "type": "color", "description": "V2.06 — nav, workspace, inspector panes" },
+        "surfaceElevated": { "value": "#1A1A1A", "type": "color", "description": "V2.06 — metric cells, active nav, sheet bodies" },
+        "dividerStructural": { "value": "#333333", "type": "color", "description": "V2.06 — all 1px dividers and borders" },
+        "bg": { "value": "{color.shell.canvasBase}", "type": "color", "description": "Alias → canvasBase" },
+        "surface": { "value": "{color.shell.surfacePanel}", "type": "color", "description": "Alias → surfacePanel" },
+        "elevated": { "value": "{color.shell.surfaceElevated}", "type": "color", "description": "Alias → surfaceElevated" },
+        "border": { "value": "{color.shell.dividerStructural}", "type": "color", "description": "Alias → dividerStructural" }
+      },
+      "text": {
+        "primary": { "value": "#F8F9FA", "type": "color", "description": "Primary text, high-priority metrics" },
+        "secondary": { "value": "#94A3B8", "type": "color", "description": "Labels, secondary metrics" },
+        "tertiary": { "value": "#666666", "type": "color", "description": "Alias → dim (V2.06)" },
+        "dim": { "value": "#666666", "type": "color", "description": "V2.06 — labels, paths, inactive states" },
+        "onAccent": { "value": "#0A0A0A", "type": "color", "description": "Text on colored button backgrounds" },
+        "valueBright": { "value": "#F8FAFC", "type": "color", "description": "Metric grid cell neutral values" },
+        "valueWhite": { "value": "#FFFFFF", "type": "color", "description": "Metric row neutral values" },
+        "labelDim": { "value": "#475569", "type": "color", "description": "Terminal metric row labels (slate-600)" }
+      },
+      "semantic": {
+        "statusGo": { "value": "#27C93F", "type": "color", "description": "V2.06 — optimal threshold (terminal green)" },
+        "statusWarn": { "value": "#FFBD2E", "type": "color", "description": "V2.06 — warning threshold (terminal amber)" },
+        "statusCritical": { "value": "#FF5F56", "type": "color", "description": "V2.06 — critical threshold (terminal red)" },
+        "success": { "value": "{color.semantic.statusGo}", "type": "color", "description": "Alias → statusGo" },
+        "warning": { "value": "{color.semantic.statusWarn}", "type": "color", "description": "Alias → statusWarn" },
+        "danger": { "value": "{color.semantic.statusCritical}", "type": "color", "description": "Alias → statusCritical" },
+        "info": { "value": "#3B82F6", "type": "color", "description": "Info tags, acquired status, links" }
+      },
+      "status": {
+        "pipeline": { "value": "#64748B", "type": "color" },
+        "review": { "value": "#F59E0B", "type": "color" },
+        "viable": { "value": "#27C93F", "type": "color" },
+        "rejected": { "value": "#FF5F56", "type": "color" },
+        "acquired": { "value": "#3B82F6", "type": "color" }
+      },
+      "grade": {
+        "A": { "value": "#10B981", "type": "color" },
+        "B": { "value": "#D4AF37", "type": "color" },
+        "C": { "value": "#F8F9FA", "type": "color" },
+        "D": { "value": "#F59E0B", "type": "color" },
+        "F": { "value": "#EF4444", "type": "color" }
+      },
+      "marketHeat": {
+        "hot": { "value": "#EF4444", "type": "color" },
+        "warm": { "value": "#F59E0B", "type": "color" },
+        "cool": { "value": "#3B82F6", "type": "color" },
+        "cold": { "value": "#64748B", "type": "color" }
+      }
+    },
+    "font": {
+      "family": {
+        "mono": { "value": "JetBrains Mono", "type": "fontFamilies", "description": "Primary — all UI, metrics, buttons" },
+        "sans": { "value": "Inter", "type": "fontFamilies", "description": "Spec only — long AI prose (rare in current UI)" }
+      },
+      "size": {
+        "2xs": { "value": "8", "type": "fontSizes" },
+        "xs": { "value": "9", "type": "fontSizes" },
+        "sm": { "value": "10", "type": "fontSizes" },
+        "md": { "value": "11", "type": "fontSizes" },
+        "base": { "value": "12", "type": "fontSizes" },
+        "lg": { "value": "13", "type": "fontSizes" },
+        "xl": { "value": "14", "type": "fontSizes" },
+        "2xl": { "value": "16", "type": "fontSizes" },
+        "3xl": { "value": "17", "type": "fontSizes" },
+        "4xl": { "value": "20", "type": "fontSizes", "description": "Hero grade, distribution pct" },
+        "5xl": { "value": "24", "type": "fontSizes" },
+        "6xl": { "value": "36", "type": "fontSizes", "description": "Phase A hero score (was 48 in v1 export)" },
+        "7xl": { "value": "48", "type": "fontSizes", "description": "Legacy large score — prefer 6xl" }
+      },
+      "weight": {
+        "regular": { "value": "400", "type": "fontWeights" },
+        "medium": { "value": "500", "type": "fontWeights" },
+        "bold": { "value": "700", "type": "fontWeights" }
+      },
+      "tracking": {
+        "tight": { "value": "-0.02", "type": "letterSpacing" },
+        "normal": { "value": "0", "type": "letterSpacing" },
+        "wide": { "value": "0.02", "type": "letterSpacing" },
+        "label": { "value": "0.08", "type": "letterSpacing" }
+      }
+    },
+    "spacing": {
+      "0": { "value": "0", "type": "spacing" },
+      "xs": { "value": "4", "type": "spacing" },
+      "sm": { "value": "8", "type": "spacing" },
+      "md": { "value": "12", "type": "spacing" },
+      "lg": { "value": "16", "type": "spacing" },
+      "xl": { "value": "24", "type": "spacing" },
+      "2xl": { "value": "32", "type": "spacing" }
+    },
+    "size": {
+      "layout": {
+        "navPaneWidth": { "value": "260", "type": "sizing", "description": "Live code (spec says 220)" },
+        "inspectorPaneWidth": { "value": "280", "type": "sizing", "description": "Live code (spec says 320)" },
+        "dividerWidth": { "value": "1", "type": "sizing" },
+        "headerBarHeight": { "value": "40", "type": "sizing" },
+        "commandBarHeight": { "value": "32", "type": "sizing" },
+        "tabBarHeight": { "value": "36", "type": "sizing" },
+        "blockHeaderHeight": { "value": "24", "type": "sizing" },
+        "navLinkHeight": { "value": "24", "type": "sizing" },
+        "rowHeight": { "value": "28", "type": "sizing", "description": "Metric rows, inputs, primary buttons" },
+        "buttonHeightLg": { "value": "32", "type": "sizing", "description": "TerminalButtonStyle default" },
+        "scoreRingSm": { "value": "120", "type": "sizing" },
+        "scoreRingLg": { "value": "180", "type": "sizing" },
+        "gridCellMin": { "value": "160", "type": "sizing" },
+        "gridCellMax": { "value": "250", "type": "sizing" },
+        "sheetWidthSm": { "value": "460", "type": "sizing" },
+        "previewWindowWidth": { "value": "1200", "type": "sizing" },
+        "previewWindowHeight": { "value": "800", "type": "sizing" }
+      },
+      "border": {
+        "thin": { "value": "1", "type": "borderWidth" },
+        "accent": { "value": "2", "type": "borderWidth", "description": "Danger left-border on metric rows" },
+        "ring": { "value": "4", "type": "borderWidth", "description": "Circular score ring stroke" }
+      },
+      "radius": {
+        "none": { "value": "0", "type": "borderRadius", "description": "Zero rounded corners everywhere" }
+      }
+    },
+    "opacity": {
+      "dangerTint": { "value": "0.05", "type": "opacity", "description": "5% semantic bg on danger cells" },
+      "warningTint": { "value": "0.05", "type": "opacity" },
+      "buttonPressed": { "value": "0.7", "type": "opacity" }
+    }
+  },
+  "porteos/profile": {
+    "accent": {
+      "cmdCenter": { "value": "#94A3B8", "type": "color" },
+      "realEstate": { "value": "#C25E30", "type": "color", "description": "Rust — live code primary RE accent" },
+      "realEstateSpec": { "value": "#D4AF37", "type": "color", "description": "Gold — design doc v3.0 (deprecated in code)" },
+      "hospitality": { "value": "#14B8A6", "type": "color" },
+      "design": { "value": "#A855F7", "type": "color" },
+      "circular": { "value": "#3B82F6", "type": "color" },
+      "mixedUse": { "value": "#F59E0B", "type": "color" },
+      "pipeline": { "value": "#F59E0B", "type": "color", "description": "V2.06 — deal flow / pipeline amber" },
+      "institutionalRust": { "value": "#A34121", "type": "color", "description": "Selection/alert accent for RE" }
+    }
+  },
+  "porteos/legacy": {
+    "color": {
+      "shell": {
+        "bg": { "value": "#0F1115", "type": "color", "description": "DEPRECATED v1.0.4" },
+        "surface": { "value": "#1A1D24", "type": "color", "description": "DEPRECATED v1.0.4" },
+        "elevated": { "value": "#23262E", "type": "color", "description": "DEPRECATED v1.0.4" },
+        "border": { "value": "#2E333F", "type": "color", "description": "DEPRECATED v1.0.4" }
+      },
+      "semantic": {
+        "success": { "value": "#10B981", "type": "color", "description": "DEPRECATED v1.0.4" },
+        "warning": { "value": "#F59E0B", "type": "color", "description": "DEPRECATED v1.0.4" },
+        "danger": { "value": "#EF4444", "type": "color", "description": "DEPRECATED v1.0.4" }
+      }
+    }
+  },
+  "porteos/semantic": {
+    "typography": {
+      "cliHeader": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.regular}",
+          "fontSize": "{font.size.md}",
+          "lineHeight": "16",
+          "letterSpacing": "{font.tracking.normal}"
+        },
+        "type": "typography",
+        "description": "porteos@system ~ % prefix"
+      },
+      "cliCommand": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.medium}",
+          "fontSize": "{font.size.md}",
+          "lineHeight": "16"
+        },
+        "type": "typography",
+        "description": "Module command string after prefix"
+      },
+      "navTitle": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.bold}",
+          "fontSize": "{font.size.lg}",
+          "lineHeight": "18"
+        },
+        "type": "typography",
+        "description": "PORTEOS@SYSTEM header"
+      },
+      "navLink": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.regular}",
+          "fontSize": "{font.size.lg}",
+          "lineHeight": "18"
+        },
+        "type": "typography"
+      },
+      "navLinkActive": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.bold}",
+          "fontSize": "{font.size.lg}",
+          "lineHeight": "18"
+        },
+        "type": "typography"
+      },
+      "metricLabel": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.medium}",
+          "fontSize": "{font.size.md}",
+          "lineHeight": "14",
+          "letterSpacing": "{font.tracking.wide}",
+          "textCase": "uppercase"
+        },
+        "type": "typography",
+        "description": "MetricGridCell label"
+      },
+      "metricValue": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.medium}",
+          "fontSize": "{font.size.2xl}",
+          "lineHeight": "20",
+          "letterSpacing": "{font.tracking.tight}"
+        },
+        "type": "typography",
+        "description": "Primary metric numbers — 16px semibold (Phase A)"
+      },
+      "metricValueSecondary": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.regular}",
+          "fontSize": "{font.size.base}",
+          "lineHeight": "16"
+        },
+        "type": "typography"
+      },
+      "scoreHero": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.bold}",
+          "fontSize": "{font.size.6xl}",
+          "lineHeight": "40"
+        },
+        "type": "typography",
+        "description": "PorteosScoreBlock — 36px bold (Phase A)"
+      },
+      "scoreGrade": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.bold}",
+          "fontSize": "{font.size.4xl}",
+          "lineHeight": "24"
+        },
+        "type": "typography",
+        "description": "Letter grade — 20px bold (Phase A)"
+      },
+      "buttonPrimary": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.bold}",
+          "fontSize": "{font.size.md}",
+          "lineHeight": "14",
+          "textCase": "uppercase"
+        },
+        "type": "typography",
+        "description": "[ ACTION_NAME ] format"
+      },
+      "buttonSecondary": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.regular}",
+          "fontSize": "{font.size.md}",
+          "lineHeight": "14"
+        },
+        "type": "typography",
+        "description": "./action_name format"
+      },
+      "input": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.regular}",
+          "fontSize": "{font.size.xl}",
+          "lineHeight": "18"
+        },
+        "type": "typography"
+      },
+      "body": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.regular}",
+          "fontSize": "{font.size.lg}",
+          "lineHeight": "20"
+        },
+        "type": "typography"
+      },
+      "caption": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.regular}",
+          "fontSize": "{font.size.sm}",
+          "lineHeight": "14"
+        },
+        "type": "typography"
+      },
+      "micro": {
+        "value": {
+          "fontFamily": "{font.family.mono}",
+          "fontWeight": "{font.weight.bold}",
+          "fontSize": "{font.size.xs}",
+          "lineHeight": "12"
+        },
+        "type": "typography"
+      }
+    }
+  },
+  "porteos/component": {
+    "button": {
+      "primary": {
+        "bg": { "value": "{profile.accent.realEstate}", "type": "color" },
+        "text": { "value": "{color.text.onAccent}", "type": "color" },
+        "height": { "value": "{size.layout.rowHeight}", "type": "sizing" },
+        "paddingX": { "value": "{spacing.md}", "type": "spacing" },
+        "radius": { "value": "{size.radius.none}", "type": "borderRadius" },
+        "format": { "value": "[ TITLE ]", "type": "other" }
+      },
+      "secondary": {
+        "bg": { "value": "transparent", "type": "color" },
+        "text": { "value": "{color.semantic.success}", "type": "color" },
+        "height": { "value": "{size.layout.rowHeight}", "type": "sizing" },
+        "paddingX": { "value": "{spacing.md}", "type": "spacing" },
+        "format": { "value": "./title", "type": "other" }
+      },
+      "palette": {
+        "green": { "value": "#10B981", "type": "color" },
+        "red": { "value": "#EF4444", "type": "color" },
+        "amber": { "value": "#F59E0B", "type": "color" },
+        "rust": { "value": "#C25E30", "type": "color" },
+        "teal": { "value": "#14B8A6", "type": "color" },
+        "blue": { "value": "#3B82F6", "type": "color" },
+        "purple": { "value": "#A855F7", "type": "color" },
+        "muted": { "value": "#2E333F", "type": "color" }
+      }
+    },
+    "input": {
+      "bg": { "value": "{color.shell.bg}", "type": "color" },
+      "border": { "value": "{color.shell.border}", "type": "color" },
+      "borderFocus": { "value": "{profile.accent.realEstate}", "type": "color", "description": "Uses active profile accent" },
+      "height": { "value": "{size.layout.rowHeight}", "type": "sizing" },
+      "paddingX": { "value": "{spacing.sm}", "type": "spacing" }
+    },
+    "terminalBlock": {
+      "headerBg": { "value": "transparent", "type": "color" },
+      "headerHeight": { "value": "{size.layout.blockHeaderHeight}", "type": "sizing" },
+      "contentPadding": { "value": "{spacing.md}", "type": "spacing" },
+      "border": { "value": "{color.shell.border}", "type": "color" }
+    },
+    "metricRow": {
+      "height": { "value": "{size.layout.rowHeight}", "type": "sizing" },
+      "paddingX": { "value": "{spacing.md}", "type": "spacing" },
+      "paddingY": { "value": "{spacing.sm}", "type": "spacing" },
+      "dangerBorderWidth": { "value": "{size.border.accent}", "type": "borderWidth" }
+    },
+    "metricGridCell": {
+      "paddingY": { "value": "6", "type": "spacing" },
+      "labelGap": { "value": "2", "type": "spacing" },
+      "gridGap": { "value": "{spacing.lg}", "type": "spacing" },
+      "rowGap": { "value": "{spacing.md}", "type": "spacing" }
+    },
+    "scoreRing": {
+      "sizeDefault": { "value": "{size.layout.scoreRingSm}", "type": "sizing" },
+      "strokeWidth": { "value": "{size.border.ring}", "type": "borderWidth" },
+      "trackColor": { "value": "{color.shell.border}", "type": "color" }
+    },
+    "scoreBlock": {
+      "padding": { "value": "{spacing.lg}", "type": "spacing" },
+      "bg": { "value": "{color.shell.surface}", "type": "color" },
+      "border": { "value": "{color.shell.border}", "type": "color" }
+    },
+    "dealRow": {
+      "height": { "value": "{size.layout.rowHeight}", "type": "sizing" },
+      "statusPillHeight": { "value": "16", "type": "sizing" }
+    },
+    "sheet": {
+      "widthDefault": { "value": "{size.layout.sheetWidthSm}", "type": "sizing" },
+      "headerHeight": { "value": "40", "type": "sizing" }
+    },
+    "toast": {
+      "width": { "value": "320", "type": "sizing" },
+      "padding": { "value": "{spacing.md}", "type": "spacing" }
+    },
+    "commandPalette": {
+      "width": { "value": "560", "type": "sizing" },
+      "maxHeight": { "value": "400", "type": "sizing" }
+    }
+  },
+  "$themes": [
+    {
+      "id": "porteos-dark",
+      "name": "Porteos Dark",
+      "selectedTokenSets": {
+        "porteos/global": "enabled",
+        "porteos/semantic": "enabled",
+        "porteos/profile": "enabled",
+        "porteos/component": "enabled",
+        "porteos/legacy": "disabled"
+      },
+      "$figmaStyleReferences": {},
+      "$figmaVariableReferences": {}
+    }
+  ]
+}

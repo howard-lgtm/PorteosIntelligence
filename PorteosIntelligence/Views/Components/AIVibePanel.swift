@@ -15,9 +15,11 @@ struct AIVibePanel: View {
 
     @Environment(\.modelContext) private var modelContext
 
-    @State private var result:     AnalysisResult? = nil
-    @State private var isRunning:  Bool            = false
-    @State private var analyzedID: UUID?           = nil
+    @State private var result:      AnalysisResult? = nil
+    @State private var phase:       AnalysisPhase?  = nil   // nil = idle
+    @State private var analyzedID:  UUID?           = nil
+
+    private var isRunning: Bool { phase == .analyzingRules || phase == .generatingNarrative }
 
     // MARK: Tokens
 
@@ -97,11 +99,18 @@ struct AIVibePanel: View {
             sectionHeader("01 // AI_VIBE_CHECK")
 
             VStack(alignment: .leading, spacing: 8) {
-                logLine(">", "scanning real estate metrics...")
-                logLine(">", "scanning hospitality metrics...")
-                logLine(">", "scanning design metrics...")
-                logLine(">", "scanning circular economy metrics...")
-                logLine(">", "assembling narrative...")
+                if phase == .analyzingRules || phase == .generatingNarrative {
+                    logLine(">", "scanning real estate metrics...")
+                    logLine(">", "scanning hospitality metrics...")
+                    logLine(">", "scanning design metrics...")
+                    logLine(">", "scanning circular economy metrics...")
+                }
+                if phase == .generatingNarrative {
+                    logLine(">", "[ ANALYZING_RULES... ] done")
+                    logLine(">", "[ GENERATING_NARRATIVE... ] calling local LLM...")
+                } else if phase == .analyzingRules {
+                    logLine(">", "[ ANALYZING_RULES... ]")
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -126,6 +135,11 @@ struct AIVibePanel: View {
             .padding(.vertical, 12)
 
         Rectangle().fill(shellBorder).frame(height: 1)
+
+        // LLM offline warning
+        if case .done(let llmOffline) = phase, llmOffline {
+            llmOfflineBanner
+        }
 
         // Signal sections
         signalSection(title: "REAL ESTATE",         signals: r.realEstateSignals)
@@ -327,6 +341,26 @@ struct AIVibePanel: View {
 
     // MARK: Run Button
 
+    // MARK: LLM Offline Banner
+
+    private var llmOfflineBanner: some View {
+        HStack(spacing: 6) {
+            Text("~")
+                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .foregroundStyle(Color(hex: "#F59E0B"))
+            Text("Local LLM offline. Using rule-based analysis only.")
+                .font(.custom("JetBrains Mono", size: 11))
+                .foregroundStyle(Color(hex: "#94A3B8"))
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(hex: "#1A1D24"))
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Color(hex: "#2E333F")).frame(height: 1)
+        }
+    }
+
     private func runButton(label: String) -> some View {
         Button { runAnalysis() } label: {
             Text(label)
@@ -368,13 +402,18 @@ struct AIVibePanel: View {
     // MARK: Analysis Runner
 
     private func runAnalysis() {
-        isRunning = true
+        phase = .analyzingRules
         Task {
-            let r = await AIAnalysisService.shared.analyze(deal, context: modelContext)
+            let r = await AIAnalysisService.shared.analyze(
+                deal,
+                context: modelContext,
+                onPhaseChange: { [self] newPhase in
+                    self.phase = newPhase
+                }
+            )
             await MainActor.run {
-                result              = r
-                analyzedID          = deal.id
-                isRunning           = false
+                result      = r
+                analyzedID  = deal.id
                 // Persist analysis text only — do NOT touch deal.updatedAt here.
                 // Setting updatedAt would trigger InspectorPane's onChange which
                 // immediately wipes the text we just stored.

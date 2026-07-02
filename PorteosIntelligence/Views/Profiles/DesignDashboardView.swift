@@ -7,22 +7,9 @@ struct DesignDashboardView: View {
 
     @Bindable var deal: PropertyDeal
 
-    // MARK: Tokens
-
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellElevated = Color(hex: "#23262E")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let accentPurple  = Color(hex: "#A855F7")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-
-    // MARK: Computed
+    private var accent: Color { ProfileType.design.accentColor }
 
     private var hasData: Bool { deal.designGFA > 0 || deal.designNIA > 0 || deal.designSpaceUtilization > 0 }
-
-    private let columns = [GridItem(.adaptive(minimum: 140, maximum: 220), spacing: 8, alignment: .leading)]
 
     private var metrics: DesignCalculator.FullMetrics {
         DesignCalculator.calculateFull(inputs: DesignCalculator.FullInputs(
@@ -45,16 +32,17 @@ struct DesignDashboardView: View {
         ))
     }
 
-    // MARK: Body
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            cliHeader
-            Rectangle().fill(shellBorder).frame(height: 1)
+            TerminalCLIHeader(
+                command: "profile --design --asset=\"\(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)\"",
+                accentColor: accent
+            )
+            TerminalStructuralDivider()
 
             if hasData {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: DesignTokens.blockSpacing) {
                         let logs = DataValidator.validate(deal: deal)
                         SystemLogBlock(messages: logs)
                         module01SpaceEfficiency
@@ -63,91 +51,69 @@ struct DesignDashboardView: View {
                         module04Adaptability
                         DesignSensitivityBlock(deal: deal)
                         MarketTrendModule(city: deal.locationCity, profile: "design",
-                                          accent: Color(hex: "#A855F7"))
+                                          accent: accent)
                     }
-                    .padding(16)
+                    .padding(DesignTokens.blockGutter)
                 }
             } else {
                 emptyState
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(shellBg)
+        .background(DesignTokens.canvasBase)
     }
 
-    // MARK: CLI Header
-
-    private var cliHeader: some View {
-        HStack(spacing: 0) {
-            Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 13))
-                .foregroundStyle(textTertiary)
-            Text("profile --design --asset=\"\(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)\"")
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                .foregroundStyle(accentPurple)
-                .lineLimit(1)
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .frame(height: 36)
-        .background(shellSurface)
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
     // MARK: Module 01 // SPACE_EFFICIENCY
-    // ─────────────────────────────────────────────────────────────────────────
 
     private var module01SpaceEfficiency: some View {
-        TerminalBlock(command: "01 // SPACE_EFFICIENCY", accentColor: accentPurple, contentPadding: 12) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
+        TerminalBlock(command: "01 // SPACE_EFFICIENCY", accentColor: accent) {
+            TerminalMetricGrid {
                 let ntgTrend  = mockTrend(from: metrics.netToGrossRatio)
                 let utilTrend = mockTrend(from: metrics.spaceUtilization)
 
                 MetricGridCell(  label: "Gross Floor Area (GFA)",  value: m2(metrics.gfa))
                 MetricGridCell(  label: "Net Internal Area (NIA)", value: m2(metrics.nia))
-                MetricWithTrend( label: "Net-to-Gross Ratio",
-                                 value: pct(metrics.netToGrossRatio),
-                                 trend: ntgTrend,
-                                 trendColor: sparkColor(ntgTrend),
-                                 state: netToGrossState(metrics.netToGrossRatio))
+                TerminalMetricCell(label: "Net-to-Gross Ratio",
+                                   value: pct(metrics.netToGrossRatio),
+                                   state: netToGrossState(metrics.netToGrossRatio),
+                                   trend: ntgTrend,
+                                   trendColor: sparkColor(ntgTrend))
                 MetricGridCell(  label: "Circulation",
                                  value: pct(metrics.circulationPct),
                                  state: metrics.circulationPct > 20 ? .warning : .neutral)
-                MetricWithTrend( label: "Space Utilization Rate",
-                                 value: pct(metrics.spaceUtilization),
-                                 trend: utilTrend,
-                                 trendColor: sparkColor(utilTrend),
-                                 state: metrics.spaceUtilization >= 90 ? .optimal : .neutral)
+                TerminalMetricCell(label: "Space Utilization Rate",
+                                   value: pct(metrics.spaceUtilization),
+                                   state: metrics.spaceUtilization >= 90 ? .optimal : .neutral,
+                                   trend: utilTrend,
+                                   trendColor: sparkColor(utilTrend))
             }
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // MARK: Module 02 // WELLNESS_METRICS
-    // ─────────────────────────────────────────────────────────────────────────
 
     private var module02Wellness: some View {
-        TerminalBlock(command: "02 // WELLNESS_METRICS", accentColor: accentPurple, contentPadding: 12) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
+        TerminalBlock(command: "02 // WELLNESS_METRICS", accentColor: accent) {
+            TerminalMetricGrid {
                 let dayTrend     = mockTrend(from: metrics.daylighting)
                 let thermalTrend = mockTrend(from: metrics.thermalComfort)
 
-                MetricWithTrend( label: "Daylighting Coverage",
-                                 value: pct(metrics.daylighting),
-                                 trend: dayTrend,
-                                 trendColor: sparkColor(dayTrend),
-                                 state: metrics.daylighting >= 80 ? .optimal : .neutral)
+                TerminalMetricCell(label: "Daylighting Coverage",
+                                   value: pct(metrics.daylighting),
+                                   state: metrics.daylighting >= 80 ? .optimal : .neutral,
+                                   trend: dayTrend,
+                                   trendColor: sparkColor(dayTrend))
                 MetricGridCell(  label: "CO2 Levels",
                                  value: "\(metrics.co2ppm.formatted(.number.precision(.fractionLength(0)))) ppm",
                                  state: co2State(metrics.co2ppm))
                 MetricGridCell(  label: "Air Changes Per Hour",
                                  value: "\(metrics.ach.formatted(.number.precision(.fractionLength(1)))) ACH",
                                  state: metrics.ach >= 4 ? .optimal : .neutral)
-                MetricWithTrend( label: "Thermal Comfort Score",
-                                 value: pct(metrics.thermalComfort),
-                                 trend: thermalTrend,
-                                 trendColor: sparkColor(thermalTrend),
-                                 state: metrics.thermalComfort >= 90 ? .optimal : .neutral)
+                TerminalMetricCell(label: "Thermal Comfort Score",
+                                   value: pct(metrics.thermalComfort),
+                                   state: metrics.thermalComfort >= 90 ? .optimal : .neutral,
+                                   trend: thermalTrend,
+                                   trendColor: sparkColor(thermalTrend))
                 MetricGridCell(  label: "Acoustic Comfort Score",
                                  value: pct(metrics.acousticComfort),
                                  state: metrics.acousticComfort >= 85 ? .optimal : .neutral)
@@ -155,13 +121,11 @@ struct DesignDashboardView: View {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // MARK: Module 03 // BIOPHILIC_ELEMENTS
-    // ─────────────────────────────────────────────────────────────────────────
 
     private var module03Biophilic: some View {
-        TerminalBlock(command: "03 // BIOPHILIC_ELEMENTS", accentColor: accentPurple, contentPadding: 12) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
+        TerminalBlock(command: "03 // BIOPHILIC_ELEMENTS", accentColor: accent) {
+            TerminalMetricGrid {
                 MetricGridCell(label: "Biophilic Elements",  value: "\(metrics.biophilicCount)")
                 MetricGridCell(label: "Green Wall Coverage", value: m2(metrics.greenWallM2))
                 MetricGridCell(label: "Views to Nature",     value: pct(metrics.viewsToNaturePct),    state: metrics.viewsToNaturePct >= 70 ? .optimal : .neutral)
@@ -170,13 +134,11 @@ struct DesignDashboardView: View {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // MARK: Module 04 // ADAPTABILITY
-    // ─────────────────────────────────────────────────────────────────────────
 
     private var module04Adaptability: some View {
-        TerminalBlock(command: "04 // ADAPTABILITY", accentColor: accentPurple, contentPadding: 12) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
+        TerminalBlock(command: "04 // ADAPTABILITY", accentColor: accent) {
+            TerminalMetricGrid {
                 MetricGridCell(label: "Movable Partition",  value: pct(metrics.movablePartitionPct), state: metrics.movablePartitionPct >= 30 ? .optimal : .neutral)
                 MetricGridCell(label: "Multi-Use Spaces",   value: "\(metrics.multiUseSpaces)")
                 MetricGridCell(label: "Adaptability Score", value: "\(metrics.adaptabilityScore.formatted(.number.precision(.fractionLength(0))))/100", state: adaptabilityState(metrics.adaptabilityScore))
@@ -184,65 +146,28 @@ struct DesignDashboardView: View {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // MARK: Empty State
-    // ─────────────────────────────────────────────────────────────────────────
 
     private var emptyState: some View {
         VStack(spacing: 16) {
             Spacer()
             VStack(spacing: 8) {
                 Text("porteos@system ~ % ls ./design_data")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textTertiary)
+                    .font(DesignTokens.mono(size: 11))
+                    .foregroundStyle(DesignTokens.textDim)
                 Text("No design data available")
-                    .font(.custom("JetBrains Mono", size: 14))
-                    .foregroundStyle(textSecondary)
+                    .font(DesignTokens.mono(size: 12))
+                    .foregroundStyle(DesignTokens.textSecondary)
                 Text("Click [ ./EDIT_DEAL ] to add design metrics")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textSecondary)
+                    .font(DesignTokens.mono(size: 11))
+                    .foregroundStyle(DesignTokens.textSecondary)
             }
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Shared Components
-    // ─────────────────────────────────────────────────────────────────────────
-
-    private func summaryRow(label: String, value: String, state: MetricState = .neutral) -> some View {
-        let valueColor: Color = {
-            switch state {
-            case .optimal:           return Color(hex: "#10B981")
-            case .warning:           return Color(hex: "#F59E0B")
-            case .danger, .critical: return Color(hex: "#EF4444")
-            default:                 return textPrimary
-            }
-        }()
-        return HStack(spacing: 0) {
-            Text(label.uppercased())
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
-                .tracking(0.08)
-                .foregroundStyle(textSecondary)
-            Spacer()
-            Text(value)
-                .font(.custom("JetBrains Mono", size: 16).weight(.bold))
-                .monospacedDigit()
-                .foregroundStyle(valueColor)
-        }
-        .padding(.horizontal, 12)
-        .frame(height: 36)
-        .background(shellElevated)
-    }
-
-    private var rowDivider: some View {
-        Rectangle().fill(shellBorder).frame(height: 1)
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
     // MARK: Formatters
-    // ─────────────────────────────────────────────────────────────────────────
 
     private func m2(_ v: Double) -> String {
         "\(v.formatted(.number.precision(.fractionLength(0)))) m²"
@@ -252,9 +177,7 @@ struct DesignDashboardView: View {
         "\(v.formatted(.number.precision(.fractionLength(dp))))%"
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // MARK: Threshold Logic
-    // ─────────────────────────────────────────────────────────────────────────
 
     private func netToGrossState(_ v: Double) -> MetricState {
         if v >= 80 { return .optimal }
@@ -301,11 +224,11 @@ struct DesignDashboardView: View {
         DesignDashboardView(deal: deal)
     }
     .frame(width: 660, height: 900)
-    .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
 }
 
 #Preview("Empty State") {
     DesignDashboardView(deal: PropertyDeal())
         .frame(width: 660, height: 400)
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
 }

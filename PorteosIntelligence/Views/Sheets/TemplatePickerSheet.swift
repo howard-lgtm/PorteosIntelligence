@@ -18,23 +18,13 @@ struct TemplatePickerSheet: View {
     // ── State ─────────────────────────────────────────────────────────────────
     @State private var selectedCategory = "all"
 
-    // ── Design tokens ─────────────────────────────────────────────────────────
-    private let shellBg      = Color(hex: "#0F1115")
-    private let shellSurface = Color(hex: "#1A1D24")
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let textPrimary  = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let accentRust   = Color(hex: "#C25E30")
-
-    // ── Category tabs ─────────────────────────────────────────────────────────
     private let categories: [(id: String, label: String, color: Color)] = [
-        ("all",         "ALL",         Color(hex: "#94A3B8")),
-        ("realEstate",  "REAL ESTATE", Color(hex: "#C25E30")),
-        ("hospitality", "HOSPITALITY", Color(hex: "#14B8A6")),
-        ("mixedUse",    "MIXED-USE",   Color(hex: "#F59E0B")),
-        ("design",      "DESIGN",      Color(hex: "#A855F7")),
-        ("circular",    "CIRCULAR",    Color(hex: "#3B82F6")),
+        ("all",         "ALL",         DesignTokens.textSecondary),
+        ("realEstate",  "REAL ESTATE", ProfileType.realEstate.accentColor),
+        ("hospitality", "HOSPITALITY", ProfileType.hospitality.accentColor),
+        ("mixedUse",    "MIXED-USE",   DesignTokens.statusWarn),
+        ("design",      "DESIGN",      ProfileType.design.accentColor),
+        ("circular",    "CIRCULAR",    ProfileType.circular.accentColor),
     ]
 
     // ── Filtered data ──────────────────────────────────────────────────────────
@@ -47,80 +37,39 @@ struct TemplatePickerSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             sheetHeader
-            Rectangle().fill(shellBorder).frame(height: 1)
-            categoryFilter
-            Rectangle().fill(shellBorder).frame(height: 1)
+            TerminalStructuralDivider()
+            TerminalCategoryTabBar(categories: categories, selectedID: $selectedCategory)
+            TerminalStructuralDivider()
             templateGrid
         }
         .frame(width: 720)
-        .background(shellBg)
+        .background(DesignTokens.canvasBase)
         .clipShape(Rectangle())
     }
-
-    // MARK: – Sheet Header
 
     private var sheetHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 12))
-                .foregroundStyle(textTertiary)
+                .font(DesignTokens.mono(size: 11))
+                .foregroundStyle(DesignTokens.textDim)
             Text("template_init --mode=new_deal")
-                .font(.custom("JetBrains Mono", size: 12).weight(.bold))
-                .foregroundStyle(accentRust)
-
+                .font(DesignTokens.mono(size: 11, weight: .bold))
+                .foregroundStyle(DesignTokens.accentRust)
             Spacer()
-
             Text("[ \(filteredTemplates.count) TEMPLATES ]")
-                .font(.custom("JetBrains Mono", size: 10))
-                .foregroundStyle(textTertiary)
+                .font(DesignTokens.mono(size: 10))
+                .foregroundStyle(DesignTokens.textDim)
                 .padding(.trailing, 12)
-
             Button { dismiss() } label: {
                 Text("[ × ]")
-                    .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                    .foregroundStyle(textSecondary)
+                    .font(DesignTokens.mono(size: 11, weight: .bold))
+                    .foregroundStyle(DesignTokens.textSecondary)
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 20)
-        .frame(height: 40)
-        .background(shellSurface)
-    }
-
-    // MARK: – Category Filter Bar
-
-    private var categoryFilter: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 0) {
-                ForEach(categories, id: \.id) { cat in
-                    categoryTab(id: cat.id, label: cat.label, color: cat.color)
-                }
-            }
-            .padding(.horizontal, 20)
-        }
-        .frame(height: 38)
-        .background(shellSurface)
-    }
-
-    private func categoryTab(id: String, label: String, color: Color) -> some View {
-        let isActive = selectedCategory == id
-        return Button {
-            selectedCategory = id
-        } label: {
-            VStack(spacing: 0) {
-                Spacer()
-                Text(label)
-                    .font(.custom("JetBrains Mono", size: 11).weight(isActive ? .bold : .regular))
-                    .foregroundStyle(isActive ? color : textTertiary)
-                    .padding(.horizontal, 10)
-                Spacer()
-                Rectangle()
-                    .fill(isActive ? color : Color.clear)
-                    .frame(height: 2)
-            }
-            .frame(height: 38)
-        }
-        .buttonStyle(.plain)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightPaneBar)
+        .background(DesignTokens.surfacePanel)
     }
 
     // MARK: – Template Grid
@@ -154,19 +103,19 @@ struct TemplatePickerSheet: View {
                 HStack(spacing: 0) {
                     // Left accent bar
                     Rectangle()
-                        .fill(shellBorder)
+                        .fill(DesignTokens.dividerStructural)
                         .frame(width: 3)
 
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
                             Text("+ BLANK DEAL")
-                                .font(.custom("JetBrains Mono", size: 12).weight(.bold))
-                                .foregroundStyle(textSecondary)
+                                .font(DesignTokens.mono(size: 12, weight: .bold))
+                                .foregroundStyle(DesignTokens.textSecondary)
                             Spacer()
                         }
                         Text("Start from scratch with an empty template")
-                            .font(.custom("JetBrains Mono", size: 10))
-                            .foregroundStyle(textTertiary)
+                            .font(DesignTokens.mono(size: 10))
+                            .foregroundStyle(DesignTokens.textDim)
                             .lineLimit(2)
                             .fixedSize(horizontal: false, vertical: true)
 
@@ -174,8 +123,8 @@ struct TemplatePickerSheet: View {
 
                         HStack {
                             Text("// NO PRE-FILLED VALUES")
-                                .font(.custom("JetBrains Mono", size: 9))
-                                .foregroundStyle(textTertiary)
+                                .font(DesignTokens.mono(size: 9))
+                                .foregroundStyle(DesignTokens.textDim)
                             Spacer()
                         }
                     }
@@ -184,11 +133,8 @@ struct TemplatePickerSheet: View {
                 }
             }
             .frame(maxWidth: .infinity, minHeight: 104)
-            .background(shellSurface)
-            .overlay(
-                Rectangle()
-                    .stroke(shellBorder, lineWidth: 1)
-            )
+            .background(DesignTokens.surfacePanel)
+            .overlay(Rectangle().stroke(DesignTokens.dividerStructural, lineWidth: 1))
             .clipShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -211,14 +157,14 @@ struct TemplatePickerSheet: View {
                         // Name + category badge
                         HStack(alignment: .top, spacing: 6) {
                             Text(template.name.uppercased())
-                                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                                .foregroundStyle(textPrimary)
+                                .font(DesignTokens.mono(size: 11, weight: .bold))
+                                .foregroundStyle(DesignTokens.textPrimary)
                                 .lineLimit(2)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .frame(maxWidth: .infinity, alignment: .leading)
 
                             Text(template.categoryLabel)
-                                .font(.custom("JetBrains Mono", size: 8).weight(.medium))
+                                .font(DesignTokens.mono(size: 8, weight: .medium))
                                 .foregroundStyle(template.accentColor)
                                 .padding(.horizontal, 5)
                                 .padding(.vertical, 2)
@@ -232,8 +178,8 @@ struct TemplatePickerSheet: View {
 
                         // Description
                         Text(template.description)
-                            .font(.custom("JetBrains Mono", size: 9.5))
-                            .foregroundStyle(textSecondary)
+                            .font(DesignTokens.mono(size: 10))
+                            .foregroundStyle(DesignTokens.textSecondary)
                             .lineLimit(2)
                             .fixedSize(horizontal: false, vertical: true)
 
@@ -241,7 +187,7 @@ struct TemplatePickerSheet: View {
 
                         // Divider
                         Rectangle()
-                            .fill(shellBorder.opacity(0.6))
+                            .fill(DesignTokens.dividerStructural.opacity(0.6))
                             .frame(height: 1)
 
                         // Key metrics row
@@ -249,10 +195,10 @@ struct TemplatePickerSheet: View {
                             ForEach(template.keyMetrics, id: \.label) { metric in
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(metric.label)
-                                        .font(.custom("JetBrains Mono", size: 7.5))
-                                        .foregroundStyle(textTertiary)
+                                        .font(DesignTokens.mono(size: 8))
+                                        .foregroundStyle(DesignTokens.textDim)
                                     Text(metric.value)
-                                        .font(.custom("JetBrains Mono", size: 10).weight(.bold))
+                                        .font(DesignTokens.mono(size: 10, weight: .bold))
                                         .foregroundStyle(template.accentColor)
                                 }
                             }
@@ -266,11 +212,8 @@ struct TemplatePickerSheet: View {
                 }
             }
             .frame(maxWidth: .infinity, minHeight: 104)
-            .background(shellSurface)
-            .overlay(
-                Rectangle()
-                    .stroke(shellBorder, lineWidth: 1)
-            )
+            .background(DesignTokens.surfacePanel)
+            .overlay(Rectangle().stroke(DesignTokens.dividerStructural, lineWidth: 1))
             .clipShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -305,5 +248,5 @@ struct TemplatePickerSheet: View {
 
     return TemplatePickerSheet()
         .modelContainer(container)
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
 }

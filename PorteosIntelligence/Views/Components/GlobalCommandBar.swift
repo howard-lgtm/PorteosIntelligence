@@ -1,54 +1,57 @@
 import SwiftUI
 
 // MARK: - GlobalCommandBar
-// Fixed 32pt bar pinned to the bottom of AppShell.
-// Left: prompt prefix + text input field.
-// Right: encoding / line-count indicator.
+// V2.06 footer: prompt + blinking cursor | MAN_PAGES SYS_STAT KERNEL_LOG
 
 struct GlobalCommandBar: View {
 
     @State private var commandInput: String = ""
     var lineCount: Int = 120
 
-    // MARK: Tokens
-
-    private let shellBg      = Color(hex: "#0F1115")
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let textPrimary  = Color(hex: "#F8F9FA")
-    private let textTertiary = Color(hex: "#64748B")
-
-    // MARK: Body
-
     var body: some View {
         VStack(spacing: 0) {
             Rectangle()
-                .fill(shellBorder)
-                .frame(height: 1)
+                .fill(DesignTokens.dividerStructural)
+                .frame(height: DesignTokens.dividerWidth)
 
             HStack(spacing: 0) {
-                // Prompt prefix
-                Text("porteos@system ~ %")
-                    .font(.custom("JetBrains Mono", size: 11))
-                    .foregroundStyle(textTertiary)
-                    .padding(.trailing, 8)
+                Text("porteos@system ~ % ")
+                    .font(DesignTokens.mono(size: 11))
+                    .foregroundStyle(DesignTokens.textDim)
 
-                // Command input
                 TextField("", text: $commandInput)
-                    .font(.custom("JetBrains Mono", size: 11))
-                    .foregroundStyle(textPrimary)
+                    .font(DesignTokens.mono(size: 11))
+                    .foregroundStyle(DesignTokens.textPrimary)
                     .textFieldStyle(.plain)
                     .frame(maxWidth: .infinity)
 
-                // Right-side status
-                Text("UTF-8  LN: \(lineCount)")
-                    .font(.custom("JetBrains Mono", size: 11))
-                    .foregroundStyle(textTertiary)
-                    .padding(.leading, 16)
+                BlinkingCursorView()
+                    .padding(.trailing, 16)
+
+                footerMonitors
             }
             .padding(.horizontal, 12)
-            .frame(height: 32)
-            .background(shellBg)
+            .frame(height: DesignTokens.rowHeightButton)
+            .background(DesignTokens.canvasBase)
         }
+    }
+
+    private var footerMonitors: some View {
+        HStack(spacing: 12) {
+            footerTag("MAN_PAGES")
+            footerTag("SYS_STAT")
+            footerTag("KERNEL_LOG")
+            Text("LN:\(lineCount)")
+                .font(DesignTokens.mono(size: 10))
+                .foregroundStyle(DesignTokens.textDim)
+                .monospacedDigit()
+        }
+    }
+
+    private func footerTag(_ label: String) -> some View {
+        Text(label)
+            .font(DesignTokens.mono(size: 10, weight: .bold))
+            .foregroundStyle(DesignTokens.textDim)
     }
 }
 
@@ -57,5 +60,5 @@ struct GlobalCommandBar: View {
 #Preview {
     GlobalCommandBar(lineCount: 120)
         .frame(width: 1200)
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
 }

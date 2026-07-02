@@ -45,16 +45,16 @@ struct NavigationPane: View {
         return .realEstate
     }
 
-    // MARK: Tokens
+    // MARK: Tokens (V2.06 — via DesignTokens)
 
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellElevated = Color(hex: "#23262E")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let accentRust    = Color(hex: "#C25E30")
-    private let accentGreen   = Color(hex: "#10B981")
+    private var shellSurface:  Color { DesignTokens.surfacePanel }
+    private var shellElevated: Color { DesignTokens.surfaceElevated }
+    private var shellBorder:   Color { DesignTokens.dividerStructural }
+    private var textPrimary:   Color { DesignTokens.textPrimary }
+    private var textSecondary: Color { DesignTokens.textSecondary }
+    private var textTertiary:  Color { DesignTokens.textDim }
+    private var accentRust:    Color { DesignTokens.accentRust }
+    private var accentGreen:   Color { DesignTokens.statusGo }
 
     // MARK: Body
 
@@ -103,13 +103,13 @@ struct NavigationPane: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text("PORTEOS@SYSTEM")
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                .foregroundStyle(textPrimary)
+            Text("INSTITUTIONAL_V2.06_STABLE")
+                .font(DesignTokens.mono(size: 11, weight: .bold))
+                .foregroundStyle(accentRust)
 
             Text("STATUS: ENCRYPTED")
-                .font(.custom("JetBrains Mono", size: 13))
-                .foregroundStyle(accentRust)
+                .font(DesignTokens.mono(size: 11))
+                .foregroundStyle(textTertiary)
         }
         .padding(.top, 16)
         .padding(.bottom, 16)
@@ -139,19 +139,24 @@ struct NavigationPane: View {
             activeProfile = profile
         } label: {
             HStack(spacing: 0) {
-                // Active indicator pip
                 Rectangle()
-                    .fill(isActive ? profile.accentColor : Color.clear)
-                    .frame(width: 2)
+                    .fill(isActive ? accentRust : Color.clear)
+                    .frame(width: DesignTokens.navSelectionBorder)
 
                 Text(profile.navPath)
-                    .font(.custom("JetBrains Mono", size: 13).weight(isActive ? .bold : .regular))
-                    .foregroundStyle(isActive ? textPrimary : textSecondary)
+                    .font(DesignTokens.mono(size: 13, weight: isActive ? .bold : .regular))
+                    .foregroundStyle(isActive ? textPrimary : textTertiary)
                     .padding(.leading, 14)
 
                 Spacer()
+
+                Text("[ ↗ ]")
+                    .font(DesignTokens.mono(size: 9))
+                    .foregroundStyle(textTertiary)
+                    .padding(.trailing, 8)
+                    .opacity(0.6)
             }
-            .frame(height: 28)
+            .frame(height: DesignTokens.rowHeightData)
             .background(isActive ? shellElevated : Color.clear)
             .clipShape(Rectangle())
         }

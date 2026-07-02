@@ -44,14 +44,14 @@ struct AppShell: View {
         )
     }
 
-    // MARK: Tokens
+    // MARK: Tokens (V2.06)
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#0F1115")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let accentRust    = Color(hex: "#C25E30")
+    private var shellBg:       Color { DesignTokens.canvasBase }
+    private var shellSurface:  Color { DesignTokens.surfacePanel }
+    private var shellBorder:   Color { DesignTokens.dividerStructural }
+    private var textSecondary: Color { DesignTokens.textSecondary }
+    private var textTertiary:  Color { DesignTokens.textDim }
+    private var accentRust:    Color { DesignTokens.accentRust }
 
     // MARK: Layout Constants
 
@@ -266,7 +266,6 @@ struct AppShell: View {
             let viewModel = PropertyDealViewModel(deal: deal)
             VStack(spacing: 0) {
                 PorteosScoreBlock(metrics: viewModel.porteosScore)
-                Rectangle().fill(shellBg).frame(height: 16)
                 switch wm.activeProfile {
                 case .realEstate:  RealEstateDashboardView(deal: deal)
                 case .hospitality: HospitalityDashboardView(deal: deal)

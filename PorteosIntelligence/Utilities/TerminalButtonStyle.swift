@@ -2,12 +2,8 @@ import SwiftUI
 
 // MARK: - TerminalButtonStyle
 //
-// Reusable ButtonStyle that enforces the terminal aesthetic across the app:
-// - Zero border radius
-// - JetBrains Mono label
-// - Solid background using the provided accent color
-// - #0F1115 foreground text (always dark on the colored background)
-// - Slight opacity press feedback
+// V2.06: zero radius, JetBrains Mono, bracket triggers.
+// Supports solid palette fills and semantic ribbon variants (approve/watchlist/reject).
 
 struct TerminalButtonStyle: ButtonStyle {
 
@@ -16,35 +12,87 @@ struct TerminalButtonStyle: ButtonStyle {
 
         var color: Color {
             switch self {
-            case .green:  return Color(hex: "#10B981")
-            case .red:    return Color(hex: "#EF4444")
-            case .amber:  return Color(hex: "#F59E0B")
-            case .rust:   return Color(hex: "#C25E30")
-            case .teal:   return Color(hex: "#14B8A6")
-            case .blue:   return Color(hex: "#3B82F6")
-            case .purple: return Color(hex: "#A855F7")
-            case .muted:  return Color(hex: "#2E333F")
+            case .green:  return DesignTokens.statusGo
+            case .red:    return DesignTokens.statusCritical
+            case .amber:  return DesignTokens.statusWarn
+            case .rust:   return DesignTokens.accentRust
+            case .teal:   return ProfileType.hospitality.accentColor
+            case .blue:   return ProfileType.circular.accentColor
+            case .purple: return ProfileType.design.accentColor
+            case .muted:  return DesignTokens.dividerStructural
             }
         }
 
         var foreground: Color {
-            // muted uses a lighter text; all others use shell-bg for contrast
-            self == .muted ? Color(hex: "#94A3B8") : Color(hex: "#0F1115")
+            self == .muted ? DesignTokens.textSecondary : DesignTokens.canvasBase
         }
     }
 
-    let color:    Palette
+    enum Variant {
+        case filled(Palette)
+        case outlined(Palette)
+        case semantic(TerminalSemanticAction)
+    }
+
+    let variant: Variant
     var fontSize: CGFloat = 11
-    var height:   CGFloat = 32
+    var height:   CGFloat = DesignTokens.rowHeightButton
+
+    init(color: Palette, fontSize: CGFloat = 11, height: CGFloat = DesignTokens.rowHeightButton) {
+        self.variant = .filled(color)
+        self.fontSize = fontSize
+        self.height = height
+    }
+
+    init(outlined color: Palette, fontSize: CGFloat = 11, height: CGFloat = DesignTokens.rowHeightButton) {
+        self.variant = .outlined(color)
+        self.fontSize = fontSize
+        self.height = height
+    }
+
+    init(semantic: TerminalSemanticAction, fontSize: CGFloat = 11, height: CGFloat = DesignTokens.rowHeightButton) {
+        self.variant = .semantic(semantic)
+        self.fontSize = fontSize
+        self.height = height
+    }
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.custom("JetBrains Mono", size: fontSize).weight(.bold))
-            .foregroundStyle(color.foreground)
+            .font(DesignTokens.mono(size: fontSize, weight: .bold))
             .padding(.horizontal, 10)
             .frame(height: height)
-            .background(color.color.opacity(configuration.isPressed ? 0.7 : 1.0))
+            .foregroundStyle(foregroundColor)
+            .background(backgroundColor.opacity(configuration.isPressed ? 0.7 : 1.0))
+            .overlay(borderOverlay)
             .clipShape(Rectangle())
             .contentShape(Rectangle())
+    }
+
+    private var foregroundColor: Color {
+        switch variant {
+        case .filled(let palette):   return palette.foreground
+        case .outlined(let palette): return palette.color
+        case .semantic(let action):  return action.accentColor
+        }
+    }
+
+    private var backgroundColor: Color {
+        switch variant {
+        case .filled(let palette):   return palette.color
+        case .outlined:              return Color.clear
+        case .semantic(let action):  return action.accentColor.opacity(action.fillOpacity)
+        }
+    }
+
+    @ViewBuilder
+    private var borderOverlay: some View {
+        switch variant {
+        case .filled:
+            EmptyView()
+        case .outlined(let palette):
+            Rectangle().stroke(palette.color, lineWidth: 1)
+        case .semantic(let action):
+            Rectangle().stroke(action.accentColor, lineWidth: 1)
+        }
     }
 }
