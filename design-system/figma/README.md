@@ -2,10 +2,19 @@
 
 Design tokens and component specs extracted from the live app (`PORTEOS_TERMINAL_v1.0.4`).
 
+## Cursor execution (start here)
+
+**`porteos.figma-execution-plan.json`** — single file for Cursor to read and execute the full Figma redesign. It includes phased tasks, acceptance criteria, design decisions, constraints, and references to all other files in this folder.
+
+```
+@design-system/figma/porteos.figma-execution-plan.json Execute Phase 0
+```
+
 ## Files
 
 | File | Purpose |
 |------|---------|
+| **`porteos.figma-execution-plan.json`** | **Cursor execution plan — phased tasks + acceptance criteria** |
 | `porteos.tokens.json` | Colors, typography, spacing, layout — import via **Tokens Studio** |
 | `porteos.components.json` | Component anatomy, variants, dimensions — reference while building |
 | `porteos.screens.json` | Screen inventory, Figma page structure, redesign phases |
