@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 // MARK: - ComparisonMetric
 
@@ -11,53 +12,41 @@ private struct ComparisonMetric {
 }
 
 // MARK: - ComparisonView
+// Figma img_00_12 — multi-deal metric table + OPEX breakdown.
 
 struct ComparisonView: View {
 
     let deals: [PropertyDeal]
-    /// Called when the user taps [ CLOSE ].
     var onDismiss: () -> Void = {}
 
-    // MARK: Tokens
+    @Environment(\.modelContext) private var modelContext
 
-    private let shellBg       = DesignTokens.canvasBase
-    private let shellSurface  = DesignTokens.surfacePanel
-    private let shellElevated = DesignTokens.surfaceElevated
-    private let shellBorder   = DesignTokens.dividerStructural
-    private let accentRust    = DesignTokens.accentRust
-    private let textPrimary   = DesignTokens.textPrimary
-    private let textSecondary = DesignTokens.textSecondary
-    private let textTertiary  = DesignTokens.textDim
-    private let colorBest     = DesignTokens.statusGo
-    private let colorWorst    = DesignTokens.statusCritical
+    @State private var opexDraft: OpexDraft?
+    @State private var opexBaseline: OpexDraft?
 
-    // MARK: Layout
-
-    private let labelWidth:  CGFloat = 172
-    private let dealWidth:   CGFloat = 160
-    private let rowHeight:   CGFloat = 40
-
-    // MARK: Metrics Definition
+    private let labelWidth: CGFloat = 168
+    private let dealWidth:  CGFloat = 148
+    private let rowHeight:  CGFloat = DesignTokens.rowHeightHeader + 8
 
     private var metrics: [ComparisonMetric] { [
         .init(label: "PURCHASE PRICE",
               getValue: { $0.purchasePrice > 0 ? $0.purchasePrice : nil },
-              format:   { eur($0) },
-              direction: .neutral),
+              format: compactEur,
+              direction: .lowerBetter),
 
-        .init(label: "GROSS POTENTIAL INCOME",
+        .init(label: "GROSS POTENTIAL INC",
               getValue: { $0.grossPotentialIncome > 0 ? $0.grossPotentialIncome : nil },
-              format:   { eur($0) },
+              format: compactEur,
               direction: .higherBetter),
 
         .init(label: "NOI",
               getValue: { reMetrics($0).netOperatingIncome.nonZero },
-              format:   { eur($0) },
+              format: compactEur,
               direction: .higherBetter),
 
         .init(label: "CAP RATE",
               getValue: { reMetrics($0).capRate.nonZero },
-              format:   { pct($0, dp: 2) },
+              format: { pct($0, dp: 1) },
               direction: .higherBetter),
 
         .init(label: "CASH FLOW BEFORE TAX",
@@ -65,191 +54,253 @@ struct ComparisonView: View {
                   let v = reMetrics(deal).cashFlowBeforeTax
                   return deal.grossPotentialIncome > 0 ? v : nil
               },
-              format:   { eur($0) },
+              format: compactEur,
               direction: .higherBetter),
 
         .init(label: "LTV",
               getValue: { reMetrics($0).loanToValue.nonZero },
-              format:   { pct($0, dp: 1) },
+              format: { pct($0, dp: 1) },
               direction: .lowerBetter),
 
         .init(label: "DSCR",
               getValue: { reMetrics($0).debtServiceCoverageRatio.nonZero },
-              format:   { String(format: "%.2fx", $0) },
+              format: { String(format: "%.2fx", $0) },
               direction: .higherBetter),
 
         .init(label: "PORTEOS SCORE",
               getValue: { $0.porteosScore },
-              format:   { "\(Int($0.rounded())) / 100" },
+              format: { "\(Int($0.rounded())) / 100" },
               direction: .higherBetter),
     ] }
-
-    // MARK: Body
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             cliHeader
-            Rectangle().fill(shellBorder).frame(height: 1)
+            TerminalStructuralDivider()
 
             ScrollView([.horizontal, .vertical]) {
                 VStack(alignment: .leading, spacing: 0) {
                     dealHeaders
-                    Rectangle().fill(shellBorder).frame(height: 1)
+                    TerminalStructuralDivider()
 
                     ForEach(metrics.indices, id: \.self) { i in
                         metricRow(metrics[i])
-                        Rectangle().fill(shellBorder).frame(height: 1)
+                        TerminalStructuralDivider()
+                    }
+
+                    if let draft = opexDraft {
+                        opexBreakdownPanel(draft)
+                            .padding(.top, 12)
+                            .padding(.leading, DesignTokens.blockGutter)
+                            .padding(.bottom, DesignTokens.blockGutter)
                     }
                 }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(shellBg)
+        .background(DesignTokens.canvasBase)
+        .onAppear { loadOpexDraft() }
+        .onChange(of: deals.map(\.id)) { _, _ in loadOpexDraft() }
     }
 
-    // MARK: CLI Header
+    // MARK: Header
 
     private var cliHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 13))
-                .foregroundStyle(textTertiary)
+                .font(DesignTokens.cliPromptFont())
+                .foregroundStyle(DesignTokens.textDim)
             Text("deal --compare --assets=\(deals.count)")
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                .foregroundStyle(accentRust)
+                .font(DesignTokens.mono(size: DesignTokens.TypeScale.cliPrompt, weight: .bold))
+                .foregroundStyle(DesignTokens.accentRust)
             Spacer()
             Button { onDismiss() } label: {
                 Text("[ CLOSE ]")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textTertiary)
-                    .padding(.trailing, 16)
+                    .font(DesignTokens.rowLabelFont())
+                    .foregroundStyle(DesignTokens.textSecondary)
             }
             .buttonStyle(.plain)
         }
-        .padding(.leading, 16)
-        .frame(height: 36)
-        .background(shellSurface)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightPaneBar)
+        .background(DesignTokens.surfacePanel)
     }
 
-    // MARK: Deal Header Row
+    // MARK: Table
 
     private var dealHeaders: some View {
         HStack(spacing: 0) {
-            // Label column header
-            Text("METRIC")
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                .tracking(0.08)
-                .foregroundStyle(textTertiary)
-                .frame(width: labelWidth, alignment: .leading)
-                .padding(.leading, 16)
+            Color.clear
+                .frame(width: labelWidth)
 
             columnDivider
 
             ForEach(deals.indices, id: \.self) { i in
                 let deal = deals[i]
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)
-                        .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                        .foregroundStyle(textPrimary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(shortName(deal))
+                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                        .foregroundStyle(DesignTokens.textPrimary)
                         .lineLimit(1)
-                    HStack(spacing: 6) {
-                        Text(deal.status.rawValue.uppercased())
-                            .font(.custom("JetBrains Mono", size: 11))
-                            .foregroundStyle(statusColor(deal.status))
-                        if !deal.locationCity.isEmpty {
-                            Text("· \(deal.locationCity)")
-                                .font(.custom("JetBrains Mono", size: 11))
-                                .foregroundStyle(textTertiary)
-                        }
-                    }
+                    Text(deal.locationCity.isEmpty ? "—" : deal.locationCity)
+                        .font(DesignTokens.metaFont())
+                        .foregroundStyle(DesignTokens.textDim)
                 }
                 .frame(width: dealWidth, alignment: .leading)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 10)
 
                 if i < deals.count - 1 { columnDivider }
             }
         }
-        .frame(height: 52)
-        .background(shellSurface)
+        .frame(height: 48)
+        .background(DesignTokens.surfacePanel)
     }
 
-    // MARK: Metric Row
-
     private func metricRow(_ metric: ComparisonMetric) -> some View {
-        let values  = deals.map { metric.getValue($0) }
-        let best    = bestIndex(values: values, direction: metric.direction)
-        let worst   = worstIndex(values: values, direction: metric.direction)
+        let values = deals.map { metric.getValue($0) }
+        let best   = bestIndex(values: values, direction: metric.direction)
+        let worst  = worstIndex(values: values, direction: metric.direction)
 
         return HStack(spacing: 0) {
-            // Label
             Text(metric.label)
-                .font(.custom("JetBrains Mono", size: 13).weight(.regular))
-                .tracking(0.02)
-                .foregroundStyle(textTertiary)
+                .font(DesignTokens.rowLabelFont())
+                .foregroundStyle(DesignTokens.textDim)
                 .frame(width: labelWidth, alignment: .leading)
-                .padding(.leading, 16)
+                .padding(.leading, DesignTokens.blockGutter)
 
             columnDivider
 
-            // Deal value cells
             ForEach(deals.indices, id: \.self) { i in
                 let val   = values[i]
-                let color = cellColor(
-                    index:     i,
-                    best:      best,
-                    worst:     worst,
-                    direction: metric.direction,
-                    hasValue:  val != nil
-                )
+                let color = cellColor(index: i, best: best, worst: worst,
+                                      direction: metric.direction, hasValue: val != nil)
 
-                HStack(spacing: 4) {
-                    Spacer()
-                    if let v = val {
-                        Text(metric.format(v))
-                            .font(.custom("JetBrains Mono", size: 17).weight(.bold))
-                            .monospacedDigit()
-                            .foregroundStyle(color)
-                        // Best marker
-                        if i == best && metric.direction != .neutral {
-                            Circle()
-                                .fill(colorBest)
-                                .frame(width: 5, height: 5)
-                        }
-                    } else {
-                        Text("—")
-                            .font(.custom("JetBrains Mono", size: 17))
-                            .foregroundStyle(textTertiary)
-                    }
-                }
-                .frame(width: dealWidth)
-                .padding(.horizontal, 12)
+                Text(val.map { metric.format($0) } ?? "—")
+                    .font(DesignTokens.metricValueFont())
+                    .monospacedDigit()
+                    .foregroundStyle(color)
+                    .frame(width: dealWidth, alignment: .trailing)
+                    .padding(.horizontal, 10)
 
                 if i < deals.count - 1 { columnDivider }
             }
         }
         .frame(height: rowHeight)
-        .background(rowBg())
+        .background(DesignTokens.surfaceElevated.opacity(0.35))
     }
 
-    // Alternate row background for readability
-    @State private var _rowCount = 0
-    private func rowBg() -> Color {
-        Color.clear  // uniform; border lines provide sufficient separation
+    // MARK: OPEX Panel
+
+    private func opexBreakdownPanel(_ draft: OpexDraft) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                Rectangle()
+                    .fill(DesignTokens.accentRust)
+                    .frame(width: 2, height: 14)
+                Text("03 // OPEX BREAKDOWN")
+                    .font(DesignTokens.sectionLabelFont())
+                    .foregroundStyle(DesignTokens.textDim)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(DesignTokens.surfacePanel)
+
+            TerminalStructuralDivider()
+
+            opexRow("PROPERTY MANAGEMENT", value: draft.propertyManagement)
+            opexInsetDivider
+            opexRow("PROPERTY TAX", value: draft.propertyTax)
+            opexInsetDivider
+            opexRow("INSURANCE", value: draft.insurance)
+            opexInsetDivider
+            opexRow("UTILITIES", value: draft.utilities)
+            opexInsetDivider
+            opexRow("MAINTENANCE", value: draft.maintenance)
+            opexInsetDivider
+            opexRow("CAPITAL RESERVES", value: draft.capitalReserves)
+
+            TerminalStructuralDivider()
+
+            HStack(spacing: 12) {
+                Button { discardOpexChanges() } label: {
+                    Text("[ DISCARD ]")
+                        .font(DesignTokens.rowLabelFont())
+                        .foregroundStyle(DesignTokens.textSecondary)
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                Button { saveOpexChanges() } label: {
+                    Text("[ SAVE CHANGES ]")
+                }
+                .buttonStyle(TerminalButtonStyle(color: .rust))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(DesignTokens.surfacePanel)
+        }
+        .frame(width: 300)
+        .overlay {
+            Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
+        }
+        .clipShape(Rectangle())
     }
 
-    // MARK: Value Color
+    private func opexRow(_ label: String, value: Double) -> some View {
+        HStack {
+            Text(label)
+                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                .foregroundStyle(DesignTokens.textDim)
+            Spacer()
+            Text(formattedOpex(value))
+                .font(DesignTokens.rowValueFont())
+                .foregroundStyle(DesignTokens.textPrimary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(DesignTokens.canvasBase)
+                .overlay {
+                    Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
+                }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(DesignTokens.surfaceElevated)
+    }
+
+    private var opexInsetDivider: some View {
+        Rectangle()
+            .fill(DesignTokens.dividerStructural)
+            .frame(height: DesignTokens.dividerWidth)
+            .padding(.leading, 12)
+    }
+
+    // MARK: Helpers
+
+    private var columnDivider: some View {
+        Rectangle()
+            .fill(DesignTokens.dividerStructural)
+            .frame(width: DesignTokens.dividerWidth)
+            .frame(maxHeight: .infinity)
+    }
+
+    private func shortName(_ deal: PropertyDeal) -> String {
+        let name = deal.propertyName.isEmpty ? "UNTITLED" : deal.propertyName.uppercased()
+        if name.count > 18 {
+            return String(name.prefix(18))
+        }
+        return name
+    }
 
     private func cellColor(
         index: Int, best: Int?, worst: Int?,
         direction: ComparisonMetric.Direction, hasValue: Bool
     ) -> Color {
-        guard hasValue, direction != .neutral else { return textPrimary }
-        if index == best  { return colorBest  }
-        if index == worst { return colorWorst }
-        return textPrimary
+        guard hasValue, direction != .neutral else { return DesignTokens.textPrimary }
+        if index == best  { return DesignTokens.statusGo }
+        if index == worst { return DesignTokens.statusCritical }
+        return DesignTokens.textPrimary
     }
-
-    // MARK: Best / Worst Index
 
     private func bestIndex(values: [Double?], direction: ComparisonMetric.Direction) -> Int? {
         guard direction != .neutral else { return nil }
@@ -269,16 +320,28 @@ struct ComparisonView: View {
             : nonNil.max(by: { $0.1 < $1.1 })?.0
     }
 
-    // MARK: Column Divider
-
-    private var columnDivider: some View {
-        Rectangle()
-            .fill(shellBorder)
-            .frame(width: 1)
-            .frame(maxHeight: .infinity)
+    private func loadOpexDraft() {
+        guard let deal = deals.first else {
+            opexDraft = nil
+            opexBaseline = nil
+            return
+        }
+        let draft = OpexDraft(deal: deal)
+        opexDraft = draft
+        opexBaseline = draft
     }
 
-    // MARK: Calculators
+    private func discardOpexChanges() {
+        opexDraft = opexBaseline
+    }
+
+    private func saveOpexChanges() {
+        guard let deal = deals.first, let draft = opexDraft else { return }
+        draft.apply(to: deal)
+        deal.updatedAt = Date()
+        try? modelContext.save()
+        opexBaseline = draft
+    }
 
     private func reMetrics(_ d: PropertyDeal) -> RealEstateCalculator.FullMetrics {
         RealEstateCalculator.calculateFull(inputs: .init(
@@ -302,31 +365,53 @@ struct ComparisonView: View {
         ))
     }
 
-    // MARK: Formatters
+    private func compactEur(_ v: Double) -> String {
+        if v >= 1_000_000 { return String(format: "€%.2fM", v / 1_000_000) }
+        if v >= 1_000     { return String(format: "€%.1fk", v / 1_000) }
+        return String(format: "€%.0f", v)
+    }
 
-    private func eur(_ v: Double) -> String {
-        v.formatted(.currency(code: "EUR").precision(.fractionLength(0)))
+    private func formattedOpex(_ v: Double) -> String {
+        "€ \(Int(v).formatted(.number.grouping(.automatic)))"
     }
 
     private func pct(_ v: Double, dp: Int = 1) -> String {
         "\(v.formatted(.number.precision(.fractionLength(dp))))%"
     }
+}
 
-    private func statusColor(_ s: DealStatus) -> Color {
-        switch s {
-        case .viable:   return DesignTokens.statusGo
-        case .review:   return Color(hex: "#F59E0B")
-        case .rejected: return DesignTokens.statusCritical
-        case .acquired: return Color(hex: "#3B82F6")
-        case .pipeline: return DesignTokens.textDim
-        }
+// MARK: - OpexDraft
+
+private struct OpexDraft: Equatable {
+    var propertyManagement: Double
+    var propertyTax: Double
+    var insurance: Double
+    var utilities: Double
+    var maintenance: Double
+    var capitalReserves: Double
+
+    init(deal: PropertyDeal) {
+        propertyManagement = deal.opexPropertyManagement
+        propertyTax        = deal.opexPropertyTax
+        insurance          = deal.opexInsurance
+        utilities          = deal.opexUtilities
+        maintenance        = deal.opexMaintenance
+        capitalReserves    = deal.opexCapitalReserves
+    }
+
+    func apply(to deal: PropertyDeal) {
+        deal.opexPropertyManagement = propertyManagement
+        deal.opexPropertyTax        = propertyTax
+        deal.opexInsurance          = insurance
+        deal.opexUtilities          = utilities
+        deal.opexMaintenance        = maintenance
+        deal.opexCapitalReserves    = capitalReserves
     }
 }
 
 // MARK: - Double Helper
 
 private extension Double {
-    /// Returns nil if the value is 0 (treat zero as "no data").
     var nonZero: Double? { self == 0 ? nil : self }
 }
 
@@ -334,23 +419,26 @@ private extension Double {
 
 #Preview {
     let deals: [PropertyDeal] = [
-        PropertyDeal(propertyName: "Lisbon Office A", purchasePrice: 2_400_000,
-                     grossPotentialIncome: 210_000, vacancyRate: 5,
-                     operatingExpenses: 72_000, loanAmount: 1_680_000,
-                     interestRate: 4.25, amortizationMonths: 360,
-                     porteosScore: 78, status: .viable),
-        PropertyDeal(propertyName: "Porto Warehouse", purchasePrice: 875_000,
-                     grossPotentialIncome: 95_000, vacancyRate: 8,
-                     operatingExpenses: 38_000, loanAmount: 612_500,
-                     interestRate: 4.75, amortizationMonths: 300,
-                     porteosScore: 64, status: .review),
-        PropertyDeal(propertyName: "Cascais Villa", purchasePrice: 2_100_000,
-                     grossPotentialIncome: 168_000, vacancyRate: 6,
-                     operatingExpenses: 58_000, loanAmount: 1_470_000,
-                     interestRate: 4.5, amortizationMonths: 360,
-                     porteosScore: 71, status: .pipeline),
+        PropertyDeal(propertyName: "Lisbon T2", locationCity: "Lisbon",
+                     purchasePrice: 350_000, grossPotentialIncome: 18_000,
+                     vacancyRate: 5, operatingExpenses: 4_000,
+                     loanAmount: 262_500, interestRate: 4.5,
+                     opexPropertyManagement: 2_400, opexPropertyTax: 2_000,
+                     opexInsurance: 800, opexUtilities: 1_200,
+                     opexMaintenance: 700, opexCapitalReserves: 400,
+                     porteosScore: 82, status: .viable),
+        PropertyDeal(propertyName: "Porto Historic", locationCity: "Porto",
+                     purchasePrice: 280_000, grossPotentialIncome: 14_400,
+                     vacancyRate: 5, operatingExpenses: 3_500,
+                     loanAmount: 196_000, interestRate: 4.5,
+                     porteosScore: 68, status: .review),
+        PropertyDeal(propertyName: "Berlin Office", locationCity: "Berlin",
+                     purchasePrice: 5_000_000, grossPotentialIncome: 300_000,
+                     vacancyRate: 5, operatingExpenses: 80_000,
+                     loanAmount: 3_500_000, interestRate: 4.0,
+                     porteosScore: 74, status: .pipeline),
     ]
     ComparisonView(deals: deals)
-        .frame(width: 900, height: 700)
+        .frame(width: 720, height: 640)
         .background(DesignTokens.canvasBase)
 }
