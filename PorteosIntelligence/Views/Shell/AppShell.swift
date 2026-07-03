@@ -230,19 +230,25 @@ struct AppShell: View {
                     CommandPalette(
                         isPresented: $showCommandPalette,
                         deals:       deals,
-                        onNavigate: { profile in
-                            wm.activeProfile = profile
-                            showComparison   = false
-                        },
                         onSelectDeal: { deal in
                             wm.selectedDealID = deal.id
                             wm.activeProfile  = deal.hospitalityRoomCount > 0 || deal.hospitalityADR > 0
                                 ? .hospitality
                                 : .realEstate
                         },
-                        onNewDeal:  { showNewDealSheet = true },
-                        onExport:   {
-                            NotificationCenter.default.post(name: .showExportSheet, object: nil)
+                        onNewDeal: { showNewDealSheet = true },
+                        onImport: {
+                            NotificationCenter.default.post(name: .showImportDeals, object: nil)
+                        },
+                        onRunAI: {
+                            if let deal = selectedDeal {
+                                NotificationCenter.default.post(
+                                    name: .autoTriggerAI,
+                                    object: nil,
+                                    userInfo: ["dealID": deal.id]
+                                )
+                            }
+                            wm.activeProfile = .cmdCenter
                         }
                     )
                     .padding(.top, 100)
