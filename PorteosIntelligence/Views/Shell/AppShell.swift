@@ -65,9 +65,6 @@ struct AppShell: View {
 
     var body: some View {
         coreView
-        .sheet(isPresented: $showShortcutsPanel) {
-            ShortcutsLegendView()
-        }
         .sheet(isPresented: $showNewDealSheet) {
             TemplatePickerSheet { newID in
                 pendingDealID    = newID
@@ -252,6 +249,17 @@ struct AppShell: View {
                         }
                     )
                     .padding(.top, 100)
+                }
+            }
+        }
+        .overlay {
+            if showShortcutsPanel {
+                ZStack {
+                    Color.black.opacity(0.55)
+                        .ignoresSafeArea()
+                        .onTapGesture { showShortcutsPanel = false }
+
+                    ShortcutsLegendView(onDismiss: { showShortcutsPanel = false })
                 }
             }
         }
