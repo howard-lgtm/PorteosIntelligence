@@ -13,7 +13,7 @@ struct FullDealEditSheet: View {
 
     enum Field: String, Hashable, CaseIterable {
         // BASE
-        case propertyName, location, propertyType, purchasePrice, totalArea, notes
+        case propertyName, address, location, propertyType, purchasePrice, totalArea, notes
         // REAL ESTATE
         case grossPotentialIncome, vacancyRate, operatingExpenses, otherIncome
         case loanAmount, interestRate, amortizationMonths, closingCosts, renovationBudget
@@ -41,9 +41,9 @@ struct FullDealEditSheet: View {
     private let shellSurface  = DesignTokens.surfacePanel
     private let shellBorder   = DesignTokens.dividerStructural
     private let accentRust    = DesignTokens.accentRust
-    private let accentTeal    = Color(hex: "#14B8A6")
-    private let accentPurple  = Color(hex: "#A855F7")
-    private let accentBlue    = Color(hex: "#3B82F6")
+    private let accentTeal    = ProfileType.hospitality.accentColor
+    private let accentPurple  = ProfileType.design.accentColor
+    private let accentBlue    = ProfileType.circular.accentColor
     private let textPrimary   = DesignTokens.textPrimary
     private let textSecondary = DesignTokens.textSecondary
     private let textTertiary  = DesignTokens.textDim
@@ -83,7 +83,7 @@ struct FullDealEditSheet: View {
                     case .circular:    circularContent
                     }
                 }
-                .padding(16)
+                .padding(DesignTokens.blockGutter)
             }
             .onKeyPress(.tab) {
                 guard let current = focusedField,
@@ -100,7 +100,7 @@ struct FullDealEditSheet: View {
         }
         .background(shellBg)
         .clipShape(Rectangle())
-        .frame(width: 560)
+        .frame(width: 520)
         .onAppear {
             // Capture state before the user makes any edits.
             // Because FullDealEditSheet uses @Bindable, fields update the deal
@@ -117,22 +117,22 @@ struct FullDealEditSheet: View {
     private var sheetHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 13))
+                .font(DesignTokens.cliPromptFont())
                 .foregroundStyle(textTertiary)
             Text("deal --edit --asset=\"\(deal.propertyName.isEmpty ? "Untitled" : deal.propertyName)\"")
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
+                .font(DesignTokens.mono(size: DesignTokens.TypeScale.cliPrompt, weight: .bold))
                 .foregroundStyle(accentRust)
                 .lineLimit(1)
             Spacer()
             Button { dismiss() } label: {
-                Text("✕")
-                    .font(.custom("JetBrains Mono", size: 14).weight(.bold))
-                    .foregroundStyle(textTertiary)
+                Text("[ × ]")
+                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.cliPrompt, weight: .bold))
+                    .foregroundStyle(textSecondary)
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 16)
-        .frame(height: 44)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightPaneBar)
         .background(shellSurface)
     }
 
@@ -141,26 +141,48 @@ struct FullDealEditSheet: View {
     private var tabBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 0) {
-                ForEach(Tab.allCases, id: \.self) { tab in
-                    let isActive = selectedTab == tab
-                    Button { selectedTab = tab } label: {
-                        VStack(spacing: 0) {
-                            Text("[\(tab.rawValue)]")
-                                .font(.custom("JetBrains Mono", size: 13).weight(isActive ? .bold : .regular))
-                                .foregroundStyle(isActive ? textPrimary : textTertiary)
-                                .padding(.horizontal, 10)
-                                .frame(height: 26)
-                            Rectangle()
-                                .fill(isActive ? accentRust : Color.clear)
-                                .frame(height: 2)
-                        }
-                        .frame(height: 28)
-                        .clipShape(Rectangle())
+                ForEach(Array(Tab.allCases.enumerated()), id: \.element) { idx, tab in
+                    if idx > 0 {
+                        Rectangle()
+                            .fill(shellBorder)
+                            .frame(width: DesignTokens.dividerWidth, height: 18)
                     }
-                    .buttonStyle(.plain)
+                    tabButton(tab)
                 }
             }
-            .padding(.leading, 16)
+            .padding(.horizontal, DesignTokens.blockGutter)
+        }
+        .frame(height: DesignTokens.rowHeightHeader + 2)
+        .background(shellSurface)
+    }
+
+    private func tabButton(_ tab: Tab) -> some View {
+        let isActive = selectedTab == tab
+        let accent   = tabAccent(tab)
+        return Button { selectedTab = tab } label: {
+            VStack(spacing: 0) {
+                Spacer()
+                Text(tab.rawValue)
+                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: isActive ? .bold : .regular))
+                    .foregroundStyle(isActive ? textPrimary : textTertiary)
+                    .padding(.horizontal, 10)
+                Spacer()
+                Rectangle()
+                    .fill(isActive ? accent : Color.clear)
+                    .frame(height: 2)
+            }
+            .frame(height: DesignTokens.rowHeightHeader + 2)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func tabAccent(_ tab: Tab) -> Color {
+        switch tab {
+        case .base:        return textPrimary
+        case .realEstate:  return accentRust
+        case .hospitality: return accentTeal
+        case .design:      return accentPurple
+        case .circular:    return accentBlue
         }
     }
 
@@ -170,20 +192,23 @@ struct FullDealEditSheet: View {
 
     private var baseContent: some View {
         VStack(alignment: .leading, spacing: 16) {
-            sectionLabel("01 // IDENTITY", color: textTertiary)
-            TerminalInputField(label: "Property Name",  placeholder: "Asset Name",     prefix: nil, suffix: nil,  text: $deal.propertyName).focused($focusedField, equals: .propertyName)
-            TerminalInputField(label: "Location",       placeholder: "City, Country",  prefix: nil, suffix: nil,  text: $deal.locationCity)
+            sectionLabel("IDENTIFICATION")
+            TerminalInputField(label: "Property Name", placeholder: "Asset Name", prefix: nil, suffix: nil, text: $deal.propertyName)
+                .focused($focusedField, equals: .propertyName)
+            TerminalInputField(label: "Address", placeholder: "Street address", prefix: nil, suffix: nil, text: $deal.address)
+                .focused($focusedField, equals: .address)
+            TerminalInputField(label: "City", placeholder: "City, Country", prefix: nil, suffix: nil, text: $deal.locationCity)
                 .focused($focusedField, equals: .location)
                 .onSubmit { checkForBenchmark() }
 
             if showBenchmarkPrompt {
                 HStack(spacing: 12) {
                     Text("porteos@system ~ %")
-                        .font(.custom("JetBrains Mono", size: 11))
+                        .font(DesignTokens.metaFont())
                         .foregroundStyle(textTertiary)
 
                     Text("Market benchmarks available for \(pendingBenchmarkCity).")
-                        .font(.custom("JetBrains Mono", size: 13))
+                        .font(DesignTokens.rowValueFont())
                         .foregroundStyle(textPrimary)
 
                     Spacer()
@@ -192,42 +217,67 @@ struct FullDealEditSheet: View {
                         applyBenchmarks()
                         showBenchmarkPrompt = false
                     }
-                    .font(.custom("JetBrains Mono", size: 13).weight(.bold))
+                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
                     .foregroundStyle(accentRust)
                     .buttonStyle(.plain)
 
                     Button("[ DISMISS ]") {
                         showBenchmarkPrompt = false
                     }
-                    .font(.custom("JetBrains Mono", size: 13))
+                    .font(DesignTokens.rowLabelFont())
                     .foregroundStyle(textTertiary)
                     .buttonStyle(.plain)
                 }
                 .padding(8)
                 .background(shellSurface)
-                .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: 1))
+                .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
                 .clipShape(Rectangle())
                 .padding(.top, 4)
             }
 
-            TerminalInputField(label: "Property Type",  placeholder: "e.g. Commercial",prefix: nil, suffix: nil,  text: $deal.propertyType).focused($focusedField, equals: .propertyType)
+            sectionLabel("FINANCIAL DETAILS")
+            TerminalInputField(label: "Purchase Price", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.purchasePrice, formatter: currencyFormatter)
+                .focused($focusedField, equals: .purchasePrice)
+            statusPickerField
+            TerminalInputField(label: "Area m²", placeholder: "0", prefix: nil, suffix: "m²", text: numStr($deal.totalArea))
+                .focused($focusedField, equals: .totalArea)
+            TerminalInputField(label: "Property Type", placeholder: "e.g. Office A-Class", prefix: nil, suffix: nil, text: $deal.propertyType)
+                .focused($focusedField, equals: .propertyType)
 
-            sectionLabel("02 // ACQUISITION", color: textTertiary)
-            TerminalInputField(label: "Purchase Price", placeholder: "0.00", prefix: "€", suffix: nil,  value: $deal.purchasePrice, formatter: currencyFormatter).focused($focusedField, equals: .purchasePrice)
-            TerminalInputField(label: "Total Area",     placeholder: "0", prefix: nil, suffix: "m²", text: numStr($deal.totalArea)).focused($focusedField, equals: .totalArea)
+            sectionLabel("NOTES")
+            notesField
+        }
+    }
 
-            sectionLabel("03 // STATUS", color: textTertiary)
-            pickerField(label: "Deal Status") {
-                Picker("", selection: $deal.status) {
-                    ForEach(DealStatus.allCases, id: \.self) {
-                        Text($0.rawValue.capitalized).tag($0)
-                    }
+    private var statusPickerField: some View {
+        pickerField(label: "Status") {
+            Picker("", selection: $deal.status) {
+                ForEach(DealStatus.allCases, id: \.self) {
+                    Text($0.rawValue.uppercased()).tag($0)
                 }
-                .pickerStyle(.menu)
-                .labelsHidden()
             }
+            .pickerStyle(.menu)
+            .labelsHidden()
+        }
+    }
 
-            TerminalInputField(label: "Notes", placeholder: "Optional…", prefix: nil, suffix: nil, text: $deal.notes).focused($focusedField, equals: .notes)
+    private var notesField: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("NOTES")
+                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                .tracking(0.05)
+                .foregroundStyle(textTertiary)
+
+            TextEditor(text: $deal.notes)
+                .font(DesignTokens.rowValueFont())
+                .foregroundStyle(textPrimary)
+                .scrollContentBackground(.hidden)
+                .padding(8)
+                .frame(minHeight: 88)
+                .background(shellBg)
+                .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
+                .clipShape(Rectangle())
+                .focused($focusedField, equals: .notes)
         }
     }
 
@@ -237,12 +287,12 @@ struct FullDealEditSheet: View {
 
     private var realEstateContent: some View {
         VStack(alignment: .leading, spacing: 16) {
-            sectionLabel("01 // INCOME", color: accentRust)
+            sectionLabel("INCOME", color: accentRust)
             TerminalInputField(label: "Gross Potential Income", placeholder: "0.00", prefix: "€",  suffix: nil, value: $deal.grossPotentialIncome, formatter: currencyFormatter).focused($focusedField, equals: .grossPotentialIncome)
             TerminalInputField(label: "Vacancy Rate",           placeholder: "0.00", prefix: nil,  suffix: "%", value: $deal.vacancyRate, formatter: Self.percentFormatter).focused($focusedField, equals: .vacancyRate)
             TerminalInputField(label: "Other Income",           placeholder: "0.00", prefix: "€",  suffix: nil, value: $deal.otherIncome, formatter: currencyFormatter).focused($focusedField, equals: .otherIncome)
 
-            sectionLabel("02 // EXPENSES", color: accentRust)
+            sectionLabel("EXPENSES", color: accentRust)
             TerminalInputField(label: "Operating Expenses",    placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.operatingExpenses,       formatter: currencyFormatter).focused($focusedField, equals: .operatingExpenses)
             TerminalInputField(label: "Property Management",   placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexPropertyManagement,  formatter: currencyFormatter)
             TerminalInputField(label: "Property Tax",          placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexPropertyTax,          formatter: currencyFormatter)
@@ -251,11 +301,11 @@ struct FullDealEditSheet: View {
             TerminalInputField(label: "Maintenance & Repairs", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexMaintenance,          formatter: currencyFormatter)
             TerminalInputField(label: "Capital Reserves",      placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexCapitalReserves,      formatter: currencyFormatter)
 
-            sectionLabel("03 // ACQUISITION", color: accentRust)
+            sectionLabel("ACQUISITION", color: accentRust)
             TerminalInputField(label: "Closing Costs",     placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.closingCosts,     formatter: currencyFormatter).focused($focusedField, equals: .closingCosts)
             TerminalInputField(label: "Renovation Budget", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.renovationBudget, formatter: currencyFormatter).focused($focusedField, equals: .renovationBudget)
 
-            sectionLabel("04 // LEVERAGE", color: accentRust)
+            sectionLabel("LEVERAGE", color: accentRust)
             TerminalInputField(label: "Loan Amount",         placeholder: "0.00", prefix: "€",  suffix: nil,  value: $deal.loanAmount, formatter: currencyFormatter).focused($focusedField, equals: .loanAmount)
             TerminalInputField(label: "Interest Rate",       placeholder: "0.0", prefix: nil,  suffix: "%",  value: $deal.interestRate, formatter: Self.percentFormatter).focused($focusedField, equals: .interestRate)
             TerminalInputField(label: "Amortization Months", placeholder: "360", prefix: nil,  suffix: "mo", text: intStr($deal.amortizationMonths)).focused($focusedField, equals: .amortizationMonths)
@@ -269,19 +319,19 @@ struct FullDealEditSheet: View {
 
     private var hospitalityContent: some View {
         VStack(alignment: .leading, spacing: 16) {
-            sectionLabel("01 // OPERATIONAL", color: accentTeal)
+            sectionLabel("OPERATIONAL", color: accentTeal)
             TerminalInputField(label: "Room Count",     placeholder: "0",   prefix: nil, suffix: nil, text: intStr($deal.hospitalityRoomCount)).focused($focusedField, equals: .roomCount)
             TerminalInputField(label: "ADR",            placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityADR, formatter: currencyFormatter).focused($focusedField, equals: .adr)
             TerminalInputField(label: "Occupancy Rate", placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.hospitalityOccupancyRate, formatter: Self.percentFormatter).focused($focusedField, equals: .occupancyRate)
             TerminalInputField(label: "OpEx Ratio",     placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.hospitalityOpExRatio, formatter: Self.percentFormatter).focused($focusedField, equals: .opexRatio)
 
-            sectionLabel("02 // REVENUE STREAMS", color: accentTeal)
+            sectionLabel("REVENUE STREAMS", color: accentTeal)
             TerminalInputField(label: "F&B Revenue",     placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityFBRevenue,      formatter: currencyFormatter).focused($focusedField, equals: .fAndBRevenue)
             TerminalInputField(label: "Spa Revenue",     placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalitySpaRevenue,     formatter: currencyFormatter).focused($focusedField, equals: .spaRevenue)
             TerminalInputField(label: "Meeting Revenue", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityMeetingRevenue,  formatter: currencyFormatter).focused($focusedField, equals: .meetingRevenue)
             TerminalInputField(label: "Other Revenue",   placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityOtherRevenue,    formatter: currencyFormatter).focused($focusedField, equals: .otherRevenue)
 
-            sectionLabel("03 // DISTRIBUTION", color: accentTeal)
+            sectionLabel("DISTRIBUTION", color: accentTeal)
             TerminalInputField(label: "Direct Booking",    placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.hospitalityDirectBookingPct, formatter: Self.percentFormatter).focused($focusedField, equals: .directBooking)
             TerminalInputField(label: "OTA Booking",       placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.hospitalityOTABookingPct, formatter: Self.percentFormatter).focused($focusedField, equals: .otaBooking)
             TerminalInputField(label: "Distribution Cost", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityDistributionCost, formatter: currencyFormatter).focused($focusedField, equals: .distributionCost)
@@ -294,26 +344,26 @@ struct FullDealEditSheet: View {
 
     private var designContent: some View {
         VStack(alignment: .leading, spacing: 16) {
-            sectionLabel("01 // SPACE_EFFICIENCY", color: accentPurple)
+            sectionLabel("SPACE EFFICIENCY", color: accentPurple)
             TerminalInputField(label: "Gross Floor Area (GFA)",  placeholder: "0",   prefix: nil, suffix: "m²", text: numStr($deal.designGFA)).focused($focusedField, equals: .gfa)
             TerminalInputField(label: "Net Internal Area (NIA)", placeholder: "0",   prefix: nil, suffix: "m²", text: numStr($deal.designNIA)).focused($focusedField, equals: .nia)
             TerminalInputField(label: "Circulation",             placeholder: "0.0", prefix: nil, suffix: "%",  value: $deal.designCirculationPct, formatter: Self.percentFormatter).focused($focusedField, equals: .circulation)
             TerminalInputField(label: "Space Utilization",       placeholder: "0.0", prefix: nil, suffix: "%",  value: $deal.designSpaceUtilization, formatter: Self.percentFormatter).focused($focusedField, equals: .spaceUtilization)
 
-            sectionLabel("02 // WELLNESS", color: accentPurple)
+            sectionLabel("WELLNESS", color: accentPurple)
             TerminalInputField(label: "Daylighting Coverage", placeholder: "0.0", prefix: nil, suffix: "%",   value: $deal.designDaylighting, formatter: Self.percentFormatter).focused($focusedField, equals: .daylightingCoverage)
             TerminalInputField(label: "CO2 Levels",           placeholder: "0",   prefix: nil, suffix: "ppm", text: numStr($deal.designCO2ppm)).focused($focusedField, equals: .co2Levels)
             TerminalInputField(label: "Air Changes Per Hour", placeholder: "0.0", prefix: nil, suffix: "ACH", text: numStr($deal.designACH, decimals: 2)).focused($focusedField, equals: .airChangesPerHour)
             TerminalInputField(label: "Thermal Comfort",      placeholder: "0.0", prefix: nil, suffix: "%",   value: $deal.designThermalComfort, formatter: Self.percentFormatter).focused($focusedField, equals: .thermalComfort)
             TerminalInputField(label: "Acoustic Comfort",     placeholder: "0.0", prefix: nil, suffix: "%",   value: $deal.designAcousticComfort, formatter: Self.percentFormatter).focused($focusedField, equals: .acousticComfort)
 
-            sectionLabel("03 // BIOPHILIC", color: accentPurple)
+            sectionLabel("BIOPHILIC", color: accentPurple)
             TerminalInputField(label: "Biophilic Elements",  placeholder: "0",   prefix: nil, suffix: nil,  text: intStr($deal.designBiophilicCount)).focused($focusedField, equals: .biophilicElements)
             TerminalInputField(label: "Green Wall Coverage", placeholder: "0",   prefix: nil, suffix: "m²", text: numStr($deal.designGreenWallM2)).focused($focusedField, equals: .greenWallCoverage)
             TerminalInputField(label: "Views to Nature",     placeholder: "0.0", prefix: nil, suffix: "%",  value: $deal.designViewsToNaturePct, formatter: Self.percentFormatter).focused($focusedField, equals: .viewsToNature)
             TerminalInputField(label: "Natural Materials",   placeholder: "0.0", prefix: nil, suffix: "%",  value: $deal.designNaturalMaterialsPct, formatter: Self.percentFormatter).focused($focusedField, equals: .naturalMaterials)
 
-            sectionLabel("04 // ADAPTABILITY", color: accentPurple)
+            sectionLabel("ADAPTABILITY", color: accentPurple)
             TerminalInputField(label: "Movable Partition",  placeholder: "0.0", prefix: nil, suffix: "%",    value: $deal.designMovablePartitionPct, formatter: Self.percentFormatter).focused($focusedField, equals: .movablePartition)
             TerminalInputField(label: "Multi-Use Spaces",   placeholder: "0",   prefix: nil, suffix: nil,    text: intStr($deal.designMultiUseSpaces)).focused($focusedField, equals: .multiUseSpaces)
             TerminalInputField(label: "Adaptability Score", placeholder: "0",   prefix: nil, suffix: "/100", text: numStr($deal.designAdaptabilityScore)).focused($focusedField, equals: .adaptabilityScore)
@@ -326,7 +376,7 @@ struct FullDealEditSheet: View {
 
     private var circularContent: some View {
         VStack(alignment: .leading, spacing: 16) {
-            sectionLabel("01 // MATERIAL_FLOW", color: accentBlue)
+            sectionLabel("MATERIAL FLOW", color: accentBlue)
             TerminalInputField(label: "Total Construction Cost",  placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.circularTotalConstructionCost,  formatter: currencyFormatter).focused($focusedField, equals: .totalConstructionCost)
             TerminalInputField(label: "Repurposed Material Cost", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.circularRepurposedMaterialCost, formatter: currencyFormatter).focused($focusedField, equals: .repurposedMaterialCost)
             TerminalInputField(label: "Kg Materials Used",        placeholder: "0", prefix: nil,  suffix: "kg", text: numStr($deal.circularKgMaterialsUsed)).focused($focusedField, equals: .kgMaterialsUsed)
@@ -336,7 +386,7 @@ struct FullDealEditSheet: View {
             TerminalInputField(label: "Recycled Content",         placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.circularRecycledContentPct, formatter: Self.percentFormatter).focused($focusedField, equals: .recycledContent)
             TerminalInputField(label: "Renewable Content",        placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.circularRenewableContentPct, formatter: Self.percentFormatter).focused($focusedField, equals: .renewableContent)
 
-            sectionLabel("02 // CARBON", color: accentBlue)
+            sectionLabel("CARBON", color: accentBlue)
             TerminalInputField(label: "CO2 Embodied",         placeholder: "0",   prefix: nil, suffix: "kg",        text: numStr($deal.circularCO2Embodied)).focused($focusedField, equals: .co2Embodied)
             TerminalInputField(label: "Operational Carbon",   placeholder: "0.0", prefix: nil, suffix: "tCO2e/yr",  text: numStr($deal.circularOperationalCarbon, decimals: 2)).focused($focusedField, equals: .operationalCarbon)
             TerminalInputField(label: "Building Area",        placeholder: "0",   prefix: nil, suffix: "m²",        text: numStr($deal.circularBuildingAreaM2)).focused($focusedField, equals: .buildingArea)
@@ -352,28 +402,21 @@ struct FullDealEditSheet: View {
         HStack(spacing: 12) {
             Button { dismiss() } label: {
                 Text("[ CANCEL ]")
-                    .font(.custom("JetBrains Mono", size: 13))
+                    .font(DesignTokens.rowLabelFont())
                     .foregroundStyle(textSecondary)
-                    .frame(height: 32)
             }
             .buttonStyle(.plain)
 
             Spacer()
 
             Button { commitChanges() } label: {
-                Text("[ COMMIT_CHANGES ]")
-                    .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                    .foregroundStyle(DesignTokens.canvasBase)
-                    .padding(.horizontal, 16)
-                    .frame(height: 32)
-                    .background(accentRust)
-                    .clipShape(Rectangle())
+                Text("[ SAVE ]")
             }
-            .buttonStyle(.plain)
+            .buttonStyle(TerminalButtonStyle(color: .rust))
             .keyboardShortcut(.return, modifiers: .command)
         }
-        .padding(.horizontal, 16)
-        .frame(height: 56)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightPaneBar + 16)
         .background(shellSurface)
     }
 
@@ -470,27 +513,28 @@ struct FullDealEditSheet: View {
         deal.designDaylighting = metrics.typicalDaylighting
     }
 
-    private func sectionLabel(_ text: String, color: Color) -> some View {
+    private func sectionLabel(_ text: String, color: Color = DesignTokens.textDim) -> some View {
         Text(text)
-            .font(.custom("JetBrains Mono", size: 13).weight(.bold))
+            .font(DesignTokens.sectionLabelFont())
+            .tracking(0.08)
             .foregroundStyle(color)
     }
 
     private func pickerField<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label.uppercased())
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
+                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
                 .tracking(0.05)
                 .foregroundStyle(textTertiary)
 
             content()
-                .font(.custom("JetBrains Mono", size: 14))
+                .font(DesignTokens.rowValueFont())
                 .foregroundStyle(textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .frame(height: 32)
+                .frame(height: DesignTokens.rowHeightHeader)
                 .padding(.horizontal, 8)
                 .background(shellBg)
-                .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: 1))
+                .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
                 .clipShape(Rectangle())
         }
     }
