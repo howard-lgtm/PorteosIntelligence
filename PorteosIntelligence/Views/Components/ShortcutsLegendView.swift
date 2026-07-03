@@ -11,15 +11,15 @@ struct ShortcutsLegendView: View {
 
     // MARK: Tokens
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellElevated = Color(hex: "#23262E")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let accentRust    = Color(hex: "#C25E30")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let accentGreen   = Color(hex: "#10B981")
+    private let shellBg       = DesignTokens.canvasBase
+    private let shellSurface  = DesignTokens.surfacePanel
+    private let shellElevated = DesignTokens.surfaceElevated
+    private let shellBorder   = DesignTokens.dividerStructural
+    private let accentRust    = DesignTokens.accentRust
+    private let textPrimary   = DesignTokens.textPrimary
+    private let textSecondary = DesignTokens.textSecondary
+    private let textTertiary  = DesignTokens.textDim
+    private let accentGreen   = DesignTokens.statusGo
 
     // MARK: Data
 
@@ -192,7 +192,7 @@ struct ShortcutsLegendView: View {
             } label: {
                 Text("[ CLOSE ]")
                     .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                    .foregroundStyle(Color(hex: "#0F1115"))
+                    .foregroundStyle(DesignTokens.canvasBase)
                     .padding(.horizontal, 16)
                     .frame(height: 28)
                     .background(accentRust)
@@ -211,5 +211,5 @@ struct ShortcutsLegendView: View {
 
 #Preview {
     ShortcutsLegendView()
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
 }

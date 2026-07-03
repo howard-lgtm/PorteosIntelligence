@@ -59,10 +59,10 @@ struct TerminalInputField: View {
 
     // MARK: Tokens
 
-    private let shellBg      = Color(hex: "#0F1115")
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let textPrimary  = Color(hex: "#F8F9FA")
-    private let textTertiary = Color(hex: "#64748B")
+    private let shellBg      = DesignTokens.canvasBase
+    private let shellBorder  = DesignTokens.dividerStructural
+    private let textPrimary  = DesignTokens.textPrimary
+    private let textTertiary = DesignTokens.textDim
 
     // MARK: Body
 

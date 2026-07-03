@@ -23,14 +23,14 @@ struct AIVibePanel: View {
 
     // MARK: Tokens
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellElevated = Color(hex: "#23262E")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let accentRust    = Color(hex: "#C25E30")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
+    private let shellBg       = DesignTokens.canvasBase
+    private let shellSurface  = DesignTokens.surfacePanel
+    private let shellElevated = DesignTokens.surfaceElevated
+    private let shellBorder   = DesignTokens.dividerStructural
+    private let accentRust    = DesignTokens.accentRust
+    private let textPrimary   = DesignTokens.textPrimary
+    private let textSecondary = DesignTokens.textSecondary
+    private let textTertiary  = DesignTokens.textDim
 
     // MARK: Body
 
@@ -244,10 +244,10 @@ struct AIVibePanel: View {
                     Button { applyAction(action) } label: {
                         Text("[ APPLY ]")
                             .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                            .foregroundStyle(Color(hex: "#0F1115"))
+                            .foregroundStyle(DesignTokens.canvasBase)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 8)
-                            .background(Color(hex: "#C25E30"))
+                            .background(DesignTokens.accentRust)
                             .clipShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -255,7 +255,7 @@ struct AIVibePanel: View {
                     if case .applyBenchmark(let value, let field) = action {
                         Text("→ sets \(fieldLabel(field)) to \(formatActionValue(value, field: field))")
                             .font(.custom("JetBrains Mono", size: 11))
-                            .foregroundStyle(Color(hex: "#64748B"))
+                            .foregroundStyle(DesignTokens.textDim)
                     }
                 }
             }
@@ -311,17 +311,17 @@ struct AIVibePanel: View {
         HStack(spacing: 0) {
             statCell(label: "PROFILES", value: "\(r.activeProfileCount)")
             divider
-            statCell(label: "POSITIVE", value: "\(r.positiveCount)", color: Color(hex: "#10B981"))
+            statCell(label: "POSITIVE", value: "\(r.positiveCount)", color: DesignTokens.statusGo)
             divider
             statCell(label: "CAUTION", value: "\(r.warningCount)",   color: Color(hex: "#F59E0B"))
             divider
-            statCell(label: "CRITICAL", value: "\(r.criticalCount)", color: Color(hex: "#EF4444"))
+            statCell(label: "CRITICAL", value: "\(r.criticalCount)", color: DesignTokens.statusCritical)
         }
         .frame(height: 44)
         .background(shellElevated)
     }
 
-    private func statCell(label: String, value: String, color: Color = Color(hex: "#94A3B8")) -> some View {
+    private func statCell(label: String, value: String, color: Color = DesignTokens.textSecondary) -> some View {
         VStack(spacing: 2) {
             Text(value)
                 .font(.custom("JetBrains Mono", size: 17).weight(.bold))
@@ -330,7 +330,7 @@ struct AIVibePanel: View {
             Text(label)
                 .font(.custom("JetBrains Mono", size: 9).weight(.medium))
                 .tracking(0.06)
-                .foregroundStyle(Color(hex: "#64748B"))
+                .foregroundStyle(DesignTokens.textDim)
         }
         .frame(maxWidth: .infinity)
     }
@@ -350,14 +350,14 @@ struct AIVibePanel: View {
                 .foregroundStyle(Color(hex: "#F59E0B"))
             Text("Local LLM offline. Using rule-based analysis only.")
                 .font(.custom("JetBrains Mono", size: 11))
-                .foregroundStyle(Color(hex: "#94A3B8"))
+                .foregroundStyle(DesignTokens.textSecondary)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(hex: "#1A1D24"))
+        .background(DesignTokens.surfacePanel)
         .overlay(alignment: .bottom) {
-            Rectangle().fill(Color(hex: "#2E333F")).frame(height: 1)
+            Rectangle().fill(DesignTokens.dividerStructural).frame(height: 1)
         }
     }
 
@@ -365,7 +365,7 @@ struct AIVibePanel: View {
         Button { runAnalysis() } label: {
             Text(label)
                 .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                .foregroundStyle(Color(hex: "#0F1115"))
+                .foregroundStyle(DesignTokens.canvasBase)
                 .frame(maxWidth: .infinity)
                 .frame(height: 36)
                 .background(accentRust)
@@ -447,10 +447,10 @@ struct AIVibePanel: View {
 
     private func sentimentColor(_ s: AnalysisSignal.Sentiment) -> Color {
         switch s {
-        case .positive: return Color(hex: "#10B981")
-        case .neutral:  return Color(hex: "#64748B")
+        case .positive: return DesignTokens.statusGo
+        case .neutral:  return DesignTokens.textDim
         case .warning:  return Color(hex: "#F59E0B")
-        case .critical: return Color(hex: "#EF4444")
+        case .critical: return DesignTokens.statusCritical
         }
     }
 }
@@ -469,9 +469,9 @@ struct AIVibePanel: View {
         Spacer()
         AIVibePanel(deal: deal, refreshID: UUID())
             .frame(width: 320)
-            .background(Color(hex: "#1A1D24"))
+            .background(DesignTokens.surfacePanel)
     }
     .frame(width: 600, height: 800)
-    .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
     .modelContainer(container)
 }

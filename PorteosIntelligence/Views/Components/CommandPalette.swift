@@ -84,15 +84,15 @@ struct CommandPalette: View {
 
     // MARK: Tokens
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellElevated = Color(hex: "#23262E")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let accentRust    = Color(hex: "#C25E30")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let accentGreen   = Color(hex: "#10B981")
+    private let shellBg       = DesignTokens.canvasBase
+    private let shellSurface  = DesignTokens.surfacePanel
+    private let shellElevated = DesignTokens.surfaceElevated
+    private let shellBorder   = DesignTokens.dividerStructural
+    private let accentRust    = DesignTokens.accentRust
+    private let textPrimary   = DesignTokens.textPrimary
+    private let textSecondary = DesignTokens.textSecondary
+    private let textTertiary  = DesignTokens.textDim
+    private let accentGreen   = DesignTokens.statusGo
 
     // MARK: Static Actions
 
@@ -314,7 +314,7 @@ struct CommandPalette: View {
                 .foregroundStyle(textPrimary)
                 .padding(.horizontal, 4)
                 .padding(.vertical, 1)
-                .background(Color(hex: "#2E333F"))
+                .background(DesignTokens.dividerStructural)
                 .clipShape(Rectangle())
             Text(label)
                 .font(.custom("JetBrains Mono", size: 11))
@@ -350,7 +350,7 @@ struct CommandPalette: View {
         PropertyDeal(propertyName: "Cascais Villa",    locationCity: "Cascais", status: .pipeline),
     ]
     ZStack {
-        Color(hex: "#0F1115").ignoresSafeArea()
+        DesignTokens.canvasBase.ignoresSafeArea()
         CommandPalette(
             isPresented: .constant(true),
             deals:       deals

@@ -91,19 +91,19 @@ final class PDFReportGenerator {
 
     // MARK: – Color palette  (CGColor – used for fills, strokes, and text)
 
-    private let bg     = CGColor.porteos("#0F1115")
-    private let surf   = CGColor.porteos("#1A1D24")
-    private let border = CGColor.porteos("#2E333F")
+    private let bg     = CGColor.porteos("#0A0A0A")
+    private let surf   = CGColor.porteos("#111111")
+    private let border = CGColor.porteos("#333333")
     private let tp1    = CGColor.porteos("#F8F9FA")   // text primary
     private let tp2    = CGColor.porteos("#94A3B8")   // text secondary
-    private let tp3    = CGColor.porteos("#64748B")   // text tertiary
+    private let tp3    = CGColor.porteos("#666666")   // text dim
     private let rust   = CGColor.porteos("#C25E30")
     private let teal   = CGColor.porteos("#14B8A6")
     private let purple = CGColor.porteos("#A855F7")
     private let blue   = CGColor.porteos("#3B82F6")
-    private let green  = CGColor.porteos("#10B981")
-    private let red    = CGColor.porteos("#EF4444")
-    private let amber  = CGColor.porteos("#F59E0B")
+    private let green  = CGColor.porteos("#27C93F")
+    private let red    = CGColor.porteos("#FF5F56")
+    private let amber  = CGColor.porteos("#FFBD2E")
 
     // MARK: – Fonts
 

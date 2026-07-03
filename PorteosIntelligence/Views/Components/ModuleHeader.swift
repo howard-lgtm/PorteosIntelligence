@@ -12,9 +12,9 @@ struct ModuleHeader: View {
 
     // MARK: Tokens
 
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let textTertiary = Color(hex: "#64748B")
-    private let textSecondary = Color(hex: "#94A3B8")
+    private let shellBorder  = DesignTokens.dividerStructural
+    private let textTertiary = DesignTokens.textDim
+    private let textSecondary = DesignTokens.textSecondary
 
     // MARK: Body
 
@@ -53,5 +53,5 @@ struct ModuleHeader: View {
         ModuleHeader(number: 12, title: "Porteos Score")
     }
     .frame(width: 400)
-    .background(Color(hex: "#1A1D24"))
+    .background(DesignTokens.surfacePanel)
 }

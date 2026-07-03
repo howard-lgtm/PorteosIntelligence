@@ -35,14 +35,14 @@ struct ScenarioManagerBlock: View {
     @State private var saveError:    Bool            = false
 
     // ── Design tokens ─────────────────────────────────────────────────────────
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let colorGreen    = Color(hex: "#10B981")
-    private let colorRed      = Color(hex: "#EF4444")
+    private let shellBg       = DesignTokens.canvasBase
+    private let shellSurface  = DesignTokens.surfacePanel
+    private let shellBorder   = DesignTokens.dividerStructural
+    private let textPrimary   = DesignTokens.textPrimary
+    private let textSecondary = DesignTokens.textSecondary
+    private let textTertiary  = DesignTokens.textDim
+    private let colorGreen    = DesignTokens.statusGo
+    private let colorRed      = DesignTokens.statusCritical
     private let colorAmber    = Color(hex: "#F59E0B")
 
     // MARK: Body

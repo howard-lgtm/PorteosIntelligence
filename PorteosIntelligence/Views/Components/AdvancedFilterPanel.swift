@@ -20,12 +20,12 @@ struct AdvancedFilterPanel: View {
     @State private var maxScoreStr:  String = ""
 
     // MARK: Tokens
-    private let shellBg      = Color(hex: "#0F1115")
-    private let shellSurface = Color(hex: "#1A1D24")
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let textPrimary  = Color(hex: "#F8F9FA")
-    private let textTertiary = Color(hex: "#64748B")
-    private let accentRust   = Color(hex: "#C25E30")
+    private let shellBg      = DesignTokens.canvasBase
+    private let shellSurface = DesignTokens.surfacePanel
+    private let shellBorder  = DesignTokens.dividerStructural
+    private let textPrimary  = DesignTokens.textPrimary
+    private let textTertiary = DesignTokens.textDim
+    private let accentRust   = DesignTokens.accentRust
 
     // MARK: Body
 
@@ -201,7 +201,7 @@ struct AdvancedFilterPanel: View {
             Button { applyFilters() } label: {
                 Text("[ APPLY_FILTERS ]")
                     .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                    .foregroundStyle(Color(hex: "#0F1115"))
+                    .foregroundStyle(DesignTokens.canvasBase)
                     .padding(.horizontal, 12)
                     .frame(height: 30)
                     .background(accentRust)
@@ -291,5 +291,5 @@ struct AdvancedFilterPanel: View {
     @Previewable @State var filters = DealFilters()
     return AdvancedFilterPanel(filters: $filters)
         .frame(width: 256)
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
 }

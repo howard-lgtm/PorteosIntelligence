@@ -119,7 +119,7 @@ final class WindowManager {
         )
         window.contentView          = contentView
         window.title                = "Porteos — \(pane.rawValue.capitalized)"
-        window.backgroundColor      = NSColor(hex: "#0F1115")
+        window.backgroundColor      = NSColor(hex: "#0A0A0A")
         window.isReleasedWhenClosed = false   // keep alive so delegate can safely call back
         window.minSize              = pane.minSize
 

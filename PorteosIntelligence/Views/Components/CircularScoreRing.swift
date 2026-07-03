@@ -15,9 +15,9 @@ struct CircularScoreRing: View {
 
     // MARK: Tokens
 
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textTertiary  = Color(hex: "#64748B")
+    private let shellBorder   = DesignTokens.dividerStructural
+    private let textPrimary   = DesignTokens.textPrimary
+    private let textTertiary  = DesignTokens.textDim
 
     // MARK: Derived
 
@@ -64,11 +64,11 @@ struct CircularScoreRing: View {
 
 #Preview {
     HStack(spacing: 32) {
-        CircularScoreRing(score: 87, accentColor: Color(hex: "#C25E30"), size: 120, label: "PORTEOS")
+        CircularScoreRing(score: 87, accentColor: DesignTokens.accentRust, size: 120, label: "PORTEOS")
         CircularScoreRing(score: 63, accentColor: Color(hex: "#14B8A6"), size: 120, label: "PORTEOS")
         CircularScoreRing(score: 42, accentColor: Color(hex: "#A855F7"), size: 120, label: "PORTEOS")
         CircularScoreRing(score: 91, accentColor: Color(hex: "#3B82F6"), size: 180, label: "PORTEOS")
     }
     .padding(32)
-    .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
 }

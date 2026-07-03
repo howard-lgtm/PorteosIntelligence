@@ -37,16 +37,16 @@ struct FullDealEditSheet: View {
 
     // MARK: Tokens
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let accentRust    = Color(hex: "#C25E30")
+    private let shellBg       = DesignTokens.canvasBase
+    private let shellSurface  = DesignTokens.surfacePanel
+    private let shellBorder   = DesignTokens.dividerStructural
+    private let accentRust    = DesignTokens.accentRust
     private let accentTeal    = Color(hex: "#14B8A6")
     private let accentPurple  = Color(hex: "#A855F7")
     private let accentBlue    = Color(hex: "#3B82F6")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
+    private let textPrimary   = DesignTokens.textPrimary
+    private let textSecondary = DesignTokens.textSecondary
+    private let textTertiary  = DesignTokens.textDim
 
     // MARK: Tab
 
@@ -363,7 +363,7 @@ struct FullDealEditSheet: View {
             Button { commitChanges() } label: {
                 Text("[ COMMIT_CHANGES ]")
                     .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                    .foregroundStyle(Color(hex: "#0F1115"))
+                    .foregroundStyle(DesignTokens.canvasBase)
                     .padding(.horizontal, 16)
                     .frame(height: 32)
                     .background(accentRust)
@@ -516,5 +516,5 @@ struct FullDealEditSheet: View {
     container.mainContext.insert(deal)
     return FullDealEditSheet(deal: deal)
         .modelContainer(container)
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
 }

@@ -20,16 +20,16 @@ struct ComparisonView: View {
 
     // MARK: Tokens
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellElevated = Color(hex: "#23262E")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let accentRust    = Color(hex: "#C25E30")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let colorBest     = Color(hex: "#10B981")
-    private let colorWorst    = Color(hex: "#EF4444")
+    private let shellBg       = DesignTokens.canvasBase
+    private let shellSurface  = DesignTokens.surfacePanel
+    private let shellElevated = DesignTokens.surfaceElevated
+    private let shellBorder   = DesignTokens.dividerStructural
+    private let accentRust    = DesignTokens.accentRust
+    private let textPrimary   = DesignTokens.textPrimary
+    private let textSecondary = DesignTokens.textSecondary
+    private let textTertiary  = DesignTokens.textDim
+    private let colorBest     = DesignTokens.statusGo
+    private let colorWorst    = DesignTokens.statusCritical
 
     // MARK: Layout
 
@@ -314,11 +314,11 @@ struct ComparisonView: View {
 
     private func statusColor(_ s: DealStatus) -> Color {
         switch s {
-        case .viable:   return Color(hex: "#10B981")
+        case .viable:   return DesignTokens.statusGo
         case .review:   return Color(hex: "#F59E0B")
-        case .rejected: return Color(hex: "#EF4444")
+        case .rejected: return DesignTokens.statusCritical
         case .acquired: return Color(hex: "#3B82F6")
-        case .pipeline: return Color(hex: "#64748B")
+        case .pipeline: return DesignTokens.textDim
         }
     }
 }
@@ -352,5 +352,5 @@ private extension Double {
     ]
     ComparisonView(deals: deals)
         .frame(width: 900, height: 700)
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
 }

@@ -14,13 +14,13 @@ struct QuickAddDealSheet: View {
 
     // MARK: Tokens
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let accentRust    = Color(hex: "#C25E30")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
+    private let shellBg       = DesignTokens.canvasBase
+    private let shellSurface  = DesignTokens.surfacePanel
+    private let shellBorder   = DesignTokens.dividerStructural
+    private let accentRust    = DesignTokens.accentRust
+    private let textPrimary   = DesignTokens.textPrimary
+    private let textSecondary = DesignTokens.textSecondary
+    private let textTertiary  = DesignTokens.textDim
 
     // MARK: State — initialised from deal if editing
 
@@ -180,7 +180,7 @@ struct QuickAddDealSheet: View {
             Button { saveDeal() } label: {
                 Text(isEditing ? "[ UPDATE_DEAL ]" : "[ DEPLOY_DEAL ]")
                     .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                    .foregroundStyle(Color(hex: "#0F1115"))
+                    .foregroundStyle(DesignTokens.canvasBase)
                     .padding(.horizontal, 16)
                     .frame(height: 28)
                     .background(canSave ? accentRust : shellBorder)
@@ -234,7 +234,7 @@ struct QuickAddDealSheet: View {
 
 #Preview("Create") {
     QuickAddDealSheet()
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
 }
 
 #Preview("Edit") {
@@ -246,5 +246,5 @@ struct QuickAddDealSheet: View {
         status: .viable
     )
     return QuickAddDealSheet(deal: deal)
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
 }

@@ -44,15 +44,15 @@ struct IngestionToastView: View {
 
     // MARK: Tokens
 
-    private let shellBg      = Color(hex: "#0F1115")
-    private let shellSurface = Color(hex: "#1A1D24")
-    private let shellBorder  = Color(hex: "#2E333F")
+    private let shellBg      = DesignTokens.canvasBase
+    private let shellSurface = DesignTokens.surfacePanel
+    private let shellBorder  = DesignTokens.dividerStructural
     private let textPrimary  = Color(hex: "#E2E8F0")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary = Color(hex: "#64748B")
-    private let accentGreen  = Color(hex: "#10B981")
+    private let textSecondary = DesignTokens.textSecondary
+    private let textTertiary = DesignTokens.textDim
+    private let accentGreen  = DesignTokens.statusGo
     private let accentAmber  = Color(hex: "#F59E0B")
-    private let accentRust   = Color(hex: "#C25E30")
+    private let accentRust   = DesignTokens.accentRust
     private let accentBlue   = Color(hex: "#3B82F6")
 
     private var stateColor: Color {
@@ -200,5 +200,5 @@ struct IngestionToastView: View {
         )
     )
     .padding(20)
-    .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
 }

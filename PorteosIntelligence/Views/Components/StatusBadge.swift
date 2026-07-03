@@ -23,9 +23,9 @@ struct StatusBadge: View {
 
     private var semanticColor: Color {
         switch state {
-        case .optimal:  return Color(hex: "#10B981")   // green
+        case .optimal:  return DesignTokens.statusGo   // green
         case .watch:    return Color(hex: "#F59E0B")   // amber
-        case .degraded: return Color(hex: "#EF4444")   // red
+        case .degraded: return DesignTokens.statusCritical   // red
         case .pending:  return Color(hex: "#F59E0B")   // amber (same as watch)
         }
     }
@@ -56,5 +56,5 @@ struct StatusBadge: View {
         StatusBadge(text: "Pending",   state: .pending)
     }
     .padding(16)
-    .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
 }
