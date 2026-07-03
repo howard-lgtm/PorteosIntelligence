@@ -1,19 +1,30 @@
 import SwiftUI
 
 // MARK: - TerminalBlock
+// V2.06 Figma module chrome: 4px profile accent strip + panel + divider border.
 
 struct TerminalBlock<Content: View>: View {
 
     let command: String
     let accentColor: Color
-    var contentPadding: CGFloat = 8
+    var contentPadding: CGFloat = DesignTokens.blockGutter
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            blockHeader
-            Rectangle().fill(DesignTokens.dividerStructural).frame(height: 1)
-            contentArea
+        HStack(alignment: .top, spacing: 0) {
+            Rectangle()
+                .fill(accentColor)
+                .frame(width: DesignTokens.profileBarHeight)
+
+            VStack(alignment: .leading, spacing: 0) {
+                blockHeader
+                TerminalStructuralDivider()
+                contentArea
+            }
+        }
+        .background(DesignTokens.surfacePanel)
+        .overlay {
+            Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
         }
         .clipShape(Rectangle())
     }
@@ -21,17 +32,18 @@ struct TerminalBlock<Content: View>: View {
     private var blockHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(DesignTokens.mono(size: 11))
+                .font(DesignTokens.cliPromptFont())
                 .foregroundStyle(DesignTokens.textDim)
 
             Text(command)
-                .font(DesignTokens.mono(size: 11, weight: .medium))
+                .font(DesignTokens.moduleCommandFont())
                 .foregroundStyle(accentColor)
 
             Spacer()
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, DesignTokens.blockGutter)
         .frame(height: DesignTokens.rowHeightData)
+        .background(DesignTokens.surfaceElevated)
     }
 
     private var contentArea: some View {
@@ -39,22 +51,23 @@ struct TerminalBlock<Content: View>: View {
             content()
         }
         .padding(contentPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(DesignTokens.canvasBase)
     }
 }
 
 // MARK: - Preview
 
 #Preview {
-    VStack(spacing: 16) {
-        TerminalBlock(command: "stats --quick-look", accentColor: DesignTokens.accentRust) {
-            VStack(spacing: 0) {
-                TerminalMetricRow(label: "Net Operating Income", value: "€125,000", state: .neutral)
-                TerminalMetricRow(label: "Cap Rate",             value: "6.20%",    state: .optimal)
-                TerminalMetricRow(label: "DSCR",                 value: "0.98",     state: .danger)
+    VStack(spacing: DesignTokens.blockSpacing) {
+        TerminalBlock(command: "01 // CORE_FINANCIALS_REVENUE", accentColor: DesignTokens.accentRust) {
+            TerminalMetricGrid(fixedColumnCount: 2) {
+                TerminalMetricCell(label: "NOI", value: "€125,000")
+                TerminalMetricCell(label: "Cap Rate", value: "6.20%", state: .optimal)
             }
         }
     }
-    .padding(16)
+    .padding(DesignTokens.blockGutter)
     .frame(width: 520)
     .background(DesignTokens.canvasBase)
 }

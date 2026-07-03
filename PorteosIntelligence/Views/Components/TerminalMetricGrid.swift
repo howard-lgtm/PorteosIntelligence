@@ -12,11 +12,20 @@ private struct GridWidthKey: PreferenceKey {
 
 struct TerminalMetricGrid<Content: View>: View {
 
+    /// When set, overrides responsive 2/4-column behaviour (Figma 1×4 / 2×2 layouts).
+    var fixedColumnCount: Int? = nil
+
     @State private var gridWidth: CGFloat = 800
     @ViewBuilder let content: () -> Content
 
     private var columns: [GridItem] {
-        DesignTokens.metricGridColumns(forWidth: gridWidth)
+        if let count = fixedColumnCount {
+            return Array(
+                repeating: GridItem(.flexible(), spacing: DesignTokens.gridColumnSpacing, alignment: .leading),
+                count: count
+            )
+        }
+        return DesignTokens.metricGridColumns(forWidth: gridWidth)
     }
 
     var body: some View {

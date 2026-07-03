@@ -71,4 +71,47 @@ enum ProfileType: String, CaseIterable, Identifiable {
         case .circular:    return Color(hex: "#3B82F6")   // Blue
         }
     }
+
+    /// CLI host segment for dashboard headers: `porteos@{host} ~ %`.
+    var cliHost: String {
+        switch self {
+        case .cmdCenter:   return "system"
+        case .realEstate:  return "real-estate"
+        case .hospitality: return "hospitality"
+        case .design:      return "design"
+        case .circular:    return "circular"
+        }
+    }
+
+    /// Uppercase tag beside deal name on hero score strip.
+    var heroProfileTag: String {
+        switch self {
+        case .cmdCenter:   return "CMD CENTER"
+        case .realEstate:  return "REAL ESTATE"
+        case .hospitality: return "HOSPITALITY"
+        case .design:      return "DESIGN"
+        case .circular:    return "CIRCULAR"
+        }
+    }
+
+    /// Market trend grid profile key for `MarketTrendGridBuilder`.
+    var marketTrendProfileKey: String {
+        switch self {
+        case .realEstate:  return "realEstate"
+        case .hospitality: return "hospitality"
+        case .design:      return "design"
+        case .circular:    return "circular"
+        case .cmdCenter:   return "cmdCenter"
+        }
+    }
+
+    func dashboardCLI(assetName: String) -> String {
+        let name = assetName.isEmpty ? "Untitled Deal" : assetName
+        switch self {
+        case .cmdCenter:
+            return "./dashboard --portfolio=overview --profiles=5"
+        default:
+            return "./dashboard --asset=\"\(name)\""
+        }
+    }
 }

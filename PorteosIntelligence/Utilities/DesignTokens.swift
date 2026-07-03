@@ -24,24 +24,49 @@ enum DesignTokens {
     static let textDim            = Color(hex: "#666666")
     static let textTertiary       = textDim
 
-    // MARK: Semantic
+    // MARK: Semantic (Figma: semantic/*)
 
     static let statusGo           = Color(hex: "#27C93F")
     static let statusWarn         = Color(hex: "#FFBD2E")
     static let statusCritical     = Color(hex: "#FF5F56")
+    static let statusInfo         = Color(hex: "#3B82F6")
 
     static let colorOptimal       = statusGo
     static let colorWarning       = statusWarn
     static let colorDanger        = statusCritical
 
-    static let accentRust         = Color(hex: "#A34121")
+    // MARK: Deal status (Figma: status/*)
+
+    static let statusPipeline     = Color(hex: "#64748B")
+    static let statusReview       = Color(hex: "#F59E0B")
+    static let statusViable       = Color(hex: "#27C93F")
+    static let statusRejected     = Color(hex: "#FF5F56")
+    static let statusAcquired     = Color(hex: "#3B82F6")
+
+    // MARK: Profile accents (Figma: profile/*) — identity only, not threshold state
+
+    static let accentCmdCenter    = Color(hex: "#94A3B8")
+    static let accentRust         = Color(hex: "#C25E30")
+    static let accentHospitality  = Color(hex: "#14B8A6")
+    static let accentDesign       = Color(hex: "#A855F7")
+    static let accentCircular     = Color(hex: "#3B82F6")
+    static let accentPipeline     = Color(hex: "#F59E0B")
+
+    // MARK: Layout — shell (Figma: layout/*)
+
+    static let navPaneWidth:       CGFloat = 260
+    static let inspectorPaneWidth: CGFloat = 280
+    static let windowMinWidth:     CGFloat = 1200
+    static let windowMinHeight:    CGFloat = 800
 
     // MARK: Layout — rows
 
     static let rowHeightData:     CGFloat = 28
+    static let rowHeightNavLink:  CGFloat = 24
     static let rowHeightButton:   CGFloat = 32
     static let rowHeightHeader:   CGFloat = 36
     static let rowHeightPaneBar:  CGFloat = 40
+    static let rowHeightCommandBar: CGFloat = 32
     static let dividerWidth:      CGFloat = 1
     static let navSelectionBorder: CGFloat = 2
 
@@ -201,6 +226,20 @@ enum TerminalSemanticAction {
         case .approve:   return 0.15
         case .watchlist: return 0
         case .reject:    return 0
+        }
+    }
+}
+
+// MARK: - DealStatus colors (Figma status/* tokens)
+
+extension DealStatus {
+    var tokenColor: Color {
+        switch self {
+        case .pipeline: return DesignTokens.statusPipeline
+        case .review:   return DesignTokens.statusReview
+        case .viable:   return DesignTokens.statusViable
+        case .rejected: return DesignTokens.statusRejected
+        case .acquired: return DesignTokens.statusAcquired
         }
     }
 }

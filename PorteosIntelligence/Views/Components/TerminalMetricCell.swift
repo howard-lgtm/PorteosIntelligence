@@ -1,8 +1,7 @@
 import SwiftUI
 
 // MARK: - TerminalMetricCell
-// Phase B — inset padded cell: elevated surface + 1px border + 8pt padding.
-// Label top; value + sparkline bottom row. Semantic color on value only.
+// V2.06 Figma handoff — value above label, inset cell, no sparklines in grids.
 
 struct TerminalMetricCell: View {
 
@@ -26,6 +25,13 @@ struct TerminalMetricCell: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
+                Text(value)
+                    .font(DesignTokens.metricValueFont())
+                    .monospacedDigit()
+                    .foregroundStyle(state.semanticColor)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+
                 Text(label.uppercased())
                     .font(DesignTokens.metricLabelFont())
                     .tracking(0.02)
@@ -33,22 +39,11 @@ struct TerminalMetricCell: View {
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
 
-                HStack(alignment: .bottom, spacing: 6) {
-                    Text(value)
-                        .font(DesignTokens.metricValueFont())
-                        .monospacedDigit()
-                        .foregroundStyle(state.semanticColor)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
-
-                    Spacer(minLength: 0)
-
-                    if trend.count >= 2 {
-                        TerminalSparkline(data: trend, color: resolvedTrendColor,
-                                          height: DesignTokens.sparklineHeight)
-                            .frame(width: DesignTokens.sparklineWidth,
-                                   height: DesignTokens.sparklineHeight)
-                    }
+                if trend.count >= 2 {
+                    TerminalSparkline(data: trend, color: resolvedTrendColor,
+                                      height: DesignTokens.sparklineHeight)
+                        .frame(width: DesignTokens.sparklineWidth,
+                               height: DesignTokens.sparklineHeight)
                 }
             }
             .padding(DesignTokens.metricCellPadding)
