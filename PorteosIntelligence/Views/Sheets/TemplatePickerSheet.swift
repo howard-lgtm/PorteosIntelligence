@@ -2,35 +2,35 @@ import SwiftUI
 import SwiftData
 
 // MARK: - TemplatePickerSheet
-//
-// Entry point for new deal creation. Presents the full template library in a
-// 2-column grid with a category filter bar. Selecting any template (or the
-// blank deal option) creates a PropertyDeal, inserts it into the model
-// context, and calls onSave(deal.id) before dismissing.
+// Figma img_00_10 — select template, then confirm via footer.
 
 struct TemplatePickerSheet: View {
+
+    private static let blankID = "__blank__"
+    private static let templateCount = 12
 
     var onSave: ((UUID) -> Void)? = nil
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss)      private var dismiss
 
-    // ── State ─────────────────────────────────────────────────────────────────
     @State private var selectedCategory = "all"
+    @State private var selectedID: String?
 
     private let categories: [(id: String, label: String, color: Color)] = [
-        ("all",         "ALL",         DesignTokens.textSecondary),
-        ("realEstate",  "REAL ESTATE", ProfileType.realEstate.accentColor),
+        ("all",         "ALL",         DesignTokens.textPrimary),
+        ("realEstate",  "RE",          ProfileType.realEstate.accentColor),
         ("hospitality", "HOSPITALITY", ProfileType.hospitality.accentColor),
-        ("mixedUse",    "MIXED-USE",   DesignTokens.statusWarn),
         ("design",      "DESIGN",      ProfileType.design.accentColor),
         ("circular",    "CIRCULAR",    ProfileType.circular.accentColor),
+        ("mixedUse",    "MIXED",       DesignTokens.statusWarn),
     ]
 
-    // ── Filtered data ──────────────────────────────────────────────────────────
     private var filteredTemplates: [DealTemplate] {
         DealTemplates.templates(for: selectedCategory)
     }
+
+    private var canConfirm: Bool { selectedID != nil }
 
     // MARK: Body
 
@@ -41,28 +41,34 @@ struct TemplatePickerSheet: View {
             TerminalCategoryTabBar(categories: categories, selectedID: $selectedCategory)
             TerminalStructuralDivider()
             templateGrid
+            TerminalStructuralDivider()
+            footerBar
         }
-        .frame(width: 720)
+        .frame(width: 640)
         .background(DesignTokens.canvasBase)
         .clipShape(Rectangle())
+        .onAppear { syncDefaultSelection() }
+        .onChange(of: selectedCategory) { _, _ in syncDefaultSelection() }
     }
+
+    // MARK: Header
 
     private var sheetHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(DesignTokens.mono(size: 11))
+                .font(DesignTokens.cliPromptFont())
                 .foregroundStyle(DesignTokens.textDim)
-            Text("template_init --mode=new_deal")
-                .font(DesignTokens.mono(size: 11, weight: .bold))
+            Text("template --picker")
+                .font(DesignTokens.mono(size: DesignTokens.TypeScale.cliPrompt, weight: .bold))
                 .foregroundStyle(DesignTokens.accentRust)
             Spacer()
-            Text("[ \(filteredTemplates.count) TEMPLATES ]")
-                .font(DesignTokens.mono(size: 10))
+            Text("[ \(Self.templateCount) TEMPLATES ]")
+                .font(DesignTokens.metaFont())
                 .foregroundStyle(DesignTokens.textDim)
                 .padding(.trailing, 12)
             Button { dismiss() } label: {
                 Text("[ × ]")
-                    .font(DesignTokens.mono(size: 11, weight: .bold))
+                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.cliPrompt, weight: .bold))
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             .buttonStyle(.plain)
@@ -72,155 +78,168 @@ struct TemplatePickerSheet: View {
         .background(DesignTokens.surfacePanel)
     }
 
-    // MARK: – Template Grid
+    // MARK: Grid
 
     private var templateGrid: some View {
         ScrollView {
             LazyVGrid(
                 columns: [GridItem(.flexible()), GridItem(.flexible())],
-                spacing: 12
+                spacing: 10
             ) {
-                // Always-visible blank deal card
-                blankDealCard
-
-                // Template cards
                 ForEach(filteredTemplates) { template in
                     templateCard(template)
                 }
+                blankDealCard
             }
-            .padding(20)
+            .padding(DesignTokens.blockGutter)
         }
-        .frame(maxHeight: 520)
+        .frame(maxHeight: 480)
     }
 
-    // MARK: – Blank Deal Card
-
-    private var blankDealCard: some View {
-        Button {
-            createBlankDeal()
-        } label: {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 0) {
-                    // Left accent bar
-                    Rectangle()
-                        .fill(DesignTokens.dividerStructural)
-                        .frame(width: 3)
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text("+ BLANK DEAL")
-                                .font(DesignTokens.mono(size: 12, weight: .bold))
-                                .foregroundStyle(DesignTokens.textSecondary)
-                            Spacer()
-                        }
-                        Text("Start from scratch with an empty template")
-                            .font(DesignTokens.mono(size: 10))
-                            .foregroundStyle(DesignTokens.textDim)
-                            .lineLimit(2)
-                            .fixedSize(horizontal: false, vertical: true)
-
-                        Spacer()
-
-                        HStack {
-                            Text("// NO PRE-FILLED VALUES")
-                                .font(DesignTokens.mono(size: 9))
-                                .foregroundStyle(DesignTokens.textDim)
-                            Spacer()
-                        }
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 12)
-                }
-            }
-            .frame(maxWidth: .infinity, minHeight: 104)
-            .background(DesignTokens.surfacePanel)
-            .overlay(Rectangle().stroke(DesignTokens.dividerStructural, lineWidth: 1))
-            .clipShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    // MARK: – Template Card
+    // MARK: Cards
 
     private func templateCard(_ template: DealTemplate) -> some View {
-        Button {
-            createFromTemplate(template)
-        } label: {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 0) {
-                    // Left accent bar
-                    Rectangle()
-                        .fill(template.accentColor)
-                        .frame(width: 3)
+        let isSelected = selectedID == template.id
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        // Name + category badge
-                        HStack(alignment: .top, spacing: 6) {
-                            Text(template.name.uppercased())
-                                .font(DesignTokens.mono(size: 11, weight: .bold))
-                                .foregroundStyle(DesignTokens.textPrimary)
-                                .lineLimit(2)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+        return Button { selectedID = template.id } label: {
+            HStack(spacing: 0) {
+                Rectangle()
+                    .fill(template.accentColor)
+                    .frame(width: 3)
 
-                            Text(template.categoryLabel)
-                                .font(DesignTokens.mono(size: 8, weight: .medium))
-                                .foregroundStyle(template.accentColor)
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 2)
-                                .background(template.accentColor.opacity(0.10))
-                                .overlay(
-                                    Rectangle()
-                                        .stroke(template.accentColor.opacity(0.30), lineWidth: 1)
-                                )
-                                .clipShape(Rectangle())
-                        }
-
-                        // Description
-                        Text(template.description)
-                            .font(DesignTokens.mono(size: 10))
-                            .foregroundStyle(DesignTokens.textSecondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(alignment: .top, spacing: 8) {
+                        Text(template.name.uppercased())
+                            .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                            .foregroundStyle(DesignTokens.textPrimary)
                             .lineLimit(2)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
 
-                        Spacer()
-
-                        // Divider
-                        Rectangle()
-                            .fill(DesignTokens.dividerStructural.opacity(0.6))
-                            .frame(height: 1)
-
-                        // Key metrics row
-                        HStack(spacing: 12) {
-                            ForEach(template.keyMetrics, id: \.label) { metric in
-                                VStack(alignment: .leading, spacing: 1) {
-                                    Text(metric.label)
-                                        .font(DesignTokens.mono(size: 8))
-                                        .foregroundStyle(DesignTokens.textDim)
-                                    Text(metric.value)
-                                        .font(DesignTokens.mono(size: 10, weight: .bold))
-                                        .foregroundStyle(template.accentColor)
-                                }
-                            }
-                            Spacer()
+                        if isSelected {
+                            Text("SELECTED")
+                                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                                .foregroundStyle(DesignTokens.accentRust)
                         }
-                        .padding(.top, 6)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.top, 12)
-                    .padding(.bottom, 10)
+
+                    Text(template.description)
+                        .font(DesignTokens.metaFont())
+                        .foregroundStyle(DesignTokens.textDim)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+
+                    Spacer(minLength: 4)
+
+                    Text(template.shortCategoryLabel)
+                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                        .foregroundStyle(template.accentColor)
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
             }
-            .frame(maxWidth: .infinity, minHeight: 104)
+            .frame(maxWidth: .infinity, minHeight: 88, alignment: .leading)
             .background(DesignTokens.surfacePanel)
-            .overlay(Rectangle().stroke(DesignTokens.dividerStructural, lineWidth: 1))
+            .overlay {
+                Rectangle().stroke(
+                    isSelected ? DesignTokens.accentRust : DesignTokens.dividerStructural,
+                    lineWidth: DesignTokens.dividerWidth
+                )
+            }
             .clipShape(Rectangle())
         }
         .buttonStyle(.plain)
         .contentShape(Rectangle())
     }
 
-    // MARK: – Deal Creation
+    private var blankDealCard: some View {
+        let isSelected = selectedID == Self.blankID
+
+        return Button { selectedID = Self.blankID } label: {
+            HStack(spacing: 0) {
+                Rectangle()
+                    .fill(DesignTokens.dividerStructural)
+                    .frame(width: 3)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("+ NEW BLANK DEAL")
+                            .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                            .foregroundStyle(DesignTokens.textSecondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        if isSelected {
+                            Text("SELECTED")
+                                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                                .foregroundStyle(DesignTokens.accentRust)
+                        }
+                    }
+
+                    Text("Start from scratch")
+                        .font(DesignTokens.metaFont())
+                        .foregroundStyle(DesignTokens.textDim)
+
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+            }
+            .frame(maxWidth: .infinity, minHeight: 88, alignment: .leading)
+            .background(DesignTokens.surfacePanel)
+            .overlay {
+                Rectangle().stroke(
+                    isSelected ? DesignTokens.accentRust : DesignTokens.dividerStructural,
+                    lineWidth: DesignTokens.dividerWidth
+                )
+            }
+            .clipShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .contentShape(Rectangle())
+    }
+
+    // MARK: Footer
+
+    private var footerBar: some View {
+        HStack(spacing: 12) {
+            Button { dismiss() } label: {
+                Text("[ CANCEL ]")
+                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel))
+                    .foregroundStyle(DesignTokens.textSecondary)
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            Button { confirmSelection() } label: {
+                Text("[ USE TEMPLATE ]")
+            }
+            .buttonStyle(TerminalButtonStyle(color: canConfirm ? .rust : .muted))
+            .disabled(!canConfirm)
+        }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightPaneBar + 16)
+        .background(DesignTokens.surfacePanel)
+    }
+
+    // MARK: Actions
+
+    private func syncDefaultSelection() {
+        if let id = selectedID,
+           id == Self.blankID || filteredTemplates.contains(where: { $0.id == id }) {
+            return
+        }
+        selectedID = filteredTemplates.first?.id
+    }
+
+    private func confirmSelection() {
+        guard let id = selectedID else { return }
+        if id == Self.blankID {
+            createBlankDeal()
+        } else if let template = DealTemplates.template(id: id) {
+            createFromTemplate(template)
+        }
+    }
 
     private func createBlankDeal() {
         let deal = PropertyDeal()

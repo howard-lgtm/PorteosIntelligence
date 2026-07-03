@@ -60,6 +60,18 @@ struct DealTemplate: Identifiable {
         }
     }
 
+    /// Short category tag for template picker cards (Figma img_00_10).
+    var shortCategoryLabel: String {
+        switch category {
+        case "realEstate":  return "RE"
+        case "hospitality": return "HOSP"
+        case "mixedUse":    return "MIXED"
+        case "design":      return "DESIGN"
+        case "circular":    return "CIRCULAR"
+        default:            return category.uppercased()
+        }
+    }
+
     /// Profile accent colour for this template.
     var accentColor: Color {
         switch category {
