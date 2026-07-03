@@ -350,10 +350,10 @@ struct AppShell: View {
             Spacer()
             VStack(spacing: 4) {
                 Text("01 // \(wm.activeProfile.displayName)")
-                    .font(.custom("JetBrains Mono", size: 14).weight(.bold))
+                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
                     .foregroundStyle(wm.activeProfile.accentColor)
                 Text("MODULE NOT YET IMPLEMENTED")
-                    .font(.custom("JetBrains Mono", size: 13))
+                    .font(DesignTokens.rowLabelFont())
                     .foregroundStyle(textTertiary)
             }
             Spacer()
@@ -372,7 +372,7 @@ struct AppShell: View {
             VStack {
                 Spacer()
                 Text("./INSPECTOR_V2")
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .font(DesignTokens.rowLabelFont())
                     .foregroundStyle(textTertiary)
                 Spacer()
             }

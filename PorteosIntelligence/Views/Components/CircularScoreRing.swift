@@ -46,12 +46,12 @@ struct CircularScoreRing: View {
             // Center content
             VStack(spacing: 2) {
                 Text(String(format: "%.0f", score))
-                    .font(.custom("JetBrains Mono", size: numberSize).weight(.bold))
+                    .font(DesignTokens.mono(size: numberSize, weight: .bold))
                     .monospacedDigit()
                     .foregroundStyle(textPrimary)
 
                 Text(label.uppercased())
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .font(DesignTokens.rowLabelFont())
                     .tracking(0.08)
                     .foregroundStyle(textTertiary)
             }
@@ -65,9 +65,9 @@ struct CircularScoreRing: View {
 #Preview {
     HStack(spacing: 32) {
         CircularScoreRing(score: 87, accentColor: DesignTokens.accentRust, size: 120, label: "PORTEOS")
-        CircularScoreRing(score: 63, accentColor: Color(hex: "#14B8A6"), size: 120, label: "PORTEOS")
-        CircularScoreRing(score: 42, accentColor: Color(hex: "#A855F7"), size: 120, label: "PORTEOS")
-        CircularScoreRing(score: 91, accentColor: Color(hex: "#3B82F6"), size: 180, label: "PORTEOS")
+        CircularScoreRing(score: 63, accentColor: DesignTokens.accentHospitality, size: 120, label: "PORTEOS")
+        CircularScoreRing(score: 42, accentColor: DesignTokens.accentDesign, size: 120, label: "PORTEOS")
+        CircularScoreRing(score: 91, accentColor: DesignTokens.accentCircular, size: 180, label: "PORTEOS")
     }
     .padding(32)
     .background(DesignTokens.canvasBase)

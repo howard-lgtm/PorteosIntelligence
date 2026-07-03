@@ -60,13 +60,13 @@ struct AdvancedFilterPanel: View {
     private var panelHeader: some View {
         HStack(spacing: 0) {
             Text("// FILTER_PANEL")
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
                 .foregroundStyle(textTertiary)
                 .padding(.leading, 12)
             Spacer()
             if filters.isActive {
                 Text("ACTIVE")
-                    .font(.custom("JetBrains Mono", size: 9).weight(.bold))
+                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
                     .foregroundStyle(accentRust)
                     .padding(.trailing, 12)
             }
@@ -102,17 +102,17 @@ struct AdvancedFilterPanel: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label)
-                .font(.custom("JetBrains Mono", size: 9))
+                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta))
                 .foregroundStyle(textTertiary)
             HStack(spacing: 4) {
                 Text("≥")
-                    .font(.custom("JetBrains Mono", size: 10))
+                    .font(DesignTokens.metaFont())
                     .foregroundStyle(textTertiary)
                     .frame(width: 10, alignment: .center)
                 compactNumField(placeholder: "0",  text: minBind)
 
                 Text("≤")
-                    .font(.custom("JetBrains Mono", size: 10))
+                    .font(DesignTokens.metaFont())
                     .foregroundStyle(textTertiary)
                     .frame(width: 10, alignment: .center)
                 compactNumField(placeholder: "∞",  text: maxBind)
@@ -122,7 +122,7 @@ struct AdvancedFilterPanel: View {
 
     private func compactNumField(placeholder: String, text: Binding<String>) -> some View {
         TextField(placeholder, text: text)
-            .font(.custom("JetBrains Mono", size: 11))
+            .font(DesignTokens.rowLabelFont())
             .foregroundStyle(textPrimary)
             .textFieldStyle(.plain)
             .padding(.horizontal, 6)
@@ -164,7 +164,7 @@ struct AdvancedFilterPanel: View {
                     )
                     .clipShape(Rectangle())
                 Text(label)
-                    .font(.custom("JetBrains Mono", size: 9))
+                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta))
                     .foregroundStyle(isOn.wrappedValue ? textPrimary : textTertiary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -189,7 +189,7 @@ struct AdvancedFilterPanel: View {
         HStack(spacing: 0) {
             Button { clearAll() } label: {
                 Text("[ CLEAR_ALL ]")
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .font(DesignTokens.rowLabelFont())
                     .foregroundStyle(textTertiary)
                     .padding(.horizontal, 12)
                     .frame(height: 30)
@@ -200,7 +200,7 @@ struct AdvancedFilterPanel: View {
 
             Button { applyFilters() } label: {
                 Text("[ APPLY_FILTERS ]")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
                     .foregroundStyle(DesignTokens.canvasBase)
                     .padding(.horizontal, 12)
                     .frame(height: 30)
@@ -217,7 +217,7 @@ struct AdvancedFilterPanel: View {
 
     private func rowLabel(_ text: String) -> some View {
         Text(text)
-            .font(.custom("JetBrains Mono", size: 9).weight(.bold))
+            .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
             .foregroundStyle(textTertiary)
     }
 
@@ -227,7 +227,7 @@ struct AdvancedFilterPanel: View {
         isActive: Bool
     ) -> some View {
         TextField(placeholder, text: text)
-            .font(.custom("JetBrains Mono", size: 11))
+            .font(DesignTokens.rowLabelFont())
             .foregroundStyle(textPrimary)
             .textFieldStyle(.plain)
             .padding(.horizontal, 8)

@@ -69,19 +69,19 @@ struct TerminalInputField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label.uppercased())
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
+                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
                 .tracking(0.05)
                 .foregroundStyle(textTertiary)
 
             HStack(spacing: 0) {
                 if let prefix {
                     Text(prefix)
-                        .font(.custom("JetBrains Mono", size: 14))
+                        .font(DesignTokens.rowValueFont())
                         .foregroundStyle(textTertiary)
-                        .frame(width: 24, height: 28)
+                        .frame(width: 24, height: DesignTokens.rowHeightHeader)
                         .background(shellBg)
                         .overlay(alignment: .trailing) {
-                            Rectangle().fill(shellBorder).frame(width: 1)
+                            Rectangle().fill(shellBorder).frame(width: DesignTokens.dividerWidth)
                         }
                 }
 
@@ -89,17 +89,17 @@ struct TerminalInputField: View {
 
                 if let suffix {
                     Text(suffix)
-                        .font(.custom("JetBrains Mono", size: 14))
+                        .font(DesignTokens.rowValueFont())
                         .foregroundStyle(textTertiary)
-                        .frame(width: 24, height: 28)
+                        .frame(width: 24, height: DesignTokens.rowHeightHeader)
                         .background(shellBg)
                         .overlay(alignment: .leading) {
-                            Rectangle().fill(shellBorder).frame(width: 1)
+                            Rectangle().fill(shellBorder).frame(width: DesignTokens.dividerWidth)
                         }
                 }
             }
             .background(shellBg)
-            .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: 1))
+            .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
             .clipShape(Rectangle())
         }
     }
@@ -111,11 +111,11 @@ struct TerminalInputField: View {
         if let doubleBinding {
             TextField(placeholder, text: $localText)
                 .textFieldStyle(.plain)
-                .font(.custom("JetBrains Mono", size: 14))
+                .font(DesignTokens.rowValueFont())
                 .foregroundStyle(textPrimary)
                 .monospacedDigit()
                 .padding(.horizontal, 8)
-                .frame(height: 28)
+                .frame(height: DesignTokens.rowHeightHeader)
                 // Seed localText from the model on first appearance.
                 .onAppear {
                     localText = displayString(for: doubleBinding.wrappedValue)
@@ -136,11 +136,11 @@ struct TerminalInputField: View {
         } else if let stringBinding {
             TextField(placeholder, text: stringBinding)
                 .textFieldStyle(.plain)
-                .font(.custom("JetBrains Mono", size: 14))
+                .font(DesignTokens.rowValueFont())
                 .foregroundStyle(textPrimary)
                 .monospacedDigit()
                 .padding(.horizontal, 8)
-                .frame(height: 28)
+                .frame(height: DesignTokens.rowHeightHeader)
         }
     }
 

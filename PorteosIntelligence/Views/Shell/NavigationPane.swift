@@ -174,7 +174,7 @@ struct NavigationPane: View {
                 } label: {
                     HStack(spacing: 2) {
                         Text("[ FILTER\(filters.isActive ? "•" : "") ]")
-                            .font(.custom("JetBrains Mono", size: 11).weight(showFilterPanel ? .bold : .regular))
+                            .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: showFilterPanel ? .bold : .regular))
                             .foregroundStyle(filters.isActive ? accentRust : (showFilterPanel ? textSecondary : textTertiary))
                     }
                     .padding(.trailing, 4)
@@ -186,7 +186,7 @@ struct NavigationPane: View {
                     showTriage = true
                 } label: {
                     Text("[ TRIAGE ]")
-                        .font(.custom("JetBrains Mono", size: 11))
+                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel))
                         .foregroundStyle(textTertiary)
                         .padding(.trailing, 4)
                 }
@@ -200,7 +200,7 @@ struct NavigationPane: View {
                     if !compareMode { pendingCompare.removeAll() }
                 } label: {
                     Text(compareMode ? "[ EXIT ]" : "[ CMP ]")
-                        .font(.custom("JetBrains Mono", size: 11).weight(compareMode ? .bold : .regular))
+                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: compareMode ? .bold : .regular))
                         .foregroundStyle(compareMode ? accentRust : textTertiary)
                         .padding(.trailing, 12)
                 }
@@ -229,7 +229,7 @@ struct NavigationPane: View {
                 Text(deals.isEmpty ? "no deals yet"
                      : filters.isActive ? "no matches"
                      : "no \(statusFilter?.rawValue ?? "") deals")
-                    .font(.custom("JetBrains Mono", size: 13))
+                    .font(DesignTokens.rowValueFont())
                     .foregroundStyle(textSecondary)
                     .padding(.leading, 16)
                     .padding(.vertical, 8)
@@ -251,7 +251,7 @@ struct NavigationPane: View {
                     pendingCompare.removeAll()
                 } label: {
                     Text("[ LAUNCH_COMPARE (\(pendingCompare.count)) ]")
-                        .font(.custom("JetBrains Mono", size: 13).weight(.bold))
+                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
                         .foregroundStyle(DesignTokens.canvasBase)
                         .frame(maxWidth: .infinity)
                         .frame(height: 36)
@@ -286,7 +286,7 @@ struct NavigationPane: View {
     private var searchBar: some View {
         HStack(spacing: 0) {
             Text("↳ ")
-                .font(.custom("JetBrains Mono", size: 10))
+                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta))
                 .foregroundStyle(textTertiary)
                 .padding(.leading, 8)
 
@@ -354,7 +354,7 @@ struct NavigationPane: View {
         HStack(spacing: 0) {
             Button { showExportSheet = true } label: {
                 Text("[ ./BULK_EXPORT ]")
-                    .font(.custom("JetBrains Mono", size: 13))
+                    .font(DesignTokens.rowValueFont())
                     .foregroundStyle(filteredDeals.isEmpty ? textTertiary : accentGreen)
                     .padding(.leading, 16)
                     .frame(height: 32, alignment: .leading)
@@ -366,7 +366,7 @@ struct NavigationPane: View {
 
             Button { showDeleteConfirm = true } label: {
                 Text("[ ./BULK_DELETE ]")
-                    .font(.custom("JetBrains Mono", size: 13))
+                    .font(DesignTokens.rowValueFont())
                     .foregroundStyle(filteredDeals.isEmpty ? textTertiary : DesignTokens.statusCritical)
                     .padding(.trailing, 12)
                     .frame(height: 32, alignment: .trailing)

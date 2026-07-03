@@ -75,12 +75,12 @@ struct DealTemplate: Identifiable {
     /// Profile accent colour for this template.
     var accentColor: Color {
         switch category {
-        case "realEstate":  return Color(hex: "#C25E30")
-        case "hospitality": return Color(hex: "#14B8A6")
-        case "design":      return Color(hex: "#A855F7")
-        case "circular":    return Color(hex: "#3B82F6")
-        case "mixedUse":    return Color(hex: "#F59E0B")
-        default:            return Color(hex: "#64748B")
+        case "realEstate":  return ProfileType.realEstate.accentColor
+        case "hospitality": return ProfileType.hospitality.accentColor
+        case "design":      return ProfileType.design.accentColor
+        case "circular":    return ProfileType.circular.accentColor
+        case "mixedUse":    return DesignTokens.accentPipeline
+        default:            return DesignTokens.textSecondary
         }
     }
 

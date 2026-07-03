@@ -3,57 +3,48 @@ import SwiftUI
 // MARK: - BadgeState
 
 enum BadgeState {
-    case optimal    // green  — threshold met / healthy
-    case watch      // amber  — soft alert / approaching threshold
-    case degraded   // red    — threshold breached / critical
-    case pending    // amber  — awaiting data / in progress
+    case optimal
+    case watch
+    case degraded
+    case pending
 }
 
 // MARK: - StatusBadge
-// Small pill badge for state indicators.
-// Sharp rectangle (corner radius: 0), 1px semantic border,
-// 10% opacity semantic background tint.
 
 struct StatusBadge: View {
 
     let text: String
     let state: BadgeState
 
-    // MARK: Semantic Colors
-
     private var semanticColor: Color {
         switch state {
-        case .optimal:  return DesignTokens.statusGo   // green
-        case .watch:    return Color(hex: "#F59E0B")   // amber
-        case .degraded: return DesignTokens.statusCritical   // red
-        case .pending:  return Color(hex: "#F59E0B")   // amber (same as watch)
+        case .optimal:  return DesignTokens.statusGo
+        case .watch:    return DesignTokens.statusWarn
+        case .degraded: return DesignTokens.statusCritical
+        case .pending:  return DesignTokens.statusWarn
         }
     }
 
-    // MARK: Body
-
     var body: some View {
         Text(text.uppercased())
-            .font(.custom("JetBrains Mono", size: 10).weight(.bold))
+            .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
             .foregroundStyle(semanticColor)
             .padding(.horizontal, 4)
             .padding(.vertical, 2)
             .background(semanticColor.opacity(0.10))
             .overlay {
-                Rectangle().strokeBorder(semanticColor, lineWidth: 1)
+                Rectangle().strokeBorder(semanticColor, lineWidth: DesignTokens.dividerWidth)
             }
             .clipShape(Rectangle())
     }
 }
 
-// MARK: - Preview
-
 #Preview {
     HStack(spacing: 8) {
-        StatusBadge(text: "Viable",    state: .optimal)
-        StatusBadge(text: "Review",    state: .watch)
-        StatusBadge(text: "Critical",  state: .degraded)
-        StatusBadge(text: "Pending",   state: .pending)
+        StatusBadge(text: "Viable",   state: .optimal)
+        StatusBadge(text: "Review",   state: .watch)
+        StatusBadge(text: "Critical", state: .degraded)
+        StatusBadge(text: "Pending",  state: .pending)
     }
     .padding(16)
     .background(DesignTokens.canvasBase)
