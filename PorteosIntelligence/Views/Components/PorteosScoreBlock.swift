@@ -1,8 +1,12 @@
 import SwiftUI
 
+// MARK: - PorteosScoreBlock
+// V2.06 hero score strip — Figma porteos-score-block with accent strip + bordered panel.
+
 struct PorteosScoreBlock: View {
 
     let metrics: PorteosScoreCalculator.PorteosMetrics
+    var accentColor: Color = DesignTokens.accentRust
 
     private var gradeColor: Color {
         switch metrics.scoreGrade {
@@ -15,31 +19,39 @@ struct PorteosScoreBlock: View {
     }
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 16) {
-            Text(String(format: "%.0f", metrics.finalScore))
-                .font(DesignTokens.heroScoreFont())
-                .monospacedDigit()
-                .foregroundStyle(gradeColor)
+        HStack(spacing: 0) {
+            Rectangle()
+                .fill(accentColor)
+                .frame(width: DesignTokens.profileBarHeight)
 
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("PORTEOS SCORE")
-                    .font(DesignTokens.metricLabelFont())
-                    .tracking(0.02)
-                    .foregroundStyle(DesignTokens.textDim)
-
-                Text(metrics.scoreGrade)
-                    .font(DesignTokens.heroGradeFont())
+            HStack(alignment: .firstTextBaseline, spacing: 16) {
+                Text(String(format: "%.0f", metrics.finalScore))
+                    .font(DesignTokens.heroScoreFont())
+                    .monospacedDigit()
                     .foregroundStyle(gradeColor)
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("PORTEOS SCORE")
+                        .font(DesignTokens.metricLabelFont())
+                        .tracking(0.02)
+                        .foregroundStyle(DesignTokens.textDim)
+
+                    Text(metrics.scoreGrade)
+                        .font(DesignTokens.heroGradeFont())
+                        .foregroundStyle(gradeColor)
+                }
             }
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, DesignTokens.blockGutter)
+            .frame(maxWidth: .infinity)
+            .background(DesignTokens.surfacePanel)
         }
-        .padding(.horizontal, DesignTokens.blockGutter)
-        .padding(.vertical, DesignTokens.blockGutter)
-        .background(DesignTokens.surfacePanel)
-        .overlay(alignment: .bottom) {
-            TerminalStructuralDivider()
+        .overlay {
+            Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
         }
+        .clipShape(Rectangle())
         .padding(.horizontal, DesignTokens.blockGutter)
         .padding(.top, DesignTokens.blockGutter)
     }
@@ -50,6 +62,6 @@ struct PorteosScoreBlock: View {
         PorteosScoreBlock(metrics: .init(finalScore: 87, scoreGrade: "A"))
         PorteosScoreBlock(metrics: .init(finalScore: 41, scoreGrade: "F"))
     }
-    .frame(width: 720)
+    .frame(width: 660)
     .background(DesignTokens.canvasBase)
 }

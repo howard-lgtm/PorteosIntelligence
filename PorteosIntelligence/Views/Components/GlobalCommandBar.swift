@@ -1,12 +1,12 @@
 import SwiftUI
 
 // MARK: - GlobalCommandBar
-// V2.06 footer: prompt + blinking cursor | MAN_PAGES SYS_STAT KERNEL_LOG
+// V2.06 footer: porteos@system prompt + input + UTF-8 LN:n
 
 struct GlobalCommandBar: View {
 
     @State private var commandInput: String = ""
-    var lineCount: Int = 120
+    var lineCount: Int = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -16,49 +16,39 @@ struct GlobalCommandBar: View {
 
             HStack(spacing: 0) {
                 Text("porteos@system ~ % ")
-                    .font(DesignTokens.mono(size: 11))
+                    .font(DesignTokens.cliPromptFont())
                     .foregroundStyle(DesignTokens.textDim)
 
                 TextField("", text: $commandInput)
-                    .font(DesignTokens.mono(size: 11))
+                    .font(DesignTokens.cliPromptFont())
                     .foregroundStyle(DesignTokens.textPrimary)
                     .textFieldStyle(.plain)
                     .frame(maxWidth: .infinity)
 
                 BlinkingCursorView()
-                    .padding(.trailing, 16)
+                    .padding(.trailing, 8)
 
-                footerMonitors
+                Text("UTF-8")
+                    .font(DesignTokens.metaFont())
+                    .foregroundStyle(DesignTokens.textDim)
+
+                Text("LN:\(lineCount)")
+                    .font(DesignTokens.metaFont())
+                    .foregroundStyle(DesignTokens.textDim)
+                    .monospacedDigit()
+                    .padding(.leading, 8)
             }
             .padding(.horizontal, 12)
-            .frame(height: DesignTokens.rowHeightButton)
-            .background(DesignTokens.canvasBase)
+            .frame(height: DesignTokens.rowHeightCommandBar)
+            .background(DesignTokens.surfacePanel)
         }
-    }
-
-    private var footerMonitors: some View {
-        HStack(spacing: 12) {
-            footerTag("MAN_PAGES")
-            footerTag("SYS_STAT")
-            footerTag("KERNEL_LOG")
-            Text("LN:\(lineCount)")
-                .font(DesignTokens.mono(size: 10))
-                .foregroundStyle(DesignTokens.textDim)
-                .monospacedDigit()
-        }
-    }
-
-    private func footerTag(_ label: String) -> some View {
-        Text(label)
-            .font(DesignTokens.mono(size: 10, weight: .bold))
-            .foregroundStyle(DesignTokens.textDim)
     }
 }
 
 // MARK: - Preview
 
 #Preview {
-    GlobalCommandBar(lineCount: 120)
+    GlobalCommandBar(lineCount: 0)
         .frame(width: 1200)
         .background(DesignTokens.canvasBase)
 }

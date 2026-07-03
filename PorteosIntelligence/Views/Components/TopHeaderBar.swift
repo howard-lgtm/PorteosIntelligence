@@ -1,20 +1,21 @@
 import SwiftUI
 
 // MARK: - TopHeaderBar
-// V2.06: wordmark + `[ PROFILE // MODULE ]` (profile accent) + status strip.
+// V2.06 shell header — CLI prompt + profile command | deal breadcrumb | server LED.
 
 struct TopHeaderBar: View {
 
     let activeProfile: ProfileType
+    var selectedDealName: String? = nil
     var onServerTap: () -> Void = {}
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                wordmark
-                Spacer()
-                workspaceHeader
-                Spacer()
+                cliPrompt
+                Spacer(minLength: 16)
+                dealBreadcrumb
+                Spacer(minLength: 16)
                 statusIndicators
             }
             .padding(.horizontal, 16)
@@ -27,16 +28,26 @@ struct TopHeaderBar: View {
         }
     }
 
-    private var wordmark: some View {
-        Text("INSTITUTIONAL_V2.06_STABLE")
-            .font(DesignTokens.mono(size: 11, weight: .bold))
-            .foregroundStyle(DesignTokens.accentRust)
+    private var cliPrompt: some View {
+        HStack(spacing: 0) {
+            Text("porteos@system ~ % ")
+                .font(DesignTokens.cliPromptFont())
+                .foregroundStyle(DesignTokens.textDim)
+            Text(activeProfile.commandLine)
+                .font(DesignTokens.mono(size: DesignTokens.TypeScale.cliPrompt, weight: .bold))
+                .foregroundStyle(activeProfile.accentColor)
+                .lineLimit(1)
+        }
     }
 
-    private var workspaceHeader: some View {
-        Text(activeProfile.workspaceHeaderTitle)
-            .font(DesignTokens.mono(size: 11, weight: .bold))
-            .foregroundStyle(activeProfile.accentColor)
+    @ViewBuilder
+    private var dealBreadcrumb: some View {
+        if let name = selectedDealName, !name.isEmpty {
+            Text("--asset=\"\(name)\"")
+                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel))
+                .foregroundStyle(DesignTokens.textSecondary)
+                .lineLimit(1)
+        }
     }
 
     private var statusIndicators: some View {
@@ -58,8 +69,11 @@ struct TopHeaderBar: View {
 
 #Preview {
     VStack(spacing: 0) {
-        TopHeaderBar(activeProfile: .realEstate)
-        TopHeaderBar(activeProfile: .hospitality)
+        TopHeaderBar(
+            activeProfile: .realEstate,
+            selectedDealName: "Lisbon Office Block A"
+        )
+        TopHeaderBar(activeProfile: .cmdCenter)
     }
     .frame(width: 1200)
     .background(DesignTokens.canvasBase)

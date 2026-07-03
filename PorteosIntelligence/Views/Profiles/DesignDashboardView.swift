@@ -2,12 +2,21 @@ import SwiftUI
 import SwiftData
 
 // MARK: - DesignDashboardView
+// V2.06 — Figma module order + inset grids, no mock sparklines.
 
 struct DesignDashboardView: View {
 
     @Bindable var deal: PropertyDeal
 
     private var accent: Color { ProfileType.design.accentColor }
+
+    private var dealDisplayName: String {
+        deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName
+    }
+
+    private var porteosScore: PorteosScoreCalculator.PorteosMetrics {
+        PropertyDealViewModel(deal: deal).porteosScore
+    }
 
     private var hasData: Bool { deal.designGFA > 0 || deal.designNIA > 0 || deal.designSpaceUtilization > 0 }
 
@@ -34,24 +43,28 @@ struct DesignDashboardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            TerminalCLIHeader(
-                command: "profile --design --asset=\"\(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)\"",
-                accentColor: accent
-            )
+            DashboardCLIHeader(profile: .design, dealName: dealDisplayName)
             TerminalStructuralDivider()
 
             if hasData {
                 ScrollView {
                     VStack(alignment: .leading, spacing: DesignTokens.blockSpacing) {
-                        let logs = DataValidator.validate(deal: deal)
-                        SystemLogBlock(messages: logs)
+                        DashboardHeroScore(
+                            score: porteosScore.finalScore,
+                            grade: porteosScore.scoreGrade,
+                            dealName: dealDisplayName,
+                            profile: .design
+                        )
+                        ValidationLogModule(
+                            messages: DataValidator.validate(deal: deal),
+                            accentColor: accent
+                        )
+                        MarketTrendGrid(deal: deal, profileKey: "design", accent: accent)
                         module01SpaceEfficiency
                         module02Wellness
                         module03Biophilic
                         module04Adaptability
                         DesignSensitivityBlock(deal: deal)
-                        MarketTrendModule(city: deal.locationCity, profile: "design",
-                                          accent: accent)
                     }
                     .padding(DesignTokens.blockGutter)
                 }
@@ -63,111 +76,93 @@ struct DesignDashboardView: View {
         .background(DesignTokens.canvasBase)
     }
 
-    // MARK: Module 01 // SPACE_EFFICIENCY
-
     private var module01SpaceEfficiency: some View {
         TerminalBlock(command: "01 // SPACE_EFFICIENCY", accentColor: accent) {
-            TerminalMetricGrid {
-                let ntgTrend  = mockTrend(from: metrics.netToGrossRatio)
-                let utilTrend = mockTrend(from: metrics.spaceUtilization)
-
-                MetricGridCell(  label: "Gross Floor Area (GFA)",  value: m2(metrics.gfa))
-                MetricGridCell(  label: "Net Internal Area (NIA)", value: m2(metrics.nia))
+            TerminalMetricGrid(fixedColumnCount: 2) {
+                TerminalMetricCell(label: "Gross Floor Area (GFA)", value: m2(metrics.gfa))
+                TerminalMetricCell(label: "Net Internal Area (NIA)", value: m2(metrics.nia))
                 TerminalMetricCell(label: "Net-to-Gross Ratio",
                                    value: pct(metrics.netToGrossRatio),
-                                   state: netToGrossState(metrics.netToGrossRatio),
-                                   trend: ntgTrend,
-                                   trendColor: sparkColor(ntgTrend))
-                MetricGridCell(  label: "Circulation",
-                                 value: pct(metrics.circulationPct),
-                                 state: metrics.circulationPct > 20 ? .warning : .neutral)
+                                   state: netToGrossState(metrics.netToGrossRatio))
+                TerminalMetricCell(label: "Circulation",
+                                   value: pct(metrics.circulationPct),
+                                   state: metrics.circulationPct > 20 ? .warning : .neutral)
                 TerminalMetricCell(label: "Space Utilization Rate",
                                    value: pct(metrics.spaceUtilization),
-                                   state: metrics.spaceUtilization >= 90 ? .optimal : .neutral,
-                                   trend: utilTrend,
-                                   trendColor: sparkColor(utilTrend))
+                                   state: metrics.spaceUtilization >= 90 ? .optimal : .neutral)
             }
         }
     }
-
-    // MARK: Module 02 // WELLNESS_METRICS
 
     private var module02Wellness: some View {
         TerminalBlock(command: "02 // WELLNESS_METRICS", accentColor: accent) {
-            TerminalMetricGrid {
-                let dayTrend     = mockTrend(from: metrics.daylighting)
-                let thermalTrend = mockTrend(from: metrics.thermalComfort)
-
+            TerminalMetricGrid(fixedColumnCount: 2) {
                 TerminalMetricCell(label: "Daylighting Coverage",
                                    value: pct(metrics.daylighting),
-                                   state: metrics.daylighting >= 80 ? .optimal : .neutral,
-                                   trend: dayTrend,
-                                   trendColor: sparkColor(dayTrend))
-                MetricGridCell(  label: "CO2 Levels",
-                                 value: "\(metrics.co2ppm.formatted(.number.precision(.fractionLength(0)))) ppm",
-                                 state: co2State(metrics.co2ppm))
-                MetricGridCell(  label: "Air Changes Per Hour",
-                                 value: "\(metrics.ach.formatted(.number.precision(.fractionLength(1)))) ACH",
-                                 state: metrics.ach >= 4 ? .optimal : .neutral)
+                                   state: metrics.daylighting >= 80 ? .optimal : .neutral)
+                TerminalMetricCell(label: "CO2 Levels",
+                                   value: "\(metrics.co2ppm.formatted(.number.precision(.fractionLength(0)))) ppm",
+                                   state: co2State(metrics.co2ppm))
+                TerminalMetricCell(label: "Air Changes Per Hour",
+                                   value: "\(metrics.ach.formatted(.number.precision(.fractionLength(1)))) ACH",
+                                   state: metrics.ach >= 4 ? .optimal : .neutral)
                 TerminalMetricCell(label: "Thermal Comfort Score",
                                    value: pct(metrics.thermalComfort),
-                                   state: metrics.thermalComfort >= 90 ? .optimal : .neutral,
-                                   trend: thermalTrend,
-                                   trendColor: sparkColor(thermalTrend))
-                MetricGridCell(  label: "Acoustic Comfort Score",
-                                 value: pct(metrics.acousticComfort),
-                                 state: metrics.acousticComfort >= 85 ? .optimal : .neutral)
+                                   state: metrics.thermalComfort >= 90 ? .optimal : .neutral)
+                TerminalMetricCell(label: "Acoustic Comfort Score",
+                                   value: pct(metrics.acousticComfort),
+                                   state: metrics.acousticComfort >= 85 ? .optimal : .neutral)
             }
         }
     }
-
-    // MARK: Module 03 // BIOPHILIC_ELEMENTS
 
     private var module03Biophilic: some View {
         TerminalBlock(command: "03 // BIOPHILIC_ELEMENTS", accentColor: accent) {
-            TerminalMetricGrid {
-                MetricGridCell(label: "Biophilic Elements",  value: "\(metrics.biophilicCount)")
-                MetricGridCell(label: "Green Wall Coverage", value: m2(metrics.greenWallM2))
-                MetricGridCell(label: "Views to Nature",     value: pct(metrics.viewsToNaturePct),    state: metrics.viewsToNaturePct >= 70 ? .optimal : .neutral)
-                MetricGridCell(label: "Natural Materials",   value: pct(metrics.naturalMaterialsPct), state: metrics.naturalMaterialsPct >= 40 ? .optimal : .neutral)
+            TerminalMetricGrid(fixedColumnCount: 2) {
+                TerminalMetricCell(label: "Biophilic Elements", value: "\(metrics.biophilicCount)")
+                TerminalMetricCell(label: "Green Wall Coverage", value: m2(metrics.greenWallM2))
+                TerminalMetricCell(label: "Views to Nature",
+                                   value: pct(metrics.viewsToNaturePct),
+                                   state: metrics.viewsToNaturePct >= 70 ? .optimal : .neutral)
+                TerminalMetricCell(label: "Natural Materials",
+                                   value: pct(metrics.naturalMaterialsPct),
+                                   state: metrics.naturalMaterialsPct >= 40 ? .optimal : .neutral)
             }
         }
     }
-
-    // MARK: Module 04 // ADAPTABILITY
 
     private var module04Adaptability: some View {
         TerminalBlock(command: "04 // ADAPTABILITY", accentColor: accent) {
-            TerminalMetricGrid {
-                MetricGridCell(label: "Movable Partition",  value: pct(metrics.movablePartitionPct), state: metrics.movablePartitionPct >= 30 ? .optimal : .neutral)
-                MetricGridCell(label: "Multi-Use Spaces",   value: "\(metrics.multiUseSpaces)")
-                MetricGridCell(label: "Adaptability Score", value: "\(metrics.adaptabilityScore.formatted(.number.precision(.fractionLength(0))))/100", state: adaptabilityState(metrics.adaptabilityScore))
+            TerminalMetricGrid(fixedColumnCount: 2) {
+                TerminalMetricCell(label: "Movable Partition",
+                                   value: pct(metrics.movablePartitionPct),
+                                   state: metrics.movablePartitionPct >= 30 ? .optimal : .neutral)
+                TerminalMetricCell(label: "Multi-Use Spaces", value: "\(metrics.multiUseSpaces)")
+                TerminalMetricCell(label: "Adaptability Score",
+                                   value: "\(metrics.adaptabilityScore.formatted(.number.precision(.fractionLength(0))))/100",
+                                   state: adaptabilityState(metrics.adaptabilityScore))
             }
         }
     }
-
-    // MARK: Empty State
 
     private var emptyState: some View {
         VStack(spacing: 16) {
             Spacer()
             VStack(spacing: 8) {
                 Text("porteos@system ~ % ls ./design_data")
-                    .font(DesignTokens.mono(size: 11))
+                    .font(DesignTokens.cliPromptFont())
                     .foregroundStyle(DesignTokens.textDim)
                 Text("No design data available")
-                    .font(DesignTokens.mono(size: 12))
+                    .font(DesignTokens.rowValueFont())
                     .foregroundStyle(DesignTokens.textSecondary)
                 Text("Click [ ./EDIT_DEAL ] to add design metrics")
-                    .font(DesignTokens.mono(size: 11))
+                    .font(DesignTokens.cliPromptFont())
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-
-    // MARK: Formatters
 
     private func m2(_ v: Double) -> String {
         "\(v.formatted(.number.precision(.fractionLength(0)))) m²"
@@ -176,8 +171,6 @@ struct DesignDashboardView: View {
     private func pct(_ v: Double, dp: Int = 1) -> String {
         "\(v.formatted(.number.precision(.fractionLength(dp))))%"
     }
-
-    // MARK: Threshold Logic
 
     private func netToGrossState(_ v: Double) -> MetricState {
         if v >= 80 { return .optimal }
@@ -197,8 +190,6 @@ struct DesignDashboardView: View {
         return v < 25 ? .danger : .neutral
     }
 }
-
-// MARK: - Preview
 
 #Preview("Full Data") {
     let deal = PropertyDeal(

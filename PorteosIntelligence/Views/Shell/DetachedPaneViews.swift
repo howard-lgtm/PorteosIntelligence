@@ -8,9 +8,9 @@ private struct DetachedWindowHeader: View {
     let title: String
     let pane:  WindowManager.PaneType
 
-    private let shellSurface = Color(hex: "#1A1D24")
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let textTertiary = Color(hex: "#64748B")
+    private var shellSurface: Color { DesignTokens.surfacePanel }
+    private var shellBorder:  Color { DesignTokens.dividerStructural }
+    private var textTertiary: Color { DesignTokens.textDim }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -79,7 +79,7 @@ struct DetachedNavigationView: View {
                 compareDeals:     $compareDeals
             )
         }
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
         .sheet(isPresented: $showNewDealSheet) {
             TemplatePickerSheet { _ in }
         }
@@ -100,10 +100,10 @@ struct DetachedCenterView: View {
 
     @Query(sort: \PropertyDeal.createdAt, order: .reverse) private var deals: [PropertyDeal]
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let shellBorder   = Color(hex: "#2E333F")
+    private var shellBg:       Color { DesignTokens.canvasBase }
+    private var textSecondary: Color { DesignTokens.textSecondary }
+    private var textTertiary:  Color { DesignTokens.textDim }
+    private var shellBorder:   Color { DesignTokens.dividerStructural }
 
     private var selectedDeal: PropertyDeal? {
         deals.first { $0.id == wm.selectedDealID }
@@ -123,11 +123,8 @@ struct DetachedCenterView: View {
             CmdCenterView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let deal = selectedDeal {
-            let viewModel = PropertyDealViewModel(deal: deal)
             ScrollView {
                 VStack(spacing: 0) {
-                    PorteosScoreBlock(metrics: viewModel.porteosScore)
-                    Rectangle().fill(shellBg).frame(height: 16)
                     dashboardView(for: deal)
                 }
             }
@@ -174,9 +171,8 @@ struct DetachedInspectorView: View {
 
     @Query(sort: \PropertyDeal.createdAt, order: .reverse) private var deals: [PropertyDeal]
 
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
+    private var shellSurface:  Color { DesignTokens.surfacePanel }
+    private var textSecondary: Color { DesignTokens.textSecondary }
 
     private var selectedDeal: PropertyDeal? {
         deals.first { $0.id == wm.selectedDealID }

@@ -72,7 +72,7 @@ struct NavigationPane: View {
             Spacer(minLength: 0)
             footerActions
         }
-        .frame(width: 260)
+        .frame(width: DesignTokens.navPaneWidth)
         .frame(maxHeight: .infinity)
         .background(shellSurface)
         .overlay(alignment: .trailing) {
@@ -103,7 +103,7 @@ struct NavigationPane: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text("INSTITUTIONAL_V2.06_STABLE")
+            Text("PORTEOS@SYSTEM")
                 .font(DesignTokens.mono(size: 11, weight: .bold))
                 .foregroundStyle(accentRust)
 
@@ -140,23 +140,17 @@ struct NavigationPane: View {
         } label: {
             HStack(spacing: 0) {
                 Rectangle()
-                    .fill(isActive ? accentRust : Color.clear)
+                    .fill(isActive ? profile.accentColor : Color.clear)
                     .frame(width: DesignTokens.navSelectionBorder)
 
                 Text(profile.navPath)
-                    .font(DesignTokens.mono(size: 13, weight: isActive ? .bold : .regular))
+                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: isActive ? .bold : .regular))
                     .foregroundStyle(isActive ? textPrimary : textTertiary)
                     .padding(.leading, 14)
 
                 Spacer()
-
-                Text("[ ↗ ]")
-                    .font(DesignTokens.mono(size: 9))
-                    .foregroundStyle(textTertiary)
-                    .padding(.trailing, 8)
-                    .opacity(0.6)
             }
-            .frame(height: DesignTokens.rowHeightData)
+            .frame(height: DesignTokens.rowHeightNavLink)
             .background(isActive ? shellElevated : Color.clear)
             .clipShape(Rectangle())
         }
@@ -258,7 +252,7 @@ struct NavigationPane: View {
                 } label: {
                     Text("[ LAUNCH_COMPARE (\(pendingCompare.count)) ]")
                         .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                        .foregroundStyle(Color(hex: "#0F1115"))
+                        .foregroundStyle(DesignTokens.canvasBase)
                         .frame(maxWidth: .infinity)
                         .frame(height: 36)
                         .background(accentRust)
@@ -296,8 +290,8 @@ struct NavigationPane: View {
                 .foregroundStyle(textTertiary)
                 .padding(.leading, 8)
 
-            TextField("search…", text: $filters.searchText)
-                .font(.custom("JetBrains Mono", size: 11))
+            TextField("Search deals…", text: $filters.searchText)
+                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel))
                 .foregroundStyle(textPrimary)
                 .textFieldStyle(.plain)
                 .frame(maxWidth: .infinity)
@@ -307,15 +301,15 @@ struct NavigationPane: View {
                     filters.searchText = ""
                 } label: {
                     Text("×")
-                        .font(.custom("JetBrains Mono", size: 13))
+                        .font(DesignTokens.mono(size: 13))
                         .foregroundStyle(textTertiary)
                 }
                 .buttonStyle(.plain)
                 .padding(.trailing, 6)
             }
         }
-        .frame(height: 26)
-        .background(Color(hex: "#0F1115"))
+        .frame(height: DesignTokens.rowHeightData)
+        .background(DesignTokens.canvasBase)
         .overlay(Rectangle().stroke(
             filters.searchText.isEmpty ? shellBorder : accentRust,
             lineWidth: 1
@@ -338,9 +332,9 @@ struct NavigationPane: View {
                     Button { statusFilter = option.filter } label: {
                         VStack(spacing: 0) {
                             Text(option.label)
-                                .font(.custom("JetBrains Mono", size: 13).weight(isActive ? .bold : .regular))
+                                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: isActive ? .bold : .regular))
                                 .foregroundStyle(isActive ? textPrimary : textTertiary)
-                                .frame(height: 24)
+                                .frame(height: DesignTokens.rowHeightNavLink)
                                 .padding(.horizontal, 8)
                             Rectangle()
                                 .fill(isActive ? accentRust : Color.clear)
@@ -373,7 +367,7 @@ struct NavigationPane: View {
             Button { showDeleteConfirm = true } label: {
                 Text("[ ./BULK_DELETE ]")
                     .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(filteredDeals.isEmpty ? textTertiary : Color(hex: "#EF4444"))
+                    .foregroundStyle(filteredDeals.isEmpty ? textTertiary : DesignTokens.statusCritical)
                     .padding(.trailing, 12)
                     .frame(height: 32, alignment: .trailing)
             }
@@ -385,9 +379,10 @@ struct NavigationPane: View {
     private func dealRow(_ deal: PropertyDeal) -> some View {
         let isSelected   = deal.id == selectedDeal?.id
         let isChecked    = pendingCompare.contains(deal.id)
+        let dealAccent = profileFor(deal).accentColor
         let pipColor: Color = compareMode
-            ? (isChecked ? accentGreen : Color(hex: "#2E333F"))
-            : (isSelected ? accentRust : Color.clear)
+            ? (isChecked ? accentGreen : DesignTokens.dividerStructural)
+            : (isSelected ? dealAccent : Color.clear)
 
         return Button {
             if compareMode {
@@ -402,10 +397,9 @@ struct NavigationPane: View {
                 // Left pip: Rust when selected (normal), Green when checked (compare)
                 Rectangle()
                     .fill(pipColor)
-                    .frame(width: 2)
+                    .frame(width: compareMode ? 2 : 4)
 
                 HStack(spacing: 4) {
-                    // Checkbox indicator in compare mode
                     if compareMode {
                         Rectangle()
                             .fill(isChecked ? accentGreen : Color.clear)
@@ -415,7 +409,7 @@ struct NavigationPane: View {
                     }
 
                     Text(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)
-                        .font(.custom("JetBrains Mono", size: 13))
+                        .font(DesignTokens.rowValueFont())
                         .foregroundStyle(
                             compareMode ? (isChecked ? textPrimary : textSecondary)
                                         : (isSelected ? textPrimary : textSecondary)
@@ -425,14 +419,13 @@ struct NavigationPane: View {
                     Spacer()
 
                     Text(deal.status.rawValue.uppercased())
-                        .font(.custom("JetBrains Mono", size: 13))
-                        .foregroundStyle(statusColor(deal.status))
+                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                        .foregroundStyle(deal.status.tokenColor)
                 }
                 .padding(.leading, 10)
                 .padding(.trailing, 12)
-                .padding(.vertical, 6)
             }
-            .frame(height: 32)
+            .frame(height: DesignTokens.rowHeightData)
             .background(
                 compareMode ? (isChecked ? shellElevated : Color.clear)
                             : (isSelected ? shellElevated : Color.clear)
@@ -447,21 +440,11 @@ struct NavigationPane: View {
         }
     }
 
-    private func statusColor(_ status: DealStatus) -> Color {
-        switch status {
-        case .viable:   return Color(hex: "#10B981")  // green
-        case .review:   return Color(hex: "#F59E0B")  // amber
-        case .rejected: return Color(hex: "#EF4444")  // red
-        case .acquired: return Color(hex: "#3B82F6")  // blue
-        case .pipeline: return Color(hex: "#64748B")  // tertiary
-        }
-    }
-
     // MARK: Section Header
 
     private func sectionHeader(_ title: String) -> some View {
         Text(title)
-            .font(.custom("JetBrains Mono", size: 13).weight(.bold))
+            .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
             .tracking(0.08)
             .foregroundStyle(textTertiary)
             .textCase(.uppercase)
@@ -494,11 +477,11 @@ struct NavigationPane: View {
     private func scriptButton(label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
-                .font(.custom("JetBrains Mono", size: 13))
+                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue))
                 .foregroundStyle(accentGreen)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.leading, 16)
-                .frame(height: 32)
+                .frame(height: DesignTokens.rowHeightData)
         }
         .buttonStyle(.plain)
         .clipShape(Rectangle())
@@ -525,6 +508,6 @@ struct NavigationPane: View {
         Spacer()
     }
     .frame(width: 400, height: 600)
-    .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
     .modelContainer(container)
 }

@@ -89,11 +89,31 @@ struct CmdCenterView: View {
         )
     }
 
+    private var portfolioValidation: [ValidationMessage] {
+        var msgs: [ValidationMessage] = []
+        if hasScoredDeals && portfolioAverageScore < 80 {
+            msgs.append(.init(
+                severity: .warning,
+                field: "AVG_SCORE",
+                message: "portfolio avg \(Int(portfolioAverageScore.rounded())) below target threshold 80"
+            ))
+        }
+        let withoutCarbon = deals.filter { $0.circularKgMaterialsUsed <= 0 && $0.circularRecycledContentPct <= 0 }.count
+        if withoutCarbon >= 2 {
+            msgs.append(.init(
+                severity: .warning,
+                field: "CARBON_COVER",
+                message: "\(withoutCarbon)/\(deals.count) profiles lack carbon assessment"
+            ))
+        }
+        return msgs
+    }
+
     // MARK: Body
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            TerminalCLIHeader(command: "portfolio --overview", accentColor: accent)
+            DashboardCLIHeader(profile: .cmdCenter, dealName: "Portfolio")
             TerminalStructuralDivider()
 
             if deals.isEmpty {
@@ -102,6 +122,8 @@ struct CmdCenterView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: DesignTokens.blockSpacing) {
                         heroKPIStrip
+                        ValidationLogModule(messages: portfolioValidation, accentColor: accent)
+                        MarketTrendGrid(deal: deals[0], profileKey: "cmdCenter", accent: accent)
                         module01DealPipeline
                         module02ProfileHealth
                         module03ProfileDistribution

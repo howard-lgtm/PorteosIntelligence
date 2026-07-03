@@ -55,8 +55,8 @@ struct AppShell: View {
 
     // MARK: Layout Constants
 
-    private let navPaneWidth:       CGFloat = 260
-    private let inspectorPaneWidth: CGFloat = 280
+    private var navPaneWidth:       CGFloat { DesignTokens.navPaneWidth }
+    private var inspectorPaneWidth: CGFloat { DesignTokens.inspectorPaneWidth }
     private let dividerWidth:       CGFloat = 1
 
     // MARK: Body
@@ -142,7 +142,11 @@ struct AppShell: View {
 
     private var coreView: some View {
         VStack(spacing: 0) {
-            TopHeaderBar(activeProfile: wm.activeProfile, onServerTap: { showServerConfig = true })
+            TopHeaderBar(
+                activeProfile: wm.activeProfile,
+                selectedDealName: selectedDeal?.propertyName,
+                onServerTap: { showServerConfig = true }
+            )
 
             HStack(spacing: 0) {
                 let navGone    = wm.detachedPanes.contains(.navigation)
@@ -177,7 +181,7 @@ struct AppShell: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            GlobalCommandBar(lineCount: 120)
+            GlobalCommandBar(lineCount: 0)
         }
         .background(shellBg)
         .clipShape(Rectangle())
@@ -263,9 +267,7 @@ struct AppShell: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(shellBg)
         } else if let deal = selectedDeal {
-            let viewModel = PropertyDealViewModel(deal: deal)
-            VStack(spacing: 0) {
-                PorteosScoreBlock(metrics: viewModel.porteosScore)
+            Group {
                 switch wm.activeProfile {
                 case .realEstate:  RealEstateDashboardView(deal: deal)
                 case .hospitality: HospitalityDashboardView(deal: deal)
@@ -277,36 +279,28 @@ struct AppShell: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(shellBg)
         } else {
-            switch wm.activeProfile {
-            case .realEstate: realEstateNoDealState
-            default:          noDealState
-            }
+            emptyCenterState
         }
     }
 
-    private var realEstateNoDealState: some View {
+    private var emptyCenterState: some View {
         VStack {
             Spacer()
-            TerminalBlock(command: "ls ./deals", accentColor: textTertiary, contentPadding: 0) {
-                VStack(spacing: 12) {
-                    Text("No deal selected")
-                        .font(.custom("JetBrains Mono", size: 14))
-                        .foregroundStyle(textSecondary)
-                    Text("Select a deal from the sidebar or click [ ./NEW_DEAL ]")
-                        .font(.custom("JetBrains Mono", size: 13))
-                        .foregroundStyle(textTertiary)
-                    Rectangle().fill(shellBorder).frame(height: 1)
-                    Button(action: loadSampleDeal) {
-                        Text("[ ./LOAD_SAMPLE_DEAL ]")
-                            .font(.custom("JetBrains Mono", size: 13))
-                            .foregroundStyle(Color(hex: "#10B981"))
-                    }
-                    .buttonStyle(.plain)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("porteos@system ~ % ls ./deals")
+                    .font(DesignTokens.cliPromptFont())
+                    .foregroundStyle(textTertiary)
+                Text("// no deals found")
+                    .font(DesignTokens.rowValueFont())
+                    .foregroundStyle(textSecondary)
+                Button(action: loadSampleDeal) {
+                    Text("[ ./LOAD_SAMPLE_DEAL ]")
+                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
+                        .foregroundStyle(DesignTokens.statusGo)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(32)
+                .buttonStyle(.plain)
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 32)
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -352,23 +346,6 @@ struct AppShell: View {
         }
         .frame(maxWidth: .infinity)
         .padding(16)
-    }
-
-    private var noDealState: some View {
-        VStack {
-            Spacer()
-            VStack(spacing: 8) {
-                Text("porteos@system ~ % ls ./deals")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textTertiary)
-                Text("select or create a deal to begin")
-                    .font(.custom("JetBrains Mono", size: 14))
-                    .foregroundStyle(textSecondary)
-            }
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(shellBg)
     }
 
     // MARK: Inspector Pane

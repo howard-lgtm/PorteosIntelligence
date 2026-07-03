@@ -22,16 +22,9 @@ struct PDFReportSheet: View {
     @State private var isGenerating = false
     @State private var errorMessage: String?
 
-    // ── Design tokens ─────────────────────────────────────────────────────────
-    private let shellBg      = Color(hex: "#0F1115")
-    private let shellSurface = Color(hex: "#1A1D24")
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let textPrimary  = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let accentRust   = Color(hex: "#C25E30")
-    private let colorGreen   = Color(hex: "#10B981")
-    private let colorAmber   = Color(hex: "#F59E0B")
+    // ── Design tokens (V2.06) ─────────────────────────────────────────────────
+
+    private var accentRust: Color { DesignTokens.accentRust }
 
     // ── Computed ──────────────────────────────────────────────────────────────
     private var estimatedPages: Int {
@@ -50,7 +43,7 @@ struct PDFReportSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             sheetHeader
-            Rectangle().fill(shellBorder).frame(height: 1)
+            Rectangle().fill(DesignTokens.dividerStructural).frame(height: 1)
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     dealInfoSection
@@ -66,8 +59,8 @@ struct PDFReportSheet: View {
                 }
             }
         }
-        .frame(width: 460)
-        .background(shellBg)
+        .frame(width: 480)
+        .background(DesignTokens.canvasBase)
         .clipShape(Rectangle())
         .onAppear { loadScenarios() }
     }
@@ -77,19 +70,19 @@ struct PDFReportSheet: View {
     private var sheetHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % pdf_report_generator")
-                .font(.custom("JetBrains Mono", size: 12))
-                .foregroundStyle(textTertiary)
+                .font(DesignTokens.cliPromptFont())
+                .foregroundStyle(DesignTokens.textDim)
             Spacer()
             Button { dismiss() } label: {
                 Text("[ × ]")
-                    .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                    .foregroundStyle(textSecondary)
+                    .font(DesignTokens.mono(size: 13, weight: .bold))
+                    .foregroundStyle(DesignTokens.textSecondary)
             }
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 20)
-        .frame(height: 36)
-        .background(shellSurface)
+        .frame(height: DesignTokens.rowHeightPaneBar)
+        .background(DesignTokens.surfacePanel)
     }
 
     // MARK: – Deal Info Section
@@ -159,20 +152,20 @@ struct PDFReportSheet: View {
                 Button(action: { options.blackAndWhite.toggle() }) {
                     HStack(spacing: 8) {
                         Rectangle()
-                            .fill(options.blackAndWhite ? shellBorder : Color.clear)
+                            .fill(options.blackAndWhite ? DesignTokens.dividerStructural : Color.clear)
                             .frame(width: 16, height: 16)
                             .overlay(
                                 Rectangle()
-                                    .stroke(shellBorder, lineWidth: 1)
+                                    .stroke(DesignTokens.dividerStructural, lineWidth: 1)
                             )
                             .overlay(
                                 Text(options.blackAndWhite ? "✓" : "")
                                     .font(.system(size: 10, weight: .bold))
-                                    .foregroundColor(textPrimary)
+                                    .foregroundColor(DesignTokens.textPrimary)
                             )
                         Text("BLACK_AND_WHITE_MODE")
                             .font(.custom("JetBrains Mono", size: 11))
-                            .foregroundColor(textSecondary)
+                            .foregroundColor(DesignTokens.textSecondary)
                     }
                 }
                 .buttonStyle(.plain)
@@ -186,7 +179,7 @@ struct PDFReportSheet: View {
             if options.blackAndWhite {
                 Text("[ INFO ] PDF will be optimized for black & white printing")
                     .font(.custom("JetBrains Mono", size: 10))
-                    .foregroundColor(textTertiary)
+                    .foregroundColor(DesignTokens.textDim)
                     .padding(.horizontal, 16)
                     .padding(.bottom, 8)
             }
@@ -199,10 +192,10 @@ struct PDFReportSheet: View {
         Button { generateAndSave() } label: {
             ZStack {
                 Rectangle()
-                    .fill(isGenerating ? Color(hex: "#2E333F") : accentRust)
+                    .fill(isGenerating ? DesignTokens.dividerStructural : accentRust)
                 Text(isGenerating ? "// GENERATING…" : "[ GENERATE & SAVE ]")
                     .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                    .foregroundStyle(isGenerating ? textTertiary : Color(hex: "#0F1115"))
+                    .foregroundStyle(isGenerating ? DesignTokens.textDim : DesignTokens.canvasBase)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 38)
@@ -220,7 +213,7 @@ struct PDFReportSheet: View {
         HStack {
             Text("// \(label)")
                 .font(.custom("JetBrains Mono", size: 9.5))
-                .foregroundStyle(textTertiary)
+                .foregroundStyle(DesignTokens.textDim)
             Spacer()
         }
         .padding(.horizontal, 20)
@@ -232,37 +225,37 @@ struct PDFReportSheet: View {
         HStack(alignment: .top, spacing: 0) {
             Text(label)
                 .font(.custom("JetBrains Mono", size: 11))
-                .foregroundStyle(textSecondary)
+                .foregroundStyle(DesignTokens.textSecondary)
             Spacer()
             Text(value)
                 .font(.custom("JetBrains Mono", size: 11).weight(.medium))
-                .foregroundStyle(textPrimary)
+                .foregroundStyle(DesignTokens.textPrimary)
                 .multilineTextAlignment(.trailing)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 9)
-        .background(shellSurface)
+        .background(DesignTokens.surfacePanel)
     }
 
     private func staticRow(_ label: String, _ note: String) -> some View {
         HStack(spacing: 10) {
             Text("[ ─ ]")
                 .font(.custom("JetBrains Mono", size: 11))
-                .foregroundStyle(textTertiary)
+                .foregroundStyle(DesignTokens.textDim)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
                     .font(.custom("JetBrains Mono", size: 11).weight(.medium))
-                    .foregroundStyle(textSecondary)
+                    .foregroundStyle(DesignTokens.textSecondary)
                 Text(note)
                     .font(.custom("JetBrains Mono", size: 9))
-                    .foregroundStyle(textTertiary)
+                    .foregroundStyle(DesignTokens.textDim)
             }
             Spacer()
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 10)
-        .background(shellSurface)
+        .background(DesignTokens.surfacePanel)
     }
 
     private func optionRow(
@@ -278,7 +271,7 @@ struct PDFReportSheet: View {
             } label: {
                 Text(binding.wrappedValue && available ? "[ ✓ ]" : "[   ]")
                     .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                    .foregroundStyle(binding.wrappedValue && available ? accentRust : textTertiary)
+                    .foregroundStyle(binding.wrappedValue && available ? accentRust : DesignTokens.textDim)
             }
             .buttonStyle(.plain)
             .disabled(!available)
@@ -286,36 +279,36 @@ struct PDFReportSheet: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
                     .font(.custom("JetBrains Mono", size: 11).weight(.medium))
-                    .foregroundStyle(available ? textPrimary : textTertiary)
+                    .foregroundStyle(available ? DesignTokens.textPrimary : DesignTokens.textDim)
                 Text(note)
                     .font(.custom("JetBrains Mono", size: 9))
-                    .foregroundStyle(available ? textTertiary : textTertiary.opacity(0.5))
+                    .foregroundStyle(available ? DesignTokens.textDim : DesignTokens.textDim.opacity(0.5))
             }
             Spacer()
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 10)
-        .background(shellSurface)
+        .background(DesignTokens.surfacePanel)
     }
 
     private func errorBanner(_ msg: String) -> some View {
         HStack {
             Text("[ERR]  \(msg)")
                 .font(.custom("JetBrains Mono", size: 10))
-                .foregroundStyle(colorAmber)
+                .foregroundStyle(DesignTokens.statusWarn)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
-        .background(colorAmber.opacity(0.08))
+        .background(DesignTokens.statusWarn.opacity(0.08))
     }
 
     private var divider: some View {
-        Rectangle().fill(shellBorder).frame(height: 1)
+        Rectangle().fill(DesignTokens.dividerStructural).frame(height: 1)
     }
 
     private var thinDivider: some View {
         Rectangle()
-            .fill(shellBorder.opacity(0.5))
+            .fill(DesignTokens.dividerStructural.opacity(0.5))
             .frame(height: 1)
             .padding(.horizontal, 20)
     }

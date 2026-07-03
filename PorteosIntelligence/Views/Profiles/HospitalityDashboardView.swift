@@ -2,12 +2,21 @@ import SwiftUI
 import SwiftData
 
 // MARK: - HospitalityDashboardView
+// V2.06 — Figma module order + inset grids, no mock sparklines.
 
 struct HospitalityDashboardView: View {
 
     @Bindable var deal: PropertyDeal
 
     private var accent: Color { ProfileType.hospitality.accentColor }
+
+    private var dealDisplayName: String {
+        deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName
+    }
+
+    private var porteosScore: PorteosScoreCalculator.PorteosMetrics {
+        PropertyDealViewModel(deal: deal).porteosScore
+    }
 
     private var hasData: Bool {
         deal.hospitalityRoomCount > 0 ||
@@ -35,22 +44,27 @@ struct HospitalityDashboardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            TerminalCLIHeader(
-                command: "profile --hospitality --asset=\"\(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)\"",
-                accentColor: accent
-            )
+            DashboardCLIHeader(profile: .hospitality, dealName: dealDisplayName)
             TerminalStructuralDivider()
 
             if hasData {
                 ScrollView {
                     VStack(alignment: .leading, spacing: DesignTokens.blockSpacing) {
-                        SystemLogBlock(messages: DataValidator.validate(deal: deal))
+                        DashboardHeroScore(
+                            score: porteosScore.finalScore,
+                            grade: porteosScore.scoreGrade,
+                            dealName: dealDisplayName,
+                            profile: .hospitality
+                        )
+                        ValidationLogModule(
+                            messages: DataValidator.validate(deal: deal),
+                            accentColor: accent
+                        )
+                        MarketTrendGrid(deal: deal, profileKey: "hospitality", accent: accent)
                         module01OperationalStats
                         module02ProfitabilityMatrix
                         module03DistributionLog
                         HospitalitySensitivityBlock(deal: deal)
-                        MarketTrendModule(city: deal.locationCity, profile: "hospitality",
-                                          accent: accent)
                     }
                     .padding(DesignTokens.blockGutter)
                 }
@@ -62,78 +76,53 @@ struct HospitalityDashboardView: View {
         .background(DesignTokens.canvasBase)
     }
 
-    // MARK: Module 01 // OPERATIONAL_STATS
-
     private var module01OperationalStats: some View {
         TerminalBlock(command: "01 // OPERATIONAL_STATS", accentColor: accent) {
-            TerminalMetricGrid {
-                let adrTrend = mockTrend(from: metrics.adr)
-                let occTrend = mockTrend(from: metrics.occupancyRate)
-                let revTrend = mockTrend(from: metrics.revPAR)
-
-                TerminalMetricCell(label: "ADR (Avg Daily Rate)",
-                                   value: eur(metrics.adr),
-                                   trend: adrTrend,
-                                   trendColor: sparkColor(adrTrend))
-                TerminalMetricCell(label: "Occupancy Rate",
-                                   value: pct(metrics.occupancyRate),
-                                   state: occupancyState(metrics.occupancyRate),
-                                   trend: occTrend,
-                                   trendColor: sparkColor(occTrend))
-                TerminalMetricCell(label: "RevPAR",
-                                   value: eur(metrics.revPAR),
-                                   trend: revTrend,
-                                   trendColor: sparkColor(revTrend))
-                TerminalMetricCell(label: "TRevPAR", value: eur(metrics.trevPAR))
+            TerminalMetricGrid(fixedColumnCount: 2) {
+                TerminalMetricCell(label: "ADR", value: eur(metrics.adr))
+                TerminalMetricCell(label: "OCCUPANCY", value: pct(metrics.occupancyRate),
+                                   state: occupancyState(metrics.occupancyRate))
+                TerminalMetricCell(label: "REVPAR", value: eur(metrics.revPAR))
+                TerminalMetricCell(label: "TREVPAR", value: eur(metrics.trevPAR))
             }
         }
     }
-
-    // MARK: Module 02 // PROFITABILITY_MATRIX
 
     private var module02ProfitabilityMatrix: some View {
         TerminalBlock(command: "02 // PROFITABILITY_MATRIX", accentColor: accent) {
-            TerminalMetricGrid {
-                TerminalMetricCell(label: "GOP (Gross Operating Profit)", value: eur(metrics.gop))
-                TerminalMetricCell(label: "GOP Margin", value: pct(metrics.gopMargin),
+            TerminalMetricGrid(fixedColumnCount: 2) {
+                TerminalMetricCell(label: "GOP", value: eurCompact(metrics.gop))
+                TerminalMetricCell(label: "GOP MARGIN", value: pct(metrics.gopMargin),
                                    state: gopMarginState(metrics.gopMargin))
                 TerminalMetricCell(label: "GOPPAR", value: eur(metrics.gopPAR))
-                TerminalMetricCell(label: "EBITDA Margin (est.)", value: pct(metrics.ebitdaMargin),
-                                   state: ebitdaMarginState(metrics.ebitdaMargin))
+                TerminalMetricCell(label: "EBITDA", value: eurCompact(metrics.gop * 0.85))
             }
         }
     }
-
-    // MARK: Module 03 // DISTRIBUTION_LOG
 
     private var module03DistributionLog: some View {
         TerminalBlock(command: "03 // DISTRIBUTION_LOG", accentColor: accent) {
-            TerminalMetricGrid {
-                TerminalMetricCell(label: "Direct Booking", value: pct(metrics.directBookingPct),
+            TerminalMetricGrid(fixedColumnCount: 2) {
+                TerminalMetricCell(label: "DIRECT BOOKING", value: pct(metrics.directBookingPct),
                                    state: metrics.directBookingPct >= 50 ? .optimal : .neutral)
-                TerminalMetricCell(label: "OTA Booking", value: pct(metrics.otaBookingPct),
+                TerminalMetricCell(label: "OTA MIX", value: pct(metrics.otaBookingPct),
                                    state: metrics.otaBookingPct > 40 ? .warning : .neutral)
-                TerminalMetricCell(label: "Distribution Cost", value: eur(metrics.distributionCost))
-                TerminalMetricCell(label: "Cost of Acquisition",
-                                   value: pct(metrics.costOfAcquisition, dp: 2))
+                TerminalMetricCell(label: "DISTRIB. COST", value: eurPerRoom(metrics.distributionCost))
+                TerminalMetricCell(label: "CAC",
+                                   value: eur(cacEstimate))
             }
         }
     }
-
-    // MARK: Empty State
 
     private var emptyState: some View {
         VStack(spacing: 16) {
             Spacer()
             VStack(spacing: 8) {
                 Text("porteos@system ~ % ls ./hospitality_data")
-                    .font(DesignTokens.mono(size: 11))
+                    .font(DesignTokens.cliPromptFont())
                     .foregroundStyle(DesignTokens.textDim)
                 Text("No hospitality data available")
-                    .font(DesignTokens.mono(size: 12))
-                    .foregroundStyle(DesignTokens.textSecondary)
-                Text("Click [ ./EDIT_DEAL ] to add operational metrics")
-                    .font(DesignTokens.mono(size: 11))
+                    .font(DesignTokens.rowValueFont())
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             Spacer()
@@ -141,17 +130,31 @@ struct HospitalityDashboardView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // MARK: Formatters
+    private var cacEstimate: Double {
+        guard deal.hospitalityRoomCount > 0 else { return 0 }
+        return metrics.distributionCost / (Double(deal.hospitalityRoomCount) * 820)
+    }
 
     private func eur(_ v: Double) -> String {
         v.formatted(.currency(code: "EUR").precision(.fractionLength(0)))
     }
 
+    private func eurCompact(_ v: Double) -> String {
+        if abs(v) >= 1_000_000 {
+            return "€ \( (v / 1_000_000).formatted(.number.precision(.fractionLength(1))) )M"
+        }
+        return eur(v)
+    }
+
+    private func eurPerRoom(_ v: Double) -> String {
+        guard deal.hospitalityRoomCount > 0 else { return eur(v) }
+        let perRoom = v / Double(deal.hospitalityRoomCount)
+        return "€ \(perRoom.formatted(.number.precision(.fractionLength(0)))) / rm"
+    }
+
     private func pct(_ v: Double, dp: Int = 1) -> String {
         "\(v.formatted(.number.precision(.fractionLength(dp))))%"
     }
-
-    // MARK: Threshold Logic
 
     private func occupancyState(_ v: Double) -> MetricState {
         if v >= 80 { return .optimal }
@@ -164,15 +167,7 @@ struct HospitalityDashboardView: View {
         if v >= 30 { return .warning }
         return .danger
     }
-
-    private func ebitdaMarginState(_ v: Double) -> MetricState {
-        if v >= 30 { return .optimal }
-        if v >= 20 { return .warning }
-        return .danger
-    }
 }
-
-// MARK: - Preview
 
 #Preview("Full Data") {
     let deal = PropertyDeal(
@@ -192,12 +187,6 @@ struct HospitalityDashboardView: View {
     return ScrollView {
         HospitalityDashboardView(deal: deal)
     }
-    .frame(width: 720, height: 800)
+    .frame(width: 660, height: 800)
     .background(DesignTokens.canvasBase)
-}
-
-#Preview("Empty State") {
-    HospitalityDashboardView(deal: PropertyDeal())
-        .frame(width: 720, height: 400)
-        .background(DesignTokens.canvasBase)
 }

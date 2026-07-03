@@ -53,7 +53,7 @@ struct InspectorPane: View {
 
             Spacer(minLength: 0)
         }
-        .frame(width: 280)
+        .frame(width: DesignTokens.inspectorPaneWidth)
         .frame(maxHeight: .infinity)
         .background(shellSurface)
         .clipShape(Rectangle())
@@ -410,7 +410,7 @@ struct InspectorPane: View {
             Text("\(total, specifier: "%.1f")%")
                 .font(.custom("JetBrains Mono", size: 17).weight(.bold))
                 .monospacedDigit()
-                .foregroundStyle(abs(total - 100) < 0.01 ? textPrimary : Color(hex: "#EF4444"))
+                .foregroundStyle(abs(total - 100) < 0.01 ? textPrimary : DesignTokens.statusCritical)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -481,7 +481,7 @@ private struct TerminalSlider: View {
     let accentColor: Color
     let onChange: (Double) -> Void
 
-    private let shellBorder  = Color(hex: "#2E333F")
+    private let shellBorder  = DesignTokens.dividerStructural
     private let trackHeight: CGFloat = 2
     private let thumbWidth:  CGFloat = 8
     private let thumbHeight: CGFloat = 16
@@ -555,6 +555,6 @@ private struct FlowLayoutTags: View {
         InspectorPane(deal: deal)
     }
     .frame(width: 600, height: 700)
-    .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
     .modelContainer(container)
 }

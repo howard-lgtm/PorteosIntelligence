@@ -2,12 +2,21 @@ import SwiftUI
 import SwiftData
 
 // MARK: - CircularEconomyDashboardView
+// V2.06 — Figma module order + inset grids, no mock sparklines.
 
 struct CircularEconomyDashboardView: View {
 
     @Bindable var deal: PropertyDeal
 
     private var accent: Color { ProfileType.circular.accentColor }
+
+    private var dealDisplayName: String {
+        deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName
+    }
+
+    private var porteosScore: PorteosScoreCalculator.PorteosMetrics {
+        PropertyDealViewModel(deal: deal).porteosScore
+    }
 
     private var hasData: Bool { deal.circularKgMaterialsUsed > 0 || deal.circularRecycledContentPct > 0 || deal.circularCO2Embodied > 0 }
 
@@ -30,23 +39,27 @@ struct CircularEconomyDashboardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            TerminalCLIHeader(
-                command: "profile --circular --asset=\"\(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)\"",
-                accentColor: accent
-            )
+            DashboardCLIHeader(profile: .circular, dealName: dealDisplayName)
             TerminalStructuralDivider()
 
             if hasData {
                 ScrollView {
                     VStack(alignment: .leading, spacing: DesignTokens.blockSpacing) {
-                        let logs = DataValidator.validate(deal: deal)
-                        SystemLogBlock(messages: logs)
+                        DashboardHeroScore(
+                            score: porteosScore.finalScore,
+                            grade: porteosScore.scoreGrade,
+                            dealName: dealDisplayName,
+                            profile: .circular
+                        )
+                        ValidationLogModule(
+                            messages: DataValidator.validate(deal: deal),
+                            accentColor: accent
+                        )
+                        MarketTrendGrid(deal: deal, profileKey: "circular", accent: accent)
                         module01MaterialFlow
                         module02CarbonLifecycle
                         module03ResourceEfficiency
                         CircularSensitivityBlock(deal: deal)
-                        MarketTrendModule(city: deal.locationCity, profile: "circular",
-                                          accent: accent)
                     }
                     .padding(DesignTokens.blockGutter)
                 }
@@ -58,54 +71,36 @@ struct CircularEconomyDashboardView: View {
         .background(DesignTokens.canvasBase)
     }
 
-    // MARK: Module 01 // MATERIAL_FLOW_LOG
-
     private var module01MaterialFlow: some View {
         TerminalBlock(command: "01 // MATERIAL_FLOW_LOG", accentColor: accent) {
-            TerminalMetricGrid {
-                let recycledTrend  = mockTrend(from: metrics.recycledContentPct)
-                let recoveryTrend  = mockTrend(from: metrics.recoveryRate)
-
+            TerminalMetricGrid(fixedColumnCount: 2) {
                 TerminalMetricCell(label: "Recycled Content",
                                    value: pct(metrics.recycledContentPct),
-                                   state: recycledState(metrics.recycledContentPct),
-                                   trend: recycledTrend,
-                                   trendColor: sparkColor(recycledTrend))
+                                   state: recycledState(metrics.recycledContentPct))
                 TerminalMetricCell(label: "Renewable Content",
                                    value: pct(metrics.renewableContentPct),
                                    state: metrics.renewableContentPct >= 20 ? .optimal : .neutral)
-                TerminalMetricCell(label: "Virgin Material Input",
-                                   value: kg(metrics.virginMaterialInput))
+                TerminalMetricCell(label: "Virgin Material Input", value: kg(metrics.virginMaterialInput))
                 TerminalMetricCell(label: "Waste Generated",
                                    value: kg(metrics.wasteGenerated),
                                    state: wasteState(metrics.wasteGenerated))
                 TerminalMetricCell(label: "Recovery Rate",
                                    value: pct(metrics.recoveryRate),
-                                   state: metrics.recoveryRate >= 80 ? .optimal : .neutral,
-                                   trend: recoveryTrend,
-                                   trendColor: sparkColor(recoveryTrend))
+                                   state: metrics.recoveryRate >= 80 ? .optimal : .neutral)
             }
         }
     }
 
-    // MARK: Module 02 // CARBON_LIFECYCLE_SUMMARY
-
     private var module02CarbonLifecycle: some View {
         TerminalBlock(command: "02 // CARBON_LIFECYCLE_SUMMARY", accentColor: accent) {
-            TerminalMetricGrid {
-                let ciTrend = mockTrend(from: metrics.carbonIntensity)
-
-                TerminalMetricCell(label: "Embodied Carbon",
-                                   value: tco2e(metrics.embodiedCarbon))
+            TerminalMetricGrid(fixedColumnCount: 2) {
+                TerminalMetricCell(label: "Embodied Carbon", value: tco2e(metrics.embodiedCarbon))
                 TerminalMetricCell(label: "Operational Carbon (Annual)",
                                    value: "\(tco2e(metrics.operationalCarbon))/yr")
-                TerminalMetricCell(label: "Total Lifecycle Carbon (30Y)",
-                                   value: tco2e(metrics.totalLifecycle30Y))
+                TerminalMetricCell(label: "Total Lifecycle Carbon (30Y)", value: tco2e(metrics.totalLifecycle30Y))
                 TerminalMetricCell(label: "Carbon Intensity",
                                    value: "\(metrics.carbonIntensity.formatted(.number.precision(.fractionLength(3)))) tCO2e/m²",
-                                   state: carbonIntensityState(metrics.carbonIntensity),
-                                   trend: ciTrend,
-                                   trendColor: sparkColor(ciTrend, higherIsBetter: false))
+                                   state: carbonIntensityState(metrics.carbonIntensity))
                 TerminalMetricCell(label: "MCI Score",
                                    value: metrics.mciScore.formatted(.number.precision(.fractionLength(2))),
                                    state: mciState(metrics.mciScore))
@@ -113,11 +108,9 @@ struct CircularEconomyDashboardView: View {
         }
     }
 
-    // MARK: Module 03 // RESOURCE_EFFICIENCY
-
     private var module03ResourceEfficiency: some View {
         TerminalBlock(command: "03 // RESOURCE_EFFICIENCY", accentColor: accent) {
-            TerminalMetricGrid {
+            TerminalMetricGrid(fixedColumnCount: 2) {
                 TerminalMetricCell(label: "Water Recycling Rate",
                                    value: pct(metrics.waterRecyclingRate),
                                    state: metrics.waterRecyclingRate >= 60 ? .optimal : .neutral)
@@ -132,28 +125,24 @@ struct CircularEconomyDashboardView: View {
         }
     }
 
-    // MARK: Empty State
-
     private var emptyState: some View {
         VStack(spacing: 16) {
             Spacer()
             VStack(spacing: 8) {
                 Text("porteos@system ~ % ls ./circular_data")
-                    .font(DesignTokens.mono(size: 11))
+                    .font(DesignTokens.cliPromptFont())
                     .foregroundStyle(DesignTokens.textDim)
                 Text("No circular economy data available")
-                    .font(DesignTokens.mono(size: 12))
+                    .font(DesignTokens.rowValueFont())
                     .foregroundStyle(DesignTokens.textSecondary)
                 Text("Click [ ./EDIT_DEAL ] to add material flow data")
-                    .font(DesignTokens.mono(size: 11))
+                    .font(DesignTokens.cliPromptFont())
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-
-    // MARK: Formatters
 
     private func pct(_ v: Double, dp: Int = 1) -> String {
         "\(v.formatted(.number.precision(.fractionLength(dp))))%"
@@ -167,15 +156,12 @@ struct CircularEconomyDashboardView: View {
         "\(v.formatted(.number.precision(.fractionLength(2)))) tCO2e"
     }
 
-    // MARK: Threshold Logic
-
     private func recycledState(_ v: Double) -> MetricState {
         if v >= 30 { return .optimal }
         if v >= 15 { return .warning }
         return .danger
     }
 
-    /// Waste is flagged red if > 10 % of total materials used.
     private func wasteState(_ v: Double) -> MetricState {
         guard deal.circularKgMaterialsUsed > 0 else { return .neutral }
         return (v / deal.circularKgMaterialsUsed) > 0.10 ? .danger : .neutral
@@ -187,7 +173,6 @@ struct CircularEconomyDashboardView: View {
         return .danger
     }
 
-    /// MCI 0–1 scale: Green ≥ 0.8, Amber 0.6–0.79, Red < 0.6
     private func mciState(_ v: Double) -> MetricState {
         if v >= 0.8 { return .optimal }
         if v >= 0.6 { return .warning }
@@ -200,8 +185,6 @@ struct CircularEconomyDashboardView: View {
         return v < 30 ? .danger : .neutral
     }
 }
-
-// MARK: - Preview
 
 #Preview("Full Data") {
     let deal = PropertyDeal(
