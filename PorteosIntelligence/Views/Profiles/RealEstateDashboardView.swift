@@ -102,7 +102,7 @@ struct RealEstateDashboardView: View {
     }
 
     private var sensitivityModule: some View {
-        SensitivityAnalysisBlock(deal: localDeal)
+        RealEstateSensitivityModule(deal: localDeal)
     }
 
     // MARK: 01 // CORE_FINANCIALS_REVENUE — 2×2
@@ -176,20 +176,27 @@ struct RealEstateDashboardView: View {
         }
     }
 
-    // MARK: 04 // LEVERAGE_ENGINE — ASCII gauges
+    // MARK: 04 // LEVERAGE_ENGINE — segment bars (Figma)
 
     private var module04Leverage: some View {
         TerminalBlock(command: "04 // LEVERAGE_ENGINE", accentColor: accent) {
-            VStack(spacing: 0) {
-                leverageGaugeRow(label: "LTV", value: pct(metrics.loanToValue, dp: 1),
-                                 state: ltvState(metrics.loanToValue),
-                                 fillRatio: min(metrics.loanToValue / 100, 1))
-                TerminalStructuralDivider()
-                leverageGaugeRow(label: "DSCR",
-                                 value: "\(metrics.debtServiceCoverageRatio.formatted(.number.precision(.fractionLength(2)))) x",
-                                 state: dscrState(metrics.debtServiceCoverageRatio),
-                                 fillRatio: min(metrics.debtServiceCoverageRatio / 2.0, 1))
+            VStack(spacing: DesignTokens.gridRowSpacing) {
+                leverageGaugeRow(
+                    label: "LTV",
+                    value: pct(metrics.loanToValue, dp: 1),
+                    state: ltvState(metrics.loanToValue),
+                    fillRatio: min(metrics.loanToValue / 100, 1),
+                    barColor: accent
+                )
+                leverageGaugeRow(
+                    label: "DSCR",
+                    value: "\(metrics.debtServiceCoverageRatio.formatted(.number.precision(.fractionLength(2)))) x",
+                    state: dscrState(metrics.debtServiceCoverageRatio),
+                    fillRatio: min(metrics.debtServiceCoverageRatio / 2.0, 1),
+                    barColor: DesignTokens.statusWarn
+                )
             }
+            .padding(DesignTokens.blockGutter)
         }
     }
 
@@ -197,31 +204,25 @@ struct RealEstateDashboardView: View {
         label: String,
         value: String,
         state: MetricState,
-        fillRatio: Double
+        fillRatio: Double,
+        barColor: Color
     ) -> some View {
-        HStack(spacing: 0) {
-            if let border = state.highlightBorderColor {
-                border.frame(width: DesignTokens.navSelectionBorder)
-            }
+        HStack(spacing: 10) {
+            Text(label.uppercased())
+                .font(DesignTokens.metricLabelFont())
+                .tracking(0.02)
+                .foregroundStyle(DesignTokens.textDim)
+                .frame(width: 48, alignment: .leading)
 
-            HStack(spacing: 8) {
-                Text(label.uppercased())
-                    .font(DesignTokens.metricLabelFont())
-                    .tracking(0.02)
-                    .foregroundStyle(DesignTokens.textDim)
-                    .lineLimit(1)
+            TerminalSegmentBar(fillRatio: fillRatio, barColor: barColor)
 
-                Spacer(minLength: 8)
-
-                TerminalAsciiGauge(fillRatio: fillRatio, state: state)
-
-                Text(value)
-                    .font(DesignTokens.metricValueFont())
-                    .monospacedDigit()
-                    .foregroundStyle(state.semanticColor)
-            }
-            .padding(DesignTokens.metricCellPadding)
+            Text(value)
+                .font(DesignTokens.metricValueFont())
+                .monospacedDigit()
+                .foregroundStyle(state.semanticColor)
+                .frame(minWidth: 56, alignment: .trailing)
         }
+        .padding(DesignTokens.metricCellPadding)
         .frame(minHeight: DesignTokens.metricCellMinHeight)
         .background(DesignTokens.surfaceElevated)
         .overlay {

@@ -1,7 +1,7 @@
 import SwiftUI
 
 // MARK: - DashboardHeroScore
-// Figma handoff: 87 / 100 · DEAL NAME · PROFILE | grade box
+// Figma img_00_1 — score row + deal name stacked; grade box right.
 
 struct DashboardHeroScore: View {
 
@@ -29,23 +29,25 @@ struct DashboardHeroScore: View {
                 .frame(width: DesignTokens.profileBarHeight)
 
             HStack(alignment: .center, spacing: 12) {
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(String(format: "%.0f", score))
-                        .font(DesignTokens.heroScoreFont())
-                        .monospacedDigit()
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(String(format: "%.0f", score))
+                            .font(DesignTokens.heroScoreFont())
+                            .monospacedDigit()
+                            .foregroundStyle(DesignTokens.textPrimary)
+
+                        Text("/ 100")
+                            .font(DesignTokens.metricValueFont())
+                            .foregroundStyle(DesignTokens.textSecondary)
+                    }
+
+                    Text(dealName.uppercased())
+                        .font(DesignTokens.metricLabelFont())
+                        .tracking(0.04)
                         .foregroundStyle(DesignTokens.textPrimary)
-
-                    Text("/ 100")
-                        .font(DesignTokens.metricValueFont())
-                        .foregroundStyle(DesignTokens.textSecondary)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
                 }
-
-                Text("\(dealName.uppercased()) · \(profile.heroProfileTag)")
-                    .font(DesignTokens.metricLabelFont())
-                    .tracking(0.04)
-                    .foregroundStyle(DesignTokens.textDim)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
 
                 Spacer(minLength: 8)
 
