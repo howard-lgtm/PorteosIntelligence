@@ -1,10 +1,12 @@
 # Porteos Intelligence — Project Status
 
-**Last updated:** 1 July 2026  
+**Last updated:** 4 July 2026  
 **Build status:** ✅ Compiling — zero errors  
-**Branch:** `main`  
+**Branch:** `main` @ `5a6b27d`  
 **Platform:** macOS (SwiftUI + SwiftData)  
-**Design system:** V2.06_STABLE — shell migrated; dashboards/sheets pending (see `DESIGN_EXECUTION_PLAN.md`)
+**Design system:** V2.06 — typography pipeline complete; sheet polish pending  
+
+> **Package v1.0:** See [`PorteosIntelligence/Documentation/PACKAGE_v1_STATUS.md`](PorteosIntelligence/Documentation/PACKAGE_v1_STATUS.md) and return checklist [`PACKAGE_v1_PUNCHLIST.md`](PorteosIntelligence/Documentation/PACKAGE_v1_PUNCHLIST.md).
 
 ---
 

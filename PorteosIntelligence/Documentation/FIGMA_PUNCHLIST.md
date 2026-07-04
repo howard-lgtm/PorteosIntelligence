@@ -3,6 +3,8 @@
 **Last updated:** 2026-07-04  
 **Authority:** Running app vs `Design-system/Figma/visual-targets/` + user QA notes.
 
+> **Superseded for v1 return work by** [`PACKAGE_v1_PUNCHLIST.md`](PACKAGE_v1_PUNCHLIST.md) — use that as the living checklist; this file retains visual QA detail.
+
 Status key: `[ ]` open · `[~]` in progress · `[x]` done
 
 ---
