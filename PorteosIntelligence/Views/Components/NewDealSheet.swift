@@ -235,7 +235,7 @@ struct NewDealSheet: View {
     private var sheetHeader: some View {
         HStack {
             Text("NEW DEAL")
-                .font(.custom("JetBrains Mono", size: 12).weight(.bold))
+                .porteosRowValue()
                 .textCase(.uppercase)
                 .foregroundStyle(textPrimary)
 
@@ -245,7 +245,7 @@ struct NewDealSheet: View {
                 dismiss()
             } label: {
                 Text("✕")
-                    .font(.custom("JetBrains Mono", size: 14).weight(.bold))
+                    .porteosScoreGrade()
                     .foregroundStyle(textTertiary)
             }
             .buttonStyle(.plain)
@@ -260,8 +260,7 @@ struct NewDealSheet: View {
     private func inputGroup(title: String, @ViewBuilder fields: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
-                .tracking(0.08)
+                .porteosMeta()
                 .foregroundStyle(textTertiary)
                 .textCase(.uppercase)
                 .padding(.bottom, 4)
@@ -288,7 +287,7 @@ struct NewDealSheet: View {
                 dismiss()
             } label: {
                 Text("[ CANCEL ]")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.regular))
+                    .porteosRowLabel()
                     .foregroundStyle(textSecondary)
                     .frame(height: 28)
             }
@@ -302,7 +301,7 @@ struct NewDealSheet: View {
                 saveDeal()
             } label: {
                 Text("[ SAVE DEAL ]")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                    .porteosButtonPrimary()
                     .textCase(.uppercase)
                     .foregroundStyle(DesignTokens.canvasBase)
                     .padding(.horizontal, 16)

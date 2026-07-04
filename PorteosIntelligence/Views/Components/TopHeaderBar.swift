@@ -31,10 +31,10 @@ struct TopHeaderBar: View {
     private var cliPrompt: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(DesignTokens.cliPromptFont())
+                .porteosCliPrompt()
                 .foregroundStyle(DesignTokens.textDim)
             Text(activeProfile.commandLine)
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.cliPrompt, weight: .bold))
+                .porteosModuleCmd()
                 .foregroundStyle(activeProfile.accentColor)
                 .lineLimit(1)
         }
@@ -44,7 +44,7 @@ struct TopHeaderBar: View {
     private var dealBreadcrumb: some View {
         if let name = selectedDealName, !name.isEmpty {
             Text("--asset=\"\(name)\"")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel))
+                .porteosRowLabel()
                 .foregroundStyle(DesignTokens.textSecondary)
                 .lineLimit(1)
         }
@@ -59,7 +59,7 @@ struct TopHeaderBar: View {
                 .frame(width: 1, height: 16)
 
             Text("[ ↗ ]")
-                .font(DesignTokens.mono(size: 10))
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
         }
     }

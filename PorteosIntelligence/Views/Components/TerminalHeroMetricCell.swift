@@ -21,14 +21,13 @@ struct TerminalHeroMetricCell: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Text(label.uppercased())
-                    .font(DesignTokens.metricLabelFont())
-                    .tracking(0.02)
+                    .porteosMetricLabel()
                     .foregroundStyle(DesignTokens.textDim)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text(value)
-                    .font(DesignTokens.heroScoreFont())
+                    .porteosScoreHero()
                     .monospacedDigit()
                     .foregroundStyle(state.semanticColor)
                     .lineLimit(1)
@@ -36,8 +35,7 @@ struct TerminalHeroMetricCell: View {
 
                 if let subtitle {
                     Text(subtitle.uppercased())
-                        .font(DesignTokens.metaFont())
-                        .tracking(0.04)
+                        .porteosMeta()
                         .foregroundStyle(DesignTokens.textSecondary)
                         .lineLimit(1)
                 }
@@ -75,15 +73,14 @@ struct TerminalProfileHealthCell: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(label.uppercased())
-                    .font(DesignTokens.metricLabelFont())
-                    .tracking(0.02)
+                    .porteosMetricLabel()
                     .foregroundStyle(DesignTokens.textDim)
                     .lineLimit(1)
 
                 Spacer(minLength: 0)
 
                 Text(dealCount > 0 ? String(format: "%.1f", score) : "—")
-                    .font(DesignTokens.heroGradeFont())
+                    .porteosScoreGrade()
                     .monospacedDigit()
                     .foregroundStyle(dealCount > 0 ? scoreState.semanticColor : DesignTokens.textDim)
             }
@@ -101,7 +98,7 @@ struct TerminalProfileHealthCell: View {
 
             if dealCount > 0 {
                 Text("\(dealCount) DEAL\(dealCount == 1 ? "" : "S")  ·  /100")
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
             }
         }
@@ -128,15 +125,14 @@ struct TerminalDistributionCell: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text(label.uppercased())
-                    .font(DesignTokens.metricLabelFont())
-                    .tracking(0.02)
+                    .porteosMetricLabel()
                     .foregroundStyle(DesignTokens.textDim)
                     .lineLimit(1)
 
                 Spacer(minLength: 0)
 
                 Text("\(pct.formatted(.number.precision(.fractionLength(1))))%")
-                    .font(DesignTokens.heroGradeFont())
+                    .porteosScoreGrade()
                     .monospacedDigit()
                     .foregroundStyle(accent)
             }

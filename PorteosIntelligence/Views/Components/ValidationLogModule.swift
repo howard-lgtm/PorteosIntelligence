@@ -34,7 +34,7 @@ struct ValidationLogModule: View {
         let tag = msg.severity == .critical ? "ERR" : "WARN"
 
         return Text("\(tag) [\(msg.field.uppercased())] - \(msg.message)")
-            .font(DesignTokens.rowValueFont())
+            .porteosRowValue()
             .foregroundStyle(color)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, DesignTokens.blockGutter)

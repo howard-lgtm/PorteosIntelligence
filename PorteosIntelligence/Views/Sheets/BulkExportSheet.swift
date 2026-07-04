@@ -86,7 +86,7 @@ struct BulkExportSheet: View {
             VStack(spacing: 0) {
                 Spacer()
                 Text(item.rawValue)
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: isActive ? .bold : .regular))
+                    .porteosTextStyle(.shellNav(isActive: isActive))
                     .foregroundStyle(isActive ? DesignTokens.textPrimary : DesignTokens.textDim)
                     .padding(.horizontal, 12)
                 Spacer()
@@ -123,10 +123,10 @@ struct BulkExportSheet: View {
                 selectionSquare(isActive: isActive)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(option.rawValue)
-                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                        .porteosButtonPrimary()
                         .foregroundStyle(isActive ? DesignTokens.textPrimary : DesignTokens.textDim)
                     Text(option.subtitle)
-                        .font(DesignTokens.metaFont())
+                        .porteosMeta()
                         .foregroundStyle(DesignTokens.textDim)
                 }
                 Spacer(minLength: 0)
@@ -157,7 +157,7 @@ struct BulkExportSheet: View {
             HStack(spacing: 10) {
                 selectionSquare(isActive: isOn.wrappedValue)
                 Text(label)
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                    .porteosButtonPrimary()
                     .foregroundStyle(isOn.wrappedValue ? DesignTokens.textPrimary : DesignTokens.textDim)
                 Spacer(minLength: 0)
             }
@@ -184,18 +184,18 @@ struct BulkExportSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("PREVIEW")
-                    .font(DesignTokens.sectionLabelFont())
+                    .porteosModuleCmd()
                     .foregroundStyle(DesignTokens.textDim)
                 Spacer()
                 Text("\(format.rawValue) • \(dealsToExport.count) rows • \(previewFieldCount) fields")
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
             }
             .padding(.horizontal, DesignTokens.blockGutter)
 
             if dealsToExport.isEmpty {
                 Text("No deals available for export")
-                    .font(DesignTokens.rowLabelFont())
+                    .porteosRowLabel()
                     .foregroundStyle(DesignTokens.textSecondary)
                     .padding(DesignTokens.blockGutter)
             } else {
@@ -247,7 +247,7 @@ struct BulkExportSheet: View {
 
     private func previewCell(_ text: String, isHeader: Bool, width: CGFloat?) -> some View {
         Text(text)
-            .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: isHeader ? .bold : .regular))
+            .porteosMeta()
             .foregroundStyle(isHeader ? DesignTokens.textDim : DesignTokens.textSecondary)
             .lineLimit(1)
             .padding(.horizontal, 8)
@@ -273,7 +273,7 @@ struct BulkExportSheet: View {
         HStack(spacing: 12) {
             if !exportMessage.isEmpty {
                 Text(exportMessage)
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(exportMessage.hasPrefix("✓") ? DesignTokens.statusGo : DesignTokens.statusCritical)
                     .lineLimit(1)
             }
@@ -282,7 +282,7 @@ struct BulkExportSheet: View {
 
             Button { dismiss() } label: {
                 Text("[ CANCEL ]")
-                    .font(DesignTokens.rowLabelFont())
+                    .porteosRowLabel()
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             .buttonStyle(.plain)
@@ -354,7 +354,7 @@ struct BulkExportSheet: View {
 
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(DesignTokens.sectionLabelFont())
+            .porteosModuleCmd()
             .foregroundStyle(DesignTokens.textDim)
             .padding(.horizontal, DesignTokens.blockGutter)
             .padding(.top, 12)

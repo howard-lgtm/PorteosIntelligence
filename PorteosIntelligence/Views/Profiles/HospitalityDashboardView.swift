@@ -119,10 +119,10 @@ struct HospitalityDashboardView: View {
             Spacer()
             VStack(spacing: 8) {
                 Text("porteos@system ~ % ls ./hospitality_data")
-                    .font(DesignTokens.cliPromptFont())
+                    .porteosCliPrompt()
                     .foregroundStyle(DesignTokens.textDim)
                 Text("No hospitality data available")
-                    .font(DesignTokens.rowValueFont())
+                    .porteosRowValue()
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             Spacer()

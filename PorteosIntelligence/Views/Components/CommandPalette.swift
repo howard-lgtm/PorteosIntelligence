@@ -114,7 +114,7 @@ struct CommandPalette: View {
     private var searchBar: some View {
         HStack(spacing: 8) {
             TextField("", text: $query, prompt: Text("SEARCH DEALS OR COMMANDS…").foregroundStyle(DesignTokens.textDim))
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .medium))
+                .porteosRowValue()
                 .foregroundStyle(DesignTokens.textPrimary)
                 .textFieldStyle(.plain)
                 .focused($fieldFocused)
@@ -138,7 +138,7 @@ struct CommandPalette: View {
                 }
 
             Text("CMD+K")
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
         }
         .padding(.horizontal, DesignTokens.blockGutter)
@@ -158,12 +158,12 @@ struct CommandPalette: View {
             HStack(alignment: .center, spacing: 0) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(dealTitle(deal))
-                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
+                        .porteosButtonPrimary()
                         .foregroundStyle(DesignTokens.textPrimary)
                         .lineLimit(1)
 
                     Text(dealMeta(deal))
-                        .font(DesignTokens.metaFont())
+                        .porteosMeta()
                         .foregroundStyle(DesignTokens.textDim)
                         .lineLimit(1)
                 }
@@ -172,7 +172,7 @@ struct CommandPalette: View {
                 Spacer(minLength: 8)
 
                 Text("OPEN")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                    .porteosMeta()
                     .foregroundStyle(isSelected ? DesignTokens.accentRust : DesignTokens.textDim)
                     .padding(.trailing, DesignTokens.blockGutter)
             }
@@ -194,11 +194,11 @@ struct CommandPalette: View {
         } label: {
             VStack(alignment: .leading, spacing: 3) {
                 Text(action.command)
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
+                    .porteosButtonPrimary()
                     .foregroundStyle(isSelected ? DesignTokens.accentRust : DesignTokens.textPrimary)
 
                 Text(action.description)
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -214,8 +214,7 @@ struct CommandPalette: View {
 
     private func sectionHeader(_ title: String) -> some View {
         Text(title)
-            .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
-            .tracking(0.08)
+            .porteosMeta()
             .foregroundStyle(DesignTokens.textDim)
             .padding(.horizontal, DesignTokens.blockGutter)
             .padding(.top, 10)
@@ -224,7 +223,7 @@ struct CommandPalette: View {
 
     private var emptyState: some View {
         Text("no results for \"\(query.uppercased())\"")
-            .font(DesignTokens.rowValueFont())
+            .porteosRowValue()
             .foregroundStyle(DesignTokens.textDim)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
@@ -244,7 +243,7 @@ struct CommandPalette: View {
 
     private func footerHint(_ text: String) -> some View {
         Text(text)
-            .font(DesignTokens.metaFont())
+            .porteosMeta()
             .foregroundStyle(DesignTokens.textDim)
     }
 

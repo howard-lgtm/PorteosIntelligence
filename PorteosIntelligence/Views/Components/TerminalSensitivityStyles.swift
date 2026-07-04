@@ -11,8 +11,7 @@ enum TerminalSensitivityStyles {
 
     static func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(DesignTokens.sectionLabelFont())
-            .tracking(0.04)
+            .porteosModuleCmd()
             .foregroundStyle(DesignTokens.textDim)
             .padding(.leading, DesignTokens.blockGutter)
             .padding(.top, 10)

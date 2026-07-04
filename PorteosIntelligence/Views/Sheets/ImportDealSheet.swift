@@ -76,7 +76,7 @@ struct ImportDealSheet: View {
         Button { showFilePicker = true } label: {
             VStack(spacing: 10) {
                 Text("CSV")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
@@ -86,13 +86,13 @@ struct ImportDealSheet: View {
                     }
 
                 Text("DROP CSV FILE OR CLICK TO BROWSE")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                    .porteosButtonPrimary()
                     .foregroundStyle(DesignTokens.textSecondary)
 
                 Text(selectedFile.isEmpty
                      ? "Supports .csv and .json • Maximum 10 MB"
                      : selectedFile)
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
                     .lineLimit(1)
                     .truncationMode(.middle)
@@ -118,11 +118,11 @@ struct ImportDealSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("CSV PREVIEW")
-                    .font(DesignTokens.sectionLabelFont())
+                    .porteosModuleCmd()
                     .foregroundStyle(DesignTokens.textDim)
                 Spacer()
                 Text("\(selectedFile) • \(parsedRows.count) rows")
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
                     .lineLimit(1)
             }
@@ -183,7 +183,7 @@ struct ImportDealSheet: View {
 
     private func previewCell(_ text: String, isHeader: Bool) -> some View {
         Text(text)
-            .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: isHeader ? .bold : .regular))
+            .porteosMeta()
             .foregroundStyle(isHeader ? DesignTokens.textDim : DesignTokens.textSecondary)
             .lineLimit(1)
             .padding(.horizontal, 8)
@@ -208,11 +208,11 @@ struct ImportDealSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("COLUMN MAPPING")
-                    .font(DesignTokens.sectionLabelFont())
+                    .porteosModuleCmd()
                     .foregroundStyle(DesignTokens.textDim)
                 Spacer()
                 Text("PORTEOS FIELD → CSV COLUMN")
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
             }
 
@@ -229,12 +229,12 @@ struct ImportDealSheet: View {
     private func mappingRow(label: String, selection: Binding<String>, allowUnmapped: Bool = false) -> some View {
         HStack(spacing: 8) {
             Text(label)
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
                 .frame(width: 112, alignment: .leading)
 
             Text("→")
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
 
             Picker("", selection: selection) {
@@ -247,7 +247,7 @@ struct ImportDealSheet: View {
             }
             .pickerStyle(.menu)
             .labelsHidden()
-            .font(DesignTokens.rowValueFont())
+            .porteosRowValue()
             .foregroundStyle(selection.wrappedValue.isEmpty && allowUnmapped
                              ? DesignTokens.accentRust
                              : DesignTokens.textPrimary)
@@ -266,7 +266,7 @@ struct ImportDealSheet: View {
         if hasFile {
             let missingType = mapPropertyType.isEmpty
             Text("\(mappedFieldCount) / 4 columns mapped\(missingType ? " • PROPERTY TYPE requires manual selection" : "")")
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(missingType ? DesignTokens.accentRust : DesignTokens.textDim)
         }
     }
@@ -277,7 +277,7 @@ struct ImportDealSheet: View {
         HStack(spacing: 12) {
             Button { dismiss() } label: {
                 Text("[ CANCEL ]")
-                    .font(DesignTokens.rowLabelFont())
+                    .porteosRowLabel()
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             .buttonStyle(.plain)
@@ -300,10 +300,10 @@ struct ImportDealSheet: View {
     private func errorBanner(_ message: String) -> some View {
         HStack(spacing: 8) {
             Text("ERR >")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(DesignTokens.statusCritical)
             Text(message)
-                .font(DesignTokens.rowLabelFont())
+                .porteosRowLabel()
                 .foregroundStyle(DesignTokens.textSecondary)
                 .lineLimit(2)
             Spacer()

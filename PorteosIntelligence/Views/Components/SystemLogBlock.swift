@@ -41,16 +41,16 @@ struct SystemLogBlock: View {
     private var header: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(DesignTokens.cliPromptFont())
+                .porteosCliPrompt()
                 .foregroundStyle(DesignTokens.textDim)
             Text("./validate --strict")
-                .font(DesignTokens.moduleCommandFont().weight(.bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(DesignTokens.accentRust)
 
             Spacer()
 
             Text("\(messages.count) issue\(messages.count == 1 ? "" : "s")")
-                .font(DesignTokens.rowLabelFont().weight(.bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(borderColor)
                 .padding(.trailing, DesignTokens.blockGutter)
         }
@@ -80,18 +80,17 @@ struct SystemLogBlock: View {
 
         return HStack(alignment: .top, spacing: 8) {
             Text(msg.prefix)
-                .font(DesignTokens.rowValueFont().weight(.bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(tagColor)
                 .frame(width: 52, alignment: .leading)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(msg.field.uppercased())
-                    .font(DesignTokens.rowLabelFont().weight(.bold))
-                    .tracking(0.04)
+                    .porteosButtonPrimary()
                     .foregroundStyle(tagColor.opacity(0.8))
 
                 Text(msg.message)
-                    .font(DesignTokens.rowValueFont())
+                    .porteosRowValue()
                     .foregroundStyle(DesignTokens.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
             }

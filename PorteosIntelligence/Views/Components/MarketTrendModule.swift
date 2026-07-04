@@ -46,13 +46,13 @@ struct MarketTrendModule: View {
     private func heatRow(_ heat: MarketHeat) -> some View {
         HStack(spacing: 8) {
             Text("MARKET_HEAT")
-                .font(DesignTokens.metricLabelFont())
+                .porteosMetricLabel()
                 .foregroundStyle(DesignTokens.textDim)
 
             Spacer()
 
             Text(heat.level)
-                .font(DesignTokens.metricLabelFont().weight(.bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(heatColor(heat.level))
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
@@ -61,10 +61,10 @@ struct MarketTrendModule: View {
 
             Text("·")
                 .foregroundStyle(DesignTokens.textDim)
-                .font(DesignTokens.metricLabelFont())
+                .porteosMetricLabel()
 
             Text("\(String(format: "%.1f", heat.importVelocity)) deals/wk")
-                .font(DesignTokens.metricLabelFont())
+                .porteosMetricLabel()
                 .foregroundStyle(DesignTokens.textSecondary)
         }
         .padding(.horizontal, DesignTokens.blockGutter)
@@ -91,7 +91,7 @@ struct MarketTrendModule: View {
 
         return HStack(spacing: 8) {
             Text(label)
-                .font(DesignTokens.metricLabelFont())
+                .porteosMetricLabel()
                 .foregroundStyle(DesignTokens.textDim)
                 .frame(minWidth: 120, alignment: .leading)
 
@@ -99,20 +99,20 @@ struct MarketTrendModule: View {
 
             if hasTrend {
                 Text(arrow)
-                    .font(DesignTokens.mono(size: 9, weight: .bold))
+                    .porteosMeta()
                     .foregroundStyle(arrowColor)
                 Text("\(String(format: "%.1f", abs(trend.strength)))% (6mo)")
-                    .font(DesignTokens.metricLabelFont())
+                    .porteosMetricLabel()
                     .foregroundStyle(DesignTokens.textSecondary)
                     .monospacedDigit()
                 confidencePips(trend.confidence)
             } else if let fallback = bmFallback {
                 Text(fallback)
-                    .font(DesignTokens.metricLabelFont())
+                    .porteosMetricLabel()
                     .foregroundStyle(DesignTokens.textDim.opacity(0.7))
             } else {
                 Text("NO_DATA")
-                    .font(DesignTokens.metricLabelFont())
+                    .porteosMetricLabel()
                     .foregroundStyle(DesignTokens.textDim.opacity(0.5))
             }
         }
@@ -144,7 +144,7 @@ struct MarketTrendModule: View {
             Spacer()
             if imported > 0 {
                 Text("\(Int(heat.acquisitionRate * 100))% conv.")
-                    .font(DesignTokens.metricLabelFont())
+                    .porteosMetricLabel()
                     .foregroundStyle(DesignTokens.textDim)
             }
         }
@@ -155,11 +155,11 @@ struct MarketTrendModule: View {
     private func statPill(_ label: String, _ value: String, _ color: Color) -> some View {
         HStack(spacing: 3) {
             Text(value)
-                .font(DesignTokens.rowValueFont().weight(.bold))
+                .porteosRowValue()
                 .foregroundStyle(color)
                 .monospacedDigit()
             Text(label)
-                .font(DesignTokens.mono(size: 9))
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
         }
     }
@@ -177,7 +177,7 @@ struct MarketTrendModule: View {
 
     private func emptyRow(_ msg: String) -> some View {
         Text(msg)
-            .font(DesignTokens.metricLabelFont())
+            .porteosMetricLabel()
             .foregroundStyle(DesignTokens.textDim.opacity(0.6))
             .padding(.horizontal, DesignTokens.blockGutter)
             .padding(.vertical, DesignTokens.metricCellPadding)

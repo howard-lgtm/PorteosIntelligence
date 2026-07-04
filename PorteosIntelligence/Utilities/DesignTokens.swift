@@ -77,7 +77,7 @@ enum DesignTokens {
     static let gridRowSpacing:       CGFloat = 6
     static let gridColumnSpacing:    CGFloat = 6
     static let metricCellPadding:    CGFloat = 8
-    static let metricCellMinHeight:  CGFloat = 52
+    static let metricCellMinHeight:  CGFloat = 54   // 8 + 20 + 4 + 14 + 8
     static let heroCellMinHeight:    CGFloat = 88
     static let heroCellPadding:      CGFloat = 12
     static let profileCellMinHeight: CGFloat = 72
@@ -106,66 +106,127 @@ enum DesignTokens {
                      count: count)
     }
 
-    // MARK: Phase A — Type scale (pt). No hardcoded sizes in views.
+    // MARK: v2.06 TypeScale — FONT SPECIFICATION (non-negotiable)
+    // Views use DesignTokens.TypeScale.* + Tracking/LineSpacing modifiers only.
 
     enum TypeScale {
-        static let meta:        CGFloat = 10   // timestamps, LN:120, hints only
-        static let rowLabel:    CGFloat = 11
-        static let rowValue:    CGFloat = 12
-        static let metricLabel: CGFloat = 11
-        static let metricValue: CGFloat = 16
-        static let moduleCmd:   CGFloat = 11
-        static let cliPrompt:   CGFloat = 11
-        static let heroScore:   CGFloat = 36
-        static let heroGrade:   CGFloat = 20
+        // DISPLAY
+        static let scoreHero:  Font = mono(36, .bold)
+        static let scoreGrade: Font = mono(20, .bold)
+
+        // DATA DISPLAY — Figma `Porteos/metric/value`: SemiBold 16 / 20pt line
+        static let metricValue: Font = mono(16, .semibold)
+        static let metricLabel: Font = mono(11, .medium)
+        static let rowValue:    Font = mono(12, .medium)
+        static let rowLabel:    Font = mono(11, .regular)
+
+        // UI CHROME
+        static let buttonPrimary: Font = mono(11, .bold)
+        static let meta:          Font = mono(10, .regular)
+        static let cliPrompt:     Font = mono(11, .regular)
+        static let moduleCmd:     Font = mono(11, .medium)
+
+        private static func mono(_ size: CGFloat, _ weight: Font.Weight) -> Font {
+            let face: String
+            switch weight {
+            case .bold, .heavy:     face = "JetBrainsMono-Bold"
+            case .semibold:         face = "JetBrainsMono-SemiBold"
+            case .medium:           face = "JetBrainsMono-Medium"
+            default:                face = "JetBrainsMono-Regular"
+            }
+            return .custom(face, size: size)
+        }
     }
 
-    // MARK: Typography helpers
-
-    static func mono(size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .custom("JetBrains Mono", size: size).weight(weight)
+    enum Tracking {
+        static let metricValue:   CGFloat = -0.32   // Figma −2% @ 16pt
+        static let metricLabel:   CGFloat =  0.22   // Figma +2% @ 11pt
+        static let rowLabel:      CGFloat =  0.22   // Figma +2% @ 11pt
+        static let buttonPrimary: CGFloat =  0.22
+        static let meta:          CGFloat =  0.40   // Figma +4% @ 10pt
     }
 
-    static func metaFont() -> Font {
-        mono(size: TypeScale.meta)
+    /// Fixed line heights from `FIGMA-TEXT-STYLES.md`.
+    enum LineHeight {
+        static let scoreHero:     CGFloat = 40
+        static let scoreGrade:    CGFloat = 24
+        static let metricValue:   CGFloat = 20
+        static let metricLabel:   CGFloat = 14
+        static let rowValue:      CGFloat = 16
+        static let rowLabel:      CGFloat = 14
+        static let cli:           CGFloat = 14
+        static let buttonPrimary: CGFloat = 14
+        static let meta:          CGFloat = 12
     }
 
-    static func rowLabelFont() -> Font {
-        mono(size: TypeScale.rowLabel)
+    /// Value→label gap inside metric cells (Figma layout/xs = 4pt).
+    static let metricStackGap: CGFloat = 4
+
+    // MARK: Typography helpers (delegate to TypeScale)
+
+    static func metaFont() -> Font { TypeScale.meta }
+    static func rowLabelFont() -> Font { TypeScale.rowLabel }
+    static func rowValueFont() -> Font { TypeScale.rowValue }
+    static func metricLabelFont() -> Font { TypeScale.metricLabel }
+    static func metricValueFont() -> Font { TypeScale.metricValue }
+    static func primaryMetricFont() -> Font { TypeScale.metricValue }
+    static func sectionLabelFont() -> Font { TypeScale.moduleCmd }
+    static func moduleCommandFont() -> Font { TypeScale.moduleCmd }
+    static func cliPromptFont() -> Font { TypeScale.cliPrompt }
+    static func heroScoreFont() -> Font { TypeScale.scoreHero }
+    static func heroGradeFont() -> Font { TypeScale.scoreGrade }
+    static func bracketButtonFont() -> Font { TypeScale.buttonPrimary }
+    static func buttonPrimaryFont() -> Font { TypeScale.buttonPrimary }
+
+    /// `./INSPECTOR_V2`, search `/` — rowLabel.
+    static func shellPathFont() -> Font { TypeScale.rowLabel }
+
+    /// `PORTEOS@SYSTEM` wordmark — buttonPrimary.
+    static func shellWordmarkFont() -> Font { TypeScale.buttonPrimary }
+
+    /// Profile nav + deal names — rowLabel; active rows use buttonPrimary weight.
+    static func shellNavItemFont(isActive: Bool) -> Font {
+        isActive ? TypeScale.buttonPrimary : TypeScale.rowLabel
     }
 
-    static func rowValueFont() -> Font {
-        mono(size: TypeScale.rowValue, weight: .medium)
+    static func shellDealNameFont(isSelected: Bool) -> Font {
+        isSelected ? TypeScale.buttonPrimary : TypeScale.rowLabel
     }
 
-    static func metricLabelFont() -> Font {
-        mono(size: TypeScale.metricLabel, weight: .medium)
+    /// Bracket utility actions: `[ FILTER ]`, `[ TRIAGE ]`.
+    static func shellActionFont(isActive: Bool = false) -> Font {
+        isActive ? TypeScale.buttonPrimary : TypeScale.rowLabel
     }
 
-    static func metricValueFont() -> Font {
-        mono(size: TypeScale.metricValue, weight: .semibold)
+    /// Command segment after CLI prompt — moduleCmd.
+    static func cliCommandFont() -> Font { TypeScale.moduleCmd }
+
+    /// Chrome glyphs: `[ ↗ ]`.
+    static func chromeGlyphFont() -> Font { TypeScale.meta }
+
+    /// Status tabs (ALL, PIPELINE), HTTP chip, deal status — meta.
+    static func statusChipFont() -> Font { TypeScale.meta }
+
+    static func statusChipMetaFont() -> Font { TypeScale.meta }
+
+    /// `// FOUNDER_LENS`, section labels — meta (regular, not bold).
+    static func shellSectionFont() -> Font { TypeScale.meta }
+
+    static func emptyStateFont() -> Font { TypeScale.rowValue }
+    static func emptyStateHintFont() -> Font { TypeScale.rowLabel }
+
+    /// Stateful rowLabel/buttonPrimary at 11pt — internal only.
+    static func rowLabel(active: Bool) -> Font {
+        active ? TypeScale.buttonPrimary : TypeScale.rowLabel
     }
 
-    static func primaryMetricFont() -> Font { metricValueFont() }
-
-    static func sectionLabelFont() -> Font {
-        mono(size: TypeScale.moduleCmd, weight: .medium)
-    }
-
-    static func moduleCommandFont() -> Font { sectionLabelFont() }
-
-    static func cliPromptFont() -> Font {
-        mono(size: TypeScale.cliPrompt)
-    }
-
-    static func heroScoreFont() -> Font {
-        mono(size: TypeScale.heroScore, weight: .bold)
-    }
-
-    static func heroGradeFont() -> Font {
-        mono(size: TypeScale.heroGrade, weight: .bold)
+    /// Stateful rowValue at 12pt medium.
+    static func rowValue(active: Bool = false) -> Font {
+        active ? TypeScale.buttonPrimary : TypeScale.rowValue
     }
 }
+
+// Typography rendering: PorteosTextStyle.swift (PorteosText, .porteosTextStyle, PorteosMetricStack)
 
 // MARK: - MetricState
 

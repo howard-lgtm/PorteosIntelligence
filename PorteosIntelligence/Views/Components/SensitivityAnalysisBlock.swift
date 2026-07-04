@@ -168,7 +168,7 @@ struct SensitivityAnalysisBlock: View {
                     rateAdj    = 0
                 } label: {
                     Text("[ RESET ]")
-                        .font(DesignTokens.mono(size: 13))
+                        .porteosRowValue()
                         .foregroundStyle(DesignTokens.textDim)
                 }
                 .buttonStyle(.plain)
@@ -189,8 +189,7 @@ struct SensitivityAnalysisBlock: View {
     ) -> some View {
         HStack(spacing: 0) {
             Text(label)
-                .font(DesignTokens.mono(size: 13, weight: .medium))
-                .tracking(0.02)
+                .porteosRowValue()
                 .foregroundStyle(DesignTokens.textDim)
                 .frame(width: colLabel, alignment: .leading)
                 .padding(.leading, 16)
@@ -199,21 +198,21 @@ struct SensitivityAnalysisBlock: View {
 
             Button { onDecrement() } label: {
                 Text("[ − ]")
-                    .font(DesignTokens.mono(size: 13))
+                .porteosRowValue()
                     .foregroundStyle(canDecrement ? DesignTokens.textSecondary : DesignTokens.textDim)
             }
             .buttonStyle(.plain)
             .disabled(!canDecrement)
 
             Text(display)
-                .font(DesignTokens.primaryMetricFont())
+                .porteosMetricValue()
                 .monospacedDigit()
                 .foregroundStyle(TerminalSensitivityStyles.adjColor(display))
                 .frame(width: 76, alignment: .center)
 
             Button { onIncrement() } label: {
                 Text("[ + ]")
-                    .font(DesignTokens.mono(size: 13))
+                .porteosRowValue()
                     .foregroundStyle(canIncrement ? DesignTokens.textSecondary : DesignTokens.textDim)
             }
             .buttonStyle(.plain)
@@ -232,27 +231,23 @@ struct SensitivityAnalysisBlock: View {
             // Column headers
             HStack(spacing: 0) {
                 Text("METRIC")
-                    .font(DesignTokens.mono(size: 11, weight: .bold))
-                    .tracking(0.06)
+                    .porteosButtonPrimary()
                     .foregroundStyle(DesignTokens.textDim)
                     .frame(width: colLabel, alignment: .leading)
                     .padding(.leading, 16)
 
                 Text("BASE")
-                    .font(DesignTokens.mono(size: 11, weight: .bold))
-                    .tracking(0.06)
+                    .porteosButtonPrimary()
                     .foregroundStyle(DesignTokens.textDim)
                     .frame(width: colBase, alignment: .trailing)
 
                 Text("SIMULATED")
-                    .font(DesignTokens.mono(size: 11, weight: .bold))
-                    .tracking(0.06)
+                    .porteosButtonPrimary()
                     .foregroundStyle(DesignTokens.textDim)
                     .frame(width: colSim, alignment: .trailing)
 
                 Text("DELTA")
-                    .font(DesignTokens.mono(size: 11, weight: .bold))
-                    .tracking(0.06)
+                    .porteosButtonPrimary()
                     .foregroundStyle(DesignTokens.textDim)
                     .padding(.leading, 16)
                     .padding(.trailing, 16)
@@ -327,30 +322,29 @@ struct SensitivityAnalysisBlock: View {
 
         return HStack(spacing: 0) {
             Text(label)
-                .font(DesignTokens.mono(size: 13))
-                .tracking(0.02)
+                .porteosRowValue()
                 .foregroundStyle(DesignTokens.textSecondary)
                 .frame(width: colLabel, alignment: .leading)
                 .padding(.leading, 16)
 
             Text(base)
-                .font(DesignTokens.mono(size: 13))
+                .porteosRowValue()
                 .monospacedDigit()
                 .foregroundStyle(DesignTokens.textSecondary)
                 .frame(width: colBase, alignment: .trailing)
 
             Text(sim)
-                .font(DesignTokens.primaryMetricFont())
+                .porteosMetricValue()
                 .monospacedDigit()
                 .foregroundStyle(neutral ? DesignTokens.textPrimary : (good ? DesignTokens.statusGo : DesignTokens.statusCritical))
                 .frame(width: colSim, alignment: .trailing)
 
             HStack(spacing: 4) {
                 Text(indicator)
-                    .font(DesignTokens.mono(size: 11))
+                    .porteosRowLabel()
                     .foregroundStyle(deltaColor)
                 Text(neutral ? "—" : format(delta))
-                    .font(DesignTokens.mono(size: 13))
+                .porteosRowValue()
                     .monospacedDigit()
                     .foregroundStyle(deltaColor)
             }

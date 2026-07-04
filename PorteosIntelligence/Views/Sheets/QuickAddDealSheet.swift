@@ -100,18 +100,18 @@ struct QuickAddDealSheet: View {
     private var sheetHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 11))
+                .porteosRowLabel()
                 .foregroundStyle(textTertiary)
             Text(isEditing
                  ? "deal --edit --asset=\"\(editingDeal?.propertyName.isEmpty == false ? editingDeal!.propertyName : "Untitled")\""
                  : "deal --create")
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(accentRust)
                 .lineLimit(1)
             Spacer()
             Button { dismiss() } label: {
                 Text("✕")
-                    .font(.custom("JetBrains Mono", size: 14).weight(.bold))
+                    .porteosScoreGrade()
                     .foregroundStyle(textTertiary)
             }
             .buttonStyle(.plain)
@@ -126,12 +126,11 @@ struct QuickAddDealSheet: View {
     private func pickerField<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label.uppercased())
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
-                .tracking(0.05)
+                .porteosMeta()
                 .foregroundStyle(textTertiary)
 
             content()
-                .font(.custom("JetBrains Mono", size: 14))
+                .porteosScoreGrade()
                 .foregroundStyle(textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(height: 28)
@@ -147,13 +146,12 @@ struct QuickAddDealSheet: View {
     private var notesField: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("NOTES")
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
-                .tracking(0.05)
+                .porteosMeta()
                 .foregroundStyle(textTertiary)
 
             TextField("Optional notes…", text: $notes, axis: .vertical)
                 .textFieldStyle(.plain)
-                .font(.custom("JetBrains Mono", size: 14))
+                .porteosScoreGrade()
                 .foregroundStyle(textPrimary)
                 .lineLimit(3...6)
                 .padding(8)
@@ -169,7 +167,7 @@ struct QuickAddDealSheet: View {
         HStack(spacing: 12) {
             Button { dismiss() } label: {
                 Text("[ CANCEL ]")
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .porteosRowLabel()
                     .foregroundStyle(textSecondary)
                     .frame(height: 28)
             }
@@ -179,7 +177,7 @@ struct QuickAddDealSheet: View {
 
             Button { saveDeal() } label: {
                 Text(isEditing ? "[ UPDATE_DEAL ]" : "[ DEPLOY_DEAL ]")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                    .porteosButtonPrimary()
                     .foregroundStyle(DesignTokens.canvasBase)
                     .padding(.horizontal, 16)
                     .frame(height: 28)

@@ -18,7 +18,7 @@ struct DealIngestionServerPanel: View {
     private let accentRust   = DesignTokens.accentRust
     private let green        = DesignTokens.statusGo
     private let red          = DesignTokens.statusCritical
-    private let amber        = Color(hex: "#F59E0B")
+    private let amber        = DesignTokens.statusReview
 
     private var server: DealIngestionServer { DealIngestionServer.shared }
 
@@ -51,13 +51,13 @@ struct DealIngestionServerPanel: View {
                 .frame(width: 8, height: 8)
 
             Text(server.isRunning ? "RUNNING" : "STOPPED")
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(server.isRunning ? green : red)
 
             Spacer()
 
             Text("localhost:\(server.port)")
-                .font(.custom("JetBrains Mono", size: 11))
+                .porteosRowLabel()
                 .foregroundStyle(tp2)
                 .monospacedDigit()
         }
@@ -77,14 +77,14 @@ struct DealIngestionServerPanel: View {
     private func endpointLine(_ method: String, _ path: String, _ desc: String) -> some View {
         HStack(spacing: 8) {
             Text(method)
-                .font(.custom("JetBrains Mono", size: 9).weight(.bold))
+                .porteosMeta()
                 .foregroundStyle(method == "POST" ? amber : green)
                 .frame(width: 30, alignment: .leading)
             Text(path)
-                .font(.custom("JetBrains Mono", size: 9))
+                .porteosMeta()
                 .foregroundStyle(tp1)
             Text("// \(desc)")
-                .font(.custom("JetBrains Mono", size: 9))
+                .porteosMeta()
                 .foregroundStyle(tp3)
         }
     }
@@ -107,11 +107,11 @@ struct DealIngestionServerPanel: View {
     private func statCell(_ label: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 1) {
             Text(value)
-                .font(.custom("JetBrains Mono", size: 12).weight(.bold))
+                .porteosRowValue()
                 .foregroundStyle(tp1)
                 .monospacedDigit()
             Text(label)
-                .font(.custom("JetBrains Mono", size: 9))
+                .porteosMeta()
                 .foregroundStyle(tp3)
         }
     }
@@ -138,10 +138,10 @@ struct DealIngestionServerPanel: View {
     private func errorRow(_ msg: String) -> some View {
         HStack(spacing: 6) {
             Text("!")
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
+                .porteosMeta()
                 .foregroundStyle(red)
             Text(msg)
-                .font(.custom("JetBrains Mono", size: 10))
+                .porteosMeta()
                 .foregroundStyle(red)
                 .fixedSize(horizontal: false, vertical: true)
         }

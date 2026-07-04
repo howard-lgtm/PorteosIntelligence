@@ -74,14 +74,14 @@ struct ShortcutsLegendView: View {
     private var header: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(DesignTokens.cliPromptFont())
+                .porteosCliPrompt()
                 .foregroundStyle(DesignTokens.textDim)
             Text("./shortcuts --list")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(DesignTokens.accentRust)
             Spacer()
             Text("\(totalCount) shortcuts")
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
         }
         .padding(.horizontal, DesignTokens.blockGutter)
@@ -94,8 +94,7 @@ struct ShortcutsLegendView: View {
     private func sectionBlock(_ section: ShortcutSection) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(section.title)
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
-                .tracking(0.08)
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
                 .padding(.horizontal, DesignTokens.blockGutter)
                 .padding(.top, 12)
@@ -119,7 +118,7 @@ struct ShortcutsLegendView: View {
             .frame(minWidth: 96, alignment: .leading)
 
             Text(entry.description)
-                .font(DesignTokens.rowValueFont())
+                .porteosRowValue()
                 .foregroundStyle(DesignTokens.textPrimary)
 
             Spacer(minLength: 0)
@@ -130,7 +129,7 @@ struct ShortcutsLegendView: View {
 
     private func keyBadge(_ key: String) -> some View {
         Text(key)
-            .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+            .porteosButtonPrimary()
             .foregroundStyle(DesignTokens.textPrimary)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
@@ -148,7 +147,7 @@ struct ShortcutsLegendView: View {
             Spacer()
             Button { close() } label: {
                 Text("[ CLOSE ]")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
+                    .porteosButtonPrimary()
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             .buttonStyle(.plain)

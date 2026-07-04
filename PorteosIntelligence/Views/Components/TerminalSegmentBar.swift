@@ -43,8 +43,7 @@ struct SensitivityImpactRow: View {
     var body: some View {
         HStack(spacing: 10) {
             Text(label.uppercased())
-                .font(DesignTokens.metricLabelFont())
-                .tracking(0.02)
+                .porteosMetricLabel()
                 .foregroundStyle(DesignTokens.textDim)
                 .frame(width: 128, alignment: .leading)
                 .lineLimit(2)
@@ -52,7 +51,7 @@ struct SensitivityImpactRow: View {
             TerminalSegmentBar(fillRatio: fillRatio, barColor: accent)
 
             Text(impactText)
-                .font(DesignTokens.metricValueFont())
+                .porteosMetricValue()
                 .monospacedDigit()
                 .foregroundStyle(impactColor)
                 .frame(minWidth: 88, alignment: .trailing)

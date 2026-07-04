@@ -32,11 +32,11 @@ struct TerminalBlock<Content: View>: View {
     private var blockHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(DesignTokens.cliPromptFont())
+                .porteosCliPrompt()
                 .foregroundStyle(DesignTokens.textDim)
 
             Text(command)
-                .font(DesignTokens.moduleCommandFont())
+                .porteosModuleCmd()
                 .foregroundStyle(accentColor)
 
             Spacer()

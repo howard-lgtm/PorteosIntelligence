@@ -56,19 +56,19 @@ struct TemplatePickerSheet: View {
     private var sheetHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(DesignTokens.cliPromptFont())
+                .porteosCliPrompt()
                 .foregroundStyle(DesignTokens.textDim)
             Text("template --picker")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.cliPrompt, weight: .bold))
+                .porteosModuleCmd()
                 .foregroundStyle(DesignTokens.accentRust)
             Spacer()
             Text("[ \(Self.templateCount) TEMPLATES ]")
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
                 .padding(.trailing, 12)
             Button { dismiss() } label: {
                 Text("[ × ]")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.cliPrompt, weight: .bold))
+                    .porteosButtonPrimary()
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             .buttonStyle(.plain)
@@ -110,7 +110,7 @@ struct TemplatePickerSheet: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(alignment: .top, spacing: 8) {
                         Text(template.name.uppercased())
-                            .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                            .porteosButtonPrimary()
                             .foregroundStyle(DesignTokens.textPrimary)
                             .lineLimit(2)
                             .multilineTextAlignment(.leading)
@@ -118,13 +118,13 @@ struct TemplatePickerSheet: View {
 
                         if isSelected {
                             Text("SELECTED")
-                                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                                .porteosMeta()
                                 .foregroundStyle(DesignTokens.accentRust)
                         }
                     }
 
                     Text(template.description)
-                        .font(DesignTokens.metaFont())
+                        .porteosMeta()
                         .foregroundStyle(DesignTokens.textDim)
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
@@ -132,7 +132,7 @@ struct TemplatePickerSheet: View {
                     Spacer(minLength: 4)
 
                     Text(template.shortCategoryLabel)
-                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                        .porteosMeta()
                         .foregroundStyle(template.accentColor)
                 }
                 .padding(.horizontal, 12)
@@ -164,19 +164,19 @@ struct TemplatePickerSheet: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(alignment: .top, spacing: 8) {
                         Text("+ NEW BLANK DEAL")
-                            .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                            .porteosButtonPrimary()
                             .foregroundStyle(DesignTokens.textSecondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
 
                         if isSelected {
                             Text("SELECTED")
-                                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                                .porteosMeta()
                                 .foregroundStyle(DesignTokens.accentRust)
                         }
                     }
 
                     Text("Start from scratch")
-                        .font(DesignTokens.metaFont())
+                        .porteosMeta()
                         .foregroundStyle(DesignTokens.textDim)
 
                     Spacer(minLength: 0)
@@ -204,7 +204,7 @@ struct TemplatePickerSheet: View {
         HStack(spacing: 12) {
             Button { dismiss() } label: {
                 Text("[ CANCEL ]")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel))
+                    .porteosRowLabel()
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             .buttonStyle(.plain)

@@ -16,12 +16,13 @@ struct ServerStatusIndicator: View {
                     .frame(width: 5, height: 5)
 
                 Text(srv.isRunning ? "HTTP:\(srv.port)" : "HTTP:OFF")
-                    .font(DesignTokens.mono(size: 10))
+                    .porteosMeta()
+                    .monospacedDigit()
                     .foregroundStyle(srv.isRunning ? DesignTokens.statusGo : DesignTokens.textDim)
 
                 if srv.isRunning && srv.requestCount > 0 {
                     Text("\(srv.requestCount)")
-                        .font(DesignTokens.mono(size: 9))
+                        .porteosMeta()
                         .foregroundStyle(DesignTokens.statusWarn)
                         .padding(.horizontal, 4)
                         .background(DesignTokens.statusWarn.opacity(0.12))

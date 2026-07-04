@@ -17,7 +17,7 @@ struct TerminalButton: View {
             switch variant {
             case .primary:
                 Text("[ \(title.uppercased()) ]")
-                    .font(DesignTokens.mono(size: 11, weight: .bold))
+                    .porteosButtonPrimary()
                     .foregroundStyle(DesignTokens.canvasBase)
                     .frame(maxWidth: .infinity)
                     .frame(height: DesignTokens.rowHeightData)
@@ -26,7 +26,7 @@ struct TerminalButton: View {
 
             case .secondary:
                 Text("./\(title.lowercased())")
-                    .font(DesignTokens.mono(size: 11))
+                    .porteosRowLabel()
                     .foregroundStyle(DesignTokens.statusGo)
                     .padding(.horizontal, 12)
                     .frame(height: DesignTokens.rowHeightData)

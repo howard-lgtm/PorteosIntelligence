@@ -26,7 +26,7 @@ struct PorteosScoreBlock: View {
 
             HStack(alignment: .firstTextBaseline, spacing: 16) {
                 Text(String(format: "%.0f", metrics.finalScore))
-                    .font(DesignTokens.heroScoreFont())
+                    .porteosScoreHero()
                     .monospacedDigit()
                     .foregroundStyle(gradeColor)
 
@@ -34,12 +34,11 @@ struct PorteosScoreBlock: View {
 
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("PORTEOS SCORE")
-                        .font(DesignTokens.metricLabelFont())
-                        .tracking(0.02)
+                        .porteosMetricLabel()
                         .foregroundStyle(DesignTokens.textDim)
 
                     Text(metrics.scoreGrade)
-                        .font(DesignTokens.heroGradeFont())
+                        .porteosScoreGrade()
                         .foregroundStyle(gradeColor)
                 }
             }

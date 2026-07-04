@@ -282,10 +282,12 @@ final class PDFReportGenerator {
         hline(ctx, x: M, y: barY - 25, width: cW, color: border)
 
         // ── Key RE metrics ─────────────────────────────────────────────────────
-        let metricsY: CGFloat = barY - 40
+        // Extra vertical gap so section header cannot collide with profile % row above
+        // or the first KPI label row below (was ~4pt — caused "NOI" overlap).
+        let metricsY: CGFloat = barY - 50
         text(ctx, "// KEY FINANCIAL INDICATORS", x: M, y: metricsY, font: jm(8), color: tp3)
 
-        let metY: CGFloat = metricsY - 16
+        let metY: CGFloat = metricsY - 22
         func kv(_ label: String, _ value: String, col: Int) {
             let x = M + CGFloat(col) * (cW / 3)
             text(ctx, label, x: x, y: metY + 12, font: jm(7.5), color: tp3)

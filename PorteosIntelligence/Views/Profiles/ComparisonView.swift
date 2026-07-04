@@ -108,15 +108,15 @@ struct ComparisonView: View {
     private var cliHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(DesignTokens.cliPromptFont())
+                .porteosCliPrompt()
                 .foregroundStyle(DesignTokens.textDim)
             Text("deal --compare --assets=\(deals.count)")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.cliPrompt, weight: .bold))
+                .porteosModuleCmd()
                 .foregroundStyle(DesignTokens.accentRust)
             Spacer()
             Button { onDismiss() } label: {
                 Text("[ CLOSE ]")
-                    .font(DesignTokens.rowLabelFont())
+                    .porteosRowLabel()
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             .buttonStyle(.plain)
@@ -139,11 +139,11 @@ struct ComparisonView: View {
                 let deal = deals[i]
                 VStack(alignment: .leading, spacing: 2) {
                     Text(shortName(deal))
-                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                        .porteosButtonPrimary()
                         .foregroundStyle(DesignTokens.textPrimary)
                         .lineLimit(1)
                     Text(deal.locationCity.isEmpty ? "—" : deal.locationCity)
-                        .font(DesignTokens.metaFont())
+                        .porteosMeta()
                         .foregroundStyle(DesignTokens.textDim)
                 }
                 .frame(width: dealWidth, alignment: .leading)
@@ -163,7 +163,7 @@ struct ComparisonView: View {
 
         return HStack(spacing: 0) {
             Text(metric.label)
-                .font(DesignTokens.rowLabelFont())
+                .porteosRowLabel()
                 .foregroundStyle(DesignTokens.textDim)
                 .frame(width: labelWidth, alignment: .leading)
                 .padding(.leading, DesignTokens.blockGutter)
@@ -176,7 +176,7 @@ struct ComparisonView: View {
                                       direction: metric.direction, hasValue: val != nil)
 
                 Text(val.map { metric.format($0) } ?? "—")
-                    .font(DesignTokens.metricValueFont())
+                    .porteosMetricValue()
                     .monospacedDigit()
                     .foregroundStyle(color)
                     .frame(width: dealWidth, alignment: .trailing)
@@ -198,7 +198,7 @@ struct ComparisonView: View {
                     .fill(DesignTokens.accentRust)
                     .frame(width: 2, height: 14)
                 Text("03 // OPEX BREAKDOWN")
-                    .font(DesignTokens.sectionLabelFont())
+                    .porteosModuleCmd()
                     .foregroundStyle(DesignTokens.textDim)
             }
             .padding(.horizontal, 12)
@@ -224,7 +224,7 @@ struct ComparisonView: View {
             HStack(spacing: 12) {
                 Button { discardOpexChanges() } label: {
                     Text("[ DISCARD ]")
-                        .font(DesignTokens.rowLabelFont())
+                        .porteosRowLabel()
                         .foregroundStyle(DesignTokens.textSecondary)
                 }
                 .buttonStyle(.plain)
@@ -250,11 +250,11 @@ struct ComparisonView: View {
     private func opexRow(_ label: String, value: Double) -> some View {
         HStack {
             Text(label)
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
             Spacer()
             Text(formattedOpex(value))
-                .font(DesignTokens.rowValueFont())
+                .porteosRowValue()
                 .foregroundStyle(DesignTokens.textPrimary)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)

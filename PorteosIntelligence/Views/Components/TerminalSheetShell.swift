@@ -32,23 +32,23 @@ struct TerminalSheetShell<Content: View, Footer: View>: View {
     private var sheetHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(DesignTokens.mono(size: 11))
+                .porteosCliPrompt()
                 .foregroundStyle(DesignTokens.textDim)
             Text(command)
-                .font(DesignTokens.mono(size: 11, weight: .bold))
+                .porteosModuleCmd()
                 .foregroundStyle(accentColor)
                 .lineLimit(1)
             Spacer()
             if let trailingBadge {
                 Text(trailingBadge)
-                    .font(DesignTokens.mono(size: 10))
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
                     .padding(.trailing, 12)
             }
             if showClose {
                 Button { dismiss() } label: {
                     Text("[ × ]")
-                        .font(DesignTokens.mono(size: 11, weight: .bold))
+                        .porteosButtonPrimary()
                         .foregroundStyle(DesignTokens.textSecondary)
                 }
                 .buttonStyle(.plain)
@@ -74,13 +74,13 @@ struct TerminalSheetFooter: View {
     var body: some View {
         HStack(spacing: 12) {
             Button("[ CANCEL ]", action: cancelAction)
-                .font(DesignTokens.mono(size: 11))
+                .porteosTextStyle(.shellAction(isActive: false))
                 .foregroundStyle(DesignTokens.textSecondary)
                 .buttonStyle(.plain)
 
             if let statusText {
                 Text(statusText)
-                    .font(DesignTokens.mono(size: 10))
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
             }
 
@@ -122,7 +122,7 @@ struct TerminalCategoryTabBar: View {
             VStack(spacing: 0) {
                 Spacer()
                 Text(label)
-                    .font(DesignTokens.mono(size: 11, weight: isActive ? .bold : .regular))
+                    .porteosTextStyle(.shellAction(isActive: isActive))
                     .foregroundStyle(isActive ? color : DesignTokens.textDim)
                     .padding(.horizontal, 10)
                 Spacer()

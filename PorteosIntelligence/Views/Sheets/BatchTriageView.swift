@@ -63,10 +63,10 @@ struct BatchTriageView: View {
         HStack(spacing: 16) {
             HStack(spacing: 0) {
                 Text("porteos@system ~ % ")
-                    .font(DesignTokens.cliPromptFont())
+                    .porteosCliPrompt()
                     .foregroundStyle(DesignTokens.textDim)
                 Text("deal --triage")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.cliPrompt, weight: .bold))
+                    .porteosModuleCmd()
                     .foregroundStyle(DesignTokens.accentRust)
             }
             Spacer()
@@ -82,10 +82,10 @@ struct BatchTriageView: View {
     private func statPill(_ label: String, _ value: String) -> some View {
         HStack(spacing: 4) {
             Text("\(label):")
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
             Text(value)
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textPrimary)
                 .monospacedDigit()
         }
@@ -94,10 +94,10 @@ struct BatchTriageView: View {
     private var selectedStatPill: some View {
         HStack(spacing: 4) {
             Text("SELECTED:")
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
             Text("\(selectedDealIDs.count)")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.canvasBase)
                 .monospacedDigit()
                 .padding(.horizontal, 6)
@@ -115,10 +115,10 @@ struct BatchTriageView: View {
                 VStack(spacing: 8) {
                     Spacer()
                     Text("> NO_PIPELINE_DEALS")
-                        .font(DesignTokens.rowLabelFont())
+                        .porteosRowLabel()
                         .foregroundStyle(DesignTokens.textDim)
                     Text("> import deals or set status to PIPELINE to begin triage")
-                        .font(DesignTokens.metaFont())
+                        .porteosMeta()
                         .foregroundStyle(DesignTokens.textDim.opacity(0.6))
                     Spacer()
                 }
@@ -158,18 +158,18 @@ struct BatchTriageView: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(deal.propertyName.isEmpty ? "UNTITLED" : deal.propertyName.uppercased())
-                            .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                            .porteosButtonPrimary()
                             .foregroundStyle(DesignTokens.textPrimary)
                             .lineLimit(1)
                         Text(deal.locationCity.isEmpty ? "—" : deal.locationCity)
-                            .font(DesignTokens.metaFont())
+                            .porteosMeta()
                             .foregroundStyle(DesignTokens.textDim)
                     }
 
                     Spacer(minLength: 0)
 
                     Text(scoreGradeLabel(deal: deal, grade: grade))
-                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
+                        .porteosRowValue()
                         .foregroundStyle(grade.semanticColor)
                         .monospacedDigit()
                 }
@@ -187,7 +187,7 @@ struct BatchTriageView: View {
                     Spacer()
                     if let badge = cardBadge(for: deal) {
                         Text(badge.label)
-                            .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                            .porteosMeta()
                             .foregroundStyle(badge.color)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
@@ -236,10 +236,10 @@ struct BatchTriageView: View {
     private func metricLine(_ label: String, _ value: String) -> some View {
         HStack(spacing: 4) {
             Text("\(label):")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta))
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
             Text(value)
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textSecondary)
                 .monospacedDigit()
         }
@@ -261,16 +261,16 @@ struct BatchTriageView: View {
 
             HStack(spacing: 4) {
                 Text("\(selectedDealIDs.count) selected  ·  A approve  ·  R reject  ·  Space toggle")
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
                 Text("[")
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
                 Text("*")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.accentRust)
                 Text("]")
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
             }
         }

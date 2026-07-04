@@ -9,7 +9,7 @@ struct BlinkingCursorView: View {
 
     var body: some View {
         Text("█")
-            .font(DesignTokens.mono(size: 11, weight: .bold))
+            .porteosButtonPrimary()
             .foregroundStyle(DesignTokens.textDim)
             .opacity(visible ? 1 : 0.15)
             .onAppear {

@@ -9,15 +9,14 @@ struct TerminalCLIHeader: View {
     var accentColor: Color = DesignTokens.accentRust
     var height: CGFloat = DesignTokens.rowHeightHeader
     var horizontalPadding: CGFloat = DesignTokens.blockGutter
-    var fontSize: CGFloat = 11
 
     var body: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(DesignTokens.mono(size: fontSize))
+                .porteosCliPrompt()
                 .foregroundStyle(DesignTokens.textDim)
             Text(command)
-                .font(DesignTokens.mono(size: fontSize, weight: .bold))
+                .porteosModuleCmd()
                 .foregroundStyle(accentColor)
                 .lineLimit(1)
             Spacer()
@@ -36,8 +35,7 @@ struct TerminalSectionLabel: View {
 
     var body: some View {
         Text(text)
-            .font(DesignTokens.sectionLabelFont())
-            .tracking(0.08)
+            .porteosModuleCmd()
             .foregroundStyle(DesignTokens.textDim)
     }
 }

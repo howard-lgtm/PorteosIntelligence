@@ -130,13 +130,13 @@ struct CircularEconomyDashboardView: View {
             Spacer()
             VStack(spacing: 8) {
                 Text("porteos@system ~ % ls ./circular_data")
-                    .font(DesignTokens.cliPromptFont())
+                    .porteosCliPrompt()
                     .foregroundStyle(DesignTokens.textDim)
                 Text("No circular economy data available")
-                    .font(DesignTokens.rowValueFont())
+                    .porteosRowValue()
                     .foregroundStyle(DesignTokens.textSecondary)
                 Text("Click [ ./EDIT_DEAL ] to add material flow data")
-                    .font(DesignTokens.cliPromptFont())
+                    .porteosCliPrompt()
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             Spacer()

@@ -26,7 +26,7 @@ struct TerminalAsciiGauge: View {
 
     var body: some View {
         Text(barString)
-            .font(DesignTokens.mono(size: 11, weight: .medium))
+            .porteosMetricLabel()
             .monospacedDigit()
             .foregroundStyle(state.semanticColor)
     }

@@ -11,16 +11,15 @@ struct ModuleHeader: View {
     var body: some View {
         HStack(spacing: 0) {
             Text(String(format: "%02d", number))
-                .font(DesignTokens.moduleCommandFont())
+                .porteosModuleCmd()
                 .foregroundStyle(DesignTokens.textSecondary)
 
             Text(" // ")
-                .font(DesignTokens.moduleCommandFont())
+                .porteosModuleCmd()
                 .foregroundStyle(DesignTokens.textDim)
 
             Text(title.uppercased())
-                .font(DesignTokens.sectionLabelFont())
-                .tracking(0.08)
+                .porteosModuleCmd()
                 .foregroundStyle(DesignTokens.textDim)
 
             Spacer()

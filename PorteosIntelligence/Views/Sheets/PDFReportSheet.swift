@@ -62,15 +62,15 @@ struct PDFReportSheet: View {
     private var sheetHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(DesignTokens.cliPromptFont())
+                .porteosCliPrompt()
                 .foregroundStyle(DesignTokens.textDim)
             Text("pdf_report_generator")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.cliPrompt, weight: .bold))
+                .porteosModuleCmd()
                 .foregroundStyle(DesignTokens.accentRust)
             Spacer()
             Button { dismiss() } label: {
                 Text("[ × ]")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.cliPrompt, weight: .bold))
+                    .porteosModuleCmd()
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             .buttonStyle(.plain)
@@ -148,7 +148,7 @@ struct PDFReportSheet: View {
                 HStack(spacing: 10) {
                     selectionSquare(isActive: options.blackAndWhite, useRustFill: true)
                     Text("BLACK_AND_WHITE_MODE")
-                        .font(DesignTokens.rowLabelFont())
+                        .porteosRowLabel()
                         .foregroundStyle(DesignTokens.textPrimary)
                     Spacer()
                 }
@@ -160,7 +160,7 @@ struct PDFReportSheet: View {
 
             if options.blackAndWhite {
                 Text("[ INFO ] PDF will be optimised for black & white printing.")
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
                     .padding(.horizontal, DesignTokens.blockGutter)
                     .padding(.bottom, 10)
@@ -173,7 +173,7 @@ struct PDFReportSheet: View {
     private var generateButton: some View {
         Button { generateAndSave() } label: {
             Text(isGenerating ? "[ GENERATING… ]" : "[ GENERATE & SAVE ]")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(isGenerating ? DesignTokens.textDim : DesignTokens.canvasBase)
                 .frame(maxWidth: .infinity)
                 .frame(height: DesignTokens.rowHeightButton + 4)
@@ -190,8 +190,7 @@ struct PDFReportSheet: View {
 
     private func sectionLabel(_ label: String) -> some View {
         Text("// \(label)")
-            .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
-            .tracking(0.06)
+            .porteosMeta()
             .foregroundStyle(DesignTokens.textDim)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, DesignTokens.blockGutter)
@@ -202,11 +201,11 @@ struct PDFReportSheet: View {
     private func infoRow(_ label: String, _ value: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Text(label)
-                .font(DesignTokens.rowLabelFont())
+                .porteosRowLabel()
                 .foregroundStyle(DesignTokens.textSecondary)
             Spacer()
             Text(value)
-                .font(DesignTokens.rowValueFont())
+                .porteosRowValue()
                 .foregroundStyle(DesignTokens.textPrimary)
                 .multilineTextAlignment(.trailing)
         }
@@ -218,15 +217,15 @@ struct PDFReportSheet: View {
     private func staticRow(_ label: String, _ note: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Text("[ ─ ]")
-                .font(DesignTokens.rowLabelFont())
+                .porteosRowLabel()
                 .foregroundStyle(DesignTokens.textDim)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
-                    .font(DesignTokens.rowLabelFont())
+                    .porteosRowLabel()
                     .foregroundStyle(DesignTokens.textSecondary)
                 Text(note)
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
             }
             Spacer(minLength: 0)
@@ -248,7 +247,7 @@ struct PDFReportSheet: View {
                 binding.wrappedValue.toggle()
             } label: {
                 Text(binding.wrappedValue && available ? "[ ✓ ]" : "[   ]")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                    .porteosButtonPrimary()
                     .foregroundStyle(binding.wrappedValue && available
                                      ? DesignTokens.accentRust
                                      : DesignTokens.textDim)
@@ -258,10 +257,10 @@ struct PDFReportSheet: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
-                    .font(DesignTokens.rowLabelFont())
+                    .porteosRowLabel()
                     .foregroundStyle(available ? DesignTokens.textPrimary : DesignTokens.textDim)
                 Text(note)
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(available ? DesignTokens.textDim : DesignTokens.textDim.opacity(0.55))
             }
             Spacer(minLength: 0)
@@ -286,7 +285,7 @@ struct PDFReportSheet: View {
     private func errorBanner(_ msg: String) -> some View {
         HStack {
             Text("[ ERR ]  \(msg)")
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.statusWarn)
         }
         .padding(.horizontal, DesignTokens.blockGutter)

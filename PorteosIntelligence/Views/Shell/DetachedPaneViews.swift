@@ -15,22 +15,22 @@ private struct DetachedWindowHeader: View {
     var body: some View {
         HStack(spacing: 0) {
             Text("// \(title)")
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .porteosMeta()
                 .foregroundStyle(textTertiary)
-                .padding(.leading, 16)
+                .padding(.leading, DesignTokens.blockGutter)
 
             Spacer()
 
             Button { WindowManager.shared.reattach(pane) } label: {
-                Image(systemName: "arrow.down.right.and.arrow.up.left")
-                    .font(.system(size: 11))
-                    .foregroundStyle(Color.secondary)
+                Text("[ ↗ ]")
+                    .porteosMeta()
+                    .foregroundStyle(textTertiary)
             }
             .buttonStyle(.plain)
-            .padding(.trailing, 12)
+            .padding(.trailing, DesignTokens.blockGutter)
             .help("Reattach to main window")
         }
-        .frame(height: 32)
+        .frame(height: DesignTokens.rowHeightHeader)
         .background(shellSurface)
         .overlay(alignment: .bottom) {
             Rectangle().fill(shellBorder).frame(height: 1)
@@ -150,10 +150,10 @@ struct DetachedCenterView: View {
         VStack(spacing: 6) {
             Spacer()
             Text("no deal selected")
-                .font(.custom("JetBrains Mono", size: 13))
+                .porteosRowValue()
                 .foregroundStyle(textSecondary)
             Text("select from the navigation panel")
-                .font(.custom("JetBrains Mono", size: 11))
+                .porteosRowLabel()
                 .foregroundStyle(textTertiary)
             Spacer()
         }
@@ -187,7 +187,7 @@ struct DetachedInspectorView: View {
                 VStack {
                     Spacer()
                     Text("no deal selected")
-                        .font(.custom("JetBrains Mono", size: 13))
+                        .porteosRowValue()
                         .foregroundStyle(textSecondary)
                     Spacer()
                 }

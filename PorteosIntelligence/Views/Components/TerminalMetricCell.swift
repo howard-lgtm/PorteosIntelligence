@@ -24,20 +24,13 @@ struct TerminalMetricCell: View {
                 accent.frame(width: DesignTokens.navSelectionBorder)
             }
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text(value)
-                    .font(DesignTokens.metricValueFont())
-                    .monospacedDigit()
-                    .foregroundStyle(state.semanticColor)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-
-                Text(label.uppercased())
-                    .font(DesignTokens.metricLabelFont())
-                    .tracking(0.02)
-                    .foregroundStyle(DesignTokens.textDim)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: DesignTokens.metricStackGap) {
+                PorteosMetricStack(
+                    label: label,
+                    value: value,
+                    valueColor: state.semanticColor,
+                    labelColor: DesignTokens.textDim
+                )
 
                 if trend.count >= 2 {
                     TerminalSparkline(data: trend, color: resolvedTrendColor,

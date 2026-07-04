@@ -150,13 +150,13 @@ struct DesignDashboardView: View {
             Spacer()
             VStack(spacing: 8) {
                 Text("porteos@system ~ % ls ./design_data")
-                    .font(DesignTokens.cliPromptFont())
+                    .porteosCliPrompt()
                     .foregroundStyle(DesignTokens.textDim)
                 Text("No design data available")
-                    .font(DesignTokens.rowValueFont())
+                    .porteosRowValue()
                     .foregroundStyle(DesignTokens.textSecondary)
                 Text("Click [ ./EDIT_DEAL ] to add design metrics")
-                    .font(DesignTokens.cliPromptFont())
+                    .porteosCliPrompt()
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             Spacer()

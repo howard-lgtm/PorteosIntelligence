@@ -152,16 +152,16 @@ struct AIVibePanel: View {
 
         return HStack(alignment: .center, spacing: 12) {
             Text(scoreText)
-                .font(DesignTokens.heroScoreFont())
+                .porteosScoreHero()
                 .monospacedDigit()
                 .foregroundStyle(DesignTokens.textPrimary)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("PORTEOS AI")
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
                 Text(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)
-                    .font(DesignTokens.rowValueFont())
+                    .porteosRowValue()
                     .foregroundStyle(DesignTokens.textPrimary)
                     .lineLimit(2)
             }
@@ -169,7 +169,7 @@ struct AIVibePanel: View {
             Spacer(minLength: 0)
 
             Text(r.grade.rawValue)
-                .font(DesignTokens.heroGradeFont())
+                .porteosScoreGrade()
                 .foregroundStyle(gradeColor)
                 .frame(width: 36, height: 36)
                 .background(DesignTokens.surfaceElevated)
@@ -188,7 +188,7 @@ struct AIVibePanel: View {
     private func suggestionRow(_ signal: AnalysisSignal) -> some View {
         HStack(alignment: .center, spacing: 8) {
             Text(signal.message)
-                .font(DesignTokens.rowValueFont())
+                .porteosRowValue()
                 .foregroundStyle(DesignTokens.textSecondary)
                 .lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -196,7 +196,7 @@ struct AIVibePanel: View {
             if let action = signal.action {
                 Button { applyAction(action) } label: {
                     Text("[ APPLY ]")
-                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                        .porteosButtonPrimary()
                         .foregroundStyle(DesignTokens.accentRust)
                 }
                 .buttonStyle(.plain)
@@ -212,11 +212,11 @@ struct AIVibePanel: View {
     private func statusBox(title: String, lines: [String]) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(DesignTokens.textPrimary)
             ForEach(lines, id: \.self) { line in
                 Text(line)
-                    .font(DesignTokens.rowValueFont())
+                    .porteosRowValue()
                     .foregroundStyle(DesignTokens.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -242,17 +242,17 @@ struct AIVibePanel: View {
     private func metadataLine(_ key: String, _ value: String) -> some View {
         HStack(spacing: 8) {
             Text(key)
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
             Text(value)
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textSecondary)
         }
     }
 
     private var footerHint: some View {
         Text("CMD+ENTER to run / ESC to close")
-            .font(DesignTokens.metaFont())
+            .porteosMeta()
             .foregroundStyle(DesignTokens.textDim)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, DesignTokens.blockGutter)
@@ -262,7 +262,7 @@ struct AIVibePanel: View {
     private func runButton(label: String) -> some View {
         Button { runAnalysis() } label: {
             Text(label)
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(DesignTokens.canvasBase)
                 .frame(maxWidth: .infinity)
                 .frame(height: DesignTokens.rowHeightButton)
@@ -278,10 +278,10 @@ struct AIVibePanel: View {
     private var llmOfflineBanner: some View {
         HStack(spacing: 6) {
             Text("~")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(DesignTokens.statusWarn)
             Text("Local LLM offline. Using rule-based analysis only.")
-                .font(DesignTokens.rowLabelFont())
+                .porteosRowLabel()
                 .foregroundStyle(DesignTokens.textSecondary)
         }
         .padding(.horizontal, DesignTokens.blockGutter)
@@ -292,8 +292,7 @@ struct AIVibePanel: View {
 
     private func sectionHeader(_ title: String) -> some View {
         Text(title)
-            .font(DesignTokens.sectionLabelFont())
-            .tracking(0.08)
+            .porteosModuleCmd()
             .foregroundStyle(DesignTokens.textDim)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, DesignTokens.blockGutter)
@@ -303,10 +302,10 @@ struct AIVibePanel: View {
     private func logLine(_ prefix: String, _ text: String) -> some View {
         HStack(alignment: .top, spacing: 8) {
             Text(prefix)
-                .font(DesignTokens.rowValueFont())
+                .porteosRowValue()
                 .foregroundStyle(DesignTokens.accentRust)
             Text(text)
-                .font(DesignTokens.rowValueFont())
+                .porteosRowValue()
                 .foregroundStyle(DesignTokens.textSecondary)
         }
     }
@@ -456,7 +455,7 @@ private struct AISignalBarRow: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
                 Text(label)
-                    .font(DesignTokens.metricLabelFont())
+                    .porteosMetricLabel()
                     .foregroundStyle(DesignTokens.textDim)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .lineLimit(1)
@@ -469,14 +468,14 @@ private struct AISignalBarRow: View {
                 .frame(width: 72)
 
                 Text("\(score)")
-                    .font(DesignTokens.metricValueFont())
+                    .porteosMetricValue()
                     .monospacedDigit()
                     .foregroundStyle(barColor)
                     .frame(width: 28, alignment: .trailing)
             }
 
             Text(detail)
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
                 .fixedSize(horizontal: false, vertical: true)
         }

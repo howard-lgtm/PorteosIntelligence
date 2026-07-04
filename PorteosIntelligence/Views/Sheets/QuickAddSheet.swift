@@ -52,10 +52,10 @@ struct QuickAddSheet: View {
     private var titleBar: some View {
         HStack(spacing: 0) {
             Text("QUICK_ADD")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel))
+                .porteosRowLabel()
                 .foregroundStyle(DesignTokens.textDim)
             Text("  //  CMD+SHIFT+Q")
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
             Spacer()
             confidencePill
@@ -74,7 +74,7 @@ struct QuickAddSheet: View {
             case .low:    ("LOW",    DesignTokens.statusCritical)
             }
             Text("CONFIDENCE: \(label)")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                .porteosMeta()
                 .foregroundStyle(color)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
@@ -97,7 +97,7 @@ struct QuickAddSheet: View {
 
                 HStack(spacing: 8) {
                     Text(isURL ? "url>" : ">")
-                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .medium))
+                        .porteosRowValue()
                         .foregroundStyle(DesignTokens.accentRust)
                         .frame(width: isURL ? 28 : 14, alignment: .leading)
 
@@ -105,11 +105,11 @@ struct QuickAddSheet: View {
                         "",
                         text: $input,
                         prompt: Text("Lisbon T2 €350k 90m²")
-                            .font(DesignTokens.rowValueFont())
+                            .porteosStyle(.rowValue)
                             .foregroundStyle(DesignTokens.textDim)
                     )
                     .textFieldStyle(.plain)
-                    .font(DesignTokens.rowValueFont())
+                    .porteosRowValue()
                     .foregroundStyle(DesignTokens.textPrimary)
                     .focused($focused)
                     .onSubmit { if canSave { save() } }
@@ -130,16 +130,16 @@ struct QuickAddSheet: View {
             ForEach(Array(segments.enumerated()), id: \.offset) { idx, segment in
                 if idx > 0 {
                     Text("|")
-                        .font(DesignTokens.metaFont())
+                        .porteosMeta()
                         .foregroundStyle(DesignTokens.dividerStructural)
                         .padding(.horizontal, 8)
                 }
                 HStack(spacing: 4) {
                     Text(segment.label)
-                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                        .porteosMeta()
                         .foregroundStyle(DesignTokens.textDim)
                     Text(segment.value)
-                        .font(DesignTokens.metaFont())
+                        .porteosMeta()
                         .foregroundStyle(DesignTokens.textSecondary)
                 }
             }
@@ -218,7 +218,7 @@ struct QuickAddSheet: View {
             }
         } else {
             Text("Start typing — fields parse automatically")
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
                 .frame(maxWidth: .infinity)
                 .frame(height: DesignTokens.rowHeightPaneBar)
@@ -228,10 +228,10 @@ struct QuickAddSheet: View {
     private var previewHeader: some View {
         HStack {
             Text("porteos@system ~ % ")
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
             Text("parse --result")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
             Spacer()
         }
@@ -249,12 +249,12 @@ struct QuickAddSheet: View {
     private func previewRow(_ key: String, _ value: String, isKnown: Bool) -> some View {
         HStack(spacing: 12) {
             Text(key)
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
                 .frame(width: 120, alignment: .leading)
 
             Text(value)
-                .font(DesignTokens.rowValueFont())
+                .porteosRowValue()
                 .foregroundStyle(isKnown ? DesignTokens.textPrimary : DesignTokens.textDim)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -282,10 +282,10 @@ struct QuickAddSheet: View {
     private func urlRow(_ url: String) -> some View {
         HStack(spacing: 8) {
             Text("URL")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
             Text(url)
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.statusWarn)
                 .lineLimit(1)
                 .truncationMode(.middle)
@@ -301,14 +301,14 @@ struct QuickAddSheet: View {
     private var actionBar: some View {
         HStack(spacing: 12) {
             Text(isURL ? "MODE: URL" : "MODE: TEXT")
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
 
             Spacer()
 
             Button { dismiss() } label: {
                 Text("[ ESC ]")
-                    .font(DesignTokens.rowLabelFont())
+                    .porteosRowLabel()
                     .foregroundStyle(DesignTokens.textDim)
             }
             .buttonStyle(.plain)
@@ -403,10 +403,10 @@ struct QuickAddSheet: View {
     private func derivedChip(_ key: String, _ value: String) -> some View {
         HStack(spacing: 4) {
             Text(key)
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.statusGo.opacity(0.8))
             Text(value)
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.statusGo)
         }
         .padding(.horizontal, 8)

@@ -48,15 +48,14 @@ struct IngestionToastView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text("IMPORTING")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
-                    .tracking(0.08)
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
 
                 Spacer()
 
                 Button { ToastManager.shared.dismiss() } label: {
                     Text("×")
-                        .font(DesignTokens.mono(size: 13))
+                        .porteosRowValue()
                         .foregroundStyle(DesignTokens.textDim)
                 }
                 .buttonStyle(.plain)
@@ -65,7 +64,7 @@ struct IngestionToastView: View {
             .padding(.top, 10)
 
             Text(toast.propertyName.uppercased())
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(DesignTokens.textPrimary)
                 .lineLimit(2)
                 .padding(.horizontal, DesignTokens.blockGutter)
@@ -87,7 +86,7 @@ struct IngestionToastView: View {
             .padding(.top, 10)
 
             Text("\(toast.progressCurrent) of \(toast.progressTotal) documents processed")
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
                 .padding(.horizontal, DesignTokens.blockGutter)
                 .padding(.top, 4)

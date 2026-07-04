@@ -64,21 +64,28 @@ struct TerminalInputField: View {
     private let textPrimary  = DesignTokens.textPrimary
     private let textTertiary = DesignTokens.textDim
 
+    private func adornmentWidth(for text: String) -> CGFloat {
+        let minW: CGFloat = 28
+        let charW: CGFloat = 8.5
+        return max(minW, CGFloat(text.count) * charW + 12)
+    }
+
     // MARK: Body
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label.uppercased())
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
-                .tracking(0.05)
+                .porteosMeta()
                 .foregroundStyle(textTertiary)
 
             HStack(spacing: 0) {
                 if let prefix {
                     Text(prefix)
-                        .font(DesignTokens.rowValueFont())
+                        .porteosRowValue()
                         .foregroundStyle(textTertiary)
-                        .frame(width: 24, height: DesignTokens.rowHeightHeader)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                        .frame(width: adornmentWidth(for: prefix), height: DesignTokens.rowHeightHeader)
                         .background(shellBg)
                         .overlay(alignment: .trailing) {
                             Rectangle().fill(shellBorder).frame(width: DesignTokens.dividerWidth)
@@ -89,9 +96,11 @@ struct TerminalInputField: View {
 
                 if let suffix {
                     Text(suffix)
-                        .font(DesignTokens.rowValueFont())
+                        .porteosRowValue()
                         .foregroundStyle(textTertiary)
-                        .frame(width: 24, height: DesignTokens.rowHeightHeader)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                        .frame(width: adornmentWidth(for: suffix), height: DesignTokens.rowHeightHeader)
                         .background(shellBg)
                         .overlay(alignment: .leading) {
                             Rectangle().fill(shellBorder).frame(width: DesignTokens.dividerWidth)
@@ -111,7 +120,7 @@ struct TerminalInputField: View {
         if let doubleBinding {
             TextField(placeholder, text: $localText)
                 .textFieldStyle(.plain)
-                .font(DesignTokens.rowValueFont())
+                .porteosRowValue()
                 .foregroundStyle(textPrimary)
                 .monospacedDigit()
                 .padding(.horizontal, 8)
@@ -136,7 +145,7 @@ struct TerminalInputField: View {
         } else if let stringBinding {
             TextField(placeholder, text: stringBinding)
                 .textFieldStyle(.plain)
-                .font(DesignTokens.rowValueFont())
+                .porteosRowValue()
                 .foregroundStyle(textPrimary)
                 .monospacedDigit()
                 .padding(.horizontal, 8)

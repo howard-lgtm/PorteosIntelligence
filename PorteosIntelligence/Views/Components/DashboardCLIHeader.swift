@@ -14,10 +14,10 @@ struct DashboardCLIHeader: View {
     var body: some View {
         HStack(spacing: 0) {
             Text("porteos@\(profile.cliHost) ~ % ")
-                .font(DesignTokens.cliPromptFont())
+                .porteosCliPrompt()
                 .foregroundStyle(DesignTokens.textDim)
             Text(profile.dashboardCLI(assetName: asset))
-                .font(DesignTokens.moduleCommandFont())
+                .porteosModuleCmd()
                 .foregroundStyle(accent)
                 .lineLimit(1)
             Spacer()

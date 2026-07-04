@@ -302,14 +302,14 @@ struct AppShell: View {
             Spacer()
             VStack(alignment: .leading, spacing: 8) {
                 Text("porteos@system ~ % ls ./deals")
-                    .font(DesignTokens.cliPromptFont())
+                    .porteosCliPrompt()
                     .foregroundStyle(textTertiary)
                 Text("// no deals found")
-                    .font(DesignTokens.rowValueFont())
+                    .porteosRowValue()
                     .foregroundStyle(textSecondary)
                 Button(action: loadSampleDeal) {
                     Text("[ ./LOAD_SAMPLE_DEAL ]")
-                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
+                        .porteosButtonPrimary()
                         .foregroundStyle(DesignTokens.statusGo)
                 }
                 .buttonStyle(.plain)
@@ -350,10 +350,10 @@ struct AppShell: View {
             Spacer()
             VStack(spacing: 4) {
                 Text("01 // \(wm.activeProfile.displayName)")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
+                    .porteosModuleCmd()
                     .foregroundStyle(wm.activeProfile.accentColor)
                 Text("MODULE NOT YET IMPLEMENTED")
-                    .font(DesignTokens.rowLabelFont())
+                    .porteosRowLabel()
                     .foregroundStyle(textTertiary)
             }
             Spacer()
@@ -372,7 +372,7 @@ struct AppShell: View {
             VStack {
                 Spacer()
                 Text("./INSPECTOR_V2")
-                    .font(DesignTokens.rowLabelFont())
+                    .porteosRowLabel()
                     .foregroundStyle(textTertiary)
                 Spacer()
             }
@@ -397,9 +397,9 @@ struct AppShell: View {
     /// Reattach is handled by DetachedWindowHeader inside the floating window.
     private func detachButton(for pane: WindowManager.PaneType) -> some View {
         Button { wm.detach(pane) } label: {
-            Image(systemName: "arrow.up.left.and.arrow.down.right")
-                .font(.system(size: 11))
-                .foregroundStyle(Color.secondary)
+            Text("[ ↗ ]")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
         }
         .buttonStyle(.plain)
         .padding(8)

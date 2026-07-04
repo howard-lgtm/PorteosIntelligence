@@ -32,18 +32,17 @@ struct DashboardHeroScore: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Text(String(format: "%.0f", score))
-                            .font(DesignTokens.heroScoreFont())
+                            .porteosScoreHero()
                             .monospacedDigit()
                             .foregroundStyle(DesignTokens.textPrimary)
 
                         Text("/ 100")
-                            .font(DesignTokens.metricValueFont())
+                            .porteosMetricValue()
                             .foregroundStyle(DesignTokens.textSecondary)
                     }
 
                     Text(dealName.uppercased())
-                        .font(DesignTokens.metricLabelFont())
-                        .tracking(0.04)
+                        .porteosMetricLabel()
                         .foregroundStyle(DesignTokens.textPrimary)
                         .lineLimit(2)
                         .minimumScaleFactor(0.8)
@@ -52,7 +51,7 @@ struct DashboardHeroScore: View {
                 Spacer(minLength: 8)
 
                 Text(grade)
-                    .font(DesignTokens.heroGradeFont())
+                    .porteosScoreGrade()
                     .foregroundStyle(gradeColor)
                     .frame(width: 48, height: 48)
                     .overlay {

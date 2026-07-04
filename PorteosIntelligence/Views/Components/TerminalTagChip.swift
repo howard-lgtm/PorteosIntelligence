@@ -8,7 +8,7 @@ struct TerminalTagChip: View {
 
     var body: some View {
         Text("[\(name)]")
-            .font(DesignTokens.mono(size: 10, weight: .regular))
+            .porteosMeta()
             .foregroundStyle(DesignTokens.textSecondary)
             .padding(.horizontal, 6)
             .padding(.vertical, 3)

@@ -16,11 +16,11 @@ struct GlobalCommandBar: View {
 
             HStack(spacing: 0) {
                 Text("porteos@system ~ % ")
-                    .font(DesignTokens.cliPromptFont())
+                    .porteosCliPrompt()
                     .foregroundStyle(DesignTokens.textDim)
 
                 TextField("", text: $commandInput)
-                    .font(DesignTokens.cliPromptFont())
+                    .porteosCliPrompt()
                     .foregroundStyle(DesignTokens.textPrimary)
                     .textFieldStyle(.plain)
                     .frame(maxWidth: .infinity)
@@ -29,11 +29,11 @@ struct GlobalCommandBar: View {
                     .padding(.trailing, 8)
 
                 Text("UTF-8")
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
 
                 Text("LN:\(lineCount)")
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
                     .monospacedDigit()
                     .padding(.leading, 8)

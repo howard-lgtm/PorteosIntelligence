@@ -31,8 +31,7 @@ struct TerminalMetricRow: View {
 
             HStack(spacing: 8) {
                 Text(label.uppercased())
-                    .font(DesignTokens.rowLabelFont())
-                    .tracking(0.02)
+                    .porteosRowLabel()
                     .foregroundStyle(DesignTokens.textDim)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -44,7 +43,7 @@ struct TerminalMetricRow: View {
                 }
 
                 Text(value)
-                    .font(DesignTokens.rowValueFont())
+                    .porteosRowValue()
                     .monospacedDigit()
                     .foregroundStyle(state.semanticColor)
             }

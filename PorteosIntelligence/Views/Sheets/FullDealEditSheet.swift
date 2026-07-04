@@ -74,7 +74,7 @@ struct FullDealEditSheet: View {
             Rectangle().fill(shellBorder).frame(height: 1)
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 14) {
                     switch selectedTab {
                     case .base:        baseContent
                     case .realEstate:  realEstateContent
@@ -117,16 +117,16 @@ struct FullDealEditSheet: View {
     private var sheetHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(DesignTokens.cliPromptFont())
+                .porteosCliPrompt()
                 .foregroundStyle(textTertiary)
             Text("deal --edit --asset=\"\(deal.propertyName.isEmpty ? "Untitled" : deal.propertyName)\"")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.cliPrompt, weight: .bold))
+                .porteosModuleCmd()
                 .foregroundStyle(accentRust)
                 .lineLimit(1)
             Spacer()
             Button { dismiss() } label: {
                 Text("[ × ]")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.cliPrompt, weight: .bold))
+                    .porteosModuleCmd()
                     .foregroundStyle(textSecondary)
             }
             .buttonStyle(.plain)
@@ -163,7 +163,7 @@ struct FullDealEditSheet: View {
             VStack(spacing: 0) {
                 Spacer()
                 Text(tab.rawValue)
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: isActive ? .bold : .regular))
+                    .porteosTextStyle(.shellNav(isActive: isActive))
                     .foregroundStyle(isActive ? textPrimary : textTertiary)
                     .padding(.horizontal, 10)
                 Spacer()
@@ -191,7 +191,7 @@ struct FullDealEditSheet: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var baseContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             sectionLabel("IDENTIFICATION")
             TerminalInputField(label: "Property Name", placeholder: "Asset Name", prefix: nil, suffix: nil, text: $deal.propertyName)
                 .focused($focusedField, equals: .propertyName)
@@ -204,11 +204,11 @@ struct FullDealEditSheet: View {
             if showBenchmarkPrompt {
                 HStack(spacing: 12) {
                     Text("porteos@system ~ %")
-                        .font(DesignTokens.metaFont())
+                        .porteosMeta()
                         .foregroundStyle(textTertiary)
 
                     Text("Market benchmarks available for \(pendingBenchmarkCity).")
-                        .font(DesignTokens.rowValueFont())
+                        .porteosRowValue()
                         .foregroundStyle(textPrimary)
 
                     Spacer()
@@ -217,14 +217,14 @@ struct FullDealEditSheet: View {
                         applyBenchmarks()
                         showBenchmarkPrompt = false
                     }
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                    .porteosButtonPrimary()
                     .foregroundStyle(accentRust)
                     .buttonStyle(.plain)
 
                     Button("[ DISMISS ]") {
                         showBenchmarkPrompt = false
                     }
-                    .font(DesignTokens.rowLabelFont())
+                    .porteosRowLabel()
                     .foregroundStyle(textTertiary)
                     .buttonStyle(.plain)
                 }
@@ -264,12 +264,11 @@ struct FullDealEditSheet: View {
     private var notesField: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("NOTES")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
-                .tracking(0.05)
+                .porteosMeta()
                 .foregroundStyle(textTertiary)
 
             TextEditor(text: $deal.notes)
-                .font(DesignTokens.rowValueFont())
+                .porteosRowValue()
                 .foregroundStyle(textPrimary)
                 .scrollContentBackground(.hidden)
                 .padding(8)
@@ -286,7 +285,7 @@ struct FullDealEditSheet: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var realEstateContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             sectionLabel("INCOME", color: accentRust)
             TerminalInputField(label: "Gross Potential Income", placeholder: "0.00", prefix: "€",  suffix: nil, value: $deal.grossPotentialIncome, formatter: currencyFormatter).focused($focusedField, equals: .grossPotentialIncome)
             TerminalInputField(label: "Vacancy Rate",           placeholder: "0.00", prefix: nil,  suffix: "%", value: $deal.vacancyRate, formatter: Self.percentFormatter).focused($focusedField, equals: .vacancyRate)
@@ -318,7 +317,7 @@ struct FullDealEditSheet: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var hospitalityContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             sectionLabel("OPERATIONAL", color: accentTeal)
             TerminalInputField(label: "Room Count",     placeholder: "0",   prefix: nil, suffix: nil, text: intStr($deal.hospitalityRoomCount)).focused($focusedField, equals: .roomCount)
             TerminalInputField(label: "ADR",            placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityADR, formatter: currencyFormatter).focused($focusedField, equals: .adr)
@@ -343,7 +342,7 @@ struct FullDealEditSheet: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var designContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             sectionLabel("SPACE EFFICIENCY", color: accentPurple)
             TerminalInputField(label: "Gross Floor Area (GFA)",  placeholder: "0",   prefix: nil, suffix: "m²", text: numStr($deal.designGFA)).focused($focusedField, equals: .gfa)
             TerminalInputField(label: "Net Internal Area (NIA)", placeholder: "0",   prefix: nil, suffix: "m²", text: numStr($deal.designNIA)).focused($focusedField, equals: .nia)
@@ -375,7 +374,7 @@ struct FullDealEditSheet: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private var circularContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             sectionLabel("MATERIAL FLOW", color: accentBlue)
             TerminalInputField(label: "Total Construction Cost",  placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.circularTotalConstructionCost,  formatter: currencyFormatter).focused($focusedField, equals: .totalConstructionCost)
             TerminalInputField(label: "Repurposed Material Cost", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.circularRepurposedMaterialCost, formatter: currencyFormatter).focused($focusedField, equals: .repurposedMaterialCost)
@@ -402,10 +401,8 @@ struct FullDealEditSheet: View {
         HStack(spacing: 12) {
             Button { dismiss() } label: {
                 Text("[ CANCEL ]")
-                    .font(DesignTokens.rowLabelFont())
-                    .foregroundStyle(textSecondary)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(TerminalButtonStyle(outlined: .muted))
 
             Spacer()
 
@@ -514,21 +511,20 @@ struct FullDealEditSheet: View {
     }
 
     private func sectionLabel(_ text: String, color: Color = DesignTokens.textDim) -> some View {
-        Text(text)
-            .font(DesignTokens.sectionLabelFont())
-            .tracking(0.08)
+        Text("// \(text)")
+            .porteosMeta()
             .foregroundStyle(color)
+            .padding(.top, 4)
     }
 
     private func pickerField<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label.uppercased())
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
-                .tracking(0.05)
+                .porteosMeta()
                 .foregroundStyle(textTertiary)
 
             content()
-                .font(DesignTokens.rowValueFont())
+                .porteosRowValue()
                 .foregroundStyle(textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(height: DesignTokens.rowHeightHeader)

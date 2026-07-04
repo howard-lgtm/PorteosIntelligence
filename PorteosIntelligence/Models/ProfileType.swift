@@ -94,6 +94,9 @@ enum ProfileType: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Left nav pane label (Figma img_00_21 — uppercase, spaced).
+    var shellNavLabel: String { heroProfileTag }
+
     /// Market trend grid profile key for `MarketTrendGridBuilder`.
     var marketTrendProfileKey: String {
         switch self {

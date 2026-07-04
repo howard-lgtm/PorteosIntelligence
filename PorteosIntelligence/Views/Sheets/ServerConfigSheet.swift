@@ -36,10 +36,10 @@ struct ServerConfigSheet: View {
     private var header: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(DesignTokens.mono(size: 11))
+                .porteosRowLabel()
                 .foregroundStyle(DesignTokens.textDim)
             Text("deal_ingestion_server --config")
-                .font(DesignTokens.mono(size: 11, weight: .bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(DesignTokens.accentRust)
             Spacer()
             HStack(spacing: 5) {
@@ -47,7 +47,7 @@ struct ServerConfigSheet: View {
                     .fill(srv.isRunning ? DesignTokens.statusGo : DesignTokens.textDim)
                     .frame(width: 5, height: 5)
                 Text(srv.isRunning ? "RUNNING" : "STOPPED")
-                    .font(DesignTokens.mono(size: 10))
+                    .porteosMeta()
                     .foregroundStyle(srv.isRunning ? DesignTokens.statusGo : DesignTokens.textDim)
             }
             .padding(.horizontal, 8).padding(.vertical, 3)
@@ -55,7 +55,7 @@ struct ServerConfigSheet: View {
             .clipShape(Rectangle())
             Button { dismiss() } label: {
                 Text("[ CLOSE ]")
-                    .font(DesignTokens.mono(size: 10))
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
             }
             .buttonStyle(.plain)
@@ -86,11 +86,11 @@ struct ServerConfigSheet: View {
                     TerminalStructuralDivider()
                     HStack {
                         Text("ERROR")
-                            .font(DesignTokens.sectionLabelFont())
+                            .porteosModuleCmd()
                             .foregroundStyle(DesignTokens.textDim)
                             .frame(width: 100, alignment: .leading)
                         Text(err)
-                            .font(DesignTokens.mono(size: 10))
+                            .porteosMeta()
                             .foregroundStyle(DesignTokens.statusCritical)
                             .lineLimit(3)
                         Spacer()
@@ -108,22 +108,22 @@ struct ServerConfigSheet: View {
         TerminalBlock(command: "02 // CONFIGURATION", accentColor: DesignTokens.accentRust, contentPadding: 12) {
             HStack {
                 Text("PORT")
-                    .font(DesignTokens.sectionLabelFont())
+                    .porteosModuleCmd()
                     .foregroundStyle(DesignTokens.textDim)
                     .frame(width: 100, alignment: .leading)
                 TextField("9000", text: $portString)
                     .textFieldStyle(.plain)
-                    .font(DesignTokens.mono(size: 11))
+                    .porteosRowLabel()
                     .foregroundStyle(DesignTokens.textPrimary)
                     .frame(width: 80)
                 if let err = portError {
                     Text(err)
-                        .font(DesignTokens.mono(size: 9))
+                        .porteosMeta()
                         .foregroundStyle(DesignTokens.statusCritical)
                 }
                 Spacer()
                 Text("1024–65535")
-                    .font(DesignTokens.mono(size: 9))
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
             }
             .frame(height: DesignTokens.rowHeightData)
@@ -147,20 +147,27 @@ struct ServerConfigSheet: View {
     }
 
     private func endpointRow(method: String, path: String, note: String) -> some View {
-        HStack(spacing: 8) {
+        HStack(alignment: .top, spacing: 8) {
             Text(method)
-                .font(DesignTokens.mono(size: 9, weight: .bold))
+                .porteosMeta()
                 .foregroundStyle(methodColor(method))
                 .frame(width: 32, alignment: .leading)
-            Text("localhost:\(srv.port)\(path)")
-                .font(DesignTokens.mono(size: 10))
-                .foregroundStyle(DesignTokens.textPrimary)
-            Spacer()
-            Text(note)
-                .font(DesignTokens.mono(size: 9))
-                .foregroundStyle(DesignTokens.textDim)
+                .padding(.top, 2)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("localhost:\(srv.port)\(path)")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textPrimary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                Text(note)
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
         }
-        .frame(height: DesignTokens.rowHeightData)
+        .padding(.vertical, 4)
+        .frame(minHeight: DesignTokens.rowHeightData)
     }
 
     private func methodColor(_ method: String) -> Color {
@@ -215,23 +222,23 @@ Content-Type: application/json
     private func logRow(_ log: IngestLog) -> some View {
         HStack(spacing: 6) {
             Text(shortTime(log.timestamp))
-                .font(DesignTokens.mono(size: 9))
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
                 .frame(width: 44, alignment: .leading)
             Text(log.method)
-                .font(DesignTokens.mono(size: 9, weight: .bold))
+                .porteosMeta()
                 .foregroundStyle(methodColor(log.method))
                 .frame(width: 32, alignment: .leading)
             Text(String(log.statusCode))
-                .font(DesignTokens.mono(size: 9))
+                .porteosMeta()
                 .foregroundStyle(log.statusCode < 300 ? DesignTokens.statusGo : DesignTokens.statusCritical)
                 .frame(width: 28, alignment: .leading)
             Text(log.source)
-                .font(DesignTokens.mono(size: 9))
+                .porteosMeta()
                 .foregroundStyle(ProfileType.circular.accentColor)
                 .frame(width: 72, alignment: .leading)
             Text(log.dealName)
-                .font(DesignTokens.mono(size: 9))
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textSecondary)
                 .lineLimit(1)
             Spacer()
@@ -265,7 +272,7 @@ Content-Type: application/json
 
     private func note(_ text: String) -> some View {
         Text(text)
-            .font(DesignTokens.mono(size: 9))
+            .porteosMeta()
             .foregroundStyle(DesignTokens.textDim)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 1)
@@ -273,7 +280,7 @@ Content-Type: application/json
 
     private func codeBlock(_ text: String) -> some View {
         Text(text)
-            .font(DesignTokens.mono(size: 9))
+            .porteosMeta()
             .foregroundStyle(DesignTokens.textSecondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(8)

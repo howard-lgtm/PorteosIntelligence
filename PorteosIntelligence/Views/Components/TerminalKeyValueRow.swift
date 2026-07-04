@@ -19,14 +19,13 @@ struct TerminalKeyValueRow: View {
                 }
 
                 Text(label.uppercased())
-                    .font(DesignTokens.sectionLabelFont())
-                    .tracking(0.08)
+                    .porteosModuleCmd()
                     .foregroundStyle(DesignTokens.textDim)
                     .frame(width: labelColumnWidth(in: geo.size.width), alignment: .leading)
                     .lineLimit(1)
 
                 Text(value)
-                    .font(DesignTokens.primaryMetricFont())
+                    .porteosMetricValue()
                     .monospacedDigit()
                     .foregroundStyle(state.semanticColor)
                     .frame(maxWidth: .infinity, alignment: .trailing)

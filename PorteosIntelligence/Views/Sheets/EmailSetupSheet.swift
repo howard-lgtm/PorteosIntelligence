@@ -85,14 +85,14 @@ struct EmailSetupSheet: View {
     private var header: some View {
         HStack(spacing: 0) {
             Text("EMAIL_ALERT_MONITOR")
-                .font(.custom("JetBrains Mono", size: 11))
+                .porteosRowLabel()
                 .foregroundColor(textTertiary)
             Spacer()
             Button {
                 dismiss()
             } label: {
                 Text("[ CLOSE ]")
-                    .font(.custom("JetBrains Mono", size: 10))
+                    .porteosMeta()
                     .foregroundColor(textTertiary)
             }
             .buttonStyle(.plain)
@@ -111,7 +111,7 @@ struct EmailSetupSheet: View {
                 row("EMAIL") {
                     TextField("user@example.com", text: $email)
                         .textFieldStyle(.plain)
-                        .font(.custom("JetBrains Mono", size: 11))
+                        .porteosRowLabel()
                         .foregroundColor(textPrimary)
                         .autocorrectionDisabled()
                 }
@@ -119,7 +119,7 @@ struct EmailSetupSheet: View {
                 row("PASSWORD") {
                     SecureField("App password or token", text: $password)
                         .textFieldStyle(.plain)
-                        .font(.custom("JetBrains Mono", size: 11))
+                        .porteosRowLabel()
                         .foregroundColor(textPrimary)
                 }
                 // Gmail note
@@ -128,7 +128,7 @@ struct EmailSetupSheet: View {
                         Image(systemName: "info.circle")
                             .font(.system(size: 10))
                         Text("Gmail requires an App Password (myaccount.google.com > Security > App Passwords)")
-                            .font(.custom("JetBrains Mono", size: 9))
+                            .porteosMeta()
                     }
                     .foregroundColor(accentAmber)
                     .padding(.top, 4)
@@ -145,13 +145,13 @@ struct EmailSetupSheet: View {
                     Picker("", selection: $selectedPreset) {
                         ForEach(Array(IMAPCredentials.presets.enumerated()), id: \.0) { idx, preset in
                             Text(preset.label)
-                                .font(.custom("JetBrains Mono", size: 11))
+                                .porteosRowLabel()
                                 .tag(idx)
                         }
                     }
                     .labelsHidden()
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .porteosRowLabel()
                 }
                 // Custom host field — only visible when "Custom" is selected
                 if IMAPCredentials.presets[selectedPreset].host.isEmpty {
@@ -159,7 +159,7 @@ struct EmailSetupSheet: View {
                     row("IMAP_HOST") {
                         TextField("imap.example.com", text: $customHost)
                             .textFieldStyle(.plain)
-                            .font(.custom("JetBrains Mono", size: 11))
+                            .porteosRowLabel()
                             .foregroundColor(textPrimary)
                             .autocorrectionDisabled()
                     }
@@ -168,7 +168,7 @@ struct EmailSetupSheet: View {
                 row("PORT") {
                     TextField("993", text: $port)
                         .textFieldStyle(.plain)
-                        .font(.custom("JetBrains Mono", size: 11))
+                        .porteosRowLabel()
                         .foregroundColor(textPrimary)
                         .frame(maxWidth: 60, alignment: .trailing)
                 }
@@ -176,7 +176,7 @@ struct EmailSetupSheet: View {
                 row("FOLDER") {
                     TextField("INBOX", text: $folder)
                         .textFieldStyle(.plain)
-                        .font(.custom("JetBrains Mono", size: 11))
+                        .porteosRowLabel()
                         .foregroundColor(textPrimary)
                         .autocorrectionDisabled()
                 }
@@ -187,7 +187,7 @@ struct EmailSetupSheet: View {
                         Task { await runTest() }
                     } label: {
                         Text(isTesting ? "[ TESTING… ]" : "[ TEST_CONNECTION ]")
-                            .font(.custom("JetBrains Mono", size: 10))
+                            .porteosMeta()
                             .foregroundColor(isTesting ? textTertiary : accentRust)
                     }
                     .buttonStyle(.plain)
@@ -195,7 +195,7 @@ struct EmailSetupSheet: View {
 
                     if let result = testResult {
                         Text(result)
-                            .font(.custom("JetBrains Mono", size: 9))
+                            .porteosMeta()
                             .foregroundColor(result.hasPrefix("CONNECTION_OK") ? accentGreen : accentRed)
                             .lineLimit(2)
                             .frame(maxWidth: .infinity, alignment: .trailing)
@@ -218,16 +218,16 @@ struct EmailSetupSheet: View {
                         Text("4 hr").tag(240)
                     }
                     .labelsHidden()
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .porteosRowLabel()
                 }
                 Rectangle().fill(shellBorder).frame(height: 1)
                 HStack {
                     Text("PARSERS")
-                        .font(.custom("JetBrains Mono", size: 10))
+                        .porteosMeta()
                         .foregroundColor(textTertiary)
                         .frame(width: 96, alignment: .leading)
                     Text("Idealista  ·  Zillow  ·  Hemnet  ·  Generic")
-                        .font(.custom("JetBrains Mono", size: 10))
+                        .porteosMeta()
                         .foregroundColor(textSecondary)
                     Spacer()
                 }
@@ -253,30 +253,30 @@ struct EmailSetupSheet: View {
             VStack(spacing: 4) {
                 row("MONITORING") {
                     Text(ems.isMonitoring ? "ACTIVE" : "STOPPED")
-                        .font(.custom("JetBrains Mono", size: 11))
+                        .porteosRowLabel()
                         .foregroundColor(ems.isMonitoring ? accentGreen : textTertiary)
                 }
                 Rectangle().fill(shellBorder).frame(height: 1)
                 row("LAST_CHECK") {
                     Text(ems.lastCheckDate.map { formatDate($0) } ?? "—")
-                        .font(.custom("JetBrains Mono", size: 11))
+                        .porteosRowLabel()
                         .foregroundColor(textSecondary)
                 }
                 Rectangle().fill(shellBorder).frame(height: 1)
                 row("IMPORTS_TODAY") {
                     Text("\(ems.newImportCount)")
-                        .font(.custom("JetBrains Mono", size: 11))
+                        .porteosRowLabel()
                         .foregroundColor(ems.newImportCount > 0 ? accentGreen : textSecondary)
                 }
                 if let err = ems.errorMessage {
                     Rectangle().fill(shellBorder).frame(height: 1)
                     HStack {
                         Text("LAST_ERROR")
-                            .font(.custom("JetBrains Mono", size: 10))
+                            .porteosMeta()
                             .foregroundColor(textTertiary)
                             .frame(width: 96, alignment: .leading)
                         Text(err)
-                            .font(.custom("JetBrains Mono", size: 9))
+                            .porteosMeta()
                             .foregroundColor(accentRed)
                             .lineLimit(3)
                     }
@@ -298,7 +298,7 @@ struct EmailSetupSheet: View {
                     }
                 } label: {
                     Text(ems.isMonitoring ? "[ STOP_MONITOR ]" : "[ START_MONITOR ]")
-                        .font(.custom("JetBrains Mono", size: 11))
+                        .porteosRowLabel()
                         .foregroundColor(ems.isMonitoring ? accentAmber : accentGreen)
                         .frame(height: 32)
                         .padding(.horizontal, 12)
@@ -311,7 +311,7 @@ struct EmailSetupSheet: View {
                     Task { await ems.checkNow() }
                 } label: {
                     Text(ems.isCheckingNow ? "[ CHECKING… ]" : "[ CHECK_NOW ]")
-                        .font(.custom("JetBrains Mono", size: 11))
+                        .porteosRowLabel()
                         .foregroundColor(ems.isCheckingNow ? textTertiary : textSecondary)
                         .frame(height: 32)
                         .padding(.horizontal, 12)
@@ -327,7 +327,7 @@ struct EmailSetupSheet: View {
                     clearForm()
                 } label: {
                     Text("[ DISCONNECT ]")
-                        .font(.custom("JetBrains Mono", size: 11))
+                        .porteosRowLabel()
                         .foregroundColor(accentRed)
                         .frame(height: 32)
                         .padding(.horizontal, 12)
@@ -341,7 +341,7 @@ struct EmailSetupSheet: View {
 
             if let err = saveError {
                 Text(err)
-                    .font(.custom("JetBrains Mono", size: 9))
+                    .porteosMeta()
                     .foregroundColor(accentRed)
             }
 
@@ -349,7 +349,7 @@ struct EmailSetupSheet: View {
                 save()
             } label: {
                 Text(didSave ? "[ SAVED ✓ ]" : "[ SAVE_CONFIG ]")
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .porteosRowLabel()
                     .foregroundColor(canSave ? textPrimary : textTertiary)
                     .frame(height: 32)
                     .padding(.horizontal, 12)
@@ -373,7 +373,7 @@ struct EmailSetupSheet: View {
     private func row<V: View>(_ label: String, @ViewBuilder content: () -> V) -> some View {
         HStack {
             Text(label)
-                .font(.custom("JetBrains Mono", size: 10))
+                .porteosMeta()
                 .foregroundColor(textTertiary)
                 .frame(width: 96, alignment: .leading)
             content()
@@ -383,7 +383,7 @@ struct EmailSetupSheet: View {
 
     private func note(_ text: String) -> some View {
         Text(text)
-            .font(.custom("JetBrains Mono", size: 10))
+            .porteosMeta()
             .foregroundColor(textTertiary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 1)

@@ -58,7 +58,7 @@ struct TerminalButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(DesignTokens.mono(size: fontSize, weight: .bold))
+            .porteosTextStyle(.buttonPrimary)
             .padding(.horizontal, 10)
             .frame(height: height)
             .foregroundStyle(foregroundColor)

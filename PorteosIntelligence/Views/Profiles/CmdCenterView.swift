@@ -243,10 +243,10 @@ struct CmdCenterView: View {
     private var crmEmptyState: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("NO ACTIVE PIPELINE DEALS")
-                .font(DesignTokens.metricLabelFont())
+                .porteosMetricLabel()
                 .foregroundStyle(DesignTokens.textDim)
             Text("Deals in Pipeline or Under Review appear here for outreach tracking.")
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textSecondary)
         }
         .padding(DesignTokens.metricCellPadding)
@@ -273,31 +273,31 @@ struct CmdCenterView: View {
     private func crmDealRow(_ deal: PropertyDeal) -> some View {
         HStack(spacing: 0) {
             Text(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)
-                .font(DesignTokens.rowValueFont())
+                .porteosRowValue()
                 .foregroundStyle(DesignTokens.textPrimary)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Text(deal.locationCity.isEmpty ? "—" : deal.locationCity.uppercased())
-                .font(DesignTokens.rowLabelFont())
+                .porteosRowLabel()
                 .foregroundStyle(DesignTokens.textSecondary)
                 .lineLimit(1)
                 .frame(width: 88, alignment: .leading)
 
             Text(eur(deal.purchasePrice))
-                .font(DesignTokens.rowValueFont())
+                .porteosRowValue()
                 .monospacedDigit()
                 .foregroundStyle(DesignTokens.textPrimary)
                 .lineLimit(1)
                 .frame(width: 96, alignment: .trailing)
 
             Text(deal.status.rawValue.uppercased())
-                .font(DesignTokens.rowLabelFont())
+                .porteosRowLabel()
                 .foregroundStyle(statusColor(deal.status))
                 .frame(width: 72, alignment: .center)
 
             Text(relativeDate(deal.updatedAt))
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
                 .frame(width: 88, alignment: .trailing)
         }
@@ -310,14 +310,12 @@ struct CmdCenterView: View {
         Group {
             if let width {
                 Text(title)
-                    .font(DesignTokens.metaFont())
-                    .tracking(0.06)
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
                     .frame(width: width, alignment: alignment)
             } else {
                 Text(title)
-                    .font(DesignTokens.metaFont())
-                    .tracking(0.06)
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
                     .frame(maxWidth: .infinity, alignment: alignment)
             }
@@ -346,18 +344,18 @@ struct CmdCenterView: View {
     private func activityRow(_ deal: PropertyDeal) -> some View {
         HStack(spacing: 0) {
             Text(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)
-                .font(DesignTokens.rowValueFont())
+                .porteosRowValue()
                 .foregroundStyle(DesignTokens.textPrimary)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Text(deal.status.rawValue.uppercased())
-                .font(DesignTokens.rowLabelFont())
+                .porteosRowLabel()
                 .foregroundStyle(statusColor(deal.status))
                 .frame(width: 80, alignment: .center)
 
             Text(deal.updatedAt, style: .date)
-                .font(DesignTokens.metaFont())
+                .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
                 .frame(width: 96, alignment: .trailing)
         }
@@ -400,11 +398,11 @@ struct CmdCenterView: View {
                     TerminalStructuralDivider()
                     HStack(spacing: 8) {
                         Text("SERVER_ERR")
-                            .font(DesignTokens.metaFont())
+                            .porteosMeta()
                             .foregroundStyle(DesignTokens.textDim)
                             .frame(width: 120, alignment: .leading)
                         Text(err)
-                            .font(DesignTokens.metaFont())
+                            .porteosMeta()
                             .foregroundStyle(DesignTokens.statusCritical)
                             .lineLimit(2)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -430,7 +428,7 @@ struct CmdCenterView: View {
     ) -> some View {
         HStack(spacing: 8) {
             Text(label)
-                .font(DesignTokens.rowLabelFont())
+                .porteosRowLabel()
                 .foregroundStyle(DesignTokens.textDim)
                 .frame(width: 140, alignment: .leading)
 
@@ -439,7 +437,7 @@ struct CmdCenterView: View {
                 .frame(width: 6, height: 6)
 
             Text(detail)
-                .font(DesignTokens.rowValueFont())
+                .porteosRowValue()
                 .foregroundStyle(isActive ? DesignTokens.statusGo : DesignTokens.textDim)
                 .lineLimit(1)
 
@@ -448,7 +446,7 @@ struct CmdCenterView: View {
             if let action, let onAction {
                 Button(action: onAction) {
                     Text(action)
-                        .font(DesignTokens.metaFont())
+                        .porteosMeta()
                         .foregroundStyle(actionColor)
                 }
                 .buttonStyle(.plain)
@@ -466,13 +464,13 @@ struct CmdCenterView: View {
             Spacer()
             VStack(spacing: 8) {
                 Text("porteos@system ~ % ls ./deals")
-                    .font(DesignTokens.cliPromptFont())
+                    .porteosCliPrompt()
                     .foregroundStyle(DesignTokens.textDim)
                 Text("No deals in portfolio")
-                    .font(DesignTokens.rowValueFont())
+                    .porteosRowValue()
                     .foregroundStyle(DesignTokens.textSecondary)
                 Text("Click [ ./NEW_DEAL ] or [ ./IMPORT_DEALS ] to begin")
-                    .font(DesignTokens.cliPromptFont())
+                    .porteosCliPrompt()
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             Spacer()

@@ -90,7 +90,7 @@ struct InspectorPane: View {
     private var paneHeader: some View {
         VStack(spacing: 0) {
             Text("./INSPECTOR_V2")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue))
+                .porteosRowLabel()
                 .foregroundStyle(textTertiary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, DesignTokens.blockGutter)
@@ -101,10 +101,10 @@ struct InspectorPane: View {
             HStack(spacing: 8) {
                 Button { showFullEditSheet = true } label: {
                     Text("[ EDIT DEAL DATA ]")
-                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
+                        .porteosButtonPrimary()
                         .foregroundStyle(shellBg)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 28)
+                        .frame(height: DesignTokens.rowHeightData)
                         .background(accentRust)
                         .clipShape(Rectangle())
                 }
@@ -112,9 +112,9 @@ struct InspectorPane: View {
 
                 Button { showingPDFReport = true } label: {
                     Text("[ PDF ]")
-                        .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
+                        .porteosButtonPrimary()
                         .foregroundStyle(accentRust)
-                        .frame(width: 64, height: 28)
+                        .frame(width: 64, height: DesignTokens.rowHeightData)
                         .background(accentRust.opacity(0.08))
                         .overlay(
                             Rectangle()
@@ -137,7 +137,7 @@ struct InspectorPane: View {
         HStack(spacing: 0) {
             Button { performUndo() } label: {
                 Text("[ UNDO ]")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                    .porteosButtonPrimary()
                     .foregroundStyle(history.canUndo ? textSecondary : textTertiary.opacity(0.35))
             }
             .buttonStyle(.plain)
@@ -146,7 +146,7 @@ struct InspectorPane: View {
 
             if history.canUndo {
                 Text(history.undoLabel)
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(textTertiary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -157,7 +157,7 @@ struct InspectorPane: View {
 
             if history.canRedo {
                 Text(history.redoLabel)
-                    .font(DesignTokens.metaFont())
+                    .porteosMeta()
                     .foregroundStyle(textTertiary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -166,7 +166,7 @@ struct InspectorPane: View {
 
             Button { performRedo() } label: {
                 Text("[ REDO ]")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel, weight: .bold))
+                    .porteosButtonPrimary()
                     .foregroundStyle(history.canRedo ? textSecondary : textTertiary.opacity(0.35))
             }
             .buttonStyle(.plain)
@@ -213,7 +213,7 @@ struct InspectorPane: View {
                 Spacer()
 
                 Text("[\(title)]")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: isActive ? .bold : .regular))
+                    .porteosButtonPrimary()
                     .foregroundStyle(isActive ? textPrimary : textTertiary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 4)
@@ -261,8 +261,7 @@ struct InspectorPane: View {
     private var founderLensSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("// FOUNDER_LENS")
-                .font(DesignTokens.sectionLabelFont())
-                .tracking(0.08)
+                .porteosMeta()
                 .foregroundStyle(textTertiary)
                 .padding(.horizontal, DesignTokens.blockGutter)
                 .padding(.top, 12)
@@ -285,10 +284,10 @@ struct InspectorPane: View {
         } label: {
             HStack(spacing: 6) {
                 Text(isActive ? "(•)" : marker)
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
+                    .porteosRowLabel()
                     .foregroundStyle(isActive ? accentRust : textTertiary)
                 Text(label)
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+                    .porteosMeta()
                     .foregroundStyle(isActive ? textPrimary : textTertiary)
             }
         }
@@ -302,8 +301,7 @@ struct InspectorPane: View {
     private var tagRepositorySection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("// TAG_REPOSITORY")
-                .font(DesignTokens.sectionLabelFont())
-                .tracking(0.08)
+                .porteosMeta()
                 .foregroundStyle(textTertiary)
                 .padding(.horizontal, DesignTokens.blockGutter)
                 .padding(.top, 8)
@@ -338,17 +336,16 @@ struct InspectorPane: View {
         accentColor: Color,
         key: String
     ) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DesignTokens.blockGutter) {
             HStack {
                 Text(label.uppercased())
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
-                    .tracking(0.08)
+                    .porteosMetricLabel()
                     .foregroundStyle(textTertiary)
 
                 Spacer()
 
-                Text("\(value, specifier: "%.1f")%")
-                    .font(DesignTokens.metricValueFont())
+                Text("\(value, specifier: "%.0f") %")
+                    .porteosMetricValue()
                     .monospacedDigit()
                     .foregroundStyle(textPrimary)
             }
@@ -358,7 +355,7 @@ struct InspectorPane: View {
             }
         }
         .padding(.horizontal, DesignTokens.blockGutter)
-        .padding(.vertical, 12)
+        .padding(.vertical, DesignTokens.blockGutter)
     }
 
     private var totalRow: some View {
@@ -369,14 +366,13 @@ struct InspectorPane: View {
 
         return HStack {
             Text("TOTAL")
-                .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowValue, weight: .bold))
-                .tracking(0.08)
+                .porteosMetricLabel()
                 .foregroundStyle(textTertiary)
 
             Spacer()
 
             Text("\(total, specifier: "%.1f")%")
-                .font(DesignTokens.metricValueFont())
+                .porteosMetricValue()
                 .monospacedDigit()
                 .foregroundStyle(abs(total - 100) < 0.01 ? textPrimary : DesignTokens.statusCritical)
         }

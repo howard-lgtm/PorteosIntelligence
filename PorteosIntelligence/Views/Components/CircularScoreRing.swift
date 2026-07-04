@@ -22,7 +22,6 @@ struct CircularScoreRing: View {
     // MARK: Derived
 
     private var clampedFraction: Double { max(0, min(1, score / 100)) }
-    private var numberSize: CGFloat { size >= 180 ? 48 : 24 }
     private let strokeWidth: CGFloat = 4
 
     // MARK: Body
@@ -46,13 +45,12 @@ struct CircularScoreRing: View {
             // Center content
             VStack(spacing: 2) {
                 Text(String(format: "%.0f", score))
-                    .font(DesignTokens.mono(size: numberSize, weight: .bold))
+                    .font(size >= 180 ? DesignTokens.TypeScale.scoreHero : DesignTokens.TypeScale.scoreGrade)
                     .monospacedDigit()
                     .foregroundStyle(textPrimary)
 
                 Text(label.uppercased())
-                    .font(DesignTokens.rowLabelFont())
-                    .tracking(0.08)
+                    .porteosMeta()
                     .foregroundStyle(textTertiary)
             }
         }

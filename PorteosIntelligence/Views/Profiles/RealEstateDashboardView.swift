@@ -209,15 +209,14 @@ struct RealEstateDashboardView: View {
     ) -> some View {
         HStack(spacing: 10) {
             Text(label.uppercased())
-                .font(DesignTokens.metricLabelFont())
-                .tracking(0.02)
+                .porteosMetricLabel()
                 .foregroundStyle(DesignTokens.textDim)
                 .frame(width: 48, alignment: .leading)
 
             TerminalSegmentBar(fillRatio: fillRatio, barColor: barColor)
 
             Text(value)
-                .font(DesignTokens.metricValueFont())
+                .porteosMetricValue()
                 .monospacedDigit()
                 .foregroundStyle(state.semanticColor)
                 .frame(minWidth: 56, alignment: .trailing)
@@ -261,13 +260,13 @@ struct RealEstateDashboardView: View {
             Spacer()
             VStack(spacing: 8) {
                 Text("porteos@system ~ % ls ./deals")
-                    .font(DesignTokens.cliPromptFont())
+                    .porteosCliPrompt()
                     .foregroundStyle(DesignTokens.textDim)
                 Text("No real estate data")
-                    .font(DesignTokens.rowValueFont())
+                    .porteosRowValue()
                     .foregroundStyle(DesignTokens.textSecondary)
                 Text("Click [ ./EDIT_DEAL ] to add financials")
-                    .font(DesignTokens.mono(size: DesignTokens.TypeScale.rowLabel))
+                    .porteosRowLabel()
                     .foregroundStyle(DesignTokens.textSecondary)
             }
             Spacer()

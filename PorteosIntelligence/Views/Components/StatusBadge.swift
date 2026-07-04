@@ -27,7 +27,7 @@ struct StatusBadge: View {
 
     var body: some View {
         Text(text.uppercased())
-            .font(DesignTokens.mono(size: DesignTokens.TypeScale.meta, weight: .bold))
+            .porteosMeta()
             .foregroundStyle(semanticColor)
             .padding(.horizontal, 4)
             .padding(.vertical, 2)
