@@ -12,9 +12,11 @@
 
 | Date | Area | Observation | Severity | Promoted ID |
 |------|------|-------------|----------|-------------|
-| | | | | |
-| | | | | |
-| | | | | |
+| 2026-07-05 | Email monitor | TEST_CONNECTION OK (Gmail app password works); CHECK_NOW fails curl exit **100** on `SEARCH UNSEEN` | major | P6-17 |
+| 2026-07-05 | Browser import | Casa Guerra Junqueiro — purchase price **€0.00**; price not pulled from listing | major | P7-05 |
+| 2026-07-05 | Full Edit — Base | Browser import notes show `Source: BROWSER_EXTENSION` only; **listing URL not visible** in edit UI | minor | P7-06 |
+| 2026-07-05 | Email Setup | Need **show/hide password** toggle on app-password field | minor | P6-19 |
+| 2026-07-05 | PDF Report | **Black & white mode** toggle present but output not built out | minor | P3-07 |
 
 **Severity:** blocker · major · minor · cosmetic · idea
 
@@ -74,6 +76,7 @@
 | P2-05 | Footer cancel | `[ CANCEL ]` outlined | `[x]` | |
 | P2-06 | Sheet chrome | macOS rounded sheet corners | `[ ]` | `.presentationBackground` / overlay pattern |
 | P2-07 | Legacy sheets | Deprecate or align `EditDealSheet` / `NewDealSheet` / `QuickAddDealSheet` | `[ ]` | Confirm wiring vs Figma sheets |
+| P2-08 | Full Edit — Base | **Source URL field** — browser/email imports store URL in notes; expose as dedicated row (link or copy) in BASE tab, not buried in NOTES blob | `[ ]` | Casa Guerra Junqueiro; see P7-06 |
 
 ---
 
@@ -85,8 +88,9 @@
 | P3-02 | Sheet chrome | Rounded corners | `[ ]` |
 | P3-03 | PDF cover output | Overlap | `[x]` |
 | P3-04 | PDF page 3+ | Field mapping (e.g. GFA `400000 m²`) | `[ ]` | Data vs display |
-| P3-05 | B&W mode | Untested output | `[ ]` | Smoke test toggle |
+| P3-05 | B&W mode | Untested output | `[ ]` | Superseded by P3-07 build-out |
 | P3-06 | External share | Cover KPI spacing OK for send-out | `[ ]` | Re-verify after wild PDFs |
+| P3-07 | **B&W mode build-out** | Toggle exists in `PDFReportSheet` but output not fully implemented — user note: “Need to build this out”. Wire `blackAndWhite` through `PDFReportGenerator`; verify print-safe contrast. | `[ ]` | Wild-use 2026-07-05 |
 
 ---
 
@@ -95,7 +99,7 @@
 | ID | Surface | Issue | Status |
 |----|---------|-------|--------|
 | P4-01 | Server Config / Ingestion panel | Typography migrated; layout pass | `[~]` | Post-typography sweep |
-| P4-02 | Email Setup / Ingestion panel | Same | `[~]` | |
+| P4-02 | Email Setup / Ingestion panel | Same | `[~]` | + P6-19 show password |
 | P4-03 | Settings | Legacy layout pass | `[ ]` | `SettingsView` |
 | P4-04 | Command palette / shortcuts legend | Visual parity | `[ ]` | Low priority |
 
@@ -143,7 +147,10 @@
 
 | ID | Task | Status |
 |----|------|--------|
-| P6-10 | Wild-test IMAP with real Gmail + 10 broker emails | `[ ]` |
+| P6-19 | **Show/hide password** toggle on `EmailSetupSheet` app-password field (verify paste, no Keychain plain-text log) | `[ ]` | Wild-use 2026-07-05 |
+| P6-17 | **Fix CHECK_NOW curl exit 100** — `EmailMonitorService.fetchAndImport` uses `curl -X SEARCH UNSEEN`; fails after TEST OK. Replace with bounded fetch (recent UIDs / `--list-only` + cap 50) or native IMAP; surface curl stderr in UI. Workaround: dedicated Gmail label + smaller unread set. | `[ ]` **next** |
+| P6-18 | Improve IMAP error messages — map exit 67 → “login denied / check app password”, 100 → “inbox query too large or unsupported” | `[ ]` |
+| P6-10 | Wild-test IMAP with real Gmail + 10 broker emails | `[~]` | Auth OK 2026-07-05; blocked on P6-17 |
 | P6-11 | Parser golden fixtures per broker template | `[ ]` |
 | P6-12 | Batch triage integration for email imports | `[ ]` |
 | P6-13 | Badge / toast parity with HTTP ingestion | `[ ]` |
@@ -163,10 +170,12 @@
 
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
-| P7-01 | Localhost server stable under sandbox | `[ ]` | Wild test |
+| P7-01 | Localhost server stable under sandbox | `[x]` | Working 2026-07-05 (port conflict if multi-instance) |
 | P7-02 | Extension POST payload schema documented | `[ ]` | Match `DealIngestionServer` |
 | P7-03 | Idealista / Zillow / Hemnet DOM drift | `[ ]` | Per-site maintenance |
 | P7-04 | Extension icons + Chrome Web Store | `[—]` | If public distribution |
+| P7-05 | **Pull purchase price from listing** — browser extension import landed Casa Guerra Junqueiro at **€0.00**; fix `content.js` scrape + `DealIngestionPayload.purchasePrice` mapping | `[ ]` | Wild-use 2026-07-05 |
+| P7-06 | **Source URL in deal model/UI** — URL written to notes today; add first-class field or BASE tab row so imports are traceable without parsing NOTES | `[ ]` | See P2-08 |
 
 ---
 
@@ -193,12 +202,16 @@
 
 ## Recommended fix order (when you return)
 
-1. **Wild-use log** → new P0s
-2. **P6 email feed** — if inbox intake is top priority
-3. **P1-04, P1-05, P2** — visual finish to match Template Picker
-4. **P3** — PDF trust for external sharing
-5. **PKG-04–07** — if handing app to another machine
-6. **P7** — only if still using browser extension over email
+1. **P6-17** — email CHECK_NOW exit 100 (credentials work; fetch pipeline broken)
+2. **P7-05, P7-06 / P2-08** — browser import price + source URL (wild-use on Idealista)
+3. **Wild-use log** → new P0s
+4. **P6-19** — email show-password toggle
+5. **P3-07** — PDF B&W mode build-out
+6. **P6** remainder — if inbox intake is top priority
+7. **P1-04, P1-05, P2** — visual finish to match Template Picker
+8. **P3** — PDF trust for external sharing
+9. **PKG-04–07** — if handing app to another machine
+10. **P7-03** — extension DOM maintenance
 
 ---
 
