@@ -17,6 +17,8 @@
 | 2026-07-05 | Full Edit — Base | Browser import notes show `Source: BROWSER_EXTENSION` only; **listing URL not visible** in edit UI | minor | P7-06 |
 | 2026-07-05 | Email Setup | Need **show/hide password** toggle on app-password field | minor | P6-19 |
 | 2026-07-05 | PDF Report | **Black & white mode** toggle present but output not built out | minor | P3-07 |
+| 2026-07-05 | Navigation pane | **Arrow-key nav** — need ↑↓ between profile links (REAL ESTATE, etc.) and deal rows; ←→ or focus handoff between columns | minor | P1-08 |
+| 2026-07-05 | Deal list | **Duplicate PIPELINE rows** — e.g. two “LISBON OFFICE BLOCK A”, two “SEMI-DETACHED HOUSE…”; tighten dedup on import | major | P7-07 |
 
 **Severity:** blocker · major · minor · cosmetic · idea
 
@@ -62,6 +64,7 @@
 | P1-05 | Detached inspector | Empty horizontal margins | `[ ]` | `DetachedPaneViews` width cap |
 | P1-06 | Deal rows | Right column: cap rate vs status chip | `[ ]` | Figma `img_00_22` |
 | P1-07 | HTTP endpoint display | `monospacedDigit` on full URL line | `[ ]` | Server Config / nav status |
+| P1-08 | **Keyboard nav (↑↓ ←→)** | Navigate **profile links** and **deal rows** in left pane with arrow keys; terminal-style focus ring + selection pip follows keyboard. Document in shortcuts legend. | `[ ]` | Wild-use 2026-07-05 |
 
 ---
 
@@ -176,6 +179,7 @@
 | P7-04 | Extension icons + Chrome Web Store | `[—]` | If public distribution |
 | P7-05 | **Pull purchase price from listing** — browser extension import landed Casa Guerra Junqueiro at **€0.00**; fix `content.js` scrape + `DealIngestionPayload.purchasePrice` mapping | `[ ]` | Wild-use 2026-07-05 |
 | P7-06 | **Source URL in deal model/UI** — URL written to notes today; add first-class field or BASE tab row so imports are traceable without parsing NOTES | `[ ]` | See P2-08 |
+| P7-07 | **Duplicate deals on import** — same listing imported twice (e.g. Lisbon Office Block A ×2, Semi-Detached ×2 in PIPELINE). Harden dedup: URL hash in `DealIngestionServer` + email `EmailImportRecord`; surface “duplicate skipped” in nav | `[ ]` | Wild-use 2026-07-05 |
 
 ---
 
@@ -203,7 +207,7 @@
 ## Recommended fix order (when you return)
 
 1. **P6-17** — email CHECK_NOW exit 100 (credentials work; fetch pipeline broken)
-2. **P7-05, P7-06 / P2-08** — browser import price + source URL (wild-use on Idealista)
+2. **P7-05, P7-06, P7-07 / P2-08** — browser import price, source URL, duplicate rows
 3. **Wild-use log** → new P0s
 4. **P6-19** — email show-password toggle
 5. **P3-07** — PDF B&W mode build-out
