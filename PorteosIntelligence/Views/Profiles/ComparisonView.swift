@@ -28,6 +28,13 @@ struct ComparisonView: View {
     private let dealWidth:  CGFloat = 148
     private let rowHeight:  CGFloat = DesignTokens.rowHeightHeader + 8
 
+    /// Figma img_00_12 — OPEX block spans label column + first deal column.
+    private var opexPanelWidth: CGFloat {
+        labelWidth + DesignTokens.dividerWidth + dealWidth
+    }
+
+    private let opexValueFieldWidth: CGFloat = 104
+
     private var metrics: [ComparisonMetric] { [
         .init(label: "PURCHASE PRICE",
               getValue: { $0.purchasePrice > 0 ? $0.purchasePrice : nil },
@@ -87,14 +94,19 @@ struct ComparisonView: View {
                         metricRow(metrics[i])
                         TerminalStructuralDivider()
                     }
-
-                    if let draft = opexDraft {
-                        opexBreakdownPanel(draft)
-                            .padding(.top, 12)
-                            .padding(.leading, DesignTokens.blockGutter)
-                            .padding(.bottom, DesignTokens.blockGutter)
-                    }
                 }
+            }
+
+            if opexDraft != nil {
+                HStack(alignment: .top, spacing: 0) {
+                    opexBreakdownPanel()
+                        .frame(width: opexPanelWidth, alignment: .leading)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, DesignTokens.blockGutter)
+                .padding(.vertical, 12)
+                .background(DesignTokens.surfacePanel)
+                .overlay(alignment: .top) { TerminalStructuralDivider() }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -191,15 +203,24 @@ struct ComparisonView: View {
 
     // MARK: OPEX Panel
 
-    private func opexBreakdownPanel(_ draft: OpexDraft) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+    private func opexBreakdownPanel() -> some View {
+        let dealLabel = deals.first.map { shortName($0) } ?? "—"
+
+        return VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
                 Rectangle()
                     .fill(DesignTokens.accentRust)
                     .frame(width: 2, height: 14)
-                Text("03 // OPEX BREAKDOWN")
-                    .porteosModuleCmd()
-                    .foregroundStyle(DesignTokens.textDim)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("03 // OPEX BREAKDOWN")
+                        .porteosModuleCmd()
+                        .foregroundStyle(DesignTokens.textDim)
+                    Text(dealLabel)
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textSecondary)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
@@ -207,17 +228,17 @@ struct ComparisonView: View {
 
             TerminalStructuralDivider()
 
-            opexRow("PROPERTY MANAGEMENT", value: draft.propertyManagement)
+            opexRow("PROPERTY MANAGEMENT", value: opexBinding(\.propertyManagement))
             opexInsetDivider
-            opexRow("PROPERTY TAX", value: draft.propertyTax)
+            opexRow("PROPERTY TAX", value: opexBinding(\.propertyTax))
             opexInsetDivider
-            opexRow("INSURANCE", value: draft.insurance)
+            opexRow("INSURANCE", value: opexBinding(\.insurance))
             opexInsetDivider
-            opexRow("UTILITIES", value: draft.utilities)
+            opexRow("UTILITIES", value: opexBinding(\.utilities))
             opexInsetDivider
-            opexRow("MAINTENANCE", value: draft.maintenance)
+            opexRow("MAINTENANCE", value: opexBinding(\.maintenance))
             opexInsetDivider
-            opexRow("CAPITAL RESERVES", value: draft.capitalReserves)
+            opexRow("CAPITAL RESERVES", value: opexBinding(\.capitalReserves))
 
             TerminalStructuralDivider()
 
@@ -240,31 +261,35 @@ struct ComparisonView: View {
             .padding(.vertical, 10)
             .background(DesignTokens.surfacePanel)
         }
-        .frame(width: 300)
         .overlay {
             Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
         }
         .clipShape(Rectangle())
     }
 
-    private func opexRow(_ label: String, value: Double) -> some View {
-        HStack {
+    private func opexBinding(_ keyPath: WritableKeyPath<OpexDraft, Double>) -> Binding<Double> {
+        Binding(
+            get: { opexDraft?[keyPath: keyPath] ?? 0 },
+            set: { newValue in
+                guard opexDraft != nil else { return }
+                opexDraft![keyPath: keyPath] = newValue
+            }
+        )
+    }
+
+    private func opexRow(_ label: String, value: Binding<Double>) -> some View {
+        HStack(spacing: 8) {
             Text(label)
                 .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
-            Spacer()
-            Text(formattedOpex(value))
-                .porteosRowValue()
-                .foregroundStyle(DesignTokens.textPrimary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(DesignTokens.canvasBase)
-                .overlay {
-                    Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
-                }
+                .lineLimit(1)
+                .frame(maxWidth: opexPanelWidth - opexValueFieldWidth - 48, alignment: .leading)
+            Spacer(minLength: 4)
+            OpexInlineAmountField(value: value, fieldWidth: opexValueFieldWidth)
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.vertical, 6)
+        .frame(minHeight: DesignTokens.rowHeightData)
         .background(DesignTokens.surfaceElevated)
     }
 
@@ -371,12 +396,58 @@ struct ComparisonView: View {
         return String(format: "€%.0f", v)
     }
 
-    private func formattedOpex(_ v: Double) -> String {
-        "€ \(Int(v).formatted(.number.grouping(.automatic)))"
-    }
-
     private func pct(_ v: Double, dp: Int = 1) -> String {
         "\(v.formatted(.number.precision(.fractionLength(dp))))%"
+    }
+}
+
+// MARK: - OpexInlineAmountField
+// String-backed € entry (same reliability pattern as TerminalInputField).
+
+private struct OpexInlineAmountField: View {
+    @Binding var value: Double
+    let fieldWidth: CGFloat
+
+    @State private var localText = ""
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text("€")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+            TextField("0", text: $localText)
+                .textFieldStyle(.plain)
+                .porteosRowValue()
+                .monospacedDigit()
+                .multilineTextAlignment(.trailing)
+                .frame(width: fieldWidth - 28)
+                .onAppear { localText = displayString(for: value) }
+                .onChange(of: localText) { _, newText in
+                    value = parse(newText)
+                }
+                .onChange(of: value) { _, newValue in
+                    guard abs(parse(localText) - newValue) > 0.001 else { return }
+                    localText = displayString(for: newValue)
+                }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .frame(width: fieldWidth)
+        .background(DesignTokens.canvasBase)
+        .overlay {
+            Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
+        }
+    }
+
+    private func parse(_ text: String) -> Double {
+        let cleaned = text.filter { $0.isNumber || $0 == "." }
+        return Double(cleaned) ?? 0
+    }
+
+    private func displayString(for value: Double) -> String {
+        guard value != 0 else { return "" }
+        if value.rounded() == value { return "\(Int(value))" }
+        return String(format: "%.2f", value)
     }
 }
 

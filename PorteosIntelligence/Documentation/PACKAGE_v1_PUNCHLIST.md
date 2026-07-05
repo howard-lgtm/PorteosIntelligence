@@ -19,6 +19,8 @@
 | 2026-07-05 | PDF Report | **Black & white mode** toggle present but output not built out | minor | P3-07 |
 | 2026-07-05 | Navigation pane | **Arrow-key nav** — need ↑↓ between profile links (REAL ESTATE, etc.) and deal rows; ←→ or focus handoff between columns | minor | P1-08 |
 | 2026-07-05 | Deal list | **Duplicate PIPELINE rows** — e.g. two “LISBON OFFICE BLOCK A”, two “SEMI-DETACHED HOUSE…”; tighten dedup on import | major | P7-07 |
+| 2026-07-05 | ComparisonView | OPEX panel floated centered in scroll, read-only €0 fields, no deal label | major | P2-09 |
+| 2026-07-05 | ComparisonView OPEX | Input fields capped at ~**2 digits** (88pt + NumberFormatter) — can't enter e.g. €2,400 | major | P2-09 |
 
 **Severity:** blocker · major · minor · cosmetic · idea
 
@@ -80,6 +82,7 @@
 | P2-06 | Sheet chrome | macOS rounded sheet corners | `[ ]` | `.presentationBackground` / overlay pattern |
 | P2-07 | Legacy sheets | Deprecate or align `EditDealSheet` / `NewDealSheet` / `QuickAddDealSheet` | `[ ]` | Confirm wiring vs Figma sheets |
 | P2-08 | Full Edit — Base | **Source URL field** — browser/email imports store URL in notes; expose as dedicated row (link or copy) in BASE tab, not buried in NOTES blob | `[ ]` | Casa Guerra Junqueiro; see P7-06 |
+| P2-09 | **ComparisonView OPEX panel** | `[~]` Fixed layout + editable fields 2026-07-05; **fixed 2-digit input cap** same day (`OpexInlineAmountField`). **Follow-up:** OPEX per deal column; pre-fill from `operatingExpenses` | `[~]` | Wild-use |
 
 ---
 
