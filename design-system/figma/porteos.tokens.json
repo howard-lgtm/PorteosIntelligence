@@ -420,6 +420,7 @@
       "name": "Porteos Dark",
       "selectedTokenSets": {
         "porteos/global": "enabled",
+        "porteos/density": "enabled",
         "porteos/semantic": "enabled",
         "porteos/profile": "enabled",
         "porteos/component": "enabled"

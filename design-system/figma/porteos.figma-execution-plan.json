@@ -130,6 +130,19 @@
       "tags and isFavorite (no current UI)"
     ]
   },
+  "startupSplash": {
+    "status": "in_progress",
+    "figmaHandoff": "design-system/figma/STARTUP_ANIMATION_HANDOFF.md",
+    "assetPath": "PorteosIntelligence/Resources/Splash/",
+    "naming": "porteos_splash_{###}.png",
+    "appFiles": [
+      "PorteosIntelligence/Views/Splash/SplashView.swift",
+      "PorteosIntelligence/Views/Splash/RootView.swift",
+      "PorteosIntelligence/PorteosIntelligenceApp.swift"
+    ],
+    "blockedBy": "Copy PNG sequence from CascadeProjects into Resources/Splash/",
+    "configFields": ["frameCount", "fps", "minimumDuration", "canvasSize"]
+  },
   "figmaPages": [
     { "order": 0, "name": "00 — Cover & Tokens", "purpose": "Project brief, open decisions, swatches, type scale" },
     { "order": 1, "name": "01 — Components", "purpose": "Component library with variants" },
@@ -637,7 +650,7 @@
     "currentPhase": "phase-0",
     "completedTasks": [],
     "resolvedDecisions": {},
-    "lastUpdated": null,
-    "notes": "Cursor should update completedTasks and resolvedDecisions as work progresses"
+    "lastUpdated": "2026-07-06",
+    "notes": "Startup splash scaffold wired. Awaiting Figma PNG export in Resources/Splash/. Apple review pending."
   }
 }
