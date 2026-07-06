@@ -26,6 +26,7 @@ Design tokens and component specs for the UI look-and-feel overhaul.
 
 | File | Purpose |
 |------|---------|
+| **`FIGMA_DELIVERABLES_REQUEST.md`** | **All-inclusive prompt for Figma AI / designer** (copy PROMPT START → PROMPT END) |
 | **`porteos.figma-execution-plan.json`** | Cursor execution plan |
 | **`porteos.tokens.json`** | **V2.06 reconciled** — Tokens Studio import |
 | **`porteos.tokens.w3c.json`** | W3C format alternative |
