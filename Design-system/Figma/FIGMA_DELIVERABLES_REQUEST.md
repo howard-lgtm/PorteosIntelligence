@@ -223,7 +223,8 @@ Pick one option per row and note on cover:
 When complete, export a folder structure for git:
 
 ```
-design-system/figma/
+Design-system/Figma/
+├── FIGMA_DELIVERABLES_REQUEST.md    (this prompt)
 ├── STARTUP_ANIMATION_HANDOFF.md     (filled in — not template)
 ├── Splash Image/
 │   └── porteos_splash_000.png … NNN
@@ -262,11 +263,11 @@ PorteosIntelligence/Resources/Splash/
 
 | File | Purpose |
 |------|---------|
-| `design-system/figma/porteos.figma-execution-plan.json` | Phased build checklist |
-| `design-system/figma/porteos.components.json` | Component anatomy |
-| `design-system/figma/porteos.screens.json` | Screen inventory |
-| `design-system/figma/porteos.tokens.json` | Design tokens |
-| `design-system/figma/DISPLAY_DENSITY.md` | 1× / 2× spec |
+| `Design-system/Figma/porteos.figma-execution-plan.json` | Phased build checklist |
+| `Design-system/Figma/porteos.components.json` | Component anatomy |
+| `Design-system/Figma/porteos.screens.json` | Screen inventory |
+| `Design-system/Figma/porteos.tokens.json` | Design tokens |
+| `Design-system/Figma/DISPLAY_DENSITY.md` | 1× / 2× spec (if present) |
 | `PorteosIntelligence/01_TERMINAL_DESIGN_SYSTEM.md` | Full design system rules |
 | `PUNCHLIST.md` | Current project status |
 
