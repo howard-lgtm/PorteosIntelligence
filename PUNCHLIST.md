@@ -73,7 +73,7 @@ PorteosIntelligence/Resources/Splash/
 
 | Feature | Notes |
 |---------|--------|
-| **Display density toggle** | Two-step: **Compact** (laptop) vs **Comfortable** (large monitor). Scale type + row heights together — not a free-form slider. Best done after Figma token pass so sizes live in one place. Settings → GENERAL: `[ LAPTOP ]` / `[ DISPLAY ]`. Persist via `@AppStorage`. |
+| **Display density toggle** | **Standard 1×** (laptop) vs **Large 2×** (external monitor). Scales type + row heights together. Settings → GENERAL wired; full UI migration during Figma pass. See `DISPLAY_DENSITY.md`. |
 | Deal clone | Context menu |
 | Tags + favorites UI | Model fields exist |
 | City autocomplete | API exists |

@@ -21,6 +21,7 @@ struct RootView: View {
                 .zIndex(1)
             }
         }
+        .environment(\.displayDensity, DisplayDensityStore.shared)
         .animation(.easeOut(duration: 0.35), value: showSplash)
     }
 }

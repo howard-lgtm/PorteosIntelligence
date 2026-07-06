@@ -31,6 +31,7 @@ struct SettingsView: View {
 
     @State private var activeTab: Tab = .email
     @State private var showEmailSetup = false
+    @State private var densityStore = DisplayDensityStore.shared
 
     // MARK: Body
 
@@ -227,6 +228,10 @@ struct SettingsView: View {
 
             divider
 
+            displayDensitySection
+
+            divider
+
             sectionHeader("02 // BUILD_INFO", subtitle: "")
 
             infoRow("ARCHITECTURE",  "Email Monitor (curl/IMAP) + HTTP Ingestion Server + Browser Extension")
@@ -299,6 +304,45 @@ struct SettingsView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+    }
+
+    private var displayDensitySection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("DISPLAY_DENSITY")
+                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                    .foregroundStyle(tp2)
+                Text("Scale typography and row heights for laptop vs external monitor.")
+                    .font(.custom("JetBrains Mono", size: 10))
+                    .foregroundStyle(tp3)
+            }
+
+            HStack(spacing: 8) {
+                ForEach(DisplayDensity.allCases) { option in
+                    Button {
+                        densityStore.mode = option
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("[ \(option.settingsLabel) ]")
+                                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
+                            Text(option.settingsHint)
+                                .font(.custom("JetBrains Mono", size: 9))
+                        }
+                        .foregroundStyle(densityStore.mode == option ? Color(hex: "#0F1115") : tp2)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(densityStore.mode == option ? accentRust : shellSurface)
+                        .overlay(
+                            Rectangle().stroke(shellBorder, lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 
     private func infoRow(_ label: String, _ value: String) -> some View {
