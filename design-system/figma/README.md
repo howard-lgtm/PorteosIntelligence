@@ -4,7 +4,9 @@ Design tokens and component specs extracted from the live app (`PORTEOS_TERMINAL
 
 ## Cursor execution (start here)
 
-**`porteos.figma-execution-plan.json`** — single file for Cursor to read and execute the full Figma redesign. It includes phased tasks, acceptance criteria, design decisions, constraints, and references to all other files in this folder.
+**`porteos.figma-execution-plan.json`** — single file for Cursor to read and execute the full Figma redesign.
+
+**`FIGMA_DELIVERABLES_REQUEST.md`** — all-inclusive prompt to send to Figma AI or your designer (copy PROMPT START → PROMPT END).
 
 ```
 @design-system/figma/porteos.figma-execution-plan.json Execute Phase 0
