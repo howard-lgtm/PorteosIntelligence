@@ -69,9 +69,17 @@ PorteosIntelligence/Resources/Splash/
 - [ ] Inspector pane — inline quick-edit capability
 - [ ] `TopHeaderBar` — wire deal actions (bell/settings still decorative)
 
-## Medium priority
+## V2 considerations (backlog)
 
-- [ ] Onboarding / first-launch empty state (splash may partially cover this)
+| Feature | Notes |
+|---------|--------|
+| **Display density toggle** | Two-step: **Compact** (laptop) vs **Comfortable** (large monitor). Scale type + row heights together — not a free-form slider. Best done after Figma token pass so sizes live in one place. Settings → GENERAL: `[ LAPTOP ]` / `[ DISPLAY ]`. Persist via `@AppStorage`. |
+| Deal clone | Context menu |
+| Tags + favorites UI | Model fields exist |
+| City autocomplete | API exists |
+| JSON import | Picker allows `.json`; parser is CSV-only today |
+| Investor Score / AI chat | In metrics spec, not built |
+
 - [ ] Deal clone / duplicate context menu action
 - [ ] City autocomplete in `FullDealEditSheet` (`MarketBenchmarks.suggestions`)
 - [ ] Sync `01_TERMINAL_DESIGN_SYSTEM.md` with live type scale
