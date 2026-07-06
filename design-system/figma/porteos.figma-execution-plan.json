@@ -16,6 +16,8 @@
     "screens": "design-system/figma/porteos.screens.json",
     "screensCsv": "design-system/figma/porteos.screens.csv",
     "readme": "design-system/figma/README.md",
+    "startupAnimationHandoff": "design-system/figma/STARTUP_ANIMATION_HANDOFF.md",
+    "punchlist": "PUNCHLIST.md",
     "designSystemDoc": "PorteosIntelligence/01_TERMINAL_DESIGN_SYSTEM.md",
     "codebaseShell": "PorteosIntelligence/Views/Shell/AppShell.swift"
   },

@@ -47,7 +47,7 @@ struct PorteosIntelligenceApp: App {
 
     var body: some Scene {
         WindowGroup {
-            AppShell()
+            RootView()
                 .modelContainer(sharedModelContainer)
                 // Stop ingestion server cleanly when the app quits
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in

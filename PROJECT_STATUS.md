@@ -1,6 +1,6 @@
 # Porteos Intelligence — Project Status
 
-**Last updated:** 28 June 2026  
+**Last updated:** 6 July 2026  
 **Build status:** ✅ Compiling — zero errors  
 **Branch:** `main`  
 **Platform:** macOS (SwiftUI + SwiftData)
@@ -93,6 +93,7 @@
 ## Known Gaps / Next Sessions
 
 ### High priority
+- [ ] **Startup splash** — Figma PNG sequence on app open (`SplashView` + `RootView` scaffold ready; awaiting frames in `Resources/Splash/`)
 - [ ] `PorteosScoreBlock` — the score ring at the top of the center pane; currently renders but the 4 profile weight sliders are not yet interactive in the main view (editable only in `FullDealEditSheet`)
 - [ ] Inspector pane — shows deal metadata but lacks inline quick-edit capability
 - [ ] `TopHeaderBar` — profile name and deal name display; no active deal actions wired
