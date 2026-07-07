@@ -461,46 +461,59 @@ private struct AISignalBarRow: View {
     let onToggle: () -> Void
 
     var body: some View {
-        Button(action: onToggle) {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Text(label)
-                        .porteosMetricLabel()
-                        .foregroundStyle(DesignTokens.textDim)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .lineLimit(1)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Text(label)
+                    .porteosMetricLabel()
+                    .foregroundStyle(DesignTokens.textDim)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .lineLimit(1)
 
-                    TerminalSegmentBar(
-                        fillRatio: Double(score) / 100,
-                        barColor: barColor,
-                        height: 6
-                    )
-                    .frame(width: 72)
+                TerminalSegmentBar(
+                    fillRatio: Double(score) / 100,
+                    barColor: barColor,
+                    height: 6
+                )
+                .frame(width: 72)
 
-                    Text("\(score)")
-                        .porteosMetricValue()
-                        .monospacedDigit()
-                        .foregroundStyle(barColor)
-                        .frame(width: 28, alignment: .trailing)
+                Text("\(score)")
+                    .porteosMetricValue()
+                    .monospacedDigit()
+                    .foregroundStyle(barColor)
+                    .frame(width: 28, alignment: .trailing)
 
+                Button(action: onToggle) {
                     Text(isExpanded ? "[ − ]" : "[ + ]")
                         .porteosMeta()
                         .foregroundStyle(isExpanded ? DesignTokens.accentRust : DesignTokens.textDim)
                         .frame(width: 34, alignment: .trailing)
                 }
-
-                Text(detail)
-                    .porteosMeta()
-                    .foregroundStyle(DesignTokens.textDim)
-                    .multilineTextAlignment(.leading)
-                    .lineLimit(isExpanded ? nil : 1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                .buttonStyle(.plain)
             }
-            .padding(.horizontal, DesignTokens.blockGutter)
-            .padding(.vertical, 10)
-            .background(isExpanded ? DesignTokens.surfaceElevated : DesignTokens.surfacePanel)
+
+            Group {
+                if isExpanded {
+                    Text(detail)
+                        .font(DesignTokens.TypeScale.rowValue)
+                        .foregroundStyle(DesignTokens.textDim)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    Text(detail)
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textDim)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, 10)
+        .background(isExpanded ? DesignTokens.surfaceElevated : DesignTokens.surfacePanel)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onToggle)
         .animation(.easeOut(duration: 0.15), value: isExpanded)
     }
 }
