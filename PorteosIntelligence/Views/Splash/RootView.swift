@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 // MARK: - RootView
 // Splash overlay → AppShell. PorteosIntelligenceApp mounts this at launch.
@@ -26,6 +27,9 @@ struct RootView: View {
 }
 
 #Preview {
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: PropertyDeal.self, configurations: config)
     RootView()
-        .modelContainer(for: PropertyDeal.self, inMemory: true)
+        .modelContainer(container)
+        .frame(width: 1200, height: 800)
 }
