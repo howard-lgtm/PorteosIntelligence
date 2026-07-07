@@ -14,6 +14,7 @@ struct AIVibePanel: View {
     @State private var result:     AnalysisResult? = nil
     @State private var phase:      AnalysisPhase?  = nil
     @State private var analyzedID: UUID?           = nil
+    @State private var expandedSignalIndex: Int?   = nil
 
     private var isRunning: Bool {
         phase == .analyzingRules || phase == .generatingNarrative
@@ -43,11 +44,13 @@ struct AIVibePanel: View {
         .onChange(of: deal.id) { _, _ in
             result = nil
             analyzedID = nil
+            expandedSignalIndex = nil
             restoreStoredAnalysis()
         }
         .onChange(of: refreshID) { _, _ in
             result = nil
             analyzedID = nil
+            expandedSignalIndex = nil
         }
     }
 
@@ -117,7 +120,11 @@ struct AIVibePanel: View {
                         label: item.label,
                         score: item.score,
                         detail: item.detail,
-                        barColor: sentimentColor(item.sentiment)
+                        barColor: sentimentColor(item.sentiment),
+                        isExpanded: expandedSignalIndex == idx,
+                        onToggle: {
+                            expandedSignalIndex = expandedSignalIndex == idx ? nil : idx
+                        }
                     )
                     if idx < barSignals.count - 1 { insetDivider }
                 }
@@ -450,38 +457,51 @@ private struct AISignalBarRow: View {
     let score: Int
     let detail: String
     let barColor: Color
+    let isExpanded: Bool
+    let onToggle: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 8) {
-                Text(label)
-                    .porteosMetricLabel()
+        Button(action: onToggle) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    Text(label)
+                        .porteosMetricLabel()
+                        .foregroundStyle(DesignTokens.textDim)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .lineLimit(1)
+
+                    TerminalSegmentBar(
+                        fillRatio: Double(score) / 100,
+                        barColor: barColor,
+                        height: 6
+                    )
+                    .frame(width: 72)
+
+                    Text("\(score)")
+                        .porteosMetricValue()
+                        .monospacedDigit()
+                        .foregroundStyle(barColor)
+                        .frame(width: 28, alignment: .trailing)
+
+                    Text(isExpanded ? "[ − ]" : "[ + ]")
+                        .porteosMeta()
+                        .foregroundStyle(isExpanded ? DesignTokens.accentRust : DesignTokens.textDim)
+                        .frame(width: 34, alignment: .trailing)
+                }
+
+                Text(detail)
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(isExpanded ? nil : 1)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .lineLimit(1)
-
-                TerminalSegmentBar(
-                    fillRatio: Double(score) / 100,
-                    barColor: barColor,
-                    height: 6
-                )
-                .frame(width: 72)
-
-                Text("\(score)")
-                    .porteosMetricValue()
-                    .monospacedDigit()
-                    .foregroundStyle(barColor)
-                    .frame(width: 28, alignment: .trailing)
             }
-
-            Text(detail)
-                .porteosMeta()
-                .foregroundStyle(DesignTokens.textDim)
-                .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 10)
+            .background(isExpanded ? DesignTokens.surfaceElevated : DesignTokens.surfacePanel)
         }
-        .padding(.horizontal, DesignTokens.blockGutter)
-        .padding(.vertical, 10)
-        .background(DesignTokens.surfacePanel)
+        .buttonStyle(.plain)
+        .animation(.easeOut(duration: 0.15), value: isExpanded)
     }
 }
 
