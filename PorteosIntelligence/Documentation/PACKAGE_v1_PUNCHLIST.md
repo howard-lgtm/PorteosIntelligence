@@ -4,7 +4,8 @@
 **Purpose:** Return here after using Porteos Intelligence in the wild.  
 **Status key:** `[ ]` open · `[~]` in progress · `[x]` done · `[—]` deferred / won’t fix v1
 
-**Companion:** [`PACKAGE_v1_STATUS.md`](PACKAGE_v1_STATUS.md)
+**Companion:** [`PACKAGE_v1_STATUS.md`](PACKAGE_v1_STATUS.md)  
+**Forward-looking tasks (splash, Figma, v2):** [`PUNCHLIST.md`](../../PUNCHLIST.md) at repo root
 
 ---
 

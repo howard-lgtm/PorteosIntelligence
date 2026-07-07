@@ -4,7 +4,7 @@ import AppKit
 // MARK: - SplashView
 // Plays a PNG frame sequence from Resources/Splash/ on app launch.
 // Update frameCount and fps when Figma handoff is final — see
-// design-system/figma/STARTUP_ANIMATION_HANDOFF.md
+// Design-system/Figma/STARTUP_ANIMATION_HANDOFF.md
 
 struct SplashView: View {
 

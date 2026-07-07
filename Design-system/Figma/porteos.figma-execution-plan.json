@@ -10,19 +10,22 @@
     "redesignScope": "look-and-feel only — preserve all features and information architecture"
   },
   "inputFiles": {
-    "tokens": "design-system/figma/porteos.tokens.json",
-    "tokensW3c": "design-system/figma/porteos.tokens.w3c.json",
-    "components": "design-system/figma/porteos.components.json",
-    "screens": "design-system/figma/porteos.screens.json",
-    "screensCsv": "design-system/figma/porteos.screens.csv",
-    "readme": "design-system/figma/README.md",
+    "tokens": "Design-system/Figma/porteos.tokens.json",
+    "tokensW3c": "Design-system/Figma/porteos.tokens.w3c.json",
+    "components": "Design-system/Figma/porteos.components.json",
+    "screens": "Design-system/Figma/porteos.screens.json",
+    "screensCsv": "Design-system/Figma/porteos.screens.csv",
+    "readme": "Design-system/Figma/README.md",
+    "startupAnimationHandoff": "Design-system/Figma/STARTUP_ANIMATION_HANDOFF.md",
+    "displayDensity": "Design-system/Figma/DISPLAY_DENSITY.md",
+    "punchlist": "PUNCHLIST.md",
     "designSystemDoc": "PorteosIntelligence/01_TERMINAL_DESIGN_SYSTEM.md",
     "codebaseShell": "PorteosIntelligence/Views/Shell/AppShell.swift"
   },
   "figmaSetup": {
     "plugin": "Tokens Studio for Figma",
     "pluginUrl": "https://tokens.studio/",
-    "importFile": "design-system/figma/porteos.tokens.json",
+    "importFile": "Design-system/Figma/porteos.tokens.json",
     "theme": "porteos-dark",
     "fonts": [
       { "family": "JetBrains Mono", "weights": [400, 500, 700], "required": true },
@@ -128,6 +131,19 @@
       "tags and isFavorite (no current UI)"
     ]
   },
+  "startupSplash": {
+    "status": "in_progress",
+    "figmaHandoff": "Design-system/Figma/STARTUP_ANIMATION_HANDOFF.md",
+    "assetPath": "PorteosIntelligence/Resources/Splash/",
+    "naming": "porteos_splash_{###}.png",
+    "appFiles": [
+      "PorteosIntelligence/Views/Splash/SplashView.swift",
+      "PorteosIntelligence/Views/Splash/RootView.swift",
+      "PorteosIntelligence/PorteosIntelligenceApp.swift"
+    ],
+    "blockedBy": "Copy PNG sequence from CascadeProjects into Resources/Splash/",
+    "configFields": ["frameCount", "fps", "minimumDuration", "canvasSize"]
+  },
   "figmaPages": [
     { "order": 0, "name": "00 — Cover & Tokens", "purpose": "Project brief, open decisions, swatches, type scale" },
     { "order": 1, "name": "01 — Components", "purpose": "Component library with variants" },
@@ -149,7 +165,7 @@
           "id": "0.1",
           "action": "IMPORT_TOKENS",
           "description": "Import porteos.tokens.json into Figma via Tokens Studio",
-          "input": "design-system/figma/porteos.tokens.json",
+          "input": "Design-system/Figma/porteos.tokens.json",
           "output": "Figma variables: Porteos/color, Porteos/typography, Porteos/spacing",
           "acceptanceCriteria": [
             "Porteos Dark theme applied",
@@ -614,7 +630,7 @@
   "cursorInstructions": {
     "onStart": [
       "Read this entire file before taking any action",
-      "Read design-system/figma/porteos.tokens.json and porteos.components.json",
+      "Read Design-system/Figma/porteos.tokens.json and porteos.components.json",
       "Ask user to resolve designDecisions if not already specified — use defaults if user says proceed",
       "Execute phases in order; mark tasks complete only when acceptanceCriteria met",
       "Reference PorteosIntelligence/Views/ for layout fidelity when building frames",
@@ -645,7 +661,7 @@
       "nav-width": "260",
       "inspector-width": "280"
     },
-    "lastUpdated": "2026-07-02",
-    "notes": "Phase 0 Cursor deliverables complete. User completes Figma checklist then says Phase 0 Figma done."
+    "lastUpdated": "2026-07-07",
+    "notes": "Phase 0 Cursor deliverables complete. Startup splash scaffold wired — awaiting PNG export in Resources/Splash/. Canonical Figma package: Design-system/Figma/."
   }
 }

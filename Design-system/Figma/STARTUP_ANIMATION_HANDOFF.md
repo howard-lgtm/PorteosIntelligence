@@ -2,7 +2,7 @@
 
 **Status:** Figma export in progress (Howard)  
 **App integration:** scaffold ready — awaiting PNG sequence in repo  
-**Last updated:** 6 July 2026
+**Last updated:** 7 July 2026
 
 ---
 
@@ -12,7 +12,7 @@ Copy from local machine into this repo:
 
 | Local (CascadeProjects) | Repo destination |
 |-------------------------|------------------|
-| `Design-system/Figma/STARTUP_ANIMATION_HANDOFF.md` | `design-system/figma/STARTUP_ANIMATION_HANDOFF.md` (merge/update this file) |
+| `Design-system/Figma/STARTUP_ANIMATION_HANDOFF.md` | `Design-system/Figma/STARTUP_ANIMATION_HANDOFF.md` (this file) |
 | `Design-system/Figma/Splash Image/porteos_splash_*.png` | `PorteosIntelligence/Resources/Splash/` |
 
 First frame reference: `porteos_splash_000.png`

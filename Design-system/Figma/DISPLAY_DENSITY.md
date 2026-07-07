@@ -1,7 +1,7 @@
 # Display Density — Standard (1×) vs Large (2×)
 
 **Status:** Spec agreed · Settings toggle wired · Full UI migration pending Figma token pass  
-**Last updated:** 6 July 2026
+**Last updated:** 7 July 2026
 
 ---
 

@@ -123,7 +123,7 @@
 - [ ] `TopHeaderBar` — profile and deal name display; deal actions not fully wired
 - [x] Email ingestion — Settings → EMAIL_INGESTION tab on `main`
 
-> Branch-only additions merged from `cursor/figma-design-tokens-3e3e`: `RootView`, `SplashView`, `DisplayDensity` toggle in Settings. See also `PUNCHLIST.md`.
+> Branch-only additions merged from `cursor/figma-design-tokens-3e3e`: `RootView`, `SplashView`, `DisplayDensity` toggle in Settings. Canonical Figma package: `Design-system/Figma/`. See also `PUNCHLIST.md`.
 
 ### Medium priority
 - [ ] Onboarding / empty state for first-launch

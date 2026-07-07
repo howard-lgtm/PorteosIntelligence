@@ -1,9 +1,11 @@
 # Porteos Intelligence — Punchlist
 
-**Last updated:** 6 July 2026  
+**Last updated:** 7 July 2026  
 **Build:** compiling  
 **Platform:** macOS (SwiftUI + SwiftData)  
-**Apple App Store:** awaiting review response
+**Apple App Store:** approved — running locally
+
+> **Wild-use QA:** see [`PorteosIntelligence/Documentation/PACKAGE_v1_PUNCHLIST.md`](PorteosIntelligence/Documentation/PACKAGE_v1_PUNCHLIST.md) for field-test bugs (email, browser import, PDF).
 
 ---
 
@@ -13,7 +15,7 @@
 
 | # | Task | Owner | Status |
 |---|------|-------|--------|
-| S1 | Copy `STARTUP_ANIMATION_HANDOFF.md` + `Splash Image/*.png` from local CascadeProjects into repo `design-system/figma/` | Howard | ⬜ |
+| S1 | Copy `STARTUP_ANIMATION_HANDOFF.md` + `Splash Image/*.png` from local CascadeProjects into repo `Design-system/Figma/` | Howard | ⬜ |
 | S2 | Confirm frame count, FPS, total duration, canvas size from handoff doc | Cursor + Howard | ⬜ |
 | S3 | Drop PNG sequence into `PorteosIntelligence/Resources/Splash/` | Howard | ⬜ |
 | S4 | Wire `SplashView` → `RootView` → `AppShell` (code scaffold in place) | Cursor | 🔄 |
@@ -28,12 +30,12 @@ CascadeProjects/PorteosNative/PorteosIntelligence/Design-system/Figma/Splash Ima
 
 **Repo targets:**
 ```
-design-system/figma/STARTUP_ANIMATION_HANDOFF.md
-design-system/figma/Splash Image/
+Design-system/Figma/STARTUP_ANIMATION_HANDOFF.md
+Design-system/Figma/Splash Image/
 PorteosIntelligence/Resources/Splash/
 ```
 
-**Integration summary:** see `design-system/figma/STARTUP_ANIMATION_HANDOFF.md`
+**Integration summary:** see `Design-system/Figma/STARTUP_ANIMATION_HANDOFF.md`
 
 ---
 
@@ -48,7 +50,7 @@ PorteosIntelligence/Resources/Splash/
 | F5 | Phase 3 — dashboards (RE stress test first) | ⬜ |
 | F6 | Phases 4–7 — inspector, sheets, admin, validation | ⬜ |
 
-**Cursor entry point:** `design-system/figma/porteos.figma-execution-plan.json`
+**Cursor entry point:** `Design-system/Figma/porteos.figma-execution-plan.json`
 
 ---
 
@@ -93,7 +95,7 @@ PorteosIntelligence/Resources/Splash/
 
 ## Done recently
 
-- [x] Figma design token package (`design-system/figma/`)
+- [x] Figma design token package (`Design-system/Figma/`)
 - [x] Cursor execution plan JSON
 - [x] Full feature inventory for UI redesign
 - [x] Splash integration scaffold (`SplashView`, `RootView`)
@@ -106,6 +108,8 @@ PorteosIntelligence/Resources/Splash/
 |-----|------|
 | Punchlist | `PUNCHLIST.md` |
 | Project status | `PROJECT_STATUS.md` |
-| Figma execution plan | `design-system/figma/porteos.figma-execution-plan.json` |
-| Splash handoff | `design-system/figma/STARTUP_ANIMATION_HANDOFF.md` |
+| Figma execution plan | `Design-system/Figma/porteos.figma-execution-plan.json` |
+| Splash handoff | `Design-system/Figma/STARTUP_ANIMATION_HANDOFF.md` |
+| Display density | `Design-system/Figma/DISPLAY_DENSITY.md` |
+| Wild-use punchlist | `PorteosIntelligence/Documentation/PACKAGE_v1_PUNCHLIST.md` |
 | Design system | `PorteosIntelligence/01_TERMINAL_DESIGN_SYSTEM.md` |

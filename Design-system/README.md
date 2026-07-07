@@ -51,7 +51,8 @@ Three layers. Don't mix them up.
 | **`porteos.components.json`** | json | Component sizes & variants — Phase 1 |
 | **`porteos.screens.json`** | json | 27 screens checklist — Phases 2–6 |
 | **`DESIGN.md`** | md | Stitch design reference |
-| **`porteos_v2.06_color_spec.md`** | md | V2.06 color architecture |
+| **`DISPLAY_DENSITY.md`** | md | 1× / 2× display density spec |
+| **`STARTUP_ANIMATION_HANDOFF.md`** | md | Splash PNG sequence handoff |
 
 **Rule:** JSON + md stay in git. Figma holds pixels only.
 

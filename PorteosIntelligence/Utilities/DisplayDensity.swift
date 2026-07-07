@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - DisplayDensity
 // Two-step UI scale: Standard (1×) for laptop, Large (2×) for external monitors.
-// Scales typography and row heights together — see design-system/figma/DISPLAY_DENSITY.md
+// Scales typography and row heights together — see Design-system/Figma/DISPLAY_DENSITY.md
 
 enum DisplayDensity: String, CaseIterable, Identifiable {
     case standard = "standard"
