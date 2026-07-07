@@ -68,9 +68,8 @@ struct SplashView: View {
 
             heroLayer(opacity: heroOpacity(at: t))
 
-            VStack(spacing: 10) {
-                Spacer()
-
+            // Title + version — centered in panel (Figma motion frame)
+            VStack(spacing: 8) {
                 typewriterRow(at: t)
                     .padding(.horizontal, 40)
 
@@ -78,11 +77,17 @@ struct SplashView: View {
                     .font(.custom("JetBrains Mono", size: 11))
                     .foregroundStyle(textDim)
                     .opacity(versionOpacity(at: t))
+            }
+            .frame(width: Self.panelWidth, height: Self.panelHeight)
 
+            // Progress — pinned to handoff position y:428
+            VStack {
+                Spacer()
                 progressBar(fraction: progressFraction(at: t))
                     .padding(.horizontal, Self.progressLeading)
-                    .padding(.bottom, 30)
+                    .padding(.bottom, Self.panelHeight - 428 - Self.progressHeight)
             }
+            .frame(width: Self.panelWidth, height: Self.panelHeight)
         }
     }
 
@@ -124,7 +129,8 @@ struct SplashView: View {
                 .frame(width: 10, height: 24)
                 .opacity(cursorAlpha)
         }
-        .frame(maxWidth: .infinity, alignment: .center)
+        .fixedSize(horizontal: true, vertical: false)
+        .frame(maxWidth: .infinity)
         .opacity(t >= 0.7 ? 1 : 0)
     }
 
