@@ -45,16 +45,16 @@ struct NavigationPane: View {
         return .realEstate
     }
 
-    // MARK: Tokens
+    // MARK: Tokens (V2.06 — via DesignTokens)
 
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellElevated = Color(hex: "#23262E")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let accentRust    = Color(hex: "#C25E30")
-    private let accentGreen   = Color(hex: "#10B981")
+    private var shellSurface:  Color { DesignTokens.surfacePanel }
+    private var shellElevated: Color { DesignTokens.surfaceElevated }
+    private var shellBorder:   Color { DesignTokens.dividerStructural }
+    private var textPrimary:   Color { DesignTokens.textPrimary }
+    private var textSecondary: Color { DesignTokens.textSecondary }
+    private var textTertiary:  Color { DesignTokens.textDim }
+    private var accentRust:    Color { DesignTokens.accentRust }
+    private var accentGreen:   Color { DesignTokens.statusGo }
 
     // MARK: Body
 
@@ -72,7 +72,7 @@ struct NavigationPane: View {
             Spacer(minLength: 0)
             footerActions
         }
-        .frame(width: 260)
+        .frame(width: DesignTokens.navPaneWidth)
         .frame(maxHeight: .infinity)
         .background(shellSurface)
         .overlay(alignment: .trailing) {
@@ -99,36 +99,32 @@ struct NavigationPane: View {
         }
     }
 
-    // MARK: Header
+    // MARK: Header — Figma img_00_21: PORTEOS@SYSTEM wordmark only
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(spacing: 0) {
             Text("PORTEOS@SYSTEM")
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                .foregroundStyle(textPrimary)
+                .porteosButtonPrimary()
+                .foregroundStyle(textSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, DesignTokens.blockGutter)
+                .padding(.top, 14)
+                .padding(.bottom, 12)
 
-            Text("STATUS: ENCRYPTED")
-                .font(.custom("JetBrains Mono", size: 13))
-                .foregroundStyle(accentRust)
+            Rectangle().fill(shellBorder).frame(height: DesignTokens.dividerWidth)
         }
-        .padding(.top, 16)
-        .padding(.bottom, 16)
-        .padding(.leading, 16)
     }
 
-    // MARK: Nav Section
+    // MARK: Nav Section — uppercase profile labels, 2px accent pip
 
     private var navSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionHeader("NAVIGATION")
-                .padding(.bottom, 8)
-
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(ProfileType.allCases) { profile in
                     navLinkRow(profile)
                 }
             }
-            .padding(.bottom, 16)
+            .padding(.vertical, 8)
         }
     }
 
@@ -139,19 +135,18 @@ struct NavigationPane: View {
             activeProfile = profile
         } label: {
             HStack(spacing: 0) {
-                // Active indicator pip
                 Rectangle()
-                    .fill(isActive ? profile.accentColor : Color.clear)
-                    .frame(width: 2)
+                    .fill(isActive ? textPrimary : Color.clear)
+                    .frame(width: DesignTokens.navSelectionBorder)
 
-                Text(profile.navPath)
-                    .font(.custom("JetBrains Mono", size: 13).weight(isActive ? .bold : .regular))
-                    .foregroundStyle(isActive ? textPrimary : textSecondary)
-                    .padding(.leading, 14)
+                Text(profile.shellNavLabel)
+                    .porteosTextStyle(.shellNav(isActive: isActive))
+                    .foregroundStyle(isActive ? textPrimary : textTertiary)
+                    .padding(.leading, 12)
 
                 Spacer()
             }
-            .frame(height: 28)
+            .frame(height: DesignTokens.rowHeightNavLink)
             .background(isActive ? shellElevated : Color.clear)
             .clipShape(Rectangle())
         }
@@ -162,77 +157,64 @@ struct NavigationPane: View {
 
     private var dealsSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Rectangle().fill(shellBorder).frame(height: 1).padding(.bottom, 8)
-
-            // Deals header + compare toggle + filter toggle
+            // Compact utility row (filter / triage / compare)
             HStack(spacing: 0) {
-                sectionHeader("DEALS")
                 Spacer()
-
-                // Filter toggle — badge dot when active
-                Button {
-                    showFilterPanel.toggle()
-                } label: {
-                    HStack(spacing: 2) {
-                        Text("[ FILTER\(filters.isActive ? "•" : "") ]")
-                            .font(.custom("JetBrains Mono", size: 11).weight(showFilterPanel ? .bold : .regular))
-                            .foregroundStyle(filters.isActive ? accentRust : (showFilterPanel ? textSecondary : textTertiary))
-                    }
-                    .padding(.trailing, 4)
+                Button { showFilterPanel.toggle() } label: {
+                    Text("[ FILTER\(filters.isActive ? "•" : "") ]")
+                        .porteosTextStyle(.shellAction(isActive: showFilterPanel || filters.isActive))
+                        .foregroundStyle(filters.isActive ? accentRust : (showFilterPanel ? textSecondary : textTertiary))
                 }
                 .buttonStyle(.plain)
+                .padding(.trailing, 6)
 
-                // Triage — batch pipeline review
-                Button {
-                    showTriage = true
-                } label: {
+                Button { showTriage = true } label: {
                     Text("[ TRIAGE ]")
-                        .font(.custom("JetBrains Mono", size: 11))
+                        .porteosButtonPrimary()
                         .foregroundStyle(textTertiary)
-                        .padding(.trailing, 4)
                 }
                 .buttonStyle(.plain)
-                .sheet(isPresented: $showTriage) {
-                    BatchTriageView()
-                }
+                .padding(.trailing, 6)
+                .sheet(isPresented: $showTriage) { BatchTriageView() }
 
                 Button {
                     compareMode.toggle()
                     if !compareMode { pendingCompare.removeAll() }
                 } label: {
                     Text(compareMode ? "[ EXIT ]" : "[ CMP ]")
-                        .font(.custom("JetBrains Mono", size: 11).weight(compareMode ? .bold : .regular))
+                        .porteosTextStyle(.shellAction(isActive: compareMode))
                         .foregroundStyle(compareMode ? accentRust : textTertiary)
-                        .padding(.trailing, 12)
                 }
                 .buttonStyle(.plain)
+                .padding(.trailing, DesignTokens.blockGutter)
             }
+            .padding(.top, 8)
             .padding(.bottom, 4)
 
-            // Inline text search bar
-            searchBar
-                .padding(.horizontal, 12)
-                .padding(.bottom, 4)
+            // Status filter tabs — before search (Figma img_00_21 order)
+            filterTabs
+                .padding(.bottom, 6)
 
-            // Collapsible advanced filter panel
+            searchBar
+                .padding(.horizontal, DesignTokens.blockGutter)
+                .padding(.bottom, 6)
+
             if showFilterPanel {
                 AdvancedFilterPanel(filters: $filters)
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 4)
+                    .padding(.horizontal, DesignTokens.blockGutter)
+                    .padding(.bottom, 6)
             }
 
-            // Status filter tabs
-            filterTabs.padding(.bottom, 4)
-            Rectangle().fill(shellBorder).frame(height: 1)
+            Rectangle().fill(shellBorder).frame(height: DesignTokens.dividerWidth)
 
             // Deal list
             if filteredDeals.isEmpty {
                 Text(deals.isEmpty ? "no deals yet"
                      : filters.isActive ? "no matches"
                      : "no \(statusFilter?.rawValue ?? "") deals")
-                    .font(.custom("JetBrains Mono", size: 13))
+                    .porteosRowLabel()
                     .foregroundStyle(textSecondary)
-                    .padding(.leading, 16)
+                    .padding(.leading, DesignTokens.blockGutter)
                     .padding(.vertical, 8)
             } else {
                 LazyVStack(alignment: .leading, spacing: 0) {
@@ -252,8 +234,8 @@ struct NavigationPane: View {
                     pendingCompare.removeAll()
                 } label: {
                     Text("[ LAUNCH_COMPARE (\(pendingCompare.count)) ]")
-                        .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                        .foregroundStyle(Color(hex: "#0F1115"))
+                        .porteosButtonPrimary()
+                        .foregroundStyle(DesignTokens.canvasBase)
                         .frame(maxWidth: .infinity)
                         .frame(height: 36)
                         .background(accentRust)
@@ -263,10 +245,6 @@ struct NavigationPane: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
             }
-
-            // Bulk actions
-            Rectangle().fill(shellBorder).frame(height: 1)
-            bulkActions
         }
         .confirmationDialog(
             "Delete \(filteredDeals.count) deal\(filteredDeals.count == 1 ? "" : "s")?",
@@ -286,34 +264,32 @@ struct NavigationPane: View {
 
     private var searchBar: some View {
         HStack(spacing: 0) {
-            Text("↳ ")
-                .font(.custom("JetBrains Mono", size: 10))
+            Text("/ ")
+                .porteosRowLabel()
                 .foregroundStyle(textTertiary)
-                .padding(.leading, 8)
+                .padding(.leading, DesignTokens.blockGutter)
 
-            TextField("search…", text: $filters.searchText)
-                .font(.custom("JetBrains Mono", size: 11))
+            TextField("search deals...", text: $filters.searchText)
+                .porteosRowLabel()
                 .foregroundStyle(textPrimary)
                 .textFieldStyle(.plain)
                 .frame(maxWidth: .infinity)
 
             if !filters.searchText.isEmpty {
-                Button {
-                    filters.searchText = ""
-                } label: {
+                Button { filters.searchText = "" } label: {
                     Text("×")
-                        .font(.custom("JetBrains Mono", size: 13))
+                        .porteosTextStyle(.shellAction(isActive: false))
                         .foregroundStyle(textTertiary)
                 }
                 .buttonStyle(.plain)
                 .padding(.trailing, 6)
             }
         }
-        .frame(height: 26)
-        .background(Color(hex: "#0F1115"))
+        .frame(height: DesignTokens.rowHeightData)
+        .background(DesignTokens.canvasBase)
         .overlay(Rectangle().stroke(
             filters.searchText.isEmpty ? shellBorder : accentRust,
-            lineWidth: 1
+            lineWidth: DesignTokens.dividerWidth
         ))
         .clipShape(Rectangle())
     }
@@ -333,21 +309,21 @@ struct NavigationPane: View {
                     Button { statusFilter = option.filter } label: {
                         VStack(spacing: 0) {
                             Text(option.label)
-                                .font(.custom("JetBrains Mono", size: 13).weight(isActive ? .bold : .regular))
+                                .porteosMeta()
                                 .foregroundStyle(isActive ? textPrimary : textTertiary)
-                                .frame(height: 24)
+                                .frame(height: DesignTokens.rowHeightNavLink)
                                 .padding(.horizontal, 8)
                             Rectangle()
-                                .fill(isActive ? accentRust : Color.clear)
-                                .frame(height: 2)
+                                .fill(isActive ? textPrimary : Color.clear)
+                                .frame(height: DesignTokens.navSelectionBorder)
                         }
-                        .frame(height: 28)
+                        .frame(height: DesignTokens.rowHeightData)
                         .clipShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.leading, 16)
+            .padding(.leading, DesignTokens.blockGutter)
         }
     }
 
@@ -355,7 +331,7 @@ struct NavigationPane: View {
         HStack(spacing: 0) {
             Button { showExportSheet = true } label: {
                 Text("[ ./BULK_EXPORT ]")
-                    .font(.custom("JetBrains Mono", size: 13))
+                    .porteosButtonPrimary()
                     .foregroundStyle(filteredDeals.isEmpty ? textTertiary : accentGreen)
                     .padding(.leading, 16)
                     .frame(height: 32, alignment: .leading)
@@ -367,8 +343,8 @@ struct NavigationPane: View {
 
             Button { showDeleteConfirm = true } label: {
                 Text("[ ./BULK_DELETE ]")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(filteredDeals.isEmpty ? textTertiary : Color(hex: "#EF4444"))
+                    .porteosButtonPrimary()
+                    .foregroundStyle(filteredDeals.isEmpty ? textTertiary : DesignTokens.statusCritical)
                     .padding(.trailing, 12)
                     .frame(height: 32, alignment: .trailing)
             }
@@ -380,9 +356,10 @@ struct NavigationPane: View {
     private func dealRow(_ deal: PropertyDeal) -> some View {
         let isSelected   = deal.id == selectedDeal?.id
         let isChecked    = pendingCompare.contains(deal.id)
+        let dealAccent = profileFor(deal).accentColor
         let pipColor: Color = compareMode
-            ? (isChecked ? accentGreen : Color(hex: "#2E333F"))
-            : (isSelected ? accentRust : Color.clear)
+            ? (isChecked ? accentGreen : DesignTokens.dividerStructural)
+            : (isSelected ? dealAccent : Color.clear)
 
         return Button {
             if compareMode {
@@ -397,10 +374,9 @@ struct NavigationPane: View {
                 // Left pip: Rust when selected (normal), Green when checked (compare)
                 Rectangle()
                     .fill(pipColor)
-                    .frame(width: 2)
+                    .frame(width: compareMode ? 2 : 4)
 
                 HStack(spacing: 4) {
-                    // Checkbox indicator in compare mode
                     if compareMode {
                         Rectangle()
                             .fill(isChecked ? accentGreen : Color.clear)
@@ -409,8 +385,8 @@ struct NavigationPane: View {
                             .clipShape(Rectangle())
                     }
 
-                    Text(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)
-                        .font(.custom("JetBrains Mono", size: 13))
+                    Text(deal.propertyName.isEmpty ? "UNTITLED DEAL" : deal.propertyName.uppercased())
+                        .porteosTextStyle(.shellDeal(isSelected: isSelected || isChecked))
                         .foregroundStyle(
                             compareMode ? (isChecked ? textPrimary : textSecondary)
                                         : (isSelected ? textPrimary : textSecondary)
@@ -420,14 +396,14 @@ struct NavigationPane: View {
                     Spacer()
 
                     Text(deal.status.rawValue.uppercased())
-                        .font(.custom("JetBrains Mono", size: 13))
-                        .foregroundStyle(statusColor(deal.status))
+                        .porteosMeta()
+                        .monospacedDigit()
+                        .foregroundStyle(deal.status.tokenColor)
                 }
                 .padding(.leading, 10)
                 .padding(.trailing, 12)
-                .padding(.vertical, 6)
             }
-            .frame(height: 32)
+            .frame(height: DesignTokens.rowHeightData)
             .background(
                 compareMode ? (isChecked ? shellElevated : Color.clear)
                             : (isSelected ? shellElevated : Color.clear)
@@ -442,62 +418,61 @@ struct NavigationPane: View {
         }
     }
 
-    private func statusColor(_ status: DealStatus) -> Color {
-        switch status {
-        case .viable:   return Color(hex: "#10B981")  // green
-        case .review:   return Color(hex: "#F59E0B")  // amber
-        case .rejected: return Color(hex: "#EF4444")  // red
-        case .acquired: return Color(hex: "#3B82F6")  // blue
-        case .pipeline: return Color(hex: "#64748B")  // tertiary
-        }
-    }
-
-    // MARK: Section Header
-
-    private func sectionHeader(_ title: String) -> some View {
-        Text(title)
-            .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-            .tracking(0.08)
-            .foregroundStyle(textTertiary)
-            .textCase(.uppercase)
-            .padding(.leading, 16)
-    }
-
-    // MARK: Footer Actions
+    // MARK: Footer — Figma img_00_21: ./IMPORT_DEALS + [ ./NEW_DEAL ] + CLI prompt
 
     private var footerActions: some View {
         VStack(spacing: 0) {
             Rectangle()
                 .fill(shellBorder)
-                .frame(height: 1)
+                .frame(height: DesignTokens.dividerWidth)
 
-            scriptButton(label: "[ ./NEW_DEAL ]") {
-                showNewDealSheet = true
+            if !compareMode && !filteredDeals.isEmpty {
+                bulkActions
+                Rectangle()
+                    .fill(shellBorder)
+                    .frame(height: DesignTokens.dividerWidth)
             }
+
+            Button { showImportSheet = true } label: {
+                Text("./IMPORT_DEALS")
+                    .porteosRowLabel()
+                    .foregroundStyle(textSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, DesignTokens.blockGutter)
+                    .frame(height: DesignTokens.rowHeightData)
+            }
+            .buttonStyle(.plain)
 
             Rectangle()
                 .fill(shellBorder)
-                .frame(height: 1)
-                .padding(.horizontal, 16)
+                .frame(height: DesignTokens.dividerWidth)
+                .padding(.horizontal, DesignTokens.blockGutter)
 
-            scriptButton(label: "[ ./IMPORT_DEALS ]") {
-                showImportSheet = true
+            Button { showNewDealSheet = true } label: {
+                Text("[ ./NEW_DEAL ]")
+                    .frame(maxWidth: .infinity)
             }
-        }
-    }
+            .buttonStyle(TerminalButtonStyle(color: .rust, height: DesignTokens.rowHeightButton))
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 8)
 
-    private func scriptButton(label: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(label)
-                .font(.custom("JetBrains Mono", size: 13))
-                .foregroundStyle(accentGreen)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.leading, 16)
-                .frame(height: 32)
+            Rectangle()
+                .fill(shellBorder)
+                .frame(height: DesignTokens.dividerWidth)
+
+            HStack(spacing: 0) {
+                Text("porteos@system ~ %")
+                    .porteosCliPrompt()
+                    .foregroundStyle(textTertiary)
+                Rectangle()
+                    .fill(textPrimary.opacity(0.85))
+                    .frame(width: 7, height: 13)
+                Spacer()
+            }
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 10)
+            .background(DesignTokens.canvasBase)
         }
-        .buttonStyle(.plain)
-        .clipShape(Rectangle())
-        .padding(.vertical, 4)
     }
 }
 
@@ -520,6 +495,6 @@ struct NavigationPane: View {
         Spacer()
     }
     .frame(width: 400, height: 600)
-    .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
     .modelContainer(container)
 }

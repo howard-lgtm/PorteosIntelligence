@@ -1,0 +1,161 @@
+{
+  "$description": "W3C DTCG format — reconciled Phase 0 (V2.06 canonical). Import via Tokens Studio or Variables Import.",
+  "$metadata": {
+    "version": "2.06.0",
+    "phase0Completed": "2026-07-02",
+    "theme": "porteos-dark"
+  },
+  "color": {
+    "shell": {
+      "canvas-base": { "$value": "#0A0A0A", "$type": "color", "$description": "V2.06 canonical" },
+      "surface-panel": { "$value": "#111111", "$type": "color" },
+      "surface-elevated": { "$value": "#1A1A1A", "$type": "color" },
+      "divider-structural": { "$value": "#333333", "$type": "color" },
+      "bg": { "$value": "#0A0A0A", "$type": "color", "$description": "Alias" },
+      "surface": { "$value": "#111111", "$type": "color", "$description": "Alias" },
+      "elevated": { "$value": "#1A1A1A", "$type": "color", "$description": "Alias" },
+      "border": { "$value": "#333333", "$type": "color", "$description": "Alias" }
+    },
+    "text": {
+      "primary": { "$value": "#F8F9FA", "$type": "color" },
+      "secondary": { "$value": "#94A3B8", "$type": "color" },
+      "dim": { "$value": "#666666", "$type": "color" },
+      "tertiary": { "$value": "#666666", "$type": "color", "$description": "Alias → dim" },
+      "on-accent": { "$value": "#0A0A0A", "$type": "color" }
+    },
+    "semantic": {
+      "status-go": { "$value": "#27C93F", "$type": "color" },
+      "status-warn": { "$value": "#FFBD2E", "$type": "color" },
+      "status-critical": { "$value": "#FF5F56", "$type": "color" },
+      "success": { "$value": "#27C93F", "$type": "color", "$description": "Alias" },
+      "warning": { "$value": "#FFBD2E", "$type": "color", "$description": "Alias" },
+      "danger": { "$value": "#FF5F56", "$type": "color", "$description": "Alias" },
+      "info": { "$value": "#3B82F6", "$type": "color" }
+    },
+    "status": {
+      "pipeline": { "$value": "#64748B", "$type": "color" },
+      "review": { "$value": "#F59E0B", "$type": "color" },
+      "viable": { "$value": "#27C93F", "$type": "color" },
+      "rejected": { "$value": "#FF5F56", "$type": "color" },
+      "acquired": { "$value": "#3B82F6", "$type": "color" }
+    },
+    "profile": {
+      "cmd-center": { "$value": "#94A3B8", "$type": "color" },
+      "real-estate": { "$value": "#C25E30", "$type": "color", "$description": "Resolved default: rust" },
+      "real-estate-spec": { "$value": "#D4AF37", "$type": "color", "$description": "Optional gold" },
+      "institutional-rust": { "$value": "#A34121", "$type": "color" },
+      "hospitality": { "$value": "#14B8A6", "$type": "color" },
+      "design": { "$value": "#A855F7", "$type": "color" },
+      "circular": { "$value": "#3B82F6", "$type": "color" },
+      "pipeline": { "$value": "#F59E0B", "$type": "color" }
+    },
+    "grade": {
+      "a": { "$value": "#27C93F", "$type": "color" },
+      "b": { "$value": "#D4AF37", "$type": "color" },
+      "c": { "$value": "#F8F9FA", "$type": "color" },
+      "d": { "$value": "#FFBD2E", "$type": "color" },
+      "f": { "$value": "#FF5F56", "$type": "color" }
+    },
+    "legacy": {
+      "shell-bg": { "$value": "#0F1115", "$type": "color", "$description": "DEPRECATED v1.0.4" },
+      "shell-surface": { "$value": "#1A1D24", "$type": "color", "$description": "DEPRECATED" },
+      "shell-border": { "$value": "#2E333F", "$type": "color", "$description": "DEPRECATED" }
+    }
+  },
+  "dimension": {
+    "layout": {
+      "nav-pane-width": { "$value": "260px", "$type": "dimension" },
+      "inspector-pane-width": { "$value": "280px", "$type": "dimension" },
+      "header-height": { "$value": "40px", "$type": "dimension" },
+      "command-bar-height": { "$value": "32px", "$type": "dimension" },
+      "row-height": { "$value": "28px", "$type": "dimension" },
+      "metric-cell-min-height": { "$value": "52px", "$type": "dimension" },
+      "hero-cell-min-height": { "$value": "88px", "$type": "dimension" },
+      "block-header-height": { "$value": "28px", "$type": "dimension" },
+      "score-ring-size": { "$value": "120px", "$type": "dimension" },
+      "window-width": { "$value": "1200px", "$type": "dimension" },
+      "window-height": { "$value": "800px", "$type": "dimension" }
+    },
+    "spacing": {
+      "xs": { "$value": "4px", "$type": "dimension" },
+      "sm": { "$value": "8px", "$type": "dimension" },
+      "md": { "$value": "12px", "$type": "dimension" },
+      "lg": { "$value": "16px", "$type": "dimension" },
+      "xl": { "$value": "24px", "$type": "dimension" },
+      "2xl": { "$value": "32px", "$type": "dimension" }
+    },
+    "border": {
+      "thin": { "$value": "1px", "$type": "dimension" },
+      "accent": { "$value": "2px", "$type": "dimension" },
+      "ring": { "$value": "4px", "$type": "dimension" }
+    },
+    "radius": {
+      "none": { "$value": "0px", "$type": "dimension" }
+    }
+  },
+  "fontFamily": {
+    "mono": { "$value": "JetBrains Mono", "$type": "fontFamily" },
+    "sans": { "$value": "Inter", "$type": "fontFamily" }
+  },
+  "fontSize": {
+    "meta": { "$value": "10px", "$type": "dimension" },
+    "row-label": { "$value": "11px", "$type": "dimension" },
+    "row-value": { "$value": "12px", "$type": "dimension" },
+    "metric-label": { "$value": "11px", "$type": "dimension" },
+    "metric-value": { "$value": "16px", "$type": "dimension" },
+    "score-grade": { "$value": "20px", "$type": "dimension" },
+    "score-hero": { "$value": "36px", "$type": "dimension" }
+  },
+  "fontWeight": {
+    "regular": { "$value": 400, "$type": "fontWeight" },
+    "medium": { "$value": 500, "$type": "fontWeight" },
+    "semibold": { "$value": 600, "$type": "fontWeight" },
+    "bold": { "$value": 700, "$type": "fontWeight" }
+  },
+  "typography": {
+    "metric-label": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{fontFamily.mono}",
+        "fontWeight": "{fontWeight.medium}",
+        "fontSize": "{fontSize.metric-label}",
+        "letterSpacing": "0.02em",
+        "textCase": "uppercase"
+      }
+    },
+    "metric-value": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{fontFamily.mono}",
+        "fontWeight": "{fontWeight.semibold}",
+        "fontSize": "{fontSize.metric-value}",
+        "letterSpacing": "-0.02em"
+      }
+    },
+    "score-hero": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{fontFamily.mono}",
+        "fontWeight": "{fontWeight.bold}",
+        "fontSize": "{fontSize.score-hero}"
+      }
+    },
+    "score-grade": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{fontFamily.mono}",
+        "fontWeight": "{fontWeight.bold}",
+        "fontSize": "{fontSize.score-grade}"
+      }
+    },
+    "button-primary": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{fontFamily.mono}",
+        "fontWeight": "{fontWeight.bold}",
+        "fontSize": "{fontSize.row-label}",
+        "textCase": "uppercase"
+      }
+    }
+  }
+}

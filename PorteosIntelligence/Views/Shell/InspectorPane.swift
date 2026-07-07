@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 // MARK: - InspectorPane
+// V2.06 — Figma img_00_21 + LOCK inspector-weights anatomy.
 
 struct InspectorPane: View {
 
@@ -11,40 +12,33 @@ struct InspectorPane: View {
     @State private var selectedTab        = "weights"
     @State private var showFullEditSheet  = false
     @State private var showingPDFReport   = false
-    /// Bumped every time deal data changes. Forwarded to AIVibePanel so it can
-    /// invalidate its in-memory result without InspectorPane reaching into its state.
     @State private var vibeRefreshID      = UUID()
+    @State private var convictionLevel:  Int = 1
 
     private var history: DealHistoryManager { DealHistoryManager.shared }
 
     // MARK: Tokens
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let accentRust    = Color(hex: "#C25E30")   // V3.1 primary accent
+    private var shellBg:       Color { DesignTokens.canvasBase }
+    private var shellSurface:  Color { DesignTokens.surfacePanel }
+    private var shellBorder:   Color { DesignTokens.dividerStructural }
+    private var textPrimary:   Color { DesignTokens.textPrimary }
+    private var textSecondary: Color { DesignTokens.textSecondary }
+    private var textTertiary:  Color { DesignTokens.textDim }
+    private var accentRust:    Color { DesignTokens.accentRust }
 
-    // V3.1 per-profile slider accent colors
-    private let accentRe = Color(hex: "#C25E30")   // Rust  – Real Estate
-    private let accentHo = Color(hex: "#14B8A6")   // Teal  – Hospitality
-    private let accentDe = Color(hex: "#A855F7")   // Purple – Design
-    private let accentCi = Color(hex: "#3B82F6")   // Blue  – Circular Economy
+    private var accentRe: Color { ProfileType.realEstate.accentColor }
+    private var accentHo: Color { ProfileType.hospitality.accentColor }
+    private var accentDe: Color { ProfileType.design.accentColor }
+    private var accentCi: Color { ProfileType.circular.accentColor }
 
     // MARK: Body
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             paneHeader
-            historyBar
-            Rectangle().fill(shellBorder).frame(height: 1)
             tabBar
-
-            Rectangle()
-                .fill(shellBorder)
-                .frame(height: 1)
+            fullWidthDivider
 
             switch selectedTab {
             case "weights": weightsContent
@@ -52,8 +46,10 @@ struct InspectorPane: View {
             }
 
             Spacer(minLength: 0)
+            fullWidthDivider
+            historyBar
         }
-        .frame(width: 280)
+        .frame(width: DesignTokens.inspectorPaneWidth)
         .frame(maxHeight: .infinity)
         .background(shellSurface)
         .clipShape(Rectangle())
@@ -79,80 +75,78 @@ struct InspectorPane: View {
             deal.aiAnalysisText = nil
             vibeRefreshID       = UUID()
         }
-        // Auto-trigger AI analysis when a deal is imported via browser extension / server
         .onReceive(NotificationCenter.default.publisher(for: .autoTriggerAI)) { notif in
             guard let id = notif.userInfo?["dealID"] as? UUID,
                   deal.id == id else { return }
             deal.aiAnalysisText = nil
             vibeRefreshID       = UUID()
         }
+        .onAppear { loadConvictionFromTags() }
+        .onChange(of: deal.id) { _, _ in loadConvictionFromTags() }
     }
 
-    // MARK: Pane Header
+    // MARK: Pane Header — ./INSPECTOR_V2 + action buttons (28px)
 
     private var paneHeader: some View {
         VStack(spacing: 0) {
-            // Module header line
             Text("./INSPECTOR_V2")
-                .font(.custom("JetBrains Mono", size: 13))
+                .porteosRowLabel()
                 .foregroundStyle(textTertiary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 16)
-                .frame(height: 36)
+                .padding(.horizontal, DesignTokens.blockGutter)
+                .frame(height: DesignTokens.rowHeightHeader)
 
-            Rectangle().fill(shellBorder).frame(height: 1)
+            fullWidthDivider
 
-            // Action buttons row
             HStack(spacing: 8) {
-                // Primary: EDIT DEAL DATA (Rust fill)
                 Button { showFullEditSheet = true } label: {
                     Text("[ EDIT DEAL DATA ]")
-                        .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                        .foregroundStyle(Color(hex: "#0F1115"))
+                        .porteosButtonPrimary()
+                        .foregroundStyle(shellBg)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 28)
+                        .frame(height: DesignTokens.rowHeightData)
                         .background(accentRust)
                         .clipShape(Rectangle())
                 }
                 .buttonStyle(.plain)
 
-                // Secondary: PDF (bordered, no fill)
                 Button { showingPDFReport = true } label: {
                     Text("[ PDF ]")
-                        .font(.custom("JetBrains Mono", size: 13).weight(.bold))
+                        .porteosButtonPrimary()
                         .foregroundStyle(accentRust)
-                        .frame(width: 64, height: 28)
+                        .frame(width: 64, height: DesignTokens.rowHeightData)
                         .background(accentRust.opacity(0.08))
                         .overlay(
                             Rectangle()
-                                .stroke(accentRust.opacity(0.45), lineWidth: 1)
+                                .stroke(accentRust.opacity(0.45), lineWidth: DesignTokens.dividerWidth)
                         )
                         .clipShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, DesignTokens.blockGutter)
             .padding(.vertical, 10)
+
+            fullWidthDivider
         }
     }
 
-    // MARK: History Bar
+    // MARK: History Bar (footer — Figma img_00_21)
 
     private var historyBar: some View {
         HStack(spacing: 0) {
-            // ── Undo ───────────────────────────────────────────────────────
             Button { performUndo() } label: {
-                Text("[ ↩ ]")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                Text("[ UNDO ]")
+                    .porteosButtonPrimary()
                     .foregroundStyle(history.canUndo ? textSecondary : textTertiary.opacity(0.35))
             }
             .buttonStyle(.plain)
             .disabled(!history.canUndo)
-            .padding(.leading, 16)
+            .padding(.leading, DesignTokens.blockGutter)
 
             if history.canUndo {
                 Text(history.undoLabel)
-                    .font(.custom("JetBrains Mono", size: 10))
+                    .porteosMeta()
                     .foregroundStyle(textTertiary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -161,10 +155,9 @@ struct InspectorPane: View {
 
             Spacer()
 
-            // ── Redo ───────────────────────────────────────────────────────
             if history.canRedo {
                 Text(history.redoLabel)
-                    .font(.custom("JetBrains Mono", size: 10))
+                    .porteosMeta()
                     .foregroundStyle(textTertiary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -172,19 +165,17 @@ struct InspectorPane: View {
             }
 
             Button { performRedo() } label: {
-                Text("[ ↪ ]")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                Text("[ REDO ]")
+                    .porteosButtonPrimary()
                     .foregroundStyle(history.canRedo ? textSecondary : textTertiary.opacity(0.35))
             }
             .buttonStyle(.plain)
             .disabled(!history.canRedo)
-            .padding(.trailing, 16)
+            .padding(.trailing, DesignTokens.blockGutter)
         }
-        .frame(height: 26)
+        .frame(height: DesignTokens.rowHeightData)
         .background(shellBg)
     }
-
-    // MARK: Undo / Redo Execution
 
     private func performUndo() {
         guard let snap = history.undo(currentState: deal) else { return }
@@ -200,7 +191,7 @@ struct InspectorPane: View {
         try? modelContext.save()
     }
 
-    // MARK: Tab Bar
+    // MARK: Tab Bar — [WEIGHTS] 2px rust underline | [AI VIBE]
 
     private var tabBar: some View {
         HStack(spacing: 0) {
@@ -208,8 +199,8 @@ struct InspectorPane: View {
             tabButton(title: "AI VIBE", id: "ai_vibe")
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .frame(height: 36)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightHeader)
     }
 
     private func tabButton(title: String, id: String) -> some View {
@@ -222,21 +213,22 @@ struct InspectorPane: View {
                 Spacer()
 
                 Text("[\(title)]")
-                    .font(.custom("JetBrains Mono", size: 13).weight(isActive ? .bold : .regular))
+                    .porteosButtonPrimary()
                     .foregroundStyle(isActive ? textPrimary : textTertiary)
-                    .padding(.horizontal, 4)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 4)
+                    .background(isActive ? DesignTokens.surfaceElevated : Color.clear)
 
                 Spacer()
 
-                // Active: 2px Rust underline; inactive: transparent
                 Rectangle()
                     .fill(isActive ? accentRust : Color.clear)
-                    .frame(height: 2)
+                    .frame(height: DesignTokens.navSelectionBorder)
             }
-            .frame(height: 36)
+            .frame(height: DesignTokens.rowHeightHeader)
         }
         .buttonStyle(.plain)
-        .padding(.trailing, 8)
+        .padding(.trailing, 4)
     }
 
     // MARK: Weights Content
@@ -244,41 +236,99 @@ struct InspectorPane: View {
     private var weightsContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                weightRow(
-                    label: "Real Estate",
-                    value: deal.weightRealEstate,
-                    accentColor: accentRe,
-                    key: "re"
-                )
-                rowDivider
-                weightRow(
-                    label: "Hospitality",
-                    value: deal.weightHospitality,
-                    accentColor: accentHo,
-                    key: "ho"
-                )
-                rowDivider
-                weightRow(
-                    label: "Design",
-                    value: deal.weightDesign,
-                    accentColor: accentDe,
-                    key: "de"
-                )
-                rowDivider
-                weightRow(
-                    label: "Circular Economy",
-                    value: deal.weightCircular,
-                    accentColor: accentCi,
-                    key: "ci"
-                )
-                rowDivider
+                weightRow(label: "Real Estate",       value: deal.weightRealEstate,  accentColor: accentRe, key: "re")
+                insetDivider
+                weightRow(label: "Hospitality",       value: deal.weightHospitality, accentColor: accentHo, key: "ho")
+                insetDivider
+                weightRow(label: "Design",            value: deal.weightDesign,      accentColor: accentDe, key: "de")
+                insetDivider
+                weightRow(label: "Circular Economy",  value: deal.weightCircular,  accentColor: accentCi, key: "ci")
+                insetDivider
                 totalRow
+                insetDivider
+                founderLensSection
+                if !displayTags.isEmpty {
+                    insetDivider
+                    tagRepositorySection
+                }
             }
-            .padding(.top, 8)
+            .padding(.top, 4)
         }
     }
 
-    // MARK: Weight Row
+    // MARK: Founder Lens
+
+    private var founderLensSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("// FOUNDER_LENS")
+                .porteosMeta()
+                .foregroundStyle(textTertiary)
+                .padding(.horizontal, DesignTokens.blockGutter)
+                .padding(.top, 12)
+
+            HStack(spacing: 16) {
+                convictionNode(level: 0, marker: "( )", label: "LOW")
+                convictionNode(level: 1, marker: "(•)", label: "MED")
+                convictionNode(level: 2, marker: "( )", label: "HIGH")
+            }
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.bottom, 12)
+        }
+    }
+
+    private func convictionNode(level: Int, marker: String, label: String) -> some View {
+        let isActive = convictionLevel == level
+        return Button {
+            convictionLevel = level
+            persistConviction(level)
+        } label: {
+            HStack(spacing: 6) {
+                Text(isActive ? "(•)" : marker)
+                    .porteosRowLabel()
+                    .foregroundStyle(isActive ? accentRust : textTertiary)
+                Text(label)
+                    .porteosMeta()
+                    .foregroundStyle(isActive ? textPrimary : textTertiary)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var displayTags: [String] {
+        deal.tags.filter { !$0.hasPrefix("conviction:") }
+    }
+
+    private var tagRepositorySection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("// TAG_REPOSITORY")
+                .porteosMeta()
+                .foregroundStyle(textTertiary)
+                .padding(.horizontal, DesignTokens.blockGutter)
+                .padding(.top, 8)
+
+            FlowLayoutTags(tags: displayTags)
+                .padding(.horizontal, DesignTokens.blockGutter)
+                .padding(.bottom, 12)
+        }
+    }
+
+    private func loadConvictionFromTags() {
+        if deal.tags.contains("conviction:high")      { convictionLevel = 2 }
+        else if deal.tags.contains("conviction:low")  { convictionLevel = 0 }
+        else                                          { convictionLevel = 1 }
+    }
+
+    private func persistConviction(_ level: Int) {
+        deal.tags.removeAll { $0.hasPrefix("conviction:") }
+        switch level {
+        case 0:  deal.tags.append("conviction:low")
+        case 2:  deal.tags.append("conviction:high")
+        default: deal.tags.append("conviction:med")
+        }
+        try? modelContext.save()
+    }
+
+    // MARK: Weight Row — label + value + 2px profile bar (Figma img_00_21)
 
     private func weightRow(
         label: String,
@@ -286,30 +336,27 @@ struct InspectorPane: View {
         accentColor: Color,
         key: String
     ) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DesignTokens.blockGutter) {
             HStack {
                 Text(label.uppercased())
-                    .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                    .tracking(0.08)
+                    .porteosMetricLabel()
                     .foregroundStyle(textTertiary)
 
                 Spacer()
 
-                Text("\(value, specifier: "%.1f")%")
-                    .font(.custom("JetBrains Mono", size: 17).weight(.bold))
+                Text("\(value, specifier: "%.0f") %")
+                    .porteosMetricValue()
                     .monospacedDigit()
                     .foregroundStyle(textPrimary)
             }
 
-            TerminalSlider(value: value, accentColor: accentColor) { newValue in
+            InspectorWeightBar(value: value, accentColor: accentColor) { newValue in
                 rebalanceWeights(changed: key, newValue: newValue)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, DesignTokens.blockGutter)
     }
-
-    // MARK: Total Row
 
     private var totalRow: some View {
         let total = deal.weightRealEstate
@@ -319,26 +366,31 @@ struct InspectorPane: View {
 
         return HStack {
             Text("TOTAL")
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                .tracking(0.08)
+                .porteosMetricLabel()
                 .foregroundStyle(textTertiary)
 
             Spacer()
 
             Text("\(total, specifier: "%.1f")%")
-                .font(.custom("JetBrains Mono", size: 17).weight(.bold))
+                .porteosMetricValue()
                 .monospacedDigit()
-                .foregroundStyle(abs(total - 100) < 0.01 ? textPrimary : Color(hex: "#EF4444"))
+                .foregroundStyle(abs(total - 100) < 0.01 ? textPrimary : DesignTokens.statusCritical)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, DesignTokens.blockGutter)
         .padding(.vertical, 12)
     }
 
-    private var rowDivider: some View {
+    private var fullWidthDivider: some View {
         Rectangle()
             .fill(shellBorder)
-            .frame(height: 1)
-            .padding(.horizontal, 16)
+            .frame(height: DesignTokens.dividerWidth)
+    }
+
+    private var insetDivider: some View {
+        Rectangle()
+            .fill(shellBorder)
+            .frame(height: DesignTokens.dividerWidth)
+            .padding(.horizontal, DesignTokens.blockGutter)
     }
 
     // MARK: AI Vibe Content
@@ -391,54 +443,61 @@ struct InspectorPane: View {
     }
 }
 
-// MARK: - TerminalSlider
+// MARK: - InspectorWeightBar
+// Figma img_00_21 — thin 2px profile-colored fill, no thumb block.
 
-private struct TerminalSlider: View {
+private struct InspectorWeightBar: View {
 
     let value: Double
     let accentColor: Color
     let onChange: (Double) -> Void
 
-    private let shellBorder  = Color(hex: "#2E333F")
     private let trackHeight: CGFloat = 2
-    private let thumbWidth:  CGFloat = 8
-    private let thumbHeight: CGFloat = 16
 
     var body: some View {
         GeometryReader { geo in
             let trackWidth = geo.size.width
             let fillWidth  = CGFloat(value / 100) * trackWidth
-            let thumbX     = fillWidth - thumbWidth / 2
 
             ZStack(alignment: .leading) {
-                // Track
                 Rectangle()
-                    .fill(shellBorder)
+                    .fill(DesignTokens.dividerStructural)
                     .frame(height: trackHeight)
 
-                // Fill
                 Rectangle()
                     .fill(accentColor)
                     .frame(width: max(0, fillWidth), height: trackHeight)
-
-                // Thumb
-                Rectangle()
-                    .fill(accentColor)
-                    .frame(width: thumbWidth, height: thumbHeight)
-                    .offset(x: max(0, min(thumbX, trackWidth - thumbWidth)))
-                    .clipShape(Rectangle())
             }
-            .frame(height: thumbHeight)
+            .frame(maxHeight: .infinity, alignment: .center)
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { gesture in
+                        guard trackWidth > 0 else { return }
                         let raw = gesture.location.x / trackWidth * 100
                         onChange(max(0, min(100, raw)))
                     }
             )
         }
-        .frame(height: thumbHeight)
+        .frame(height: 12)
+    }
+}
+
+// MARK: - FlowLayoutTags
+
+private struct FlowLayoutTags: View {
+    let tags: [String]
+
+    var body: some View {
+        LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: 90), spacing: 6)],
+            alignment: .leading,
+            spacing: 6
+        ) {
+            ForEach(tags, id: \.self) { tag in
+                TerminalTagChip(name: tag)
+            }
+        }
     }
 }
 
@@ -447,7 +506,14 @@ private struct TerminalSlider: View {
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: PropertyDeal.self, configurations: config)
-    let deal = PropertyDeal()
+    let deal = PropertyDeal(
+        propertyName: "Lisbon Office Block A",
+        weightRealEstate: 25,
+        weightHospitality: 25,
+        weightDesign: 25,
+        weightCircular: 25
+    )
+    deal.tags = ["browser_import", "source:idealista", "has_url"]
     container.mainContext.insert(deal)
 
     return HStack(spacing: 0) {
@@ -455,6 +521,6 @@ private struct TerminalSlider: View {
         InspectorPane(deal: deal)
     }
     .frame(width: 600, height: 700)
-    .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
     .modelContainer(container)
 }

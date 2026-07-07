@@ -3,284 +3,305 @@ import AppKit
 import UniformTypeIdentifiers
 
 // MARK: - BulkExportSheet
+// Figma img_00_15 — format, export depth, field scope, preview table.
 
 struct BulkExportSheet: View {
 
-    /// All deals in the store (unfiltered).
     let allDeals: [PropertyDeal]
-    /// Deals currently visible in the NavigationPane status filter.
     let filteredDeals: [PropertyDeal]
 
     @Environment(\.dismiss) private var dismiss
 
-    // MARK: State
+    @State private var format: ExportFormat = .csv
+    @State private var depthOption: ExportDepthOption = .standard
+    @State private var includeBase            = true
+    @State private var includeFinancial         = true
+    @State private var includeProfileWeights  = true
+    @State private var includeAIScores        = false
+    @State private var exportMessage          = ""
 
-    @State private var format: ExportFormat   = .csv
-    @State private var depth: ExportDepth     = .financials
-    @State private var scope: ScopeOption     = .all
-    @State private var exportMessage: String  = ""
+    private var dealsToExport: [PropertyDeal] { allDeals }
 
-    enum ScopeOption: String, CaseIterable {
-        case all      = "ALL DEALS"
-        case pipeline = "PIPELINE ONLY"
-        case viable   = "VIABLE ONLY"
-        case acquired = "ACQUIRED ONLY"
+    private var effectiveDepth: ExportDepth {
+        if depthOption == .full || includeAIScores { return .allMetrics }
+        if depthOption == .standard || includeFinancial { return .financials }
+        return .base
     }
 
-    private var dealsToExport: [PropertyDeal] {
-        switch scope {
-        case .all:      return allDeals
-        case .pipeline: return allDeals.filter { $0.status == .pipeline }
-        case .viable:   return allDeals.filter { $0.status == .viable }
-        case .acquired: return allDeals.filter { $0.status == .acquired }
+    private var previewFieldCount: Int {
+        switch effectiveDepth {
+        case .base:       return 4
+        case .financials: return 8
+        case .allMetrics: return 12
         }
     }
 
-    // MARK: Tokens
-
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellElevated = Color(hex: "#23262E")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let accentRust    = Color(hex: "#C25E30")
-    private let accentGreen   = Color(hex: "#10B981")
-    private let textPrimary   = Color(hex: "#F8FAFC")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-
-    // MARK: Body
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            cliHeader
-            Rectangle().fill(shellBorder).frame(height: 1)
+            TerminalCLIHeader(
+                command: "deal --export --format=\(format.rawValue.lowercased())",
+                accentColor: DesignTokens.accentRust
+            )
+            TerminalStructuralDivider()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    formatRow
-                    Rectangle().fill(shellBorder).frame(height: 1)
-                    depthRow
-                    Rectangle().fill(shellBorder).frame(height: 1)
+                    formatSection
+                    TerminalStructuralDivider()
+                    depthSection
+                    TerminalStructuralDivider()
                     scopeSection
-                    Rectangle().fill(shellBorder).frame(height: 1)
+                    TerminalStructuralDivider()
                     previewSection
                 }
             }
 
-            Rectangle().fill(shellBorder).frame(height: 1)
+            TerminalStructuralDivider()
             footerRow
         }
-        .frame(width: 640, height: 560)
-        .background(shellBg)
+        .frame(width: 460)
+        .background(DesignTokens.canvasBase)
         .clipShape(Rectangle())
     }
 
-    // MARK: CLI Header
+    // MARK: Format
 
-    private var cliHeader: some View {
-        HStack(spacing: 0) {
-            Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 13))
-                .foregroundStyle(textTertiary)
-            Text("deal --export --format=\(format.rawValue.lowercased())")
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                .foregroundStyle(accentRust)
-                .lineLimit(1)
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .frame(height: 36)
-        .background(shellSurface)
-    }
-
-    // MARK: Format Row
-
-    private var formatRow: some View {
-        HStack(spacing: 0) {
-            sectionLabel("FORMAT")
-            Spacer()
-            HStack(spacing: 8) {
-                ForEach(ExportFormat.allCases, id: \.self) { f in
-                    formatButton(label: f.rawValue, isActive: format == f) { format = f }
-                }
-            }
-            .padding(.trailing, 16)
-        }
-        .padding(.leading, 16)
-        .frame(height: 44)
-    }
-
-    // MARK: Depth Row
-
-    private var depthRow: some View {
-        HStack(spacing: 0) {
-            sectionLabel("FIELD DEPTH")
-            Spacer()
-            HStack(spacing: 8) {
-                ForEach(ExportDepth.allCases, id: \.self) { d in
-                    formatButton(label: d.rawValue, isActive: depth == d) { depth = d }
-                }
-            }
-            .padding(.trailing, 16)
-        }
-        .padding(.leading, 16)
-        .frame(height: 44)
-    }
-
-    // MARK: Scope Section
-
-    private var scopeSection: some View {
+    private var formatSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("SCOPE")
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-                .padding(.bottom, 10)
-
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(ScopeOption.allCases, id: \.self) { option in
-                    scopeRow(option)
-                    if option != ScopeOption.allCases.last {
-                        Rectangle().fill(shellBorder).frame(height: 1).padding(.leading, 16)
-                    }
+            sectionLabel("FORMAT")
+            HStack(spacing: 0) {
+                ForEach(ExportFormat.allCases, id: \.self) { item in
+                    formatTab(item)
                 }
+                Spacer(minLength: 0)
             }
-            .padding(.bottom, 12)
+            .padding(.horizontal, DesignTokens.blockGutter)
         }
+        .padding(.bottom, 8)
     }
 
-    private func scopeRow(_ option: ScopeOption) -> some View {
-        let count = countFor(option)
-        let isActive = scope == option
-
-        return Button { scope = option } label: {
-            HStack(spacing: 8) {
-                Rectangle()
-                    .fill(isActive ? accentGreen : Color.clear)
-                    .frame(width: 2, height: 14)
-
-                Text("[ \(option.rawValue) ]")
-                    .font(.custom("JetBrains Mono", size: 13).weight(isActive ? .bold : .regular))
-                    .foregroundStyle(isActive ? accentGreen : textTertiary)
-
+    private func formatTab(_ item: ExportFormat) -> some View {
+        let isActive = format == item
+        return Button { format = item } label: {
+            VStack(spacing: 0) {
                 Spacer()
-
-                Text("\(count) deal\(count == 1 ? "" : "s")")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(isActive ? accentGreen : textTertiary)
-                    .padding(.trailing, 16)
+                Text(item.rawValue)
+                    .porteosTextStyle(.shellNav(isActive: isActive))
+                    .foregroundStyle(isActive ? DesignTokens.textPrimary : DesignTokens.textDim)
+                    .padding(.horizontal, 12)
+                Spacer()
+                Rectangle()
+                    .fill(isActive ? DesignTokens.textPrimary : Color.clear)
+                    .frame(height: 2)
             }
-            .frame(height: 32)
-            .background(isActive ? shellElevated : Color.clear)
-            .clipShape(Rectangle())
+            .frame(height: DesignTokens.rowHeightHeader + 2)
         }
         .buttonStyle(.plain)
     }
 
-    private func countFor(_ option: ScopeOption) -> Int {
-        switch option {
-        case .all:      return allDeals.count
-        case .pipeline: return allDeals.filter { $0.status == .pipeline }.count
-        case .viable:   return allDeals.filter { $0.status == .viable }.count
-        case .acquired: return allDeals.filter { $0.status == .acquired }.count
+    // MARK: Export Depth
+
+    private var depthSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            sectionLabel("EXPORT DEPTH")
+                .padding(.bottom, 6)
+
+            ForEach(ExportDepthOption.allCases, id: \.self) { option in
+                depthRow(option)
+            }
+        }
+        .padding(.bottom, 8)
+    }
+
+    private func depthRow(_ option: ExportDepthOption) -> some View {
+        let isActive = depthOption == option
+        return Button {
+            depthOption = option
+            syncScopeWithDepth(option)
+        } label: {
+            HStack(alignment: .top, spacing: 10) {
+                selectionSquare(isActive: isActive)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(option.rawValue)
+                        .porteosButtonPrimary()
+                        .foregroundStyle(isActive ? DesignTokens.textPrimary : DesignTokens.textDim)
+                    Text(option.subtitle)
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textDim)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 8)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: Scope
+
+    private var scopeSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            sectionLabel("SCOPE")
+                .padding(.bottom, 6)
+
+            scopeToggle("BASE FIELDS",        isOn: $includeBase)
+            scopeToggle("FINANCIAL DATA",     isOn: $includeFinancial)
+            scopeToggle("PROFILE WEIGHTS",    isOn: $includeProfileWeights)
+            scopeToggle("AI SCORES",         isOn: $includeAIScores)
+        }
+        .padding(.bottom, 8)
+    }
+
+    private func scopeToggle(_ label: String, isOn: Binding<Bool>) -> some View {
+        Button { isOn.wrappedValue.toggle() } label: {
+            HStack(spacing: 10) {
+                selectionSquare(isActive: isOn.wrappedValue)
+                Text(label)
+                    .porteosButtonPrimary()
+                    .foregroundStyle(isOn.wrappedValue ? DesignTokens.textPrimary : DesignTokens.textDim)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 8)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func selectionSquare(isActive: Bool) -> some View {
+        ZStack {
+            Rectangle()
+                .fill(isActive ? ProfileType.circular.accentColor : Color.clear)
+                .frame(width: 12, height: 12)
+            Rectangle()
+                .strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
+                .frame(width: 12, height: 12)
         }
     }
 
-    // MARK: Preview Section
+    // MARK: Preview
 
     private var previewSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
                 Text("PREVIEW")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                    .tracking(0.08)
-                    .foregroundStyle(textTertiary)
-                Text("// first 3 rows · \(dealsToExport.count) deal\(dealsToExport.count == 1 ? "" : "s") selected")
-                    .font(.custom("JetBrains Mono", size: 11))
-                    .foregroundStyle(textTertiary)
+                    .porteosModuleCmd()
+                    .foregroundStyle(DesignTokens.textDim)
                 Spacer()
+                Text("\(format.rawValue) • \(dealsToExport.count) rows • \(previewFieldCount) fields")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
             }
-            .padding(.horizontal, 16)
-            .frame(height: 32)
-
-            Rectangle().fill(shellBorder).frame(height: 1)
+            .padding(.horizontal, DesignTokens.blockGutter)
 
             if dealsToExport.isEmpty {
-                Text("no deals match the current scope")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textSecondary)
-                    .padding(16)
+                Text("No deals available for export")
+                    .porteosRowLabel()
+                    .foregroundStyle(DesignTokens.textSecondary)
+                    .padding(DesignTokens.blockGutter)
             } else {
-                ScrollView([.horizontal, .vertical]) {
-                    Text(previewText)
-                        .font(.custom("JetBrains Mono", size: 11))
-                        .foregroundStyle(textSecondary)
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(spacing: 0) {
+                    previewHeaderRow
+                    previewDivider
+                    ForEach(Array(dealsToExport.prefix(3).enumerated()), id: \.element.id) { idx, deal in
+                        previewDataRow(deal, index: idx + 1)
+                        if idx < min(2, dealsToExport.count - 1) { previewDivider }
+                    }
                 }
-                .frame(height: 180)
-                .background(shellElevated)
+                .overlay {
+                    Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
+                }
+                .clipShape(Rectangle())
+                .padding(.horizontal, DesignTokens.blockGutter)
             }
         }
+        .padding(.bottom, DesignTokens.blockGutter)
     }
 
-    private var previewText: String {
-        guard !dealsToExport.isEmpty else { return "" }
-        return DealExporter.previewLines(
-            deals: dealsToExport,
-            depth: depth,
-            format: format,
-            maxRows: 3
-        )
+    private var previewHeaderRow: some View {
+        HStack(spacing: 0) {
+            previewCell("ID", isHeader: true, width: 36)
+            previewDividerVertical
+            previewCell("DEAL NAME", isHeader: true, width: nil)
+            previewDividerVertical
+            previewCell("PRICE", isHeader: true, width: 72)
+            previewDividerVertical
+            previewCell("SCORE", isHeader: true, width: 44)
+        }
+        .frame(height: DesignTokens.rowHeightHeader)
+        .background(DesignTokens.surfaceElevated)
+    }
+
+    private func previewDataRow(_ deal: PropertyDeal, index: Int) -> some View {
+        HStack(spacing: 0) {
+            previewCell(String(format: "%03d", index), isHeader: false, width: 36)
+            previewDividerVertical
+            previewCell(deal.propertyName.isEmpty ? "Untitled" : deal.propertyName, isHeader: false, width: nil)
+            previewDividerVertical
+            previewCell(String(format: "%.0f", deal.purchasePrice), isHeader: false, width: 72)
+            previewDividerVertical
+            previewCell(deal.porteosScore.map { String(format: "%.0f", $0) } ?? "—", isHeader: false, width: 44)
+        }
+        .frame(height: DesignTokens.rowHeightHeader)
+        .background(DesignTokens.surfacePanel)
+    }
+
+    private func previewCell(_ text: String, isHeader: Bool, width: CGFloat?) -> some View {
+        Text(text)
+            .porteosMeta()
+            .foregroundStyle(isHeader ? DesignTokens.textDim : DesignTokens.textSecondary)
+            .lineLimit(1)
+            .padding(.horizontal, 8)
+            .frame(width: width, alignment: .leading)
+            .frame(maxWidth: width == nil ? .infinity : nil, alignment: .leading)
+    }
+
+    private var previewDivider: some View {
+        Rectangle()
+            .fill(DesignTokens.dividerStructural)
+            .frame(height: DesignTokens.dividerWidth)
+    }
+
+    private var previewDividerVertical: some View {
+        Rectangle()
+            .fill(DesignTokens.dividerStructural)
+            .frame(width: DesignTokens.dividerWidth)
     }
 
     // MARK: Footer
 
     private var footerRow: some View {
         HStack(spacing: 12) {
-            // Status / error message
-            if exportMessage.isEmpty {
-                Text("\(dealsToExport.count) deal\(dealsToExport.count == 1 ? "" : "s") · \(depth.rawValue) · \(format.rawValue)")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textTertiary)
-            } else {
+            if !exportMessage.isEmpty {
                 Text(exportMessage)
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(exportMessage.hasPrefix("✓") ? accentGreen : Color(hex: "#EF4444"))
+                    .porteosMeta()
+                    .foregroundStyle(exportMessage.hasPrefix("✓") ? DesignTokens.statusGo : DesignTokens.statusCritical)
                     .lineLimit(1)
             }
 
             Spacer()
 
-            // Cancel
             Button { dismiss() } label: {
                 Text("[ CANCEL ]")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textSecondary)
-                    .frame(height: 32)
+                    .porteosRowLabel()
+                    .foregroundStyle(DesignTokens.textSecondary)
             }
             .buttonStyle(.plain)
 
-            // Export
             Button { triggerExport() } label: {
-                Text("[ EXPORT_FILE ]")
-                    .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                    .foregroundStyle(dealsToExport.isEmpty ? textTertiary : Color(hex: "#0F1115"))
-                    .padding(.horizontal, 16)
-                    .frame(height: 32)
-                    .background(dealsToExport.isEmpty ? shellElevated : accentRust)
-                    .clipShape(Rectangle())
+                Text("[ EXPORT ]")
             }
-            .buttonStyle(.plain)
+            .buttonStyle(TerminalButtonStyle(color: dealsToExport.isEmpty ? .muted : .rust))
             .disabled(dealsToExport.isEmpty)
         }
-        .padding(.horizontal, 16)
-        .frame(height: 56)
-        .background(shellSurface)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightPaneBar + 16)
+        .background(DesignTokens.surfacePanel)
     }
 
-    // MARK: Export Action
+    // MARK: Export
 
     private func triggerExport() {
+        let depth = effectiveDepth
         let data: Data
         switch format {
         case .csv:  data = DealExporter.exportToCSV(deals: dealsToExport, depth: depth)
@@ -305,62 +326,63 @@ struct BulkExportSheet: View {
         }
     }
 
+    private func syncScopeWithDepth(_ option: ExportDepthOption) {
+        switch option {
+        case .summary:
+            includeBase = true
+            includeFinancial = false
+            includeProfileWeights = false
+            includeAIScores = false
+        case .standard:
+            includeBase = true
+            includeFinancial = true
+            includeProfileWeights = true
+            includeAIScores = false
+        case .full:
+            includeBase = true
+            includeFinancial = true
+            includeProfileWeights = true
+            includeAIScores = true
+        }
+    }
+
     private func dateStamp() -> String {
         let f = DateFormatter()
         f.dateFormat = "yyyyMMdd_HHmm"
         return f.string(from: Date())
     }
 
-    // MARK: Shared Sub-views
-
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-            .tracking(0.08)
-            .foregroundStyle(textTertiary)
-    }
-
-    private func formatButton(label: String, isActive: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text("[ \(label) ]")
-                .font(.custom("JetBrains Mono", size: 13).weight(isActive ? .bold : .regular))
-                .foregroundStyle(isActive ? Color(hex: "#0F1115") : textTertiary)
-                .padding(.horizontal, 12)
-                .frame(height: 28)
-                .background(isActive ? accentRust : shellElevated)
-                .clipShape(Rectangle())
-        }
-        .buttonStyle(.plain)
+            .porteosModuleCmd()
+            .foregroundStyle(DesignTokens.textDim)
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.top, 12)
     }
 }
 
-// MARK: - Preview
+// MARK: - ExportDepthOption
+
+private enum ExportDepthOption: String, CaseIterable {
+    case summary  = "SUMMARY"
+    case standard = "STANDARD"
+    case full     = "FULL"
+
+    var subtitle: String {
+        switch self {
+        case .summary:  return "Core fields only"
+        case .standard: return "Base + all profile fields"
+        case .full:     return "Everything incl. AI scores + audit"
+        }
+    }
+}
 
 #Preview {
     let deals: [PropertyDeal] = [
-        PropertyDeal(
-            propertyName:         "Lisbon Office Block A",
-            address:              "Av. da Liberdade, Lisboa",
-            propertyType:         "Commercial",
-            locationCity:         "Lisboa",
-            purchasePrice:        2_400_000,
-            grossPotentialIncome: 210_000,
-            vacancyRate:          5,
-            operatingExpenses:    72_000,
-            loanAmount:           1_680_000,
-            interestRate:         4.25,
-            amortizationMonths:   360,
-            porteosScore:         78,
-            status:               .viable
-        ),
-        PropertyDeal(
-            propertyName:  "Porto Hotel",
-            address:       "Rua de Santa Catarina, Porto",
-            propertyType:  "Hospitality",
-            locationCity:  "Porto",
-            purchasePrice: 4_800_000,
-            status:        .pipeline
-        )
+        PropertyDeal(propertyName: "Lisbon Office Block A", purchasePrice: 45_200_000, porteosScore: 87, status: .viable),
+        PropertyDeal(propertyName: "Porto Waterfront Dev", purchasePrice: 38_000_000, porteosScore: 74, status: .pipeline),
+        PropertyDeal(propertyName: "Madrid Logistics Park", purchasePrice: 29_500_000, porteosScore: 68, status: .pipeline)
     ]
     BulkExportSheet(allDeals: deals, filteredDeals: deals)
+        .background(DesignTokens.canvasBase)
 }

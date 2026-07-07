@@ -44,19 +44,19 @@ struct AppShell: View {
         )
     }
 
-    // MARK: Tokens
+    // MARK: Tokens (V2.06)
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#0F1115")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let accentRust    = Color(hex: "#C25E30")
+    private var shellBg:       Color { DesignTokens.canvasBase }
+    private var shellSurface:  Color { DesignTokens.surfacePanel }
+    private var shellBorder:   Color { DesignTokens.dividerStructural }
+    private var textSecondary: Color { DesignTokens.textSecondary }
+    private var textTertiary:  Color { DesignTokens.textDim }
+    private var accentRust:    Color { DesignTokens.accentRust }
 
     // MARK: Layout Constants
 
-    private let navPaneWidth:       CGFloat = 260
-    private let inspectorPaneWidth: CGFloat = 280
+    private var navPaneWidth:       CGFloat { DesignTokens.navPaneWidth }
+    private var inspectorPaneWidth: CGFloat { DesignTokens.inspectorPaneWidth }
     private let dividerWidth:       CGFloat = 1
 
     // MARK: Body
@@ -65,9 +65,6 @@ struct AppShell: View {
 
     var body: some View {
         coreView
-        .sheet(isPresented: $showShortcutsPanel) {
-            ShortcutsLegendView()
-        }
         .sheet(isPresented: $showNewDealSheet) {
             TemplatePickerSheet { newID in
                 pendingDealID    = newID
@@ -142,7 +139,11 @@ struct AppShell: View {
 
     private var coreView: some View {
         VStack(spacing: 0) {
-            TopHeaderBar(activeProfile: wm.activeProfile, onServerTap: { showServerConfig = true })
+            TopHeaderBar(
+                activeProfile: wm.activeProfile,
+                selectedDealName: selectedDeal?.propertyName,
+                onServerTap: { showServerConfig = true }
+            )
 
             HStack(spacing: 0) {
                 let navGone    = wm.detachedPanes.contains(.navigation)
@@ -177,7 +178,7 @@ struct AppShell: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            GlobalCommandBar(lineCount: 120)
+            GlobalCommandBar(lineCount: 0)
         }
         .background(shellBg)
         .clipShape(Rectangle())
@@ -226,22 +227,39 @@ struct AppShell: View {
                     CommandPalette(
                         isPresented: $showCommandPalette,
                         deals:       deals,
-                        onNavigate: { profile in
-                            wm.activeProfile = profile
-                            showComparison   = false
-                        },
                         onSelectDeal: { deal in
                             wm.selectedDealID = deal.id
                             wm.activeProfile  = deal.hospitalityRoomCount > 0 || deal.hospitalityADR > 0
                                 ? .hospitality
                                 : .realEstate
                         },
-                        onNewDeal:  { showNewDealSheet = true },
-                        onExport:   {
-                            NotificationCenter.default.post(name: .showExportSheet, object: nil)
+                        onNewDeal: { showNewDealSheet = true },
+                        onImport: {
+                            NotificationCenter.default.post(name: .showImportDeals, object: nil)
+                        },
+                        onRunAI: {
+                            if let deal = selectedDeal {
+                                NotificationCenter.default.post(
+                                    name: .autoTriggerAI,
+                                    object: nil,
+                                    userInfo: ["dealID": deal.id]
+                                )
+                            }
+                            wm.activeProfile = .cmdCenter
                         }
                     )
                     .padding(.top, 100)
+                }
+            }
+        }
+        .overlay {
+            if showShortcutsPanel {
+                ZStack {
+                    Color.black.opacity(0.55)
+                        .ignoresSafeArea()
+                        .onTapGesture { showShortcutsPanel = false }
+
+                    ShortcutsLegendView(onDismiss: { showShortcutsPanel = false })
                 }
             }
         }
@@ -263,10 +281,7 @@ struct AppShell: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(shellBg)
         } else if let deal = selectedDeal {
-            let viewModel = PropertyDealViewModel(deal: deal)
-            VStack(spacing: 0) {
-                PorteosScoreBlock(metrics: viewModel.porteosScore)
-                Rectangle().fill(shellBg).frame(height: 16)
+            Group {
                 switch wm.activeProfile {
                 case .realEstate:  RealEstateDashboardView(deal: deal)
                 case .hospitality: HospitalityDashboardView(deal: deal)
@@ -278,36 +293,28 @@ struct AppShell: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(shellBg)
         } else {
-            switch wm.activeProfile {
-            case .realEstate: realEstateNoDealState
-            default:          noDealState
-            }
+            emptyCenterState
         }
     }
 
-    private var realEstateNoDealState: some View {
+    private var emptyCenterState: some View {
         VStack {
             Spacer()
-            TerminalBlock(command: "ls ./deals", accentColor: textTertiary, contentPadding: 0) {
-                VStack(spacing: 12) {
-                    Text("No deal selected")
-                        .font(.custom("JetBrains Mono", size: 14))
-                        .foregroundStyle(textSecondary)
-                    Text("Select a deal from the sidebar or click [ ./NEW_DEAL ]")
-                        .font(.custom("JetBrains Mono", size: 13))
-                        .foregroundStyle(textTertiary)
-                    Rectangle().fill(shellBorder).frame(height: 1)
-                    Button(action: loadSampleDeal) {
-                        Text("[ ./LOAD_SAMPLE_DEAL ]")
-                            .font(.custom("JetBrains Mono", size: 13))
-                            .foregroundStyle(Color(hex: "#10B981"))
-                    }
-                    .buttonStyle(.plain)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("porteos@system ~ % ls ./deals")
+                    .porteosCliPrompt()
+                    .foregroundStyle(textTertiary)
+                Text("// no deals found")
+                    .porteosRowValue()
+                    .foregroundStyle(textSecondary)
+                Button(action: loadSampleDeal) {
+                    Text("[ ./LOAD_SAMPLE_DEAL ]")
+                        .porteosButtonPrimary()
+                        .foregroundStyle(DesignTokens.statusGo)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(32)
+                .buttonStyle(.plain)
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 32)
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -343,33 +350,16 @@ struct AppShell: View {
             Spacer()
             VStack(spacing: 4) {
                 Text("01 // \(wm.activeProfile.displayName)")
-                    .font(.custom("JetBrains Mono", size: 14).weight(.bold))
+                    .porteosModuleCmd()
                     .foregroundStyle(wm.activeProfile.accentColor)
                 Text("MODULE NOT YET IMPLEMENTED")
-                    .font(.custom("JetBrains Mono", size: 13))
+                    .porteosRowLabel()
                     .foregroundStyle(textTertiary)
             }
             Spacer()
         }
         .frame(maxWidth: .infinity)
         .padding(16)
-    }
-
-    private var noDealState: some View {
-        VStack {
-            Spacer()
-            VStack(spacing: 8) {
-                Text("porteos@system ~ % ls ./deals")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textTertiary)
-                Text("select or create a deal to begin")
-                    .font(.custom("JetBrains Mono", size: 14))
-                    .foregroundStyle(textSecondary)
-            }
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(shellBg)
     }
 
     // MARK: Inspector Pane
@@ -382,7 +372,7 @@ struct AppShell: View {
             VStack {
                 Spacer()
                 Text("./INSPECTOR_V2")
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .porteosRowLabel()
                     .foregroundStyle(textTertiary)
                 Spacer()
             }
@@ -407,9 +397,9 @@ struct AppShell: View {
     /// Reattach is handled by DetachedWindowHeader inside the floating window.
     private func detachButton(for pane: WindowManager.PaneType) -> some View {
         Button { wm.detach(pane) } label: {
-            Image(systemName: "arrow.up.left.and.arrow.down.right")
-                .font(.system(size: 11))
-                .foregroundStyle(Color.secondary)
+            Text("[ ↗ ]")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
         }
         .buttonStyle(.plain)
         .padding(8)

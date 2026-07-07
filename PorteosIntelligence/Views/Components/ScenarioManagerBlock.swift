@@ -35,15 +35,15 @@ struct ScenarioManagerBlock: View {
     @State private var saveError:    Bool            = false
 
     // ── Design tokens ─────────────────────────────────────────────────────────
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let colorGreen    = Color(hex: "#10B981")
-    private let colorRed      = Color(hex: "#EF4444")
-    private let colorAmber    = Color(hex: "#F59E0B")
+    private let shellBg       = DesignTokens.canvasBase
+    private let shellSurface  = DesignTokens.surfacePanel
+    private let shellBorder   = DesignTokens.dividerStructural
+    private let textPrimary   = DesignTokens.textPrimary
+    private let textSecondary = DesignTokens.textSecondary
+    private let textTertiary  = DesignTokens.textDim
+    private let colorGreen    = DesignTokens.statusGo
+    private let colorRed      = DesignTokens.statusCritical
+    private let colorAmber    = DesignTokens.statusReview
 
     // MARK: Body
 
@@ -84,7 +84,7 @@ struct ScenarioManagerBlock: View {
     private var emptyState: some View {
         HStack {
             Text("// NO SAVED SCENARIOS — SAVE THE CURRENT STATE BELOW")
-                .font(.custom("JetBrains Mono", size: 11))
+                .porteosRowLabel()
                 .foregroundStyle(textTertiary)
             Spacer()
         }
@@ -97,18 +97,18 @@ struct ScenarioManagerBlock: View {
             // Name + date
             VStack(alignment: .leading, spacing: 3) {
                 Text(scenario.name.uppercased())
-                    .font(.custom("JetBrains Mono", size: 12).weight(.medium))
+                    .porteosRowValue()
                     .foregroundStyle(textPrimary)
 
                 Text(scenarioDate(scenario.createdAt))
-                    .font(.custom("JetBrains Mono", size: 10))
+                    .porteosMeta()
                     .foregroundStyle(textTertiary)
             }
             .frame(minWidth: 150, alignment: .leading)
 
             // Adjustments summary
             Text(adjustmentSummary(scenario.adjustments))
-                .font(.custom("JetBrains Mono", size: 11))
+                .porteosRowLabel()
                 .foregroundStyle(textSecondary)
                 .lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -119,7 +119,7 @@ struct ScenarioManagerBlock: View {
                     onLoad(scenario.adjustments)
                 } label: {
                     Text("[ LOAD ]")
-                        .font(.custom("JetBrains Mono", size: 11).weight(.medium))
+                        .porteosTextStyle(.shellAction(isActive: false))
                         .foregroundStyle(accentColor)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
@@ -136,7 +136,7 @@ struct ScenarioManagerBlock: View {
                     deleteScenario(scenario)
                 } label: {
                     Text("[ × ]")
-                        .font(.custom("JetBrains Mono", size: 11).weight(.medium))
+                        .porteosTextStyle(.shellAction(isActive: false))
                         .foregroundStyle(colorRed.opacity(0.8))
                         .padding(.horizontal, 6)
                         .padding(.vertical, 4)
@@ -166,11 +166,11 @@ struct ScenarioManagerBlock: View {
                 ZStack(alignment: .leading) {
                     if scenarioName.isEmpty {
                         Text("e.g. Optimistic Case")
-                            .font(.custom("JetBrains Mono", size: 12))
+                            .porteosRowValue()
                             .foregroundStyle(textTertiary)
                     }
                     TextField("", text: $scenarioName)
-                        .font(.custom("JetBrains Mono", size: 12))
+                        .porteosRowValue()
                         .foregroundStyle(textPrimary)
                         .textFieldStyle(.plain)
                         .onSubmit { saveScenario() }
@@ -188,7 +188,7 @@ struct ScenarioManagerBlock: View {
                 // Save button
                 Button { saveScenario() } label: {
                     Text("[ SAVE SCENARIO ]")
-                        .font(.custom("JetBrains Mono", size: 11).weight(.medium))
+                        .porteosTextStyle(.shellAction(isActive: false))
                         .foregroundStyle(accentColor)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
@@ -206,7 +206,7 @@ struct ScenarioManagerBlock: View {
 
             if saveError {
                 Text("// SCENARIO NAME IS REQUIRED")
-                    .font(.custom("JetBrains Mono", size: 10))
+                    .porteosMeta()
                     .foregroundStyle(colorAmber)
                     .padding(.horizontal, 16)
                     .padding(.bottom, 8)
@@ -219,12 +219,12 @@ struct ScenarioManagerBlock: View {
     private func sectionHeader(_ label: String, count: Int?) -> some View {
         HStack(spacing: 6) {
             Text("// \(label)")
-                .font(.custom("JetBrains Mono", size: 10))
+                .porteosMeta()
                 .foregroundStyle(textTertiary)
 
             if let n = count {
                 Text("(\(n))")
-                    .font(.custom("JetBrains Mono", size: 10))
+                    .porteosMeta()
                     .foregroundStyle(textTertiary)
             }
             Spacer()

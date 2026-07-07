@@ -9,16 +9,16 @@ struct EmailIngestionPanel: View {
 
     // MARK: Tokens
 
-    private let shellBg      = Color(hex: "#0F1115")
-    private let shellSurface = Color(hex: "#1A1D24")
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let tp1          = Color(hex: "#F8F9FA")
-    private let tp2          = Color(hex: "#94A3B8")
-    private let tp3          = Color(hex: "#64748B")
-    private let accentRust   = Color(hex: "#C25E30")
-    private let green        = Color(hex: "#10B981")
-    private let red          = Color(hex: "#EF4444")
-    private let amber        = Color(hex: "#F59E0B")
+    private let shellBg      = DesignTokens.canvasBase
+    private let shellSurface = DesignTokens.surfacePanel
+    private let shellBorder  = DesignTokens.dividerStructural
+    private let tp1          = DesignTokens.textPrimary
+    private let tp2          = DesignTokens.textSecondary
+    private let tp3          = DesignTokens.textDim
+    private let accentRust   = DesignTokens.accentRust
+    private let green        = DesignTokens.statusGo
+    private let red          = DesignTokens.statusCritical
+    private let amber        = DesignTokens.statusReview
 
     @State private var showSetupSheet = false
     @State private var isCheckingNow  = false
@@ -55,14 +55,14 @@ struct EmailIngestionPanel: View {
                 .frame(width: 8, height: 8)
 
             Text(ems.isMonitoring ? "MONITORING: ACTIVE" : "MONITORING: INACTIVE")
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(ems.isMonitoring ? green : tp3)
 
             Spacer()
 
             if let last = ems.lastCheckDate {
                 Text("LAST_CHECK: \(timeAgo(last))")
-                    .font(.custom("JetBrains Mono", size: 10))
+                    .porteosMeta()
                     .foregroundStyle(tp3)
                     .monospacedDigit()
             }
@@ -88,11 +88,11 @@ struct EmailIngestionPanel: View {
     private func statCell(_ label: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(value)
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
+                .porteosRowValue()
                 .foregroundStyle(tp1)
                 .monospacedDigit()
             Text(label)
-                .font(.custom("JetBrains Mono", size: 9))
+                .porteosMeta()
                 .foregroundStyle(tp3)
         }
         .padding(.horizontal, 12)
@@ -103,10 +103,10 @@ struct EmailIngestionPanel: View {
     private func errorRow(_ msg: String) -> some View {
         HStack(spacing: 6) {
             Text("!")
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
+                .porteosMeta()
                 .foregroundStyle(red)
             Text(msg)
-                .font(.custom("JetBrains Mono", size: 10))
+                .porteosMeta()
                 .foregroundStyle(red)
                 .fixedSize(horizontal: false, vertical: true)
         }

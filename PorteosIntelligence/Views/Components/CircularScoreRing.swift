@@ -15,14 +15,13 @@ struct CircularScoreRing: View {
 
     // MARK: Tokens
 
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textTertiary  = Color(hex: "#64748B")
+    private let shellBorder   = DesignTokens.dividerStructural
+    private let textPrimary   = DesignTokens.textPrimary
+    private let textTertiary  = DesignTokens.textDim
 
     // MARK: Derived
 
     private var clampedFraction: Double { max(0, min(1, score / 100)) }
-    private var numberSize: CGFloat { size >= 180 ? 48 : 24 }
     private let strokeWidth: CGFloat = 4
 
     // MARK: Body
@@ -46,13 +45,12 @@ struct CircularScoreRing: View {
             // Center content
             VStack(spacing: 2) {
                 Text(String(format: "%.0f", score))
-                    .font(.custom("JetBrains Mono", size: numberSize).weight(.bold))
+                    .font(size >= 180 ? DesignTokens.TypeScale.scoreHero : DesignTokens.TypeScale.scoreGrade)
                     .monospacedDigit()
                     .foregroundStyle(textPrimary)
 
                 Text(label.uppercased())
-                    .font(.custom("JetBrains Mono", size: 11))
-                    .tracking(0.08)
+                    .porteosMeta()
                     .foregroundStyle(textTertiary)
             }
         }
@@ -64,11 +62,11 @@ struct CircularScoreRing: View {
 
 #Preview {
     HStack(spacing: 32) {
-        CircularScoreRing(score: 87, accentColor: Color(hex: "#C25E30"), size: 120, label: "PORTEOS")
-        CircularScoreRing(score: 63, accentColor: Color(hex: "#14B8A6"), size: 120, label: "PORTEOS")
-        CircularScoreRing(score: 42, accentColor: Color(hex: "#A855F7"), size: 120, label: "PORTEOS")
-        CircularScoreRing(score: 91, accentColor: Color(hex: "#3B82F6"), size: 180, label: "PORTEOS")
+        CircularScoreRing(score: 87, accentColor: DesignTokens.accentRust, size: 120, label: "PORTEOS")
+        CircularScoreRing(score: 63, accentColor: DesignTokens.accentHospitality, size: 120, label: "PORTEOS")
+        CircularScoreRing(score: 42, accentColor: DesignTokens.accentDesign, size: 120, label: "PORTEOS")
+        CircularScoreRing(score: 91, accentColor: DesignTokens.accentCircular, size: 180, label: "PORTEOS")
     }
     .padding(32)
-    .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
 }

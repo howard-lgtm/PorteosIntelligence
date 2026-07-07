@@ -9,12 +9,12 @@ struct EditDealSheet: View {
 
     // MARK: Tokens
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
+    private let shellBg       = DesignTokens.canvasBase
+    private let shellSurface  = DesignTokens.surfacePanel
+    private let shellBorder   = DesignTokens.dividerStructural
+    private let textPrimary   = DesignTokens.textPrimary
+    private let textSecondary = DesignTokens.textSecondary
+    private let textTertiary  = DesignTokens.textDim
     private let accentGold    = Color(hex: "#D4AF37")
 
     // MARK: Base Data State
@@ -233,7 +233,7 @@ struct EditDealSheet: View {
     private var sheetHeader: some View {
         HStack {
             Text("EDIT DEAL")
-                .font(.custom("JetBrains Mono", size: 12).weight(.bold))
+                .porteosRowValue()
                 .textCase(.uppercase)
                 .foregroundStyle(textPrimary)
 
@@ -241,7 +241,7 @@ struct EditDealSheet: View {
 
             Button { dismiss() } label: {
                 Text("✕")
-                    .font(.custom("JetBrains Mono", size: 14).weight(.bold))
+                    .porteosScoreGrade()
                     .foregroundStyle(textTertiary)
             }
             .buttonStyle(.plain)
@@ -256,8 +256,7 @@ struct EditDealSheet: View {
     private func inputGroup(title: String, @ViewBuilder fields: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
-                .tracking(0.08)
+                .porteosMeta()
                 .foregroundStyle(textTertiary)
                 .textCase(.uppercase)
                 .padding(.bottom, 4)
@@ -281,7 +280,7 @@ struct EditDealSheet: View {
         HStack(spacing: 12) {
             Button { dismiss() } label: {
                 Text("[ CANCEL ]")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.regular))
+                    .porteosRowLabel()
                     .foregroundStyle(textSecondary)
                     .frame(height: 28)
             }
@@ -292,9 +291,9 @@ struct EditDealSheet: View {
 
             Button { saveDeal() } label: {
                 Text("[ SAVE CHANGES ]")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                    .porteosButtonPrimary()
                     .textCase(.uppercase)
-                    .foregroundStyle(Color(hex: "#0F1115"))
+                    .foregroundStyle(DesignTokens.canvasBase)
                     .padding(.horizontal, 16)
                     .frame(height: 28)
                     .background(accentGold)
@@ -380,5 +379,5 @@ struct EditDealSheet: View {
 
     return EditDealSheet(deal: deal)
         .modelContainer(container)
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
 }

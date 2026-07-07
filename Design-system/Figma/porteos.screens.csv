@@ -1,0 +1,28 @@
+id,name,page,priority,frame_width,frame_height,profile,accent,notes
+shell-default,App Shell — Deal Selected,02 — Shell & Navigation,P0,1200,800,real_estate,#C25E30,Primary layout frame
+shell-empty,App Shell — No Deal,02 — Shell & Navigation,P1,1200,800,,,Empty state + load sample CTA
+shell-cmd-center,Command Center,03 — Dashboards,P1,1200,800,cmd_center,#94A3B8,Portfolio overview
+dashboard-real-estate,Real Estate Dashboard,03 — Dashboards,P0,1200,800,real_estate,#C25E30,Stress-test screen — 6 modules + sensitivity
+dashboard-hospitality,Hospitality Dashboard,03 — Dashboards,P0,1200,800,hospitality,#14B8A6,3 modules + sensitivity
+dashboard-design,Design Dashboard,03 — Dashboards,P0,1200,800,design,#A855F7,4 modules + sensitivity
+dashboard-circular,Circular Economy Dashboard,03 — Dashboards,P0,1200,800,circular,#3B82F6,3 modules + sensitivity
+comparison-view,Comparison View,03 — Dashboards,P1,1200,800,,,Multi-deal table
+inspector-weights,Inspector — Weights Tab,04 — Inspector & Overlays,P0,280,800,,,4 weight sliders
+inspector-ai-idle,Inspector — AI Vibe Idle,04 — Inspector & Overlays,P2,280,800,,,Idle state
+inspector-ai-result,Inspector — AI Vibe Result,04 — Inspector & Overlays,P2,280,800,,,With signals
+command-palette,Command Palette,04 — Inspector & Overlays,P2,560,400,,,Overlay ⌘K
+shortcuts-legend,Keyboard Shortcuts,04 — Inspector & Overlays,P2,480,600,,,Overlay ⌘/
+ingestion-toast,Ingestion Toast,04 — Inspector & Overlays,P2,320,80,,,Top-right overlay
+sheet-template-picker,Template Picker,05 — Sheets & Modals,P1,640,600,,,12 templates + blank
+sheet-full-edit-base,Full Deal Editor — Base,05 — Sheets & Modals,P1,520,700,,,5 tabs
+sheet-full-edit-re,Full Deal Editor — Real Estate,05 — Sheets & Modals,P1,520,700,,,20+ fields
+sheet-quick-add,Quick Add,05 — Sheets & Modals,P1,480,400,,,NL input + confidence
+sheet-import,Import Deals,05 — Sheets & Modals,P1,460,500,,,CSV/JSON
+sheet-export,Bulk Export,05 — Sheets & Modals,P1,460,500,,,Format/depth/scope
+sheet-pdf,PDF Report Config,05 — Sheets & Modals,P2,460,450,,,Section toggles
+sheet-triage,Batch Triage,05 — Sheets & Modals,P2,800,600,,,Card grid
+sheet-settings,Settings,06 — Admin & Extension,P2,520,500,,,3 tabs
+sheet-email-setup,Email Setup,06 — Admin & Extension,P2,480,550,,,IMAP form
+sheet-server-config,Server Config,06 — Admin & Extension,P2,520,600,,,Port + request log
+detached-nav,Detached Navigation Pane,02 — Shell & Navigation,P3,260,600,,,Floating window
+extension-button,Browser Extension Button,06 — Admin & Extension,P3,200,40,,,Idealista/Zillow/Hemnet

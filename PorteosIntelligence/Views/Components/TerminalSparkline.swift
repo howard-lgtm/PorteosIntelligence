@@ -10,7 +10,12 @@ struct TerminalSparkline: View {
     let color: Color
     var height: CGFloat = 24
 
-    private let borderColor = Color(hex: "#2E333F")
+    private let borderColor = DesignTokens.dividerStructural
+
+    /// V2.06: color sparkline by trend delta direction.
+    static func color(forDelta delta: Double) -> Color {
+        delta >= 0 ? DesignTokens.statusGo : DesignTokens.statusWarn
+    }
 
     var body: some View {
         Canvas { ctx, size in
@@ -78,11 +83,11 @@ struct TerminalSparkline: View {
     let flat: [Double] = [100, 102, 98, 101, 99, 103, 100, 98, 102, 100, 101, 99]
 
     return VStack(spacing: 12) {
-        TerminalSparkline(data: up,   color: Color(hex: "#10B981"), height: 24).frame(width: 80)
-        TerminalSparkline(data: down, color: Color(hex: "#EF4444"), height: 24).frame(width: 80)
+        TerminalSparkline(data: up,   color: DesignTokens.statusGo, height: 24).frame(width: 80)
+        TerminalSparkline(data: down, color: DesignTokens.statusCritical, height: 24).frame(width: 80)
         TerminalSparkline(data: flat, color: Color(hex: "#F59E0B"), height: 24).frame(width: 80)
         TerminalSparkline(data: up,   color: Color(hex: "#14B8A6"), height: 32).frame(width: 120)
     }
     .padding(16)
-    .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
 }

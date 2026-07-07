@@ -3,61 +3,62 @@ import SwiftData
 import UniformTypeIdentifiers
 
 // MARK: - ImportDealSheet
+// Figma img_00_14 — drop zone, CSV preview, column mapping.
 
 struct ImportDealSheet: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss)      private var dismiss
 
-    // MARK: Tokens
+    @State private var showFilePicker   = false
+    @State private var selectedFile     = ""
+    @State private var headers:          [String]            = []
+    @State private var parsedRows:       [[String: String]]  = []
+    @State private var errorMessage:   String?             = nil
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellElevated = Color(hex: "#23262E")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let accentRust    = Color(hex: "#C25E30")
-    private let accentGreen   = Color(hex: "#10B981")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-
-    // MARK: State
-
-    @State private var showFilePicker = false
-    @State private var selectedFile:  String              = ""
-    @State private var headers:       [String]            = []
-    @State private var parsedRows:    [[String: String]]  = []
-    @State private var errorMessage:  String?             = nil
+    @State private var mapPropertyName  = ""
+    @State private var mapPurchasePrice = ""
+    @State private var mapLocation      = ""
+    @State private var mapPropertyType  = ""
 
     private var hasFile: Bool { !parsedRows.isEmpty }
 
-    // MARK: Body
+    private var mappedFieldCount: Int {
+        [mapPropertyName, mapPurchasePrice, mapLocation, mapPropertyType]
+            .filter { !$0.isEmpty }.count
+    }
+
+    private var canImport: Bool {
+        hasFile && !mapPropertyName.isEmpty && !mapPurchasePrice.isEmpty
+    }
 
     var body: some View {
         VStack(spacing: 0) {
-            sheetHeader
-            Rectangle().fill(shellBorder).frame(height: 1)
+            TerminalCLIHeader(command: "deal --import --csv")
+            TerminalStructuralDivider()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    fileSection
+                    dropZone
                     if hasFile {
-                        Rectangle().fill(shellBorder).frame(height: 1)
+                        TerminalStructuralDivider()
                         previewSection
+                        TerminalStructuralDivider()
+                        mappingSection
                     }
                     if let error = errorMessage {
-                        Rectangle().fill(shellBorder).frame(height: 1)
+                        TerminalStructuralDivider()
                         errorBanner(error)
                     }
                 }
             }
 
-            Rectangle().fill(shellBorder).frame(height: 1)
-            footer
+            TerminalStructuralDivider()
+            footerBar
         }
-        .background(shellBg)
+        .frame(width: 460)
+        .background(DesignTokens.canvasBase)
         .clipShape(Rectangle())
-        .frame(width: 560)
         .fileImporter(
             isPresented: $showFilePicker,
             allowedContentTypes: [
@@ -69,185 +70,247 @@ struct ImportDealSheet: View {
         )
     }
 
-    // MARK: Header
+    // MARK: Drop Zone
 
-    private var sheetHeader: some View {
-        HStack(spacing: 0) {
-            Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 11))
-                .foregroundStyle(textTertiary)
-            Text("deal --import")
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                .foregroundStyle(accentRust)
-            Spacer()
-            Button { dismiss() } label: {
-                Text("✕")
-                    .font(.custom("JetBrains Mono", size: 14).weight(.bold))
-                    .foregroundStyle(textTertiary)
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal, 16)
-        .frame(height: 40)
-        .background(shellSurface)
-    }
+    private var dropZone: some View {
+        Button { showFilePicker = true } label: {
+            VStack(spacing: 10) {
+                Text("CSV")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(DesignTokens.surfaceElevated)
+                    .overlay {
+                        Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
+                    }
 
-    // MARK: Section 1 — File Selection
+                Text("DROP CSV FILE OR CLICK TO BROWSE")
+                    .porteosButtonPrimary()
+                    .foregroundStyle(DesignTokens.textSecondary)
 
-    private var fileSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            sectionLabel("01 // FILE_SELECTION")
-
-            HStack(spacing: 12) {
-                Button { showFilePicker = true } label: {
-                    Text("[ SELECT_FILE ]")
-                        .font(.custom("JetBrains Mono", size: 11))
-                        .foregroundStyle(accentGreen)
-                        .padding(.horizontal, 12)
-                        .frame(height: 28)
-                        .overlay(Rectangle().strokeBorder(accentGreen, lineWidth: 1))
-                        .clipShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-
-                Text(selectedFile.isEmpty ? "No file selected" : selectedFile)
-                    .font(.custom("JetBrains Mono", size: 11))
-                    .foregroundStyle(selectedFile.isEmpty ? textTertiary : textSecondary)
+                Text(selectedFile.isEmpty
+                     ? "Supports .csv and .json • Maximum 10 MB"
+                     : selectedFile)
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
                     .lineLimit(1)
                     .truncationMode(.middle)
             }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 28)
+            .background(DesignTokens.surfacePanel)
+            .overlay {
+                Rectangle()
+                    .strokeBorder(
+                        DesignTokens.dividerStructural,
+                        style: StrokeStyle(lineWidth: DesignTokens.dividerWidth, dash: [6, 4])
+                    )
+            }
         }
-        .padding(16)
+        .buttonStyle(.plain)
+        .padding(DesignTokens.blockGutter)
     }
 
-    // MARK: Section 2 — Preview
+    // MARK: Preview
 
     private var previewSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            sectionLabel("02 // IMPORT_PREVIEW  [\(parsedRows.count) row\(parsedRows.count == 1 ? "" : "s") detected]")
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("CSV PREVIEW")
+                    .porteosModuleCmd()
+                    .foregroundStyle(DesignTokens.textDim)
+                Spacer()
+                Text("\(selectedFile) • \(parsedRows.count) rows")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                    .lineLimit(1)
+            }
 
             VStack(spacing: 0) {
                 previewHeaderRow
-                Rectangle().fill(shellBorder).frame(height: 1)
-                ForEach(Array(parsedRows.prefix(3).enumerated()), id: \.offset) { idx, row in
+                previewDivider
+                ForEach(Array(previewRows.enumerated()), id: \.offset) { idx, row in
                     previewDataRow(row)
-                    if idx < min(2, parsedRows.count - 1) {
-                        Rectangle().fill(shellBorder).frame(height: 1)
-                    }
-                }
-                if parsedRows.count > 3 {
-                    Rectangle().fill(shellBorder).frame(height: 1)
-                    HStack {
-                        Text("+ \(parsedRows.count - 3) more row\(parsedRows.count - 3 == 1 ? "" : "s") not shown")
-                            .font(.custom("JetBrains Mono", size: 10))
-                            .foregroundStyle(textTertiary)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 12)
-                    .frame(height: 28)
-                    .background(shellElevated)
+                    if idx < previewRows.count - 1 { previewDivider }
                 }
             }
-            .background(shellSurface)
-            .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: 1))
+            .overlay {
+                Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
+            }
             .clipShape(Rectangle())
         }
-        .padding(16)
+        .padding(DesignTokens.blockGutter)
+    }
+
+    private var previewRows: [[String: String]] {
+        Array(parsedRows.prefix(3))
     }
 
     private var previewHeaderRow: some View {
         HStack(spacing: 0) {
-            previewCell("NAME",     width: 160, isHeader: true)
-            Rectangle().fill(shellBorder).frame(width: 1)
-            previewCell("PRICE",    width: 100, isHeader: true)
-            Rectangle().fill(shellBorder).frame(width: 1)
-            previewCell("LOCATION", width: 140, isHeader: true)
-            Rectangle().fill(shellBorder).frame(width: 1)
-            previewCell("TYPE",     width: nil,  isHeader: true)
+            previewCell(previewHeader(for: mapPropertyName, fallback: "NAME"), isHeader: true)
+            previewDividerVertical
+            previewCell(previewHeader(for: mapPurchasePrice, fallback: "PRICE"), isHeader: true)
+            previewDividerVertical
+            previewCell(previewHeader(for: mapLocation, fallback: "CITY"), isHeader: true)
         }
-        .frame(height: 28)
-        .background(shellElevated)
+        .frame(height: DesignTokens.rowHeightHeader)
+        .background(DesignTokens.surfaceElevated)
     }
 
     private func previewDataRow(_ row: [String: String]) -> some View {
         HStack(spacing: 0) {
-            previewCell(row["Name"]     ?? "—", width: 160, isHeader: false)
-            Rectangle().fill(shellBorder).frame(width: 1)
-            previewCell(row["Price"]    ?? "—", width: 100, isHeader: false)
-            Rectangle().fill(shellBorder).frame(width: 1)
-            previewCell(row["Location"] ?? "—", width: 140, isHeader: false)
-            Rectangle().fill(shellBorder).frame(width: 1)
-            previewCell(row["Type"]     ?? "—", width: nil,  isHeader: false)
+            previewCell(rowValue(row, mapPropertyName), isHeader: false)
+            previewDividerVertical
+            previewCell(rowValue(row, mapPurchasePrice), isHeader: false)
+            previewDividerVertical
+            previewCell(rowValue(row, mapLocation), isHeader: false)
         }
-        .frame(height: 28)
+        .frame(height: DesignTokens.rowHeightHeader)
+        .background(DesignTokens.surfacePanel)
     }
 
-    private func previewCell(_ text: String, width: CGFloat?, isHeader: Bool) -> some View {
+    private func previewHeader(for mapped: String, fallback: String) -> String {
+        mapped.isEmpty ? fallback : mapped.uppercased()
+    }
+
+    private func rowValue(_ row: [String: String], _ key: String) -> String {
+        guard !key.isEmpty else { return "—" }
+        let value = row[key] ?? ""
+        return value.isEmpty ? "—" : value
+    }
+
+    private func previewCell(_ text: String, isHeader: Bool) -> some View {
         Text(text)
-            .font(.custom("JetBrains Mono", size: isHeader ? 10 : 11))
-            .foregroundStyle(isHeader ? textTertiary : textSecondary)
+            .porteosMeta()
+            .foregroundStyle(isHeader ? DesignTokens.textDim : DesignTokens.textSecondary)
             .lineLimit(1)
             .padding(.horizontal, 8)
-            .frame(width: width, alignment: .leading)
-            .frame(maxWidth: width == nil ? .infinity : nil, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    // MARK: Error Banner
+    private var previewDivider: some View {
+        Rectangle()
+            .fill(DesignTokens.dividerStructural)
+            .frame(height: DesignTokens.dividerWidth)
+    }
 
-    private func errorBanner(_ message: String) -> some View {
-        HStack(spacing: 8) {
-            Text("ERR >")
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                .foregroundStyle(Color(hex: "#EF4444"))
-            Text(message)
-                .font(.custom("JetBrains Mono", size: 11))
-                .foregroundStyle(textSecondary)
-                .lineLimit(2)
-            Spacer()
+    private var previewDividerVertical: some View {
+        Rectangle()
+            .fill(DesignTokens.dividerStructural)
+            .frame(width: DesignTokens.dividerWidth)
+    }
+
+    // MARK: Mapping
+
+    private var mappingSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("COLUMN MAPPING")
+                    .porteosModuleCmd()
+                    .foregroundStyle(DesignTokens.textDim)
+                Spacer()
+                Text("PORTEOS FIELD → CSV COLUMN")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+            }
+
+            mappingRow(label: "PROPERTY NAME",  selection: $mapPropertyName)
+            mappingRow(label: "PURCHASE PRICE", selection: $mapPurchasePrice)
+            mappingRow(label: "LOCATION",       selection: $mapLocation)
+            mappingRow(label: "PROPERTY TYPE",  selection: $mapPropertyType, allowUnmapped: true)
+
+            mappingStatusLine
         }
-        .padding(.horizontal, 16)
-        .frame(minHeight: 36)
-        .padding(.vertical, 8)
-        .background(Color(hex: "#EF4444").opacity(0.05))
+        .padding(DesignTokens.blockGutter)
+    }
+
+    private func mappingRow(label: String, selection: Binding<String>, allowUnmapped: Bool = false) -> some View {
+        HStack(spacing: 8) {
+            Text(label)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+                .frame(width: 112, alignment: .leading)
+
+            Text("→")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+
+            Picker("", selection: selection) {
+                if allowUnmapped {
+                    Text("NOT MAPPED").tag("")
+                }
+                ForEach(headers, id: \.self) { header in
+                    Text(header.uppercased()).tag(header)
+                }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .porteosRowValue()
+            .foregroundStyle(selection.wrappedValue.isEmpty && allowUnmapped
+                             ? DesignTokens.accentRust
+                             : DesignTokens.textPrimary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 8)
+            .frame(height: DesignTokens.rowHeightHeader)
+            .background(DesignTokens.surfacePanel)
+            .overlay {
+                Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var mappingStatusLine: some View {
+        if hasFile {
+            let missingType = mapPropertyType.isEmpty
+            Text("\(mappedFieldCount) / 4 columns mapped\(missingType ? " • PROPERTY TYPE requires manual selection" : "")")
+                .porteosMeta()
+                .foregroundStyle(missingType ? DesignTokens.accentRust : DesignTokens.textDim)
+        }
     }
 
     // MARK: Footer
 
-    private var footer: some View {
+    private var footerBar: some View {
         HStack(spacing: 12) {
             Button { dismiss() } label: {
                 Text("[ CANCEL ]")
-                    .font(.custom("JetBrains Mono", size: 11))
-                    .foregroundStyle(textSecondary)
-                    .frame(height: 28)
+                    .porteosRowLabel()
+                    .foregroundStyle(DesignTokens.textSecondary)
             }
             .buttonStyle(.plain)
 
             Spacer()
 
             Button { importDeals() } label: {
-                Text("[ IMPORT_DEALS ]")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                    .foregroundStyle(Color(hex: "#0F1115"))
-                    .padding(.horizontal, 16)
-                    .frame(height: 28)
-                    .background(hasFile ? accentRust : shellBorder)
-                    .clipShape(Rectangle())
+                Text("[ IMPORT ]")
             }
-            .buttonStyle(.plain)
-            .disabled(!hasFile)
+            .buttonStyle(TerminalButtonStyle(color: canImport ? .rust : .muted))
+            .disabled(!canImport)
         }
-        .padding(.horizontal, 16)
-        .frame(height: 56)
-        .background(shellSurface)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightPaneBar + 16)
+        .background(DesignTokens.surfacePanel)
     }
 
-    // MARK: Shared
+    // MARK: Errors
 
-    private func sectionLabel(_ text: String) -> some View {
-        Text(text)
-            .font(.custom("JetBrains Mono", size: 10).weight(.bold))
-            .foregroundStyle(textTertiary)
+    private func errorBanner(_ message: String) -> some View {
+        HStack(spacing: 8) {
+            Text("ERR >")
+                .porteosButtonPrimary()
+                .foregroundStyle(DesignTokens.statusCritical)
+            Text(message)
+                .porteosRowLabel()
+                .foregroundStyle(DesignTokens.textSecondary)
+                .lineLimit(2)
+            Spacer()
+        }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, 10)
+        .background(DesignTokens.statusCritical.opacity(0.05))
     }
 
     // MARK: File Handling
@@ -256,16 +319,15 @@ struct ImportDealSheet: View {
         errorMessage = nil
         parsedRows   = []
         headers      = []
+        resetMappings()
 
         switch result {
         case .failure(let error):
             errorMessage = error.localizedDescription
-
         case .success(let urls):
             guard let url = urls.first else { return }
             let secured = url.startAccessingSecurityScopedResource()
             defer { if secured { url.stopAccessingSecurityScopedResource() } }
-
             do {
                 let raw = try String(contentsOf: url, encoding: .utf8)
                 selectedFile = url.lastPathComponent
@@ -275,8 +337,6 @@ struct ImportDealSheet: View {
             }
         }
     }
-
-    // MARK: CSV Parsing
 
     private func parseCSV(_ content: String) {
         let lines = content
@@ -303,30 +363,50 @@ struct ImportDealSheet: View {
             }
             return row
         }
+
+        autoMapColumns()
     }
 
-    // MARK: Import
+    private func autoMapColumns() {
+        mapPropertyName  = matchHeader(["name", "property name", "property_name", "deal name"])
+        mapPurchasePrice = matchHeader(["price", "purchase price", "purchase_price", "amount"])
+        mapLocation      = matchHeader(["city", "location", "location_city", "market"])
+        mapPropertyType  = matchHeader(["type", "property type", "property_type", "asset type"])
+    }
+
+    private func matchHeader(_ candidates: [String]) -> String {
+        for candidate in candidates {
+            if let match = headers.first(where: { $0.lowercased() == candidate }) {
+                return match
+            }
+        }
+        return ""
+    }
+
+    private func resetMappings() {
+        mapPropertyName  = ""
+        mapPurchasePrice = ""
+        mapLocation      = ""
+        mapPropertyType  = ""
+    }
 
     private func importDeals() {
         for row in parsedRows {
-            let price = Double(
-                (row["Price"] ?? "").filter { $0.isNumber || $0 == "." }
-            ) ?? 0
+            let price = Double((row[mapPurchasePrice] ?? "").filter { $0.isNumber || $0 == "." }) ?? 0
             let deal = PropertyDeal(
-                propertyName:  row["Name"]     ?? "",
-                propertyType:  row["Type"]     ?? "",
-                locationCity:  row["Location"] ?? "",
+                propertyName:  row[mapPropertyName] ?? "",
+                propertyType:  mapPropertyType.isEmpty ? "" : (row[mapPropertyType] ?? ""),
+                locationCity:  mapLocation.isEmpty ? "" : (row[mapLocation] ?? ""),
                 purchasePrice: price
             )
             modelContext.insert(deal)
         }
+        try? modelContext.save()
         dismiss()
     }
 }
 
-// MARK: - Preview
-
 #Preview {
     ImportDealSheet()
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
 }

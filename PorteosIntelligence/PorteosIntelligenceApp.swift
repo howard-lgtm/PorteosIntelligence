@@ -4,6 +4,10 @@ import SwiftData
 @main
 struct PorteosIntelligenceApp: App {
 
+    init() {
+        PorteosFontLoader.registerBundledFonts()
+    }
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             PropertyDeal.self,

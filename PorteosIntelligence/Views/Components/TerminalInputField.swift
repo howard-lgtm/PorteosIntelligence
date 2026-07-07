@@ -59,29 +59,36 @@ struct TerminalInputField: View {
 
     // MARK: Tokens
 
-    private let shellBg      = Color(hex: "#0F1115")
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let textPrimary  = Color(hex: "#F8F9FA")
-    private let textTertiary = Color(hex: "#64748B")
+    private let shellBg      = DesignTokens.canvasBase
+    private let shellBorder  = DesignTokens.dividerStructural
+    private let textPrimary  = DesignTokens.textPrimary
+    private let textTertiary = DesignTokens.textDim
+
+    private func adornmentWidth(for text: String) -> CGFloat {
+        let minW: CGFloat = 28
+        let charW: CGFloat = 8.5
+        return max(minW, CGFloat(text.count) * charW + 12)
+    }
 
     // MARK: Body
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label.uppercased())
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
-                .tracking(0.05)
+                .porteosMeta()
                 .foregroundStyle(textTertiary)
 
             HStack(spacing: 0) {
                 if let prefix {
                     Text(prefix)
-                        .font(.custom("JetBrains Mono", size: 14))
+                        .porteosRowValue()
                         .foregroundStyle(textTertiary)
-                        .frame(width: 24, height: 28)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                        .frame(width: adornmentWidth(for: prefix), height: DesignTokens.rowHeightHeader)
                         .background(shellBg)
                         .overlay(alignment: .trailing) {
-                            Rectangle().fill(shellBorder).frame(width: 1)
+                            Rectangle().fill(shellBorder).frame(width: DesignTokens.dividerWidth)
                         }
                 }
 
@@ -89,17 +96,19 @@ struct TerminalInputField: View {
 
                 if let suffix {
                     Text(suffix)
-                        .font(.custom("JetBrains Mono", size: 14))
+                        .porteosRowValue()
                         .foregroundStyle(textTertiary)
-                        .frame(width: 24, height: 28)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                        .frame(width: adornmentWidth(for: suffix), height: DesignTokens.rowHeightHeader)
                         .background(shellBg)
                         .overlay(alignment: .leading) {
-                            Rectangle().fill(shellBorder).frame(width: 1)
+                            Rectangle().fill(shellBorder).frame(width: DesignTokens.dividerWidth)
                         }
                 }
             }
             .background(shellBg)
-            .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: 1))
+            .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
             .clipShape(Rectangle())
         }
     }
@@ -111,11 +120,11 @@ struct TerminalInputField: View {
         if let doubleBinding {
             TextField(placeholder, text: $localText)
                 .textFieldStyle(.plain)
-                .font(.custom("JetBrains Mono", size: 14))
+                .porteosRowValue()
                 .foregroundStyle(textPrimary)
                 .monospacedDigit()
                 .padding(.horizontal, 8)
-                .frame(height: 28)
+                .frame(height: DesignTokens.rowHeightHeader)
                 // Seed localText from the model on first appearance.
                 .onAppear {
                     localText = displayString(for: doubleBinding.wrappedValue)
@@ -136,11 +145,11 @@ struct TerminalInputField: View {
         } else if let stringBinding {
             TextField(placeholder, text: stringBinding)
                 .textFieldStyle(.plain)
-                .font(.custom("JetBrains Mono", size: 14))
+                .porteosRowValue()
                 .foregroundStyle(textPrimary)
                 .monospacedDigit()
                 .padding(.horizontal, 8)
-                .frame(height: 28)
+                .frame(height: DesignTokens.rowHeightHeader)
         }
     }
 

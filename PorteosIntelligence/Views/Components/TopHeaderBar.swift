@@ -1,88 +1,66 @@
 import SwiftUI
 
 // MARK: - TopHeaderBar
-// Fixed 40pt bar pinned to the top of AppShell.
-// Left:   PORTEOS_TERMINAL_v1.0.4 (bold wordmark)
-// Center: dynamic profile command path (accent-colored)
-// Right:  system status indicators
+// V2.06 shell header — CLI prompt + profile command | deal breadcrumb | server LED.
 
 struct TopHeaderBar: View {
 
     let activeProfile: ProfileType
+    var selectedDealName: String? = nil
     var onServerTap: () -> Void = {}
-
-    // MARK: Tokens
-
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-
-    // MARK: Body
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                wordmark
-                Spacer()
-                commandPath
-                Spacer()
+                cliPrompt
+                Spacer(minLength: 16)
+                dealBreadcrumb
+                Spacer(minLength: 16)
                 statusIndicators
             }
             .padding(.horizontal, 16)
-            .frame(height: 40)
-            .background(shellBg)
+            .frame(height: DesignTokens.rowHeightPaneBar)
+            .background(DesignTokens.canvasBase)
 
             Rectangle()
-                .fill(shellBorder)
-                .frame(height: 1)
+                .fill(DesignTokens.dividerStructural)
+                .frame(height: DesignTokens.dividerWidth)
         }
     }
 
-    // MARK: Wordmark
-
-    private var wordmark: some View {
-        Text("PORTEOS_TERMINAL_v1.0.4")
-            .font(.custom("JetBrains Mono", size: 12).weight(.bold))
-            .foregroundStyle(textPrimary)
-    }
-
-    // MARK: Dynamic Command Path
-
-    private var commandPath: some View {
-        HStack(spacing: 6) {
-            Text("porteos@system ~ %")
-                .font(.custom("JetBrains Mono", size: 11))
-                .foregroundStyle(textTertiary)
-
+    private var cliPrompt: some View {
+        HStack(spacing: 0) {
+            Text("porteos@system ~ % ")
+                .porteosCliPrompt()
+                .foregroundStyle(DesignTokens.textDim)
             Text(activeProfile.commandLine)
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .porteosModuleCmd()
                 .foregroundStyle(activeProfile.accentColor)
+                .lineLimit(1)
         }
     }
 
-    // MARK: Status Indicators
+    @ViewBuilder
+    private var dealBreadcrumb: some View {
+        if let name = selectedDealName, !name.isEmpty {
+            Text("--asset=\"\(name)\"")
+                .porteosRowLabel()
+                .foregroundStyle(DesignTokens.textSecondary)
+                .lineLimit(1)
+        }
+    }
 
     private var statusIndicators: some View {
         HStack(spacing: 12) {
-            // Ingestion server status — click opens config sheet
             ServerStatusIndicator(onTap: onServerTap)
 
-            // Divider pip
             Rectangle()
-                .fill(Color(hex: "#2E333F"))
+                .fill(DesignTokens.dividerStructural)
                 .frame(width: 1, height: 16)
 
-            // Notification indicator
-            Image(systemName: "bell")
-                .font(.system(size: 11, weight: .regular))
-                .foregroundStyle(textTertiary)
-
-            // Settings indicator
-            Image(systemName: "gearshape")
-                .font(.system(size: 11, weight: .regular))
-                .foregroundStyle(textTertiary)
+            Text("[ ↗ ]")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
         }
     }
 }
@@ -91,10 +69,12 @@ struct TopHeaderBar: View {
 
 #Preview {
     VStack(spacing: 0) {
-        TopHeaderBar(activeProfile: .realEstate)
-        TopHeaderBar(activeProfile: .circular)
-        TopHeaderBar(activeProfile: .hospitality)
+        TopHeaderBar(
+            activeProfile: .realEstate,
+            selectedDealName: "Lisbon Office Block A"
+        )
+        TopHeaderBar(activeProfile: .cmdCenter)
     }
     .frame(width: 1200)
-    .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
 }

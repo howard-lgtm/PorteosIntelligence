@@ -27,6 +27,29 @@ enum ProfileType: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Short module label for V2.06 workspace header: `[ PROFILE // MODULE ]`.
+    var moduleHeaderLabel: String {
+        switch self {
+        case .cmdCenter:   return "CMD_CENTER"
+        case .realEstate:  return "REAL_ESTATE"
+        case .hospitality: return "HOSPITALITY"
+        case .design:      return "DESIGN"
+        case .circular:    return "CIRCULAR_ECONOMY"
+        }
+    }
+
+    var moduleSubLabel: String {
+        switch self {
+        case .cmdCenter:   return "OVERVIEW"
+        default:           return "DASHBOARD"
+        }
+    }
+
+    /// V2.06 bracketed workspace header string.
+    var workspaceHeaderTitle: String {
+        "[ \(moduleHeaderLabel) // \(moduleSubLabel) ]"
+    }
+
     /// Shell-style command shown in TopHeaderBar center slot.
     var commandLine: String {
         switch self {
@@ -46,6 +69,52 @@ enum ProfileType: String, CaseIterable, Identifiable {
         case .hospitality: return Color(hex: "#14B8A6")   // Teal
         case .design:      return Color(hex: "#A855F7")   // Purple
         case .circular:    return Color(hex: "#3B82F6")   // Blue
+        }
+    }
+
+    /// CLI host segment for dashboard headers: `porteos@{host} ~ %`.
+    var cliHost: String {
+        switch self {
+        case .cmdCenter:   return "system"
+        case .realEstate:  return "real-estate"
+        case .hospitality: return "hospitality"
+        case .design:      return "design"
+        case .circular:    return "circular"
+        }
+    }
+
+    /// Uppercase tag beside deal name on hero score strip.
+    var heroProfileTag: String {
+        switch self {
+        case .cmdCenter:   return "CMD CENTER"
+        case .realEstate:  return "REAL ESTATE"
+        case .hospitality: return "HOSPITALITY"
+        case .design:      return "DESIGN"
+        case .circular:    return "CIRCULAR"
+        }
+    }
+
+    /// Left nav pane label (Figma img_00_21 — uppercase, spaced).
+    var shellNavLabel: String { heroProfileTag }
+
+    /// Market trend grid profile key for `MarketTrendGridBuilder`.
+    var marketTrendProfileKey: String {
+        switch self {
+        case .realEstate:  return "realEstate"
+        case .hospitality: return "hospitality"
+        case .design:      return "design"
+        case .circular:    return "circular"
+        case .cmdCenter:   return "cmdCenter"
+        }
+    }
+
+    func dashboardCLI(assetName: String) -> String {
+        let name = assetName.isEmpty ? "Untitled Deal" : assetName
+        switch self {
+        case .cmdCenter:
+            return "./dashboard --portfolio=overview --profiles=5"
+        default:
+            return "./dashboard --asset=\"\(name)\""
         }
     }
 }

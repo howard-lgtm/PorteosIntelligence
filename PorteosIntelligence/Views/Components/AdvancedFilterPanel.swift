@@ -20,12 +20,12 @@ struct AdvancedFilterPanel: View {
     @State private var maxScoreStr:  String = ""
 
     // MARK: Tokens
-    private let shellBg      = Color(hex: "#0F1115")
-    private let shellSurface = Color(hex: "#1A1D24")
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let textPrimary  = Color(hex: "#F8F9FA")
-    private let textTertiary = Color(hex: "#64748B")
-    private let accentRust   = Color(hex: "#C25E30")
+    private let shellBg      = DesignTokens.canvasBase
+    private let shellSurface = DesignTokens.surfacePanel
+    private let shellBorder  = DesignTokens.dividerStructural
+    private let textPrimary  = DesignTokens.textPrimary
+    private let textTertiary = DesignTokens.textDim
+    private let accentRust   = DesignTokens.accentRust
 
     // MARK: Body
 
@@ -60,13 +60,13 @@ struct AdvancedFilterPanel: View {
     private var panelHeader: some View {
         HStack(spacing: 0) {
             Text("// FILTER_PANEL")
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .porteosMeta()
                 .foregroundStyle(textTertiary)
                 .padding(.leading, 12)
             Spacer()
             if filters.isActive {
                 Text("ACTIVE")
-                    .font(.custom("JetBrains Mono", size: 9).weight(.bold))
+                    .porteosMeta()
                     .foregroundStyle(accentRust)
                     .padding(.trailing, 12)
             }
@@ -102,17 +102,17 @@ struct AdvancedFilterPanel: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label)
-                .font(.custom("JetBrains Mono", size: 9))
+                .porteosMeta()
                 .foregroundStyle(textTertiary)
             HStack(spacing: 4) {
                 Text("≥")
-                    .font(.custom("JetBrains Mono", size: 10))
+                    .porteosMeta()
                     .foregroundStyle(textTertiary)
                     .frame(width: 10, alignment: .center)
                 compactNumField(placeholder: "0",  text: minBind)
 
                 Text("≤")
-                    .font(.custom("JetBrains Mono", size: 10))
+                    .porteosMeta()
                     .foregroundStyle(textTertiary)
                     .frame(width: 10, alignment: .center)
                 compactNumField(placeholder: "∞",  text: maxBind)
@@ -122,7 +122,7 @@ struct AdvancedFilterPanel: View {
 
     private func compactNumField(placeholder: String, text: Binding<String>) -> some View {
         TextField(placeholder, text: text)
-            .font(.custom("JetBrains Mono", size: 11))
+            .porteosRowLabel()
             .foregroundStyle(textPrimary)
             .textFieldStyle(.plain)
             .padding(.horizontal, 6)
@@ -164,7 +164,7 @@ struct AdvancedFilterPanel: View {
                     )
                     .clipShape(Rectangle())
                 Text(label)
-                    .font(.custom("JetBrains Mono", size: 9))
+                    .porteosMeta()
                     .foregroundStyle(isOn.wrappedValue ? textPrimary : textTertiary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -189,7 +189,7 @@ struct AdvancedFilterPanel: View {
         HStack(spacing: 0) {
             Button { clearAll() } label: {
                 Text("[ CLEAR_ALL ]")
-                    .font(.custom("JetBrains Mono", size: 11))
+                    .porteosRowLabel()
                     .foregroundStyle(textTertiary)
                     .padding(.horizontal, 12)
                     .frame(height: 30)
@@ -200,8 +200,8 @@ struct AdvancedFilterPanel: View {
 
             Button { applyFilters() } label: {
                 Text("[ APPLY_FILTERS ]")
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                    .foregroundStyle(Color(hex: "#0F1115"))
+                    .porteosButtonPrimary()
+                    .foregroundStyle(DesignTokens.canvasBase)
                     .padding(.horizontal, 12)
                     .frame(height: 30)
                     .background(accentRust)
@@ -217,7 +217,7 @@ struct AdvancedFilterPanel: View {
 
     private func rowLabel(_ text: String) -> some View {
         Text(text)
-            .font(.custom("JetBrains Mono", size: 9).weight(.bold))
+            .porteosMeta()
             .foregroundStyle(textTertiary)
     }
 
@@ -227,7 +227,7 @@ struct AdvancedFilterPanel: View {
         isActive: Bool
     ) -> some View {
         TextField(placeholder, text: text)
-            .font(.custom("JetBrains Mono", size: 11))
+            .porteosRowLabel()
             .foregroundStyle(textPrimary)
             .textFieldStyle(.plain)
             .padding(.horizontal, 8)
@@ -291,5 +291,5 @@ struct AdvancedFilterPanel: View {
     @Previewable @State var filters = DealFilters()
     return AdvancedFilterPanel(filters: $filters)
         .frame(width: 256)
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
 }

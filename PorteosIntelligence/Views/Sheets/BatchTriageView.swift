@@ -2,41 +2,26 @@ import SwiftUI
 import SwiftData
 
 // MARK: - BatchTriageView
+// Figma img_00_13 — deal card grid, approve/reject triage.
 
 struct BatchTriageView: View {
 
     @Environment(\.dismiss)      private var dismiss
     @Environment(\.modelContext) private var modelContext
 
-    // Pull all deals; pipeline filtering is a computed property to avoid
-    // SwiftData enum-predicate limitations.
     @Query(sort: \PropertyDeal.createdAt, order: .reverse)
     private var allDeals: [PropertyDeal]
 
     @State private var selectedDealIDs: Set<UUID> = []
     @State private var hoveredDealID:   UUID?     = nil
     @FocusState private var isFocused: Bool
-
-    // Pre-computed per unique city so heat queries run once, not per card.
     @State private var cityHeat: [String: String] = [:]
 
-    // MARK: Tokens
-
-    private let shellBg      = Color(hex: "#0F1115")
-    private let shellSurface = Color(hex: "#1A1D24")
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let accentRust   = Color(hex: "#C25E30")
-    private let tp1          = Color(hex: "#F8F9FA")
-    private let tp2          = Color(hex: "#94A3B8")
-    private let tp3          = Color(hex: "#64748B")
-    private let green        = Color(hex: "#10B981")
-    private let amber        = Color(hex: "#F59E0B")
-    private let red          = Color(hex: "#EF4444")
-    private let blue         = Color(hex: "#3B82F6")
-
-    private let columns = [GridItem(.adaptive(minimum: 220, maximum: 320), spacing: 8)]
-
-    // MARK: Derived
+    private let columns = [
+        GridItem(.flexible(), spacing: 10),
+        GridItem(.flexible(), spacing: 10),
+        GridItem(.flexible(), spacing: 10)
+    ]
 
     private var pipelineDeals: [PropertyDeal] {
         allDeals.filter { $0.status == .pipeline }
@@ -48,19 +33,18 @@ struct BatchTriageView: View {
         return String(format: "%.1f", scores.reduce(0, +) / Double(scores.count))
     }
 
-    // MARK: Body
-
     var body: some View {
         VStack(spacing: 0) {
             header
-            Rectangle().fill(shellBorder).frame(height: 1)
+            TerminalStructuralDivider()
             dealGrid
-            Rectangle().fill(shellBorder).frame(height: 1)
+            TerminalStructuralDivider()
             footer
         }
-        .background(shellBg)
+        .background(DesignTokens.canvasBase)
         .clipShape(Rectangle())
-        .frame(minWidth: 760, minHeight: 540)
+        .frame(width: 800)
+        .frame(minHeight: 560)
         .focusable()
         .focused($isFocused)
         .onAppear {
@@ -73,38 +57,57 @@ struct BatchTriageView: View {
         .onKeyPress(.escape) { dismiss();          return .handled }
     }
 
-    // MARK: – Header
+    // MARK: Header
 
     private var header: some View {
         HStack(spacing: 16) {
-            Text("porteos@system ~ % deal --triage")
-                .font(.custom("JetBrains Mono", size: 13))
-                .foregroundStyle(accentRust)
-
+            HStack(spacing: 0) {
+                Text("porteos@system ~ % ")
+                    .porteosCliPrompt()
+                    .foregroundStyle(DesignTokens.textDim)
+                Text("deal --triage")
+                    .porteosModuleCmd()
+                    .foregroundStyle(DesignTokens.accentRust)
+            }
             Spacer()
-
-            statPill("TOTAL",      "\(pipelineDeals.count)")
-            statPill("SELECTED",   "\(selectedDealIDs.count)")
-            statPill("AVG_SCORE",  averageScore)
+            statPill("TOTAL", "\(pipelineDeals.count)")
+            selectedStatPill
+            statPill("AVG_SCORE", averageScore)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
-        .background(shellSurface)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightPaneBar)
+        .background(DesignTokens.surfacePanel)
     }
 
     private func statPill(_ label: String, _ value: String) -> some View {
         HStack(spacing: 4) {
             Text("\(label):")
-                .font(.custom("JetBrains Mono", size: 10))
-                .foregroundStyle(tp3)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
             Text(value)
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
-                .foregroundStyle(tp1)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textPrimary)
                 .monospacedDigit()
         }
     }
 
-    // MARK: – Deal Grid
+    private var selectedStatPill: some View {
+        HStack(spacing: 4) {
+            Text("SELECTED:")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+            Text("\(selectedDealIDs.count)")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.canvasBase)
+                .monospacedDigit()
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(DesignTokens.accentRust)
+                .clipShape(Rectangle())
+        }
+    }
+
+    // MARK: Grid
 
     private var dealGrid: some View {
         Group {
@@ -112,165 +115,175 @@ struct BatchTriageView: View {
                 VStack(spacing: 8) {
                     Spacer()
                     Text("> NO_PIPELINE_DEALS")
-                        .font(.custom("JetBrains Mono", size: 13))
-                        .foregroundStyle(tp3)
+                        .porteosRowLabel()
+                        .foregroundStyle(DesignTokens.textDim)
                     Text("> import deals or set status to PIPELINE to begin triage")
-                        .font(.custom("JetBrains Mono", size: 11))
-                        .foregroundStyle(tp3.opacity(0.6))
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textDim.opacity(0.6))
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: 8) {
+                    LazyVGrid(columns: columns, spacing: 10) {
                         ForEach(pipelineDeals) { deal in
                             dealCard(deal)
                         }
                     }
-                    .padding(16)
+                    .padding(DesignTokens.blockGutter)
                 }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(shellBg)
+        .background(DesignTokens.canvasBase)
     }
+
+    // MARK: Card
 
     @ViewBuilder
     private func dealCard(_ deal: PropertyDeal) -> some View {
         let isSelected = selectedDealIDs.contains(deal.id)
         let isHovered  = hoveredDealID == deal.id
         let grade      = VibeGrade.from(score: deal.porteosScore)
-        let heat       = cityHeat[deal.locationCity]
+        let accent     = profileAccent(for: deal)
 
-        VStack(alignment: .leading, spacing: 0) {
+        HStack(spacing: 0) {
+            Rectangle()
+                .fill(accent)
+                .frame(width: 3)
 
-            // ── Card header ────────────────────────────────────────────────────
-            HStack(alignment: .top, spacing: 0) {
-                // Selection checkbox
-                Rectangle()
-                    .fill(isSelected ? accentRust : Color.clear)
-                    .frame(width: 14, height: 14)
-                    .overlay(Rectangle().stroke(isSelected ? accentRust : shellBorder, lineWidth: 1))
-                    .overlay(
-                        Text(isSelected ? "✓" : "")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(Color(hex: "#0F1115"))
-                    )
-                    .padding(.trailing, 8)
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .top, spacing: 8) {
+                    selectionBox(isSelected: isSelected)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(deal.propertyName.isEmpty ? "UNTITLED" : deal.propertyName.uppercased())
-                        .font(.custom("JetBrains Mono", size: 12).weight(.bold))
-                        .foregroundStyle(tp1)
-                        .lineLimit(1)
-                    Text(deal.locationCity.isEmpty ? "—" : deal.locationCity.uppercased())
-                        .font(.custom("JetBrains Mono", size: 10))
-                        .foregroundStyle(tp2)
-                }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(deal.propertyName.isEmpty ? "UNTITLED" : deal.propertyName.uppercased())
+                            .porteosButtonPrimary()
+                            .foregroundStyle(DesignTokens.textPrimary)
+                            .lineLimit(1)
+                        Text(deal.locationCity.isEmpty ? "—" : deal.locationCity)
+                            .porteosMeta()
+                            .foregroundStyle(DesignTokens.textDim)
+                    }
 
-                Spacer()
+                    Spacer(minLength: 0)
 
-                // Porteos score badge
-                VStack(spacing: 1) {
-                    Text(deal.porteosScore.map { "\(Int($0.rounded()))" } ?? "—")
-                        .font(.custom("JetBrains Mono", size: 20).weight(.bold))
-                        .foregroundStyle(Color(hex: grade.hexColor))
+                    Text(scoreGradeLabel(deal: deal, grade: grade))
+                        .porteosRowValue()
+                        .foregroundStyle(grade.semanticColor)
                         .monospacedDigit()
-                    Text(grade.rawValue)
-                        .font(.custom("JetBrains Mono", size: 8).weight(.bold))
-                        .foregroundStyle(Color(hex: grade.hexColor))
                 }
-            }
-            .padding(.horizontal, 10)
-            .padding(.top, 10)
-            .padding(.bottom, 6)
+                .padding(.horizontal, 10)
+                .padding(.top, 10)
+                .padding(.bottom, 6)
 
-            Rectangle().fill(shellBorder).frame(height: 1)
+                TerminalStructuralDivider()
 
-            // ── Card body ──────────────────────────────────────────────────────
-            HStack(spacing: 0) {
-                VStack(alignment: .leading, spacing: 3) {
-                    metricLine("PRICE", formatCurrency(deal.purchasePrice))
-                    metricLine("AREA",  deal.totalArea > 0 ? "\(Int(deal.totalArea)) m²" : "—")
+                HStack(spacing: 0) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        metricLine("PRICE", formatCurrency(deal.purchasePrice))
+                        metricLine("AREA", areaLabel(for: deal))
+                    }
+                    Spacer()
+                    if let badge = cardBadge(for: deal) {
+                        Text(badge.label)
+                            .porteosMeta()
+                            .foregroundStyle(badge.color)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(badge.color.opacity(0.12))
+                            .overlay {
+                                Rectangle().strokeBorder(badge.color.opacity(0.35), lineWidth: DesignTokens.dividerWidth)
+                            }
+                            .clipShape(Rectangle())
+                    }
                 }
-                Spacer()
-                // Market heat badge
-                if let h = heat {
-                    Text(h)
-                        .font(.custom("JetBrains Mono", size: 9).weight(.bold))
-                        .foregroundStyle(heatColor(h))
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 2)
-                        .background(heatColor(h).opacity(0.12))
-                        .clipShape(Rectangle())
-                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
         }
-        .background(isSelected ? accentRust.opacity(0.07) : (isHovered ? shellSurface : shellBg))
-        .overlay(
+        .background(isSelected ? DesignTokens.accentRust.opacity(0.06)
+                    : (isHovered ? DesignTokens.surfacePanel : DesignTokens.surfaceElevated))
+        .overlay {
             Rectangle().stroke(
-                isSelected ? accentRust : (isHovered ? tp3 : shellBorder),
-                lineWidth: isSelected ? 1.5 : 1
+                isSelected ? DesignTokens.accentRust : DesignTokens.dividerStructural,
+                lineWidth: isSelected ? 1.5 : DesignTokens.dividerWidth
             )
-        )
+        }
         .clipShape(Rectangle())
         .contentShape(Rectangle())
         .onHover { hoveredDealID = $0 ? deal.id : (hoveredDealID == deal.id ? nil : hoveredDealID) }
         .onTapGesture { toggleSelection(deal.id) }
     }
 
+    private func selectionBox(isSelected: Bool) -> some View {
+        Rectangle()
+            .fill(isSelected ? DesignTokens.accentRust : Color.clear)
+            .frame(width: 14, height: 14)
+            .overlay {
+                Rectangle().strokeBorder(
+                    isSelected ? DesignTokens.accentRust : DesignTokens.dividerStructural,
+                    lineWidth: DesignTokens.dividerWidth
+                )
+            }
+    }
+
+    private func scoreGradeLabel(deal: PropertyDeal, grade: VibeGrade) -> String {
+        let score = deal.porteosScore.map { "\(Int($0.rounded()))" } ?? "—"
+        return "\(score) / \(grade.rawValue)"
+    }
+
     private func metricLine(_ label: String, _ value: String) -> some View {
         HStack(spacing: 4) {
             Text("\(label):")
-                .font(.custom("JetBrains Mono", size: 9))
-                .foregroundStyle(tp3)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
             Text(value)
-                .font(.custom("JetBrains Mono", size: 9).weight(.bold))
-                .foregroundStyle(tp2)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textSecondary)
                 .monospacedDigit()
         }
     }
 
-    // MARK: – Footer
+    // MARK: Footer
 
     private var footer: some View {
         HStack(spacing: 12) {
             Button("[ APPROVE_SELECTED ]") { approveSelected() }
-                .buttonStyle(TerminalButtonStyle(color: .green))
+                .buttonStyle(TerminalButtonStyle(outlined: .green))
                 .disabled(selectedDealIDs.isEmpty)
-                .opacity(selectedDealIDs.isEmpty ? 0.4 : 1)
 
             Button("[ REJECT_SELECTED ]") { rejectSelected() }
-                .buttonStyle(TerminalButtonStyle(color: .red))
+                .buttonStyle(TerminalButtonStyle(outlined: .red))
                 .disabled(selectedDealIDs.isEmpty)
-                .opacity(selectedDealIDs.isEmpty ? 0.4 : 1)
 
             Spacer()
 
-            if !selectedDealIDs.isEmpty {
+            HStack(spacing: 4) {
                 Text("\(selectedDealIDs.count) selected  ·  A approve  ·  R reject  ·  Space toggle")
-                    .font(.custom("JetBrains Mono", size: 9))
-                    .foregroundStyle(tp3)
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                Text("[")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                Text("*")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.accentRust)
+                Text("]")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
             }
-
-            Button("[ DISMISS ]") { dismiss() }
-                .buttonStyle(TerminalButtonStyle(color: .muted))
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
-        .background(shellSurface)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightPaneBar + 16)
+        .background(DesignTokens.surfacePanel)
     }
 
-    // MARK: – Actions
+    // MARK: Actions
 
     private func toggleSelection(_ id: UUID) {
-        if selectedDealIDs.contains(id) {
-            selectedDealIDs.remove(id)
-        } else {
-            selectedDealIDs.insert(id)
-        }
+        if selectedDealIDs.contains(id) { selectedDealIDs.remove(id) }
+        else { selectedDealIDs.insert(id) }
     }
 
     private func toggleHovered() {
@@ -281,7 +294,7 @@ struct BatchTriageView: View {
     private func approveSelected() {
         guard !selectedDealIDs.isEmpty else { return }
         for deal in pipelineDeals where selectedDealIDs.contains(deal.id) {
-            deal.status    = .viable
+            deal.status = .viable
             deal.updatedAt = Date()
         }
         try? modelContext.save()
@@ -291,42 +304,91 @@ struct BatchTriageView: View {
     private func rejectSelected() {
         guard !selectedDealIDs.isEmpty else { return }
         for deal in pipelineDeals where selectedDealIDs.contains(deal.id) {
-            deal.status    = .rejected
+            deal.status = .rejected
             deal.updatedAt = Date()
         }
         try? modelContext.save()
         selectedDealIDs.removeAll()
     }
 
-    // MARK: – Heat pre-computation
+    // MARK: Helpers
 
-    /// Runs once on appear. Queries market heat for each unique city so cards
-    /// don't trigger individual SwiftData fetches inside LazyVGrid.
     private func computeHeat() {
         let cities = Set(pipelineDeals.map(\.locationCity)).filter { !$0.isEmpty }
         var result: [String: String] = [:]
         for city in cities {
-            let heat = TrendAnalyzer.calculateMarketHeat(for: city, context: modelContext)
-            if heat.level != "COOL" { result[city] = heat.level }   // only badge notable heat
+            result[city] = TrendAnalyzer.calculateMarketHeat(for: city, context: modelContext).level
         }
         cityHeat = result
     }
 
-    // MARK: – Helpers
+    private func profileAccent(for deal: PropertyDeal) -> Color {
+        if deal.hospitalityRoomCount > 0 || deal.hospitalityADR > 0 {
+            return ProfileType.hospitality.accentColor
+        }
+        if deal.designGFA > 0 || deal.designNIA > 0 {
+            return ProfileType.design.accentColor
+        }
+        if deal.circularKgMaterialsUsed > 0 || deal.circularRecycledContentPct > 0 {
+            return ProfileType.circular.accentColor
+        }
+        return ProfileType.realEstate.accentColor
+    }
+
+    private func areaLabel(for deal: PropertyDeal) -> String {
+        if deal.hospitalityRoomCount > 0 {
+            return "\(deal.hospitalityRoomCount) rooms"
+        }
+        if deal.totalArea > 0 {
+            return "\(Int(deal.totalArea)) m²"
+        }
+        return "—"
+    }
+
+    private struct CardBadge {
+        let label: String
+        let color: Color
+    }
+
+    private func cardBadge(for deal: PropertyDeal) -> CardBadge? {
+        let grade = VibeGrade.from(score: deal.porteosScore)
+        if grade == .d || grade == .f {
+            return CardBadge(label: "RISK", color: DesignTokens.statusCritical)
+        }
+        guard !deal.locationCity.isEmpty, let level = cityHeat[deal.locationCity] else { return nil }
+        return CardBadge(label: level, color: heatColor(level))
+    }
 
     private func formatCurrency(_ v: Double) -> String {
         guard v > 0 else { return "—" }
-        if v >= 1_000_000 { return String(format: "€%.2fM", v / 1_000_000) }
-        if v >= 1_000     { return String(format: "€%.0fK", v / 1_000) }
+        if v >= 1_000_000 { return String(format: "€%.1fM", v / 1_000_000) }
+        if v >= 1_000     { return String(format: "€%.0fk", v / 1_000) }
         return String(format: "€%.0f", v)
     }
 
     private func heatColor(_ level: String) -> Color {
         switch level {
-        case "HOT":  return red
-        case "WARM": return amber
-        case "COOL": return blue
-        default:     return tp3      // COLD
+        case "HOT":  return DesignTokens.statusCritical
+        case "WARM": return DesignTokens.statusWarn
+        case "COOL": return ProfileType.circular.accentColor
+        default:     return DesignTokens.textDim
         }
     }
+}
+
+// MARK: - VibeGrade semantic color
+
+private extension VibeGrade {
+    var semanticColor: Color {
+        switch self {
+        case .a, .b: return DesignTokens.statusGo
+        case .c:     return DesignTokens.statusWarn
+        case .d, .f: return DesignTokens.statusCritical
+        }
+    }
+}
+
+#Preview {
+    BatchTriageView()
+        .modelContainer(for: PropertyDeal.self, inMemory: true)
 }

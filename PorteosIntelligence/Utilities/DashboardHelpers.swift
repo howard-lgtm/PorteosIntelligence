@@ -27,5 +27,5 @@ func mockTrend(from current: Double, months: Int = 12) -> [Double] {
 /// - `higherIsBetter: false` → green when trend is falling, red when rising.
 func sparkColor(_ trend: [Double], higherIsBetter: Bool = true) -> Color {
     let up = (trend.last ?? 0) >= (trend.first ?? 0)
-    return (up == higherIsBetter) ? Color(hex: "#10B981") : Color(hex: "#EF4444")
+    return (up == higherIsBetter) ? DesignTokens.statusGo : DesignTokens.statusCritical
 }

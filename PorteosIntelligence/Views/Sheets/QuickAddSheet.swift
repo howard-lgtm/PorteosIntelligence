@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 // MARK: - QuickAddSheet
-// Ultra-fast single-field deal entry: paste a URL or type "Lisbon T2 €350k 90m²"
+// Figma img_00_17 — NL input, parse preview, confidence pill, pipeline save.
 
 struct QuickAddSheet: View {
 
@@ -11,39 +11,23 @@ struct QuickAddSheet: View {
 
     var onSaved: ((UUID) -> Void)? = nil
 
-    // MARK: State
-
-    @State private var input:      String = ""
-    @State private var isSaving    = false
-    @State private var savedID:    UUID?
+    @State private var input:   String = ""
+    @State private var isSaving = false
+    @State private var savedID: UUID?
     @FocusState private var focused: Bool
-
-    // MARK: Derived — live parse (recomputes on every keystroke, parser is CPU-cheap)
 
     private var parsed: QuickEntryResult? {
         QuickEntryParser.parse(input)
     }
 
-    private var isURL: Bool { QuickEntryParser.isURL(input.trimmingCharacters(in: .whitespaces)) }
+    private var isURL: Bool {
+        QuickEntryParser.isURL(input.trimmingCharacters(in: .whitespaces))
+    }
 
     private var canSave: Bool {
         guard let p = parsed else { return false }
-        // URL-only entries are valid even with price = 0
         return p.purchasePrice > 0 || p.sourceURL != nil
     }
-
-    // MARK: Design tokens
-
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let textPrimary   = Color(hex: "#E2E8F0")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let accentRust    = Color(hex: "#C25E30")
-    private let accentGreen   = Color(hex: "#10B981")
-    private let accentAmber   = Color(hex: "#F59E0B")
-    private let accentRed     = Color(hex: "#EF4444")
 
     // MARK: Body
 
@@ -51,274 +35,306 @@ struct QuickAddSheet: View {
         VStack(spacing: 0) {
             titleBar
             inputSection
-            Rectangle().fill(shellBorder).frame(height: 1)
+            TerminalStructuralDivider()
             previewSection
-            Rectangle().fill(shellBorder).frame(height: 1)
+            TerminalStructuralDivider()
             actionBar
         }
-        .background(shellBg)
+        .background(DesignTokens.canvasBase)
         .clipShape(Rectangle())
-        .frame(width: 560)
+        .frame(width: 480)
         .fixedSize(horizontal: false, vertical: true)
         .onAppear { focused = true }
     }
 
-    // MARK: - Title bar
+    // MARK: Header
 
     private var titleBar: some View {
         HStack(spacing: 0) {
             Text("QUICK_ADD")
-                .font(.custom("JetBrains Mono", size: 11))
-                .foregroundColor(textTertiary)
-            Text("  //  ⌘⇧Q")
-                .font(.custom("JetBrains Mono", size: 10))
-                .foregroundColor(Color(hex: "#3D4455"))
+                .porteosRowLabel()
+                .foregroundStyle(DesignTokens.textDim)
+            Text("  //  CMD+SHIFT+Q")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
             Spacer()
             confidencePill
         }
-        .padding(.horizontal, 12)
-        .frame(height: 32)
-        .background(shellSurface)
-        .overlay(alignment: .bottom) {
-            Rectangle().fill(shellBorder).frame(height: 1)
-        }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightHeader)
+        .background(DesignTokens.surfacePanel)
     }
 
     @ViewBuilder
     private var confidencePill: some View {
         if let p = parsed {
             let (label, color): (String, Color) = switch p.confidence {
-            case .high:   ("HIGH",   accentGreen)
-            case .medium: ("MEDIUM", accentAmber)
-            case .low:    ("LOW",    accentRed)
+            case .high:   ("HIGH",   DesignTokens.statusGo)
+            case .medium: ("MEDIUM", DesignTokens.statusWarn)
+            case .low:    ("LOW",    DesignTokens.statusCritical)
             }
             Text("CONFIDENCE: \(label)")
-                .font(.custom("JetBrains Mono", size: 9))
-                .foregroundColor(color)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
+                .porteosMeta()
+                .foregroundStyle(color)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
                 .background(color.opacity(0.12))
+                .overlay {
+                    Rectangle().strokeBorder(color.opacity(0.35), lineWidth: DesignTokens.dividerWidth)
+                }
                 .clipShape(Rectangle())
         }
     }
 
-    // MARK: - Input section
+    // MARK: Input
 
     private var inputSection: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 8) {
-                // Cursor prompt
-                Text(isURL ? "url>" : ">")
-                    .font(.custom("JetBrains Mono", size: 13).weight(.medium))
-                    .foregroundColor(accentRust)
-                    .frame(width: isURL ? 28 : 12, alignment: .leading)
+            HStack(spacing: 0) {
+                Rectangle()
+                    .fill(DesignTokens.accentRust)
+                    .frame(width: 2)
 
-                TextField(
-                    "",
-                    text: $input,
-                    prompt: Text("\"Lisbon T2 €350k 90m²\"  or paste a listing URL")
-                        .font(.custom("JetBrains Mono", size: 12))
-                        .foregroundColor(textTertiary)
-                )
-                .textFieldStyle(.plain)
-                .font(.custom("JetBrains Mono", size: 13))
-                .foregroundColor(textPrimary)
-                .focused($focused)
-                .onSubmit { if canSave { save() } }
+                HStack(spacing: 8) {
+                    Text(isURL ? "url>" : ">")
+                        .porteosRowValue()
+                        .foregroundStyle(DesignTokens.accentRust)
+                        .frame(width: isURL ? 28 : 14, alignment: .leading)
 
-                // Clear button
-                if !input.isEmpty {
-                    Button { input = "" } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 10))
-                            .foregroundColor(textTertiary)
-                    }
-                    .buttonStyle(.plain)
+                    TextField(
+                        "",
+                        text: $input,
+                        prompt: Text("Lisbon T2 €350k 90m²")
+                            .porteosStyle(.rowValue)
+                            .foregroundStyle(DesignTokens.textDim)
+                    )
+                    .textFieldStyle(.plain)
+                    .porteosRowValue()
+                    .foregroundStyle(DesignTokens.textPrimary)
+                    .focused($focused)
+                    .onSubmit { if canSave { save() } }
                 }
+                .padding(.horizontal, DesignTokens.blockGutter)
+                .frame(height: DesignTokens.rowHeightPaneBar)
             }
-            .padding(.horizontal, 12)
-            .frame(height: 44)
 
-            // Syntax hint strip
-            HStack(spacing: 12) {
-                hintTag("PRICE", "€350k  €1.2M  $450,000")
-                hintTag("AREA",  "90m²  90sqm  1200sqft")
-                hintTag("TYPE",  "T2  3BR  villa")
-                hintTag("LOC",   "Lisbon  Madrid")
+            if let p = parsed, !isURL {
+                parsedSummaryBar(p)
             }
-            .padding(.horizontal, 12)
-            .frame(height: 22)
-            .background(shellBg.opacity(0.6))
         }
     }
 
-    // MARK: - Parsed preview
+    private func parsedSummaryBar(_ p: QuickEntryResult) -> some View {
+        let segments = summarySegments(for: p)
+        return HStack(spacing: 0) {
+            ForEach(Array(segments.enumerated()), id: \.offset) { idx, segment in
+                if idx > 0 {
+                    Text("|")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.dividerStructural)
+                        .padding(.horizontal, 8)
+                }
+                HStack(spacing: 4) {
+                    Text(segment.label)
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textDim)
+                    Text(segment.value)
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textSecondary)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightHeader)
+        .background(DesignTokens.canvasBase)
+    }
+
+    private struct SummarySegment {
+        let label: String
+        let value: String
+    }
+
+    private func summarySegments(for p: QuickEntryResult) -> [SummarySegment] {
+        var result: [SummarySegment] = []
+        if p.purchasePrice > 0 {
+            result.append(.init(label: "PRICE", value: compactPrice(p)))
+        }
+        if p.totalArea > 0 {
+            result.append(.init(label: "AREA", value: "\(Int(p.totalArea))m²"))
+        }
+        if let beds = p.bedrooms {
+            result.append(.init(label: "TYPE", value: "T\(beds)"))
+        } else if p.propertyType != "Apartment" {
+            result.append(.init(label: "TYPE", value: p.propertyType))
+        }
+        if p.location != "Unknown" {
+            result.append(.init(label: "LOC", value: p.location))
+        }
+        return result
+    }
+
+    // MARK: Preview
 
     @ViewBuilder
     private var previewSection: some View {
         if let p = parsed {
             VStack(spacing: 0) {
                 previewHeader
-                LazyVGrid(columns: [
-                    GridItem(.flexible(), spacing: 1),
-                    GridItem(.flexible(), spacing: 1),
-                ], spacing: 1) {
-                    previewCell("PROPERTY_NAME", p.propertyName,     isKnown: !p.propertyName.isEmpty)
-                    previewCell("LOCATION",      p.location,         isKnown: p.location != "Unknown")
-                    previewCell("PURCHASE_PRICE",
-                                p.purchasePrice > 0 ? p.priceLabel : "—",
-                                isKnown: p.purchasePrice > 0)
-                    previewCell("CURRENCY",      p.currency,         isKnown: true)
-                    previewCell("AREA",
-                                p.totalArea > 0 ? "\(Int(p.totalArea)) m²" : "—",
-                                isKnown: p.totalArea > 0)
-                    previewCell("PROPERTY_TYPE", p.propertyType,     isKnown: true)
-                    previewCell("BEDROOMS",
-                                p.bedrooms.map { String($0) } ?? "—",
-                                isKnown: p.bedrooms != nil)
-                    previewCell("STATUS",        "PIPELINE",         isKnown: true)
-                }
+
+                previewRow("PROPERTY_NAME", p.propertyName, isKnown: !p.propertyName.isEmpty)
+                previewDivider
+                previewRow("LOCATION", p.location, isKnown: p.location != "Unknown")
+                previewDivider
+                previewRow(
+                    "PURCHASE_PRICE",
+                    p.purchasePrice > 0 ? formattedPurchasePrice(p) : "—",
+                    isKnown: p.purchasePrice > 0
+                )
+                previewDivider
+                previewRow("CURRENCY", p.currency, isKnown: true)
+                previewDivider
+                previewRow(
+                    "AREA",
+                    p.totalArea > 0 ? "\(Int(p.totalArea)) m²" : "—",
+                    isKnown: p.totalArea > 0
+                )
+                previewDivider
+                previewRow("PROPERTY_TYPE", p.propertyType, isKnown: true)
+                previewDivider
+                previewRow("BEDROOMS", p.bedrooms.map { String($0) } ?? "—", isKnown: p.bedrooms != nil)
+                previewDivider
+                previewRow("STATUS", "PIPELINE", isKnown: true)
 
                 if p.estimatedGPI > 0 {
-                    Rectangle().fill(shellBorder).frame(height: 1)
+                    TerminalStructuralDivider()
                     derivedMetricsRow(p)
                 }
 
                 if let url = p.sourceURL {
-                    Rectangle().fill(shellBorder).frame(height: 1)
+                    TerminalStructuralDivider()
                     urlRow(url)
                 }
             }
         } else {
-            // Empty state
-            HStack {
-                Image(systemName: "wand.and.stars")
-                    .font(.system(size: 11))
-                Text("Start typing — fields parse automatically")
-                    .font(.custom("JetBrains Mono", size: 10))
-            }
-            .foregroundColor(textTertiary)
-            .frame(maxWidth: .infinity)
-            .frame(height: 48)
+            Text("Start typing — fields parse automatically")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+                .frame(maxWidth: .infinity)
+                .frame(height: DesignTokens.rowHeightPaneBar)
         }
     }
 
     private var previewHeader: some View {
         HStack {
-            Text("porteos@system ~ % parse --result")
-                .font(.custom("JetBrains Mono", size: 10))
-                .foregroundColor(textTertiary)
+            Text("porteos@system ~ % ")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+            Text("parse --result")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
             Spacer()
         }
-        .padding(.horizontal, 12)
-        .frame(height: 24)
-        .background(shellSurface)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightHeader)
+        .background(DesignTokens.surfacePanel)
     }
 
-    private func previewCell(_ key: String, _ value: String, isKnown: Bool) -> some View {
-        HStack(spacing: 0) {
+    private var previewDivider: some View {
+        Rectangle()
+            .fill(DesignTokens.dividerStructural)
+            .frame(height: DesignTokens.dividerWidth)
+    }
+
+    private func previewRow(_ key: String, _ value: String, isKnown: Bool) -> some View {
+        HStack(spacing: 12) {
             Text(key)
-                .font(.custom("JetBrains Mono", size: 9))
-                .foregroundColor(textTertiary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+                .frame(width: 120, alignment: .leading)
+
             Text(value)
-                .font(.custom("JetBrains Mono", size: 11).weight(.medium))
-                .foregroundColor(isKnown ? textPrimary : textTertiary)
+                .porteosRowValue()
+                .foregroundStyle(isKnown ? DesignTokens.textPrimary : DesignTokens.textDim)
                 .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, 12)
-        .frame(height: 28)
-        .background(shellSurface)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightHeader)
+        .background(DesignTokens.surfacePanel)
     }
 
     private func derivedMetricsRow(_ p: QuickEntryResult) -> some View {
-        HStack(spacing: 0) {
-            Text("AUTO_CALC")
-                .font(.custom("JetBrains Mono", size: 9))
-                .foregroundColor(textTertiary)
-                .frame(width: 80, alignment: .leading)
-            Spacer()
-            derivedChip("EST_GPI",  formatCurrency(p.estimatedGPI, p.currency))
-            derivedChip("VAC",      "5%")
+        HStack(spacing: 8) {
+            derivedChip("EST_GPI", formatCurrency(p.estimatedGPI, p.currency))
+            derivedChip("VAC", "5%")
             derivedChip("EST_OPEX", formatCurrency(p.opex, p.currency))
             if p.totalArea > 0 && p.purchasePrice > 0 {
                 derivedChip("€/M²", String(format: "%.0f", p.purchasePrice / p.totalArea))
             }
+            Spacer(minLength: 0)
         }
-        .padding(.horizontal, 12)
-        .frame(height: 28)
-        .background(shellBg)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightHeader + 4)
+        .background(DesignTokens.canvasBase)
     }
 
     private func urlRow(_ url: String) -> some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             Text("URL")
-                .font(.custom("JetBrains Mono", size: 9))
-                .foregroundColor(textTertiary)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
             Text(url)
-                .font(.custom("JetBrains Mono", size: 9))
-                .foregroundColor(accentAmber)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.statusWarn)
                 .lineLimit(1)
                 .truncationMode(.middle)
             Spacer()
         }
-        .padding(.horizontal, 12)
-        .frame(height: 24)
-        .background(shellBg)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightHeader)
+        .background(DesignTokens.canvasBase)
     }
 
-    // MARK: - Action bar
+    // MARK: Footer
 
     private var actionBar: some View {
-        HStack(spacing: 8) {
-            // Parse mode label
+        HStack(spacing: 12) {
             Text(isURL ? "MODE: URL" : "MODE: TEXT")
-                .font(.custom("JetBrains Mono", size: 9))
-                .foregroundColor(textTertiary)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
 
             Spacer()
 
             Button { dismiss() } label: {
                 Text("[ ESC ]")
-                    .font(.custom("JetBrains Mono", size: 11))
-                    .foregroundColor(textTertiary)
-                    .frame(height: 32)
-                    .padding(.horizontal, 12)
-                    .background(shellSurface)
-                    .overlay(Rectangle().stroke(shellBorder, lineWidth: 1))
+                    .porteosRowLabel()
+                    .foregroundStyle(DesignTokens.textDim)
             }
             .buttonStyle(.plain)
             .keyboardShortcut(.escape, modifiers: [])
 
-            Button {
-                save()
-            } label: {
+            Button { save() } label: {
                 Group {
                     if isSaving {
                         Text("[ SAVING… ]")
                     } else if savedID != nil {
-                        Text("[ SAVED ✓ ]")
+                        Text("[ SAVED ]")
                     } else {
                         Text("[ SAVE_TO_PIPELINE ]")
                     }
                 }
-                .font(.custom("JetBrains Mono", size: 11))
-                .foregroundColor(canSave ? textPrimary : textTertiary)
-                .frame(height: 32)
-                .padding(.horizontal, 14)
-                .background(canSave ? accentRust : shellSurface)
-                .clipShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(TerminalButtonStyle(color: canSave && !isSaving ? .rust : .muted))
             .disabled(!canSave || isSaving)
             .keyboardShortcut(.return, modifiers: .command)
         }
-        .padding(.horizontal, 12)
-        .frame(height: 48)
-        .background(shellSurface)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightPaneBar + 8)
+        .background(DesignTokens.surfacePanel)
     }
 
-    // MARK: - Save
+    // MARK: Save
 
     private func save() {
         guard let p = parsed, canSave else { return }
@@ -365,33 +381,41 @@ struct QuickAddSheet: View {
         return tags
     }
 
-    // MARK: - Small helpers
+    // MARK: Formatting
 
-    private func hintTag(_ key: String, _ example: String) -> some View {
-        HStack(spacing: 4) {
-            Text(key)
-                .font(.custom("JetBrains Mono", size: 8))
-                .foregroundColor(accentRust)
-            Text(example)
-                .font(.custom("JetBrains Mono", size: 8))
-                .foregroundColor(textTertiary)
+    private func compactPrice(_ p: QuickEntryResult) -> String {
+        let sym = p.currency == "USD" ? "$" : "€"
+        if p.purchasePrice >= 1_000_000 {
+            return "\(sym)\(String(format: "%.1f", p.purchasePrice / 1_000_000))M"
         }
+        if p.purchasePrice >= 1_000 {
+            return "\(sym)\(Int(p.purchasePrice / 1_000))k"
+        }
+        return "\(sym)\(Int(p.purchasePrice))"
+    }
+
+    private func formattedPurchasePrice(_ p: QuickEntryResult) -> String {
+        let sym = p.currency == "USD" ? "$" : "€"
+        let formatted = Int(p.purchasePrice).formatted(.number.grouping(.automatic))
+        return "\(sym) \(formatted)"
     }
 
     private func derivedChip(_ key: String, _ value: String) -> some View {
-        HStack(spacing: 3) {
+        HStack(spacing: 4) {
             Text(key)
-                .font(.custom("JetBrains Mono", size: 8))
-                .foregroundColor(textTertiary)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.statusGo.opacity(0.8))
             Text(value)
-                .font(.custom("JetBrains Mono", size: 9))
-                .foregroundColor(accentGreen)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.statusGo)
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 2)
-        .background(accentGreen.opacity(0.08))
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(DesignTokens.statusGo.opacity(0.10))
+        .overlay {
+            Rectangle().strokeBorder(DesignTokens.statusGo.opacity(0.30), lineWidth: DesignTokens.dividerWidth)
+        }
         .clipShape(Rectangle())
-        .padding(.leading, 4)
     }
 
     private func formatCurrency(_ value: Double, _ currency: String) -> String {

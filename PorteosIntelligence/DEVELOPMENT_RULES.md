@@ -1,6 +1,8 @@
 # Porteos Intelligence - AI Development & Execution Rules
 **CRITICAL:** Read this file before writing ANY code. These rules override general AI coding tendencies.
 
+**Design authority (V2.06):** `/01_TERMINAL_DESIGN_SYSTEM.md` + `/DESIGN_EXECUTION_PLAN.md` + `Utilities/DesignTokens.swift`
+
 ## 1. PROJECT ARCHITECTURE (Strict MVVM)
 - **Models:** SwiftData `@Model` classes ONLY hold raw user input and persisted data. NEVER put calculation logic in the Model.
 - **Calculators:** Create a dedicated `struct MetricCalculator` (or similar) in a `Calculators/` folder. All formulas from `02_DATA_METRICS_AND_LOGIC.md` live here. They take raw inputs and return calculated values.

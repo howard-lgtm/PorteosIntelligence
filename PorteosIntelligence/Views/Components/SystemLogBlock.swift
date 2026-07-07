@@ -9,70 +9,55 @@ struct SystemLogBlock: View {
 
     let messages: [ValidationMessage]
 
-    // MARK: Tokens
-
-    private let shellSurface = Color(hex: "#1A1D24")
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let accentRust   = Color(hex: "#C25E30")
-    private let textPrimary  = Color(hex: "#F8F9FA")
-    private let textTertiary = Color(hex: "#64748B")
-    private let colorCrit    = Color(hex: "#EF4444")
-    private let colorWarn    = Color(hex: "#F59E0B")
-
-    // MARK: Computed
-
-    /// Highest severity present; determines border color.
     private var borderColor: Color {
         messages.contains(where: { $0.severity == .critical })
-            ? colorCrit
-            : colorWarn
+            ? DesignTokens.statusCritical
+            : DesignTokens.statusWarn
     }
-
-    // MARK: Body
 
     var body: some View {
         if messages.isEmpty {
             EmptyView()
         } else {
-            VStack(alignment: .leading, spacing: 0) {
-                header
-                Rectangle().fill(borderColor.opacity(0.5)).frame(height: 1)
-                logLines
-            }
-            .background(shellSurface)
-            .overlay(alignment: .leading) {
+            HStack(spacing: 0) {
                 Rectangle()
                     .fill(borderColor)
-                    .frame(width: 2)
+                    .frame(width: DesignTokens.profileBarHeight)
+
+                VStack(alignment: .leading, spacing: 0) {
+                    header
+                    Rectangle().fill(borderColor.opacity(0.5)).frame(height: DesignTokens.dividerWidth)
+                    logLines
+                }
+                .background(DesignTokens.surfacePanel)
+            }
+            .overlay {
+                Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
             }
             .clipShape(Rectangle())
         }
     }
 
-    // MARK: Header
-
     private var header: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 13))
-                .foregroundStyle(textTertiary)
+                .porteosCliPrompt()
+                .foregroundStyle(DesignTokens.textDim)
             Text("./validate --strict")
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                .foregroundStyle(accentRust)
+                .porteosButtonPrimary()
+                .foregroundStyle(DesignTokens.accentRust)
 
             Spacer()
 
-            // Summary badge
             Text("\(messages.count) issue\(messages.count == 1 ? "" : "s")")
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(borderColor)
-                .padding(.trailing, 16)
+                .padding(.trailing, DesignTokens.blockGutter)
         }
-        .padding(.leading, 16)
-        .frame(height: 36)
+        .padding(.leading, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightHeader)
+        .background(DesignTokens.surfaceElevated)
     }
-
-    // MARK: Log Lines
 
     private var logLines: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -80,44 +65,42 @@ struct SystemLogBlock: View {
                 logRow(msg)
                 if msg.id != messages.last?.id {
                     Rectangle()
-                        .fill(shellBorder)
-                        .frame(height: 1)
-                        .padding(.leading, 16)
+                        .fill(DesignTokens.dividerStructural)
+                        .frame(height: DesignTokens.dividerWidth)
+                        .padding(.leading, DesignTokens.blockGutter)
                 }
             }
         }
         .padding(.bottom, 4)
+        .background(DesignTokens.canvasBase)
     }
 
     private func logRow(_ msg: ValidationMessage) -> some View {
-        let tagColor: Color = msg.severity == .critical ? colorCrit : colorWarn
+        let tagColor: Color = msg.severity == .critical ? DesignTokens.statusCritical : DesignTokens.statusWarn
 
         return HStack(alignment: .top, spacing: 8) {
             Text(msg.prefix)
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(tagColor)
                 .frame(width: 52, alignment: .leading)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(msg.field.uppercased())
-                    .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                    .tracking(0.04)
+                    .porteosButtonPrimary()
                     .foregroundStyle(tagColor.opacity(0.8))
 
                 Text(msg.message)
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textPrimary)
+                    .porteosRowValue()
+                    .foregroundStyle(DesignTokens.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, DesignTokens.metricCellPadding)
     }
 }
-
-// MARK: - Preview
 
 #Preview("With Errors") {
     let messages: [ValidationMessage] = [
@@ -129,13 +112,13 @@ struct SystemLogBlock: View {
               message: "Direct booking (70%) + OTA (45%) = 115% — exceeds 100%."),
     ]
     SystemLogBlock(messages: messages)
-        .padding(16)
+        .padding(DesignTokens.blockGutter)
         .frame(width: 700)
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
 }
 
 #Preview("Empty — no render") {
     SystemLogBlock(messages: [])
         .frame(width: 700, height: 100)
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
 }

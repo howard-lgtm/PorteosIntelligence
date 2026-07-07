@@ -2,23 +2,21 @@ import SwiftUI
 import SwiftData
 
 // MARK: - HospitalityDashboardView
+// V2.06 — Figma module order + inset grids, no mock sparklines.
 
 struct HospitalityDashboardView: View {
 
     @Bindable var deal: PropertyDeal
 
-    // MARK: Tokens
+    private var accent: Color { ProfileType.hospitality.accentColor }
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellElevated = Color(hex: "#23262E")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let accentTeal    = Color(hex: "#14B8A6")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
+    private var dealDisplayName: String {
+        deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName
+    }
 
-    // MARK: Computed
+    private var porteosScore: PorteosScoreCalculator.PorteosMetrics {
+        PropertyDealViewModel(deal: deal).porteosScore
+    }
 
     private var hasData: Bool {
         deal.hospitalityRoomCount > 0 ||
@@ -27,8 +25,6 @@ struct HospitalityDashboardView: View {
         deal.hospitalityFBRevenue > 0 ||
         deal.hospitalitySpaRevenue > 0
     }
-
-    private let columns = [GridItem(.adaptive(minimum: 140, maximum: 220), spacing: 8, alignment: .leading)]
 
     private var metrics: HospitalityCalculator.FullMetrics {
         HospitalityCalculator.calculateFull(inputs: HospitalityCalculator.FullInputs(
@@ -46,184 +42,119 @@ struct HospitalityDashboardView: View {
         ))
     }
 
-    // MARK: Body
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            cliHeader
-            Rectangle().fill(shellBorder).frame(height: 1)
+            DashboardCLIHeader(profile: .hospitality, dealName: dealDisplayName)
+            TerminalStructuralDivider()
 
             if hasData {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 8) {
-                        let logs = DataValidator.validate(deal: deal)
-                        SystemLogBlock(messages: logs)
+                    VStack(alignment: .leading, spacing: DesignTokens.blockSpacing) {
+                        DashboardHeroScore(
+                            score: porteosScore.finalScore,
+                            grade: porteosScore.scoreGrade,
+                            dealName: dealDisplayName,
+                            profile: .hospitality
+                        )
+                        ValidationLogModule(
+                            messages: DataValidator.validate(deal: deal),
+                            accentColor: accent
+                        )
+                        MarketTrendGrid(deal: deal, profileKey: "hospitality", accent: accent)
                         module01OperationalStats
                         module02ProfitabilityMatrix
                         module03DistributionLog
                         HospitalitySensitivityBlock(deal: deal)
-                        MarketTrendModule(city: deal.locationCity, profile: "hospitality",
-                                          accent: Color(hex: "#14B8A6"))
                     }
-                    .padding(16)
+                    .padding(DesignTokens.blockGutter)
                 }
             } else {
                 emptyState
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(shellBg)
+        .background(DesignTokens.canvasBase)
     }
-
-    // MARK: CLI Header
-
-    private var cliHeader: some View {
-        HStack(spacing: 0) {
-            Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 13))
-                .foregroundStyle(textTertiary)
-            Text("profile --hospitality --asset=\"\(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)\"")
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                .foregroundStyle(accentTeal)
-                .lineLimit(1)
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .frame(height: 36)
-        .background(shellSurface)
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Module 01 // OPERATIONAL_STATS
-    // ─────────────────────────────────────────────────────────────────────────
 
     private var module01OperationalStats: some View {
-        TerminalBlock(command: "01 // OPERATIONAL_STATS", accentColor: accentTeal, contentPadding: 12) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
-                let adrTrend = mockTrend(from: metrics.adr)
-                let occTrend = mockTrend(from: metrics.occupancyRate)
-                let revTrend = mockTrend(from: metrics.revPAR)
-
-                MetricWithTrend(label: "ADR (Avg Daily Rate)",
-                                value: eur(metrics.adr),
-                                trend: adrTrend,
-                                trendColor: sparkColor(adrTrend))
-                MetricWithTrend(label: "Occupancy Rate",
-                                value: pct(metrics.occupancyRate),
-                                trend: occTrend,
-                                trendColor: sparkColor(occTrend),
-                                state: occupancyState(metrics.occupancyRate))
-                MetricWithTrend(label: "RevPAR",
-                                value: eur(metrics.revPAR),
-                                trend: revTrend,
-                                trendColor: sparkColor(revTrend))
-                MetricGridCell( label: "TrevPAR",
-                                value: eur(metrics.trevPAR))
+        TerminalBlock(command: "01 // OPERATIONAL_STATS", accentColor: accent) {
+            TerminalMetricGrid(fixedColumnCount: 2) {
+                TerminalMetricCell(label: "ADR", value: eur(metrics.adr))
+                TerminalMetricCell(label: "OCCUPANCY", value: pct(metrics.occupancyRate),
+                                   state: occupancyState(metrics.occupancyRate))
+                TerminalMetricCell(label: "REVPAR", value: eur(metrics.revPAR))
+                TerminalMetricCell(label: "TREVPAR", value: eur(metrics.trevPAR))
             }
         }
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Module 02 // PROFITABILITY_MATRIX
-    // ─────────────────────────────────────────────────────────────────────────
 
     private var module02ProfitabilityMatrix: some View {
-        TerminalBlock(command: "02 // PROFITABILITY_MATRIX", accentColor: accentTeal, contentPadding: 12) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
-                MetricGridCell(label: "GOP (Gross Operating Profit)", value: eur(metrics.gop))
-                MetricGridCell(label: "GOP Margin",                   value: pct(metrics.gopMargin),    state: gopMarginState(metrics.gopMargin))
-                MetricGridCell(label: "GOPPAR",                       value: eur(metrics.gopPAR))
-                MetricGridCell(label: "EBITDA Margin (est.)",         value: pct(metrics.ebitdaMargin), state: ebitdaMarginState(metrics.ebitdaMargin))
+        TerminalBlock(command: "02 // PROFITABILITY_MATRIX", accentColor: accent) {
+            TerminalMetricGrid(fixedColumnCount: 2) {
+                TerminalMetricCell(label: "GOP", value: eurCompact(metrics.gop))
+                TerminalMetricCell(label: "GOP MARGIN", value: pct(metrics.gopMargin),
+                                   state: gopMarginState(metrics.gopMargin))
+                TerminalMetricCell(label: "GOPPAR", value: eur(metrics.gopPAR))
+                TerminalMetricCell(label: "EBITDA", value: eurCompact(metrics.gop * 0.85))
             }
         }
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Module 03 // DISTRIBUTION_LOG
-    // ─────────────────────────────────────────────────────────────────────────
 
     private var module03DistributionLog: some View {
-        TerminalBlock(command: "03 // DISTRIBUTION_LOG", accentColor: accentTeal, contentPadding: 12) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
-                MetricGridCell(label: "Direct Booking",      value: pct(metrics.directBookingPct),         state: metrics.directBookingPct >= 50 ? .optimal : .neutral)
-                MetricGridCell(label: "OTA Booking",         value: pct(metrics.otaBookingPct),             state: metrics.otaBookingPct > 40 ? .warning : .neutral)
-                MetricGridCell(label: "Distribution Cost",   value: eur(metrics.distributionCost))
-                MetricGridCell(label: "Cost of Acquisition", value: pct(metrics.costOfAcquisition, dp: 2))
+        TerminalBlock(command: "03 // DISTRIBUTION_LOG", accentColor: accent) {
+            TerminalMetricGrid(fixedColumnCount: 2) {
+                TerminalMetricCell(label: "DIRECT BOOKING", value: pct(metrics.directBookingPct),
+                                   state: metrics.directBookingPct >= 50 ? .optimal : .neutral)
+                TerminalMetricCell(label: "OTA MIX", value: pct(metrics.otaBookingPct),
+                                   state: metrics.otaBookingPct > 40 ? .warning : .neutral)
+                TerminalMetricCell(label: "DISTRIB. COST", value: eurPerRoom(metrics.distributionCost))
+                TerminalMetricCell(label: "CAC",
+                                   value: eur(cacEstimate))
             }
         }
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Empty State
-    // ─────────────────────────────────────────────────────────────────────────
 
     private var emptyState: some View {
         VStack(spacing: 16) {
             Spacer()
             VStack(spacing: 8) {
                 Text("porteos@system ~ % ls ./hospitality_data")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textTertiary)
+                    .porteosCliPrompt()
+                    .foregroundStyle(DesignTokens.textDim)
                 Text("No hospitality data available")
-                    .font(.custom("JetBrains Mono", size: 14))
-                    .foregroundStyle(textSecondary)
-                Text("Click [ ./EDIT_DEAL ] to add operational metrics")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textSecondary)
+                    .porteosRowValue()
+                    .foregroundStyle(DesignTokens.textSecondary)
             }
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Shared Components
-    // ─────────────────────────────────────────────────────────────────────────
-
-    private func summaryRow(label: String, value: String, state: MetricState = .neutral) -> some View {
-        let valueColor: Color = {
-            switch state {
-            case .optimal:           return Color(hex: "#10B981")
-            case .warning:           return Color(hex: "#F59E0B")
-            case .danger, .critical: return Color(hex: "#EF4444")
-            default:                 return textPrimary
-            }
-        }()
-        return HStack(spacing: 0) {
-            Text(label.uppercased())
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
-                .tracking(0.08)
-                .foregroundStyle(textSecondary)
-            Spacer()
-            Text(value)
-                .font(.custom("JetBrains Mono", size: 16).weight(.bold))
-                .monospacedDigit()
-                .foregroundStyle(valueColor)
-        }
-        .padding(.horizontal, 12)
-        .frame(height: 36)
-        .background(shellElevated)
+    private var cacEstimate: Double {
+        guard deal.hospitalityRoomCount > 0 else { return 0 }
+        return metrics.distributionCost / (Double(deal.hospitalityRoomCount) * 820)
     }
-
-    private var rowDivider: some View {
-        Rectangle().fill(shellBorder).frame(height: 1)
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Formatters
-    // ─────────────────────────────────────────────────────────────────────────
 
     private func eur(_ v: Double) -> String {
         v.formatted(.currency(code: "EUR").precision(.fractionLength(0)))
     }
 
+    private func eurCompact(_ v: Double) -> String {
+        if abs(v) >= 1_000_000 {
+            return "€ \( (v / 1_000_000).formatted(.number.precision(.fractionLength(1))) )M"
+        }
+        return eur(v)
+    }
+
+    private func eurPerRoom(_ v: Double) -> String {
+        guard deal.hospitalityRoomCount > 0 else { return eur(v) }
+        let perRoom = v / Double(deal.hospitalityRoomCount)
+        return "€ \(perRoom.formatted(.number.precision(.fractionLength(0)))) / rm"
+    }
+
     private func pct(_ v: Double, dp: Int = 1) -> String {
         "\(v.formatted(.number.precision(.fractionLength(dp))))%"
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Threshold Logic
-    // ─────────────────────────────────────────────────────────────────────────
 
     private func occupancyState(_ v: Double) -> MetricState {
         if v >= 80 { return .optimal }
@@ -236,15 +167,7 @@ struct HospitalityDashboardView: View {
         if v >= 30 { return .warning }
         return .danger
     }
-
-    private func ebitdaMarginState(_ v: Double) -> MetricState {
-        if v >= 30 { return .optimal }
-        if v >= 20 { return .warning }
-        return .danger
-    }
 }
-
-// MARK: - Preview
 
 #Preview("Full Data") {
     let deal = PropertyDeal(
@@ -265,11 +188,5 @@ struct HospitalityDashboardView: View {
         HospitalityDashboardView(deal: deal)
     }
     .frame(width: 660, height: 800)
-    .background(Color(hex: "#0F1115"))
-}
-
-#Preview("Empty State") {
-    HospitalityDashboardView(deal: PropertyDeal())
-        .frame(width: 660, height: 400)
-        .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
 }

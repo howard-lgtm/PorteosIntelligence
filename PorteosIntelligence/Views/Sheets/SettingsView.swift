@@ -12,14 +12,14 @@ struct SettingsView: View {
 
     // MARK: Tokens
 
-    private let shellBg      = Color(hex: "#0F1115")
-    private let shellSurface = Color(hex: "#1A1D24")
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let tp1          = Color(hex: "#F8F9FA")
-    private let tp2          = Color(hex: "#94A3B8")
-    private let tp3          = Color(hex: "#64748B")
-    private let accentRust   = Color(hex: "#C25E30")
-    private let accentGreen  = Color(hex: "#10B981")
+    private let shellBg      = DesignTokens.canvasBase
+    private let shellSurface = DesignTokens.surfacePanel
+    private let shellBorder  = DesignTokens.dividerStructural
+    private let tp1          = DesignTokens.textPrimary
+    private let tp2          = DesignTokens.textSecondary
+    private let tp3          = DesignTokens.textDim
+    private let accentRust   = DesignTokens.accentRust
+    private let accentGreen  = DesignTokens.statusGo
 
     // MARK: State
 
@@ -55,10 +55,10 @@ struct SettingsView: View {
     private var titleBar: some View {
         HStack(spacing: 0) {
             Text("PORTEOS")
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(tp3)
             Text(" // SETTINGS")
-                .font(.custom("JetBrains Mono", size: 11))
+                .porteosRowLabel()
                 .foregroundStyle(tp3)
             Spacer()
             Button("[ CLOSE ]") { dismiss() }
@@ -78,7 +78,7 @@ struct SettingsView: View {
                     activeTab = tab
                 } label: {
                     Text(tab.rawValue)
-                        .font(.custom("JetBrains Mono", size: 10).weight(activeTab == tab ? .bold : .regular))
+                        .porteosTextStyle(activeTab == tab ? .buttonPrimary : .meta)
                         .foregroundStyle(activeTab == tab ? tp1 : tp3)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
@@ -129,10 +129,10 @@ struct SettingsView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("FULL_CONFIGURATION")
-                        .font(.custom("JetBrains Mono", size: 10).weight(.bold))
+                        .porteosMeta()
                         .foregroundStyle(tp2)
                     Text("Credentials, IMAP server, polling interval, import rules.")
-                        .font(.custom("JetBrains Mono", size: 10))
+                        .porteosMeta()
                         .foregroundStyle(tp3)
                 }
                 Spacer()
@@ -175,10 +175,10 @@ struct SettingsView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("ADVANCED_CONFIGURATION")
-                        .font(.custom("JetBrains Mono", size: 10).weight(.bold))
+                        .porteosMeta()
                         .foregroundStyle(tp2)
                     Text("Port, allowed origins, request log, browser extension setup.")
-                        .font(.custom("JetBrains Mono", size: 10))
+                        .porteosMeta()
                         .foregroundStyle(tp3)
                 }
                 Spacer()
@@ -248,11 +248,11 @@ struct SettingsView: View {
     private func sectionHeader(_ title: String, subtitle: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(title)
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
+                .porteosMeta()
                 .foregroundStyle(tp2)
             if !subtitle.isEmpty {
                 Text(subtitle)
-                    .font(.custom("JetBrains Mono", size: 10))
+                    .porteosMeta()
                     .foregroundStyle(tp3)
             }
         }
@@ -264,15 +264,15 @@ struct SettingsView: View {
     private func sourceRow(_ name: String, domain: String, icon: String) -> some View {
         HStack(spacing: 10) {
             Text(icon)
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
+                .porteosMeta()
                 .foregroundStyle(tp3)
                 .frame(width: 24)
             Text(name)
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(tp1)
                 .frame(width: 100, alignment: .leading)
             Text(domain)
-                .font(.custom("JetBrains Mono", size: 10))
+                .porteosMeta()
                 .foregroundStyle(tp3)
             Spacer()
             Circle()
@@ -293,11 +293,11 @@ struct SettingsView: View {
     ) -> some View {
         HStack(spacing: 12) {
             Text(label)
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(tp2)
             Spacer()
             Text(value)
-                .font(.custom("JetBrains Mono", size: 11))
+                .porteosRowLabel()
                 .foregroundStyle(tp3)
             Button(btnLabel, action: action)
                 .buttonStyle(TerminalButtonStyle(color: .muted, fontSize: 10, height: 26))
@@ -348,11 +348,11 @@ struct SettingsView: View {
     private func infoRow(_ label: String, _ value: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Text(label)
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
+                .porteosMeta()
                 .foregroundStyle(tp3)
                 .frame(width: 120, alignment: .leading)
             Text(value)
-                .font(.custom("JetBrains Mono", size: 10))
+                .porteosMeta()
                 .foregroundStyle(tp2)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer()

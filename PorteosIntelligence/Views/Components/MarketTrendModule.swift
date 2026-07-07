@@ -15,28 +15,16 @@ struct MarketTrendModule: View {
 
     @Environment(\.modelContext) private var modelContext
 
-    // MARK: Tokens
-
-    private let shellBg      = Color(hex: "#0F1115")
-    private let shellSurface = Color(hex: "#1A1D24")
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let tp1          = Color(hex: "#F8F9FA")
-    private let tp2          = Color(hex: "#94A3B8")
-    private let tp3          = Color(hex: "#64748B")
-
-    // MARK: Body
-
     var body: some View {
-        TerminalBlock(command: "MARKET_TREND // \(city.uppercased())", accentColor: accent) {
+        TerminalBlock(command: "MARKET_TREND // \(city.uppercased())",
+                      accentColor: accent,
+                      contentPadding: 0) {
             VStack(alignment: .leading, spacing: 0) {
-
-                // ── Heat level row ─────────────────────────────────────────────
                 let heat = TrendAnalyzer.calculateMarketHeat(for: city, context: modelContext)
                 heatRow(heat)
 
                 divider
 
-                // ── Key metric trends ──────────────────────────────────────────
                 let metrics = keyMetrics(for: profile)
                 if metrics.isEmpty {
                     emptyRow("NO_TREND_DATA — import deals to build history")
@@ -50,24 +38,21 @@ struct MarketTrendModule: View {
 
                 divider
 
-                // ── Portfolio activity ─────────────────────────────────────────
                 activityRow(heat: heat)
             }
         }
     }
 
-    // MARK: – Sub-views
-
     private func heatRow(_ heat: MarketHeat) -> some View {
         HStack(spacing: 8) {
             Text("MARKET_HEAT")
-                .font(.custom("JetBrains Mono", size: 10))
-                .foregroundStyle(tp3)
+                .porteosMetricLabel()
+                .foregroundStyle(DesignTokens.textDim)
 
             Spacer()
 
             Text(heat.level)
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
+                .porteosButtonPrimary()
                 .foregroundStyle(heatColor(heat.level))
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
@@ -75,15 +60,15 @@ struct MarketTrendModule: View {
                 .clipShape(Rectangle())
 
             Text("·")
-                .foregroundStyle(tp3)
-                .font(.custom("JetBrains Mono", size: 10))
+                .foregroundStyle(DesignTokens.textDim)
+                .porteosMetricLabel()
 
             Text("\(String(format: "%.1f", heat.importVelocity)) deals/wk")
-                .font(.custom("JetBrains Mono", size: 10))
-                .foregroundStyle(tp2)
+                .porteosMetricLabel()
+                .foregroundStyle(DesignTokens.textSecondary)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, DesignTokens.metricCellPadding)
     }
 
     private func metricTrendRow(
@@ -106,32 +91,32 @@ struct MarketTrendModule: View {
 
         return HStack(spacing: 8) {
             Text(label)
-                .font(.custom("JetBrains Mono", size: 10))
-                .foregroundStyle(tp3)
+                .porteosMetricLabel()
+                .foregroundStyle(DesignTokens.textDim)
                 .frame(minWidth: 120, alignment: .leading)
 
             Spacer()
 
             if hasTrend {
                 Text(arrow)
-                    .font(.custom("JetBrains Mono", size: 9).weight(.bold))
+                    .porteosMeta()
                     .foregroundStyle(arrowColor)
                 Text("\(String(format: "%.1f", abs(trend.strength)))% (6mo)")
-                    .font(.custom("JetBrains Mono", size: 10))
-                    .foregroundStyle(tp2)
+                    .porteosMetricLabel()
+                    .foregroundStyle(DesignTokens.textSecondary)
                     .monospacedDigit()
                 confidencePips(trend.confidence)
             } else if let fallback = bmFallback {
                 Text(fallback)
-                    .font(.custom("JetBrains Mono", size: 10))
-                    .foregroundStyle(tp3.opacity(0.7))
+                    .porteosMetricLabel()
+                    .foregroundStyle(DesignTokens.textDim.opacity(0.7))
             } else {
                 Text("NO_DATA")
-                    .font(.custom("JetBrains Mono", size: 10))
-                    .foregroundStyle(tp3.opacity(0.5))
+                    .porteosMetricLabel()
+                    .foregroundStyle(DesignTokens.textDim.opacity(0.5))
             }
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, DesignTokens.blockGutter)
         .padding(.vertical, 7)
     }
 
@@ -153,29 +138,29 @@ struct MarketTrendModule: View {
         let pipeline = deals.filter { $0.status == .pipeline }.count
 
         return HStack(spacing: 12) {
-            statPill("IMPORTED",  "\(imported)", tp2)
-            statPill("ACQUIRED",  "\(acquired)", Color(hex: "#10B981"))
-            statPill("PIPELINE",  "\(pipeline)",  Color(hex: "#3B82F6"))
+            statPill("IMPORTED",  "\(imported)", DesignTokens.textSecondary)
+            statPill("ACQUIRED",  "\(acquired)", DesignTokens.statusAcquired)
+            statPill("PIPELINE",  "\(pipeline)",  DesignTokens.statusInfo)
             Spacer()
             if imported > 0 {
                 Text("\(Int(heat.acquisitionRate * 100))% conv.")
-                    .font(.custom("JetBrains Mono", size: 10))
-                    .foregroundStyle(tp3)
+                    .porteosMetricLabel()
+                    .foregroundStyle(DesignTokens.textDim)
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, DesignTokens.metricCellPadding)
     }
 
     private func statPill(_ label: String, _ value: String, _ color: Color) -> some View {
         HStack(spacing: 3) {
             Text(value)
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
+                .porteosRowValue()
                 .foregroundStyle(color)
                 .monospacedDigit()
             Text(label)
-                .font(.custom("JetBrains Mono", size: 9))
-                .foregroundStyle(tp3)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
         }
     }
 
@@ -184,7 +169,7 @@ struct MarketTrendModule: View {
         return HStack(spacing: 2) {
             ForEach(0..<5, id: \.self) { i in
                 Rectangle()
-                    .fill(i < filled ? tp2 : shellBorder)
+                    .fill(i < filled ? DesignTokens.textSecondary : DesignTokens.dividerStructural)
                     .frame(width: 3, height: 8)
             }
         }
@@ -192,17 +177,15 @@ struct MarketTrendModule: View {
 
     private func emptyRow(_ msg: String) -> some View {
         Text(msg)
-            .font(.custom("JetBrains Mono", size: 10))
-            .foregroundStyle(tp3.opacity(0.6))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .porteosMetricLabel()
+            .foregroundStyle(DesignTokens.textDim.opacity(0.6))
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, DesignTokens.metricCellPadding)
     }
 
     private var divider: some View {
-        Rectangle().fill(shellBorder).frame(height: 1)
+        Rectangle().fill(DesignTokens.dividerStructural).frame(height: DesignTokens.dividerWidth)
     }
-
-    // MARK: – Helpers
 
     private struct MetricSpec {
         let label: String; let metric: String; let higherIsBetter: Bool
@@ -238,23 +221,21 @@ struct MarketTrendModule: View {
 
     private func arrowTint(direction: TrendDirection, higherIsBetter: Bool) -> Color {
         switch direction {
-        case .stable: return Color(hex: "#64748B")
-        case .up:     return higherIsBetter ? Color(hex: "#10B981") : Color(hex: "#EF4444")
-        case .down:   return higherIsBetter ? Color(hex: "#EF4444") : Color(hex: "#10B981")
+        case .stable: return DesignTokens.textDim
+        case .up:     return higherIsBetter ? DesignTokens.statusGo : DesignTokens.statusCritical
+        case .down:   return higherIsBetter ? DesignTokens.statusCritical : DesignTokens.statusGo
         }
     }
 
     private func heatColor(_ level: String) -> Color {
         switch level {
-        case "HOT":  return Color(hex: "#EF4444")
-        case "WARM": return Color(hex: "#F59E0B")
-        case "COOL": return Color(hex: "#3B82F6")
-        default:     return Color(hex: "#64748B")   // COLD
+        case "HOT":  return DesignTokens.statusCritical
+        case "WARM": return DesignTokens.statusWarn
+        case "COOL": return DesignTokens.statusInfo
+        default:     return DesignTokens.textDim
         }
     }
 
-    /// Returns the relevant benchmark value for a given metric key, so the
-    /// module can display a fallback when no historical trend data exists.
     private func benchmarkValue(_ bm: CityMetrics, metric: String) -> Double? {
         switch metric {
         case "capRate":       return bm.avgCapRate

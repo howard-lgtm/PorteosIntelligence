@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 // MARK: - RealEstateDashboardView
+// V2.06 Phase 2A — layout matches Figma "Real Estate Dashboard" (660×1014).
 
 struct RealEstateDashboardView: View {
 
@@ -13,22 +14,17 @@ struct RealEstateDashboardView: View {
         self._localDeal  = State(initialValue: deal)
     }
 
-    // MARK: Tokens
+    private var accent: Color { ProfileType.realEstate.accentColor }
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellElevated = Color(hex: "#23262E")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let accentRust    = Color(hex: "#C25E30")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
+    private var porteosScore: PorteosScoreCalculator.PorteosMetrics {
+        PropertyDealViewModel(deal: localDeal).porteosScore
+    }
 
-    // MARK: Computed
+    private var dealDisplayName: String {
+        localDeal.propertyName.isEmpty ? "Untitled Deal" : localDeal.propertyName
+    }
 
     private var hasData: Bool { localDeal.grossPotentialIncome > 0 || localDeal.operatingExpenses > 0 }
-
-    private let columns = [GridItem(.adaptive(minimum: 140, maximum: 220), spacing: 8, alignment: .leading)]
 
     private var metrics: RealEstateCalculator.FullMetrics {
         RealEstateCalculator.calculateFull(inputs: RealEstateCalculator.FullInputs(
@@ -52,253 +48,233 @@ struct RealEstateDashboardView: View {
         ))
     }
 
+    /// OpEx lines rolled into Figma "Other OpEx" cell.
+    private var otherOpEx: Double {
+        metrics.opexPropertyTax + metrics.opexUtilities + metrics.opexCapitalReserves
+            + max(0, metrics.totalOpEx
+                  - metrics.opexPropertyManagement
+                  - metrics.opexMaintenance
+                  - metrics.opexInsurance)
+    }
+
+    private var noiMargin: Double {
+        guard metrics.totalRevenue > 0 else { return 0 }
+        return metrics.netOperatingIncome / metrics.totalRevenue * 100
+    }
+
     // MARK: Body
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            cliHeader
-            Rectangle().fill(shellBorder).frame(height: 1)
+            DashboardCLIHeader(profile: .realEstate, dealName: dealDisplayName)
+            TerminalStructuralDivider()
 
             if hasData {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 8) {
-                        let logs = DataValidator.validate(deal: localDeal)
-                        SystemLogBlock(messages: logs)
+                    VStack(alignment: .leading, spacing: DesignTokens.blockSpacing) {
+                        DashboardHeroScore(
+                            score: porteosScore.finalScore,
+                            grade: porteosScore.scoreGrade,
+                            dealName: dealDisplayName,
+                            profile: .realEstate
+                        )
+                        ValidationLogModule(
+                            messages: DataValidator.validate(deal: localDeal),
+                            accentColor: accent
+                        )
+                        MarketTrendGrid(deal: localDeal, profileKey: "realEstate", accent: accent)
                         module01Revenue
                         module02OpEx
                         module03Profitability
                         module04Leverage
                         module05Returns
-                        SensitivityAnalysisBlock(deal: localDeal)
-                        MarketTrendModule(city: localDeal.locationCity, profile: "realEstate",
-                                          accent: Color(hex: "#C25E30"))
+                        sensitivityModule
                     }
-                    .padding(16)
+                    .padding(DesignTokens.blockGutter)
                 }
             } else {
                 emptyState
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(shellBg)
+        .background(DesignTokens.canvasBase)
         .onChange(of: deal) { localDeal = deal }
     }
 
-    // MARK: CLI Header
-
-    private var cliHeader: some View {
-        HStack(spacing: 0) {
-            Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 13))
-                .foregroundStyle(textTertiary)
-            Text("profile --real-estate --asset=\"\(localDeal.propertyName.isEmpty ? "Untitled Deal" : localDeal.propertyName)\"")
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                .foregroundStyle(accentRust)
-                .lineLimit(1)
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .frame(height: 36)
-        .background(shellSurface)
+    private var sensitivityModule: some View {
+        RealEstateSensitivityModule(deal: localDeal)
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Module 01 // CORE_FINANCIALS_REVENUE
-    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: 01 // CORE_FINANCIALS_REVENUE — 2×2
 
     private var module01Revenue: some View {
-        TerminalBlock(command: "01 // CORE_FINANCIALS_REVENUE",
-                      accentColor: accentRust,
-                      contentPadding: 12) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
-                MetricGridCell(label: "Gross Potential Income", value: eur(metrics.grossPotentialIncome))
-                MetricGridCell(label: "Vacancy Loss",           value: "(\(eur(metrics.vacancyLoss)))", state: localDeal.vacancyRate > 10 ? .warning : .neutral)
-                MetricGridCell(label: "Effective Gross Income", value: eur(metrics.effectiveGrossIncome))
-                MetricGridCell(label: "Other Income",           value: eur(metrics.otherIncome))
-                MetricGridCell(label: "Total Revenue",          value: eur(metrics.totalRevenue))
+        TerminalBlock(command: "01 // CORE_FINANCIALS_REVENUE", accentColor: accent) {
+            TerminalMetricGrid(fixedColumnCount: 2) {
+                TerminalMetricCell(label: "GPI", value: eur(metrics.grossPotentialIncome))
+                TerminalMetricCell(label: "NOI", value: eur(metrics.netOperatingIncome))
+                TerminalMetricCell(
+                    label: "VACANCY",
+                    value: pct(localDeal.vacancyRate, dp: 1),
+                    state: localDeal.vacancyRate > 10 ? .warning : .neutral
+                )
+                TerminalMetricCell(label: "OTHER INCOME", value: eur(metrics.otherIncome))
             }
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Module 02 // EXPENSE_AUDIT_OPEX
-    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: 02 // EXPENSE_AUDIT_OPEX — 1×4
 
     private var module02OpEx: some View {
-        TerminalBlock(command: "02 // EXPENSE_AUDIT_OPEX",
-                      accentColor: accentRust,
-                      contentPadding: 12) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
-                MetricGridCell(label: "Property Management",   value: localDeal.opexPropertyManagement > 0 ? eur(metrics.opexPropertyManagement) : "—")
-                MetricGridCell(label: "Property Tax",          value: localDeal.opexPropertyTax > 0 ? eur(metrics.opexPropertyTax) : "—")
-                MetricGridCell(label: "Insurance",             value: localDeal.opexInsurance > 0 ? eur(metrics.opexInsurance) : "—")
-                MetricGridCell(label: "Utilities",             value: localDeal.opexUtilities > 0 ? eur(metrics.opexUtilities) : "—")
-                MetricGridCell(label: "Maintenance & Repairs", value: localDeal.opexMaintenance > 0 ? eur(metrics.opexMaintenance) : "—")
-                MetricGridCell(label: "Capital Reserves",      value: localDeal.opexCapitalReserves > 0 ? eur(metrics.opexCapitalReserves) : "—")
-                MetricGridCell(label: "Total Operating Expenses", value: eur(metrics.totalOpEx))
-                MetricGridCell(label: "Operating Expense Ratio",  value: pct(metrics.opExRatio), state: opExRatioState(metrics.opExRatio))
+        TerminalBlock(command: "02 // EXPENSE_AUDIT_OPEX", accentColor: accent) {
+            TerminalMetricGrid(fixedColumnCount: 4) {
+                TerminalMetricCell(
+                    label: "MGMT",
+                    value: localDeal.opexPropertyManagement > 0 ? eur(metrics.opexPropertyManagement) : "—"
+                )
+                TerminalMetricCell(
+                    label: "MAINTENANCE",
+                    value: localDeal.opexMaintenance > 0 ? eur(metrics.opexMaintenance) : "—"
+                )
+                TerminalMetricCell(
+                    label: "INSURANCE",
+                    value: localDeal.opexInsurance > 0 ? eur(metrics.opexInsurance) : "—"
+                )
+                TerminalMetricCell(
+                    label: "OTHER OPEX",
+                    value: otherOpEx > 0 ? eur(otherOpEx) : "—"
+                )
             }
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Module 03 // PROFITABILITY_TELEMETRY
-    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: 03 // PROFITABILITY_TELEMETRY — 2×2
 
     private var module03Profitability: some View {
-        TerminalBlock(command: "03 // PROFITABILITY_TELEMETRY",
-                      accentColor: accentRust,
-                      contentPadding: 12) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
-                let noiTrend  = mockTrend(from: metrics.netOperatingIncome)
-                let capTrend  = mockTrend(from: metrics.capRate)
-                let cfbtTrend = mockTrend(from: metrics.cashFlowBeforeTax)
-                let cfatTrend = mockTrend(from: metrics.cashFlowAfterTax)
-
-                MetricWithTrend(label: "NOI",
-                                value: eur(metrics.netOperatingIncome),
-                                trend: noiTrend,
-                                trendColor: sparkColor(noiTrend))
-                MetricGridCell( label: "EBITDA (est.)",
-                                value: eur(metrics.ebitda))
-                MetricWithTrend(label: "Cap Rate",
-                                value: pct(metrics.capRate, dp: 2),
-                                trend: capTrend,
-                                trendColor: sparkColor(capTrend),
-                                state: capRateState(metrics.capRate))
-                MetricWithTrend(label: "Cash Flow Before Tax",
-                                value: eur(metrics.cashFlowBeforeTax),
-                                trend: cfbtTrend,
-                                trendColor: sparkColor(cfbtTrend),
-                                state: metrics.cashFlowBeforeTax < 0 ? .danger : .neutral)
-                MetricWithTrend(label: "Cash Flow After Tax",
-                                value: eur(metrics.cashFlowAfterTax),
-                                trend: cfatTrend,
-                                trendColor: sparkColor(cfatTrend),
-                                state: metrics.cashFlowAfterTax < 0 ? .danger : .neutral)
+        TerminalBlock(command: "03 // PROFITABILITY_TELEMETRY", accentColor: accent) {
+            TerminalMetricGrid(fixedColumnCount: 2) {
+                TerminalMetricCell(
+                    label: "CAP RATE",
+                    value: pct(metrics.capRate, dp: 2),
+                    state: capRateState(metrics.capRate)
+                )
+                TerminalMetricCell(
+                    label: "DSCR",
+                    value: "\(metrics.debtServiceCoverageRatio.formatted(.number.precision(.fractionLength(2)))) x",
+                    state: dscrState(metrics.debtServiceCoverageRatio)
+                )
+                TerminalMetricCell(
+                    label: "CASH-ON-CASH",
+                    value: pct(metrics.cashOnCashReturn, dp: 2),
+                    state: cocState(metrics.cashOnCashReturn)
+                )
+                TerminalMetricCell(
+                    label: "NOI MARGIN",
+                    value: metrics.totalRevenue > 0 ? pct(noiMargin, dp: 1) : "—",
+                    state: noiMarginState(noiMargin)
+                )
             }
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Module 04 // LEVERAGE_ENGINE
-    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: 04 // LEVERAGE_ENGINE — segment bars (Figma)
 
     private var module04Leverage: some View {
-        TerminalBlock(command: "04 // LEVERAGE_ENGINE",
-                      accentColor: accentRust,
-                      contentPadding: 12) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
-                MetricGridCell(label: "Loan Amount",         value: eur(metrics.loanAmount))
-                MetricGridCell(label: "Loan-to-Value (LTV)", value: pct(metrics.loanToValue, dp: 1),  state: ltvState(metrics.loanToValue))
-                MetricGridCell(label: "Loan-to-Cost (LTC)",  value: pct(metrics.loanToCost, dp: 1),   state: ltvState(metrics.loanToCost))
-                MetricGridCell(label: "Interest Rate",       value: pct(metrics.annualInterestRate, dp: 2))
-                MetricGridCell(label: "Amortization",        value: "\(metrics.amortizationMonths) months")
-                MetricGridCell(label: "Annual Debt Service", value: eur(metrics.annualDebtService))
-                MetricGridCell(label: "DSCR",                value: "\(metrics.debtServiceCoverageRatio.formatted(.number.precision(.fractionLength(2))))x", state: dscrState(metrics.debtServiceCoverageRatio))
-                MetricGridCell(label: "Debt Yield",          value: pct(metrics.debtYield, dp: 2))
+        TerminalBlock(command: "04 // LEVERAGE_ENGINE", accentColor: accent) {
+            VStack(spacing: DesignTokens.gridRowSpacing) {
+                leverageGaugeRow(
+                    label: "LTV",
+                    value: pct(metrics.loanToValue, dp: 1),
+                    state: ltvState(metrics.loanToValue),
+                    fillRatio: min(metrics.loanToValue / 100, 1),
+                    barColor: accent
+                )
+                leverageGaugeRow(
+                    label: "DSCR",
+                    value: "\(metrics.debtServiceCoverageRatio.formatted(.number.precision(.fractionLength(2)))) x",
+                    state: dscrState(metrics.debtServiceCoverageRatio),
+                    fillRatio: min(metrics.debtServiceCoverageRatio / 2.0, 1),
+                    barColor: DesignTokens.statusWarn
+                )
             }
+            .padding(DesignTokens.blockGutter)
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Module 05 // RETURN_METRICS
-    // ─────────────────────────────────────────────────────────────────────────
+    private func leverageGaugeRow(
+        label: String,
+        value: String,
+        state: MetricState,
+        fillRatio: Double,
+        barColor: Color
+    ) -> some View {
+        HStack(spacing: 10) {
+            Text(label.uppercased())
+                .porteosMetricLabel()
+                .foregroundStyle(DesignTokens.textDim)
+                .frame(width: 48, alignment: .leading)
+
+            TerminalSegmentBar(fillRatio: fillRatio, barColor: barColor)
+
+            Text(value)
+                .porteosMetricValue()
+                .monospacedDigit()
+                .foregroundStyle(state.semanticColor)
+                .frame(minWidth: 56, alignment: .trailing)
+        }
+        .padding(DesignTokens.metricCellPadding)
+        .frame(minHeight: DesignTokens.metricCellMinHeight)
+        .background(DesignTokens.surfaceElevated)
+        .overlay {
+            Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
+        }
+        .clipShape(Rectangle())
+    }
+
+    // MARK: 05 // RETURN_METRICS — 1×4
 
     private var module05Returns: some View {
-        TerminalBlock(command: "05 // RETURN_METRICS  [5yr hold]",
-                      accentColor: accentRust,
-                      contentPadding: 12) {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
-                let cocTrend = mockTrend(from: metrics.cashOnCashReturn)
-                let irrTrend = mockTrend(from: metrics.leveredIRR)
-
-                MetricGridCell(  label: "Total Equity Invested", value: eur(metrics.totalEquityInvested))
-                MetricWithTrend( label: "Cash-on-Cash Return",
-                                 value: pct(metrics.cashOnCashReturn, dp: 2),
-                                 trend: cocTrend,
-                                 trendColor: sparkColor(cocTrend),
-                                 state: cocState(metrics.cashOnCashReturn))
-                MetricGridCell(  label: "Equity Multiple (5Y)",
-                                 value: "\(metrics.equityMultiple5Y.formatted(.number.precision(.fractionLength(2))))x",
-                                 state: emState(metrics.equityMultiple5Y))
-                MetricGridCell(  label: "Unlevered IRR (est.)",
-                                 value: pct(metrics.unleveredIRR, dp: 1),
-                                 state: irrState(metrics.unleveredIRR))
-                MetricWithTrend( label: "Levered IRR (est.)",
-                                 value: pct(metrics.leveredIRR, dp: 1),
-                                 trend: irrTrend,
-                                 trendColor: sparkColor(irrTrend),
-                                 state: irrState(metrics.leveredIRR))
+        TerminalBlock(command: "05 // RETURN_METRICS  [5yr hold]", accentColor: accent) {
+            TerminalMetricGrid(fixedColumnCount: 4) {
+                TerminalMetricCell(
+                    label: "IRR",
+                    value: metrics.leveredIRR != 0 ? pct(metrics.leveredIRR, dp: 1) : "—",
+                    state: irrState(metrics.leveredIRR)
+                )
+                TerminalMetricCell(
+                    label: "EQUITY MULT.",
+                    value: metrics.equityMultiple5Y > 0
+                        ? "\(metrics.equityMultiple5Y.formatted(.number.precision(.fractionLength(1)))) x"
+                        : "—",
+                    state: emState(metrics.equityMultiple5Y)
+                )
+                TerminalMetricCell(label: "NPV", value: "—")
+                TerminalMetricCell(label: "HOLD PERIOD", value: "5 yr")
             }
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // MARK: Empty State
-    // ─────────────────────────────────────────────────────────────────────────
 
     private var emptyState: some View {
         VStack(spacing: 16) {
             Spacer()
-
             VStack(spacing: 8) {
                 Text("porteos@system ~ % ls ./deals")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textTertiary)
-
+                    .porteosCliPrompt()
+                    .foregroundStyle(DesignTokens.textDim)
                 Text("No real estate data")
-                    .font(.custom("JetBrains Mono", size: 14))
-                    .foregroundStyle(textSecondary)
-
+                    .porteosRowValue()
+                    .foregroundStyle(DesignTokens.textSecondary)
                 Text("Click [ ./EDIT_DEAL ] to add financials")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textSecondary)
+                    .porteosRowLabel()
+                    .foregroundStyle(DesignTokens.textSecondary)
             }
-
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: Shared Components
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /// Elevated summary row for key totals (NOI, Total Revenue, Total OpEx, Levered IRR).
-    /// Pass `state:` to apply semantic color to the value; defaults to text-primary.
-    private func summaryRow(label: String, value: String, state: MetricState = .neutral) -> some View {
-        let valueColor: Color = {
-            switch state {
-            case .optimal:          return Color(hex: "#10B981")
-            case .warning:          return Color(hex: "#F59E0B")
-            case .danger, .critical: return Color(hex: "#EF4444")
-            default:                return textPrimary
-            }
-        }()
-
-        return HStack(spacing: 0) {
-            Text(label.uppercased())
-                .font(.custom("JetBrains Mono", size: 9).weight(.light))
-                .tracking(0.05)
-                .foregroundStyle(Color(hex: "#475569"))
-
-            Spacer()
-
-            Text(value)
-                .font(.custom("JetBrains Mono", size: 14).weight(.bold))
-                .monospacedDigit()
-                .tracking(-0.02)
-                .foregroundStyle(valueColor)
-        }
-        .padding(.horizontal, 12)
-        .frame(height: 36)
-    }
-
-
-    // ─────────────────────────────────────────────────────────────────────────
     // MARK: Formatters
-    // ─────────────────────────────────────────────────────────────────────────
 
     private func eur(_ v: Double) -> String {
         v.formatted(.currency(code: "EUR").precision(.fractionLength(0)))
@@ -308,9 +284,7 @@ struct RealEstateDashboardView: View {
         "\(v.formatted(.number.precision(.fractionLength(dp))))%"
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // MARK: Threshold Logic
-    // ─────────────────────────────────────────────────────────────────────────
 
     private func dscrState(_ v: Double) -> MetricState {
         if v >= 1.25 { return .optimal }
@@ -324,17 +298,15 @@ struct RealEstateDashboardView: View {
         return .danger
     }
 
-    /// Green ≥7 %, Amber 5–7 %, Red <5 %
     private func capRateState(_ v: Double) -> MetricState {
         if v >= 7.0 { return .optimal }
         if v >= 5.0 { return .warning }
         return .danger
     }
 
-    /// Red >40 %, Amber 30–40 %, Neutral ≤30 %
-    private func opExRatioState(_ v: Double) -> MetricState {
-        if v > 40 { return .danger }
-        if v > 30 { return .warning }
+    private func noiMarginState(_ v: Double) -> MetricState {
+        if v >= 60 { return .optimal }
+        if v >= 45 { return .warning }
         return .neutral
     }
 
@@ -352,7 +324,7 @@ struct RealEstateDashboardView: View {
 
     private func irrState(_ v: Double) -> MetricState {
         if v >= 12.0 { return .optimal }
-        if v >=  8.0 { return .warning }
+        if v >= 8.0  { return .warning }
         return v < 0 ? .danger : .neutral
     }
 }
@@ -384,12 +356,11 @@ struct RealEstateDashboardView: View {
         RealEstateDashboardView(deal: deal)
     }
     .frame(width: 660, height: 900)
-    .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
 }
 
 #Preview("Empty State") {
-    let deal = PropertyDeal()
-    return RealEstateDashboardView(deal: deal)
+    RealEstateDashboardView(deal: PropertyDeal())
         .frame(width: 660, height: 400)
-        .background(Color(hex: "#0F1115"))
+        .background(DesignTokens.canvasBase)
 }

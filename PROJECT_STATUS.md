@@ -1,9 +1,12 @@
 # Porteos Intelligence — Project Status
 
-**Last updated:** 6 July 2026  
+**Last updated:** 7 July 2026  
 **Build status:** ✅ Compiling — zero errors  
-**Branch:** `main`  
-**Platform:** macOS (SwiftUI + SwiftData)
+**Branch:** `cursor/figma-design-tokens-3e3e` merged with `main` @ `c68a200`  
+**Platform:** macOS (SwiftUI + SwiftData)  
+**Design system:** V2.06 — typography pipeline complete; sheet polish pending  
+
+> **Package v1.0:** See [`PorteosIntelligence/Documentation/PACKAGE_v1_STATUS.md`](PorteosIntelligence/Documentation/PACKAGE_v1_STATUS.md) and return checklist [`PACKAGE_v1_PUNCHLIST.md`](PorteosIntelligence/Documentation/PACKAGE_v1_PUNCHLIST.md).
 
 ---
 
@@ -68,46 +71,68 @@
 
 ## Architecture Decisions
 
-- **Fonts:** JetBrains Mono exclusively at 100% of UI elements. No Inter.
-- **Colors:** `#0F1115` shell-bg, `#1A1D24` shell-surface, `#2E333F` shell-border. Profile accents: Rust `#C25E30`, Teal `#14B8A6`, Purple `#A855F7`, Blue `#3B82F6`.
+- **Fonts:** JetBrains Mono exclusively. `.monospacedDigit()` on all numbers. No Inter.
+- **Colors:** `DesignTokens.swift` is code authority — `canvasBase` `#0A0A0A`, `surfacePanel` `#111111`, `dividerStructural` `#333333`. Profile accents via `ProfileType.accentColor`.
 - **Corners:** Zero rounded corners everywhere — `.clipShape(Rectangle())`.
-- **Data flow:** `@Model` stores raw inputs only. Calculated metrics (NOI, Cap Rate, DSCR, etc.) are derived on-the-fly in calculators. No stale data in the database.
-- **Calculation path:** All views use `RealEstateCalculator.calculateFull()`. The legacy `calculate()` is `@available(*, deprecated)`.
-- **Input fields:** `TerminalInputField` uses an internal `localText: String` state to prevent field-reset-to-zero on re-render (fixed critical bug).
-- **Deal selection:** `AppShell` holds `selectedDeal: PropertyDeal?` directly. New deals use `pendingDealID` + `.onChange(of: deals)` to resolve after `@Query` fires.
-- **Grids:** Dashboards use `LazyVGrid(GridItem(.adaptive(minimum: 160, maximum: 250)))` with `MetricGridCell`. `TerminalMetricRow` is list-only.
+- **Data flow:** `@Model` stores raw inputs only. Calculated metrics derived on-the-fly in calculators.
+- **Calculation path:** All views use `RealEstateCalculator.calculateFull()`. Legacy `calculate()` is deprecated.
+- **Input fields:** `TerminalInputField` uses internal `localText` state to prevent re-render reset.
+- **Deal selection:** `AppShell` holds `selectedDeal: PropertyDeal?` directly.
+- **Grids:** 4 fixed columns via `TerminalMetricGrid` — built; dashboards migrated on `main`.
 
-### Typography Scale (current)
+### Design System V2.06 (July 2026)
+
+| Document | Purpose |
+|---|---|
+| `01_TERMINAL_DESIGN_SYSTEM.md` | Canonical spec (colors, layout, components) |
+| `DESIGN_EXECUTION_PLAN.md` | Phased rollout Phases 0–9 |
+| `DesignTokens.swift` | Runtime token source |
+| `.cursor/rules/project-rules.mdc` | AI enforcement rules |
+
+| Layer | Migration status |
+|---|---|
+| Shell (nav, header, command bar) | ✅ Complete on `main` |
+| Dashboards (5 profiles + comparison) | ✅ Complete on `main` |
+| Sheets (12) | 🔄 Polish pass ongoing |
+| Components (33) | 🔄 Majority migrated |
+
+### Typography Scale (V2.06 target)
 | Role | Size | Weight |
 |---|---|---|
-| Headers / CLI commands / module titles | 13pt | medium / bold |
-| Navigation links | 13pt | regular / bold |
-| Metric labels | 13pt | regular |
-| Metric values | 17pt | bold |
-| Buttons | 13pt | regular / bold |
-| Body text | 14pt | regular |
-| Preview / secondary hints | 11pt | regular |
+| Hero score | 48pt | bold |
+| Primary metric values | 14pt | medium |
+| Secondary / body | 12pt | regular |
+| Labels / module titles | 10pt | bold, uppercase |
+| CLI prompt / buttons | 11pt | regular / bold |
 
 ---
 
 ## Known Gaps / Next Sessions
 
-### High priority
-- [ ] **Startup splash** — Figma PNG sequence on app open (`SplashView` + `RootView` scaffold ready; awaiting frames in `Resources/Splash/`)
-- [ ] `PorteosScoreBlock` — the score ring at the top of the center pane; currently renders but the 4 profile weight sliders are not yet interactive in the main view (editable only in `FullDealEditSheet`)
-- [ ] Inspector pane — shows deal metadata but lacks inline quick-edit capability
-- [ ] `TopHeaderBar` — profile name and deal name display; no active deal actions wired
+### Design (Phase 0–9 — see `DESIGN_EXECUTION_PLAN.md`)
+- [x] Phase 0 — Documentation sync (`01_TERMINAL_DESIGN_SYSTEM.md`, rules, redirect)
+- [x] Phase 1 — `TerminalMetricGrid`, `TerminalMetricCell`, `TerminalKeyValueRow`
+- [x] Phase 2 — `PorteosScoreBlock` alignment; wire `TerminalBlock.accentColor`
+- [x] Phase 3 — Hospitality dashboard as reference implementation
+- [ ] Phases 4–9 — Roll profiles, sheets, detached panes, token extermination, QA
+
+### High priority (product)
+- [ ] **Startup splash** — Figma PNG sequence on app open (`SplashView` + `RootView` wired; awaiting frames in `Resources/Splash/`)
+- [ ] `PorteosScoreBlock` — weight sliders interactive in main view (editable only in `FullDealEditSheet` today)
+- [ ] Inspector pane — inline quick-edit capability
+- [ ] `TopHeaderBar` — profile and deal name display; deal actions not fully wired
+- [x] Email ingestion — Settings → EMAIL_INGESTION tab on `main`
+
+> Branch-only additions merged from `cursor/figma-design-tokens-3e3e`: `RootView`, `SplashView`, `DisplayDensity` toggle in Settings. See also `PUNCHLIST.md`.
 
 ### Medium priority
-- [ ] Onboarding / empty state for first-launch (no deals, no tutorial)
-- [ ] Deal duplication ("Clone Deal" context menu action)
-- [ ] Export to PDF / print view
-- [ ] City autocomplete in `FullDealEditSheet` using `MarketBenchmarks.suggestions(matching:)`
+- [ ] Onboarding / empty state for first-launch
+- [ ] Deal duplication ("Clone Deal")
+- [ ] City autocomplete in `FullDealEditSheet`
 
 ### Low priority / Polish
-- [ ] Keyboard shortcut map (`⌘N` new deal, `⌘E` edit, `⌘⌫` delete)
+- [ ] Keyboard shortcut map
 - [ ] Animate metric value changes when switching deals
-- [ ] `01_TERMINAL_DESIGN_SYSTEM.md` sync — keep in step with any further type scale changes
 
 ---
 

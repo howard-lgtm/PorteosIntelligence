@@ -1,188 +1,130 @@
 import SwiftUI
 
-// MARK: - PaletteAction
-// A static command the user can run from the palette.
-
-struct PaletteAction: Identifiable {
-    let id:       String
-    let title:    String
-    let subtitle: String
-    let execute:  () -> Void
-}
-
-// MARK: - PaletteItem
-// Unified result type combining deals and actions.
-
-private enum PaletteItem: Identifiable {
-
-    case deal(PropertyDeal)
-    case action(PaletteAction)
-
-    var id: String {
-        switch self {
-        case .deal(let d):   return "deal_\(d.id.uuidString)"
-        case .action(let a): return "action_\(a.id)"
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .deal:   return "[D]"
-        case .action: return "[>]"
-        }
-    }
-
-    var title: String {
-        switch self {
-        case .deal(let d):   return d.propertyName.isEmpty ? "Untitled Deal" : d.propertyName
-        case .action(let a): return a.title
-        }
-    }
-
-    var subtitle: String {
-        switch self {
-        case .deal(let d):
-            let loc = d.locationCity.isEmpty ? "" : "\(d.locationCity) · "
-            return "\(loc)\(d.status.rawValue.uppercased())"
-        case .action(let a):
-            return a.subtitle
-        }
-    }
-
-    /// Execute the item's primary action and return whether to dismiss the palette.
-    func execute(
-        onNavigate:   (ProfileType) -> Void,
-        onSelectDeal: (PropertyDeal) -> Void,
-        onNewDeal:    () -> Void,
-        onExport:     () -> Void
-    ) {
-        switch self {
-        case .deal(let d):   onSelectDeal(d)
-        case .action(let a): a.execute()
-        }
-    }
-}
-
 // MARK: - CommandPalette
+// Figma img_00_7 — DEALS list + ACTIONS + footer hints.
 
 struct CommandPalette: View {
 
     @Binding var isPresented: Bool
     let deals: [PropertyDeal]
 
-    // Callbacks — supplied by AppShell
-    var onNavigate:   (ProfileType) -> Void  = { _ in }
     var onSelectDeal: (PropertyDeal) -> Void = { _ in }
     var onNewDeal:    () -> Void             = {}
-    var onExport:     () -> Void             = {}
-
-    // MARK: State
+    var onImport:     () -> Void             = {}
+    var onRunAI:      () -> Void             = {}
 
     @State private var query         = ""
     @State private var selectedIndex = 0
     @FocusState private var fieldFocused: Bool
 
-    // MARK: Tokens
+    // MARK: Figma actions
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellElevated = Color(hex: "#23262E")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let accentRust    = Color(hex: "#C25E30")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
-    private let accentGreen   = Color(hex: "#10B981")
-
-    // MARK: Static Actions
-
-    private var actions: [PaletteAction] { [
-        .init(id: "nav.cmd",   title: "Go to Command Center",   subtitle: "Navigate") { onNavigate(.cmdCenter)   },
-        .init(id: "nav.re",    title: "Go to Real Estate",      subtitle: "Navigate") { onNavigate(.realEstate)  },
-        .init(id: "nav.hosp",  title: "Go to Hospitality",      subtitle: "Navigate") { onNavigate(.hospitality) },
-        .init(id: "nav.des",   title: "Go to Design",           subtitle: "Navigate") { onNavigate(.design)      },
-        .init(id: "nav.circ",  title: "Go to Circular Economy", subtitle: "Navigate") { onNavigate(.circular)    },
-        .init(id: "new.deal",  title: "New Deal",               subtitle: "Action")   { onNewDeal()              },
-        .init(id: "export",    title: "Export Data",            subtitle: "Action")   { onExport()               },
-    ] }
-
-    // MARK: Filtered Results
-
-    private var results: [PaletteItem] {
-        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
-
-        let dealItems: [PaletteItem] = deals
-            .filter { deal in
-                guard !q.isEmpty else { return true }
-                return deal.propertyName.lowercased().contains(q)
-                    || deal.locationCity.lowercased().contains(q)
-                    || deal.status.rawValue.lowercased().contains(q)
-            }
-            .map { .deal($0) }
-
-        let actionItems: [PaletteItem] = actions
-            .filter { q.isEmpty || $0.title.lowercased().contains(q) || $0.subtitle.lowercased().contains(q) }
-            .map { .action($0) }
-
-        return dealItems + actionItems
+    private struct PaletteAction: Identifiable {
+        let id:          String
+        let command:     String
+        let description: String
+        let execute:     () -> Void
     }
+
+    private var actions: [PaletteAction] {
+        [
+            .init(id: "new",    command: "[ ./NEW_DEAL ]",     description: "Create new deal entry",   execute: onNewDeal),
+            .init(id: "import", command: "[ ./IMPORT_DEALS ]", description: "Import CSV or API",       execute: onImport),
+            .init(id: "ai",     command: "[ ./RUN_AI ]",       description: "Run portfolio analysis", execute: onRunAI),
+        ]
+    }
+
+    private var filteredDeals: [PropertyDeal] {
+        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !q.isEmpty else { return deals }
+        return deals.filter {
+            $0.propertyName.lowercased().contains(q)
+                || $0.locationCity.lowercased().contains(q)
+                || $0.status.rawValue.lowercased().contains(q)
+        }
+    }
+
+    private var filteredActions: [PaletteAction] {
+        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !q.isEmpty else { return actions }
+        return actions.filter {
+            $0.command.lowercased().contains(q)
+                || $0.description.lowercased().contains(q)
+        }
+    }
+
+    private var selectableCount: Int { filteredDeals.count + filteredActions.count }
 
     // MARK: Body
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            inputBar
-            Rectangle().fill(shellBorder).frame(height: 1)
+            searchBar
+            divider
 
-            if results.isEmpty {
-                emptyState
-            } else {
-                resultList
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    if !filteredDeals.isEmpty {
+                        sectionHeader("DEALS")
+                        ForEach(Array(filteredDeals.enumerated()), id: \.element.id) { idx, deal in
+                            dealRow(deal, index: idx)
+                            if idx < filteredDeals.count - 1 { insetDivider }
+                        }
+                    }
+
+                    if !filteredActions.isEmpty {
+                        if !filteredDeals.isEmpty {
+                            divider.padding(.vertical, 4)
+                        }
+                        sectionHeader("ACTIONS")
+                        ForEach(Array(filteredActions.enumerated()), id: \.element.id) { idx, action in
+                            actionRow(action, index: filteredDeals.count + idx)
+                            if idx < filteredActions.count - 1 { insetDivider }
+                        }
+                    }
+
+                    if filteredDeals.isEmpty && filteredActions.isEmpty {
+                        emptyState
+                    }
+                }
             }
+            .frame(maxHeight: 320)
 
-            Rectangle().fill(shellBorder).frame(height: 1)
-            hintBar
+            divider
+            footerBar
         }
-        .frame(width: 500)
-        .frame(maxHeight: 420)
-        .background(shellSurface)
+        .frame(width: 560)
+        .background(DesignTokens.surfacePanel)
         .overlay {
-            Rectangle().strokeBorder(shellBorder, lineWidth: 1)
+            Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
         }
         .clipShape(Rectangle())
         .onAppear {
-            fieldFocused   = true
-            selectedIndex  = 0
-        }
-        .onChange(of: query) {
+            fieldFocused  = true
             selectedIndex = 0
         }
-        .onChange(of: results.count) {
-            selectedIndex = min(selectedIndex, max(results.count - 1, 0))
+        .onChange(of: query) { selectedIndex = 0 }
+        .onChange(of: selectableCount) {
+            selectedIndex = min(selectedIndex, max(selectableCount - 1, 0))
         }
     }
 
-    // MARK: – Input Bar
+    // MARK: Search bar
 
-    private var inputBar: some View {
+    private var searchBar: some View {
         HStack(spacing: 8) {
-            Text(">")
-                .font(.custom("JetBrains Mono", size: 17).weight(.bold))
-                .foregroundStyle(accentRust)
-
-            TextField("Search deals or type a command…", text: $query)
-                .font(.custom("JetBrains Mono", size: 14))
-                .foregroundStyle(textPrimary)
+            TextField("", text: $query, prompt: Text("SEARCH DEALS OR COMMANDS…").foregroundStyle(DesignTokens.textDim))
+                .porteosRowValue()
+                .foregroundStyle(DesignTokens.textPrimary)
                 .textFieldStyle(.plain)
                 .focused($fieldFocused)
-                // ── Keyboard navigation ──────────────────────────────────────
                 .onKeyPress(phases: .down) { press in
                     switch press.key {
                     case .upArrow:
                         selectedIndex = max(0, selectedIndex - 1)
                         return .handled
                     case .downArrow:
-                        selectedIndex = min(results.count - 1, selectedIndex + 1)
+                        selectedIndex = min(selectableCount - 1, selectedIndex + 1)
                         return .handled
                     case .return:
                         commitSelected()
@@ -194,149 +136,173 @@ struct CommandPalette: View {
                         return .ignored
                     }
                 }
+
+            Text("CMD+K")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
         }
-        .padding(.horizontal, 16)
-        .frame(height: 48)
-        .background(shellBg)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightPaneBar)
+        .background(DesignTokens.canvasBase)
     }
 
-    // MARK: – Result List
+    // MARK: Deal row
 
-    private var resultList: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(results.indices, id: \.self) { i in
-                        resultRow(results[i], index: i)
-                            .id(i)
-                        if i < results.count - 1 {
-                            Rectangle()
-                                .fill(shellBorder.opacity(0.5))
-                                .frame(height: 1)
-                                .padding(.leading, 16)
-                        }
-                    }
-                }
-            }
-            .onChange(of: selectedIndex) { _, newIndex in
-                withAnimation(.easeOut(duration: 0.1)) {
-                    proxy.scrollTo(newIndex, anchor: .center)
-                }
-            }
-        }
-    }
-
-    private func resultRow(_ item: PaletteItem, index: Int) -> some View {
-        let isSelected = index == selectedIndex
+    private func dealRow(_ deal: PropertyDeal, index: Int) -> some View {
+        let isSelected = selectedIndex == index
 
         return Button {
             selectedIndex = index
-            commitSelected()
+            openDeal(deal)
         } label: {
-            HStack(spacing: 0) {
-                // Rust selection pip
-                Rectangle()
-                    .fill(isSelected ? accentRust : Color.clear)
-                    .frame(width: 2)
-
-                HStack(spacing: 10) {
-                    // Icon tag
-                    Text(item.icon)
-                        .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                        .foregroundStyle(isSelected ? accentRust : textTertiary)
-                        .frame(width: 28, alignment: .leading)
-
-                    // Title
-                    Text(item.title)
-                        .font(.custom("JetBrains Mono", size: 13).weight(isSelected ? .bold : .regular))
-                        .foregroundStyle(isSelected ? textPrimary : textSecondary)
+            HStack(alignment: .center, spacing: 0) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(dealTitle(deal))
+                        .porteosButtonPrimary()
+                        .foregroundStyle(DesignTokens.textPrimary)
                         .lineLimit(1)
 
-                    Spacer()
-
-                    // Subtitle / status
-                    Text(item.subtitle)
-                        .font(.custom("JetBrains Mono", size: 11))
-                        .foregroundStyle(isSelected ? accentRust.opacity(0.8) : textTertiary)
+                    Text(dealMeta(deal))
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textDim)
                         .lineLimit(1)
-                        .padding(.trailing, 16)
                 }
-                .padding(.leading, 12)
+                .padding(.leading, DesignTokens.blockGutter)
+
+                Spacer(minLength: 8)
+
+                Text("OPEN")
+                    .porteosMeta()
+                    .foregroundStyle(isSelected ? DesignTokens.accentRust : DesignTokens.textDim)
+                    .padding(.trailing, DesignTokens.blockGutter)
             }
-            .frame(height: 40)
-            .background(isSelected ? shellElevated : Color.clear)
+            .frame(minHeight: DesignTokens.rowHeightHeader + 8)
+            .background(isSelected ? DesignTokens.surfaceElevated : Color.clear)
             .clipShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
 
-    // MARK: – Empty State
+    // MARK: Action row
+
+    private func actionRow(_ action: PaletteAction, index: Int) -> some View {
+        let isSelected = selectedIndex == index
+
+        return Button {
+            selectedIndex = index
+            commitAction(action)
+        } label: {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(action.command)
+                    .porteosButtonPrimary()
+                    .foregroundStyle(isSelected ? DesignTokens.accentRust : DesignTokens.textPrimary)
+
+                Text(action.description)
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 10)
+            .background(isSelected ? DesignTokens.surfaceElevated : Color.clear)
+            .clipShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: Chrome
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .porteosMeta()
+            .foregroundStyle(DesignTokens.textDim)
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.top, 10)
+            .padding(.bottom, 4)
+    }
 
     private var emptyState: some View {
-        HStack {
-            Spacer()
-            VStack(spacing: 6) {
-                Text("no results for \"\(query)\"")
-                    .font(.custom("JetBrains Mono", size: 13))
-                    .foregroundStyle(textTertiary)
-                Text("try a deal name, city, or command")
-                    .font(.custom("JetBrains Mono", size: 11))
-                    .foregroundStyle(textTertiary.opacity(0.6))
-            }
-            .padding(.vertical, 24)
-            Spacer()
-        }
-        .background(shellBg)
+        Text("no results for \"\(query.uppercased())\"")
+            .porteosRowValue()
+            .foregroundStyle(DesignTokens.textDim)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 28)
     }
 
-    // MARK: – Hint Bar
-
-    private var hintBar: some View {
-        HStack(spacing: 16) {
-            hintPair("↑↓", "navigate")
-            hintPair("↩",  "select")
-            hintPair("esc", "close")
-            Spacer()
-            Text("\(results.count) result\(results.count == 1 ? "" : "s")")
-                .font(.custom("JetBrains Mono", size: 11))
-                .foregroundStyle(textTertiary)
-                .padding(.trailing, 16)
+    private var footerBar: some View {
+        HStack(spacing: 12) {
+            footerHint("navigate")
+            footerHint("enter:select")
+            footerHint("esc:close")
+            footerHint("CMD+K:toggle")
         }
-        .padding(.leading, 16)
-        .frame(height: 32)
-        .background(shellBg)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightCommandBar)
+        .background(DesignTokens.canvasBase)
     }
 
-    private func hintPair(_ key: String, _ label: String) -> some View {
-        HStack(spacing: 4) {
-            Text(key)
-                .font(.custom("JetBrains Mono", size: 10).weight(.bold))
-                .foregroundStyle(textPrimary)
-                .padding(.horizontal, 4)
-                .padding(.vertical, 1)
-                .background(Color(hex: "#2E333F"))
-                .clipShape(Rectangle())
-            Text(label)
-                .font(.custom("JetBrains Mono", size: 11))
-                .foregroundStyle(textTertiary)
-        }
+    private func footerHint(_ text: String) -> some View {
+        Text(text)
+            .porteosMeta()
+            .foregroundStyle(DesignTokens.textDim)
     }
 
-    // MARK: – Helpers
+    private var divider: some View {
+        Rectangle()
+            .fill(DesignTokens.dividerStructural)
+            .frame(height: DesignTokens.dividerWidth)
+    }
+
+    private var insetDivider: some View {
+        Rectangle()
+            .fill(DesignTokens.dividerStructural)
+            .frame(height: DesignTokens.dividerWidth)
+            .padding(.leading, DesignTokens.blockGutter)
+    }
+
+    // MARK: Helpers
+
+    private func dealTitle(_ deal: PropertyDeal) -> String {
+        let name = deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName
+        return name.uppercased()
+    }
+
+    private func dealMeta(_ deal: PropertyDeal) -> String {
+        let profile = profileAbbrev(for: deal)
+        let status  = deal.status.rawValue.uppercased()
+        let score   = Int((deal.porteosScore ?? 0).rounded())
+        return "\(profile)  \(status)  \(score)pt"
+    }
+
+    private func profileAbbrev(for deal: PropertyDeal) -> String {
+        if deal.hospitalityRoomCount > 0 || deal.hospitalityADR > 0 { return "HOSP" }
+        if deal.designGFA > 0 { return "DES" }
+        if deal.circularKgMaterialsUsed > 0 || deal.circularRecycledContentPct > 0 { return "CIRC" }
+        return "RE"
+    }
 
     private func commitSelected() {
-        guard !results.isEmpty,
-              selectedIndex < results.count else { return }
-        let item = results[selectedIndex]
+        guard selectableCount > 0, selectedIndex < selectableCount else { return }
+        if selectedIndex < filteredDeals.count {
+            openDeal(filteredDeals[selectedIndex])
+        } else {
+            let actionIdx = selectedIndex - filteredDeals.count
+            guard actionIdx < filteredActions.count else { return }
+            commitAction(filteredActions[actionIdx])
+        }
+    }
+
+    private func openDeal(_ deal: PropertyDeal) {
         isPresented = false
-        // Small delay so the palette dismisses before any sheet appears
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            item.execute(
-                onNavigate:   onNavigate,
-                onSelectDeal: onSelectDeal,
-                onNewDeal:    onNewDeal,
-                onExport:     onExport
-            )
+            onSelectDeal(deal)
+        }
+    }
+
+    private func commitAction(_ action: PaletteAction) {
+        isPresented = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            action.execute()
         }
     }
 }
@@ -345,16 +311,13 @@ struct CommandPalette: View {
 
 #Preview {
     let deals = [
-        PropertyDeal(propertyName: "Lisbon Office A",  locationCity: "Lisbon",  status: .viable),
-        PropertyDeal(propertyName: "Porto Warehouse",  locationCity: "Porto",   status: .review),
-        PropertyDeal(propertyName: "Cascais Villa",    locationCity: "Cascais", status: .pipeline),
+        PropertyDeal(propertyName: "Lisbon Office Block A", locationCity: "Lisbon", porteosScore: 87, status: .viable),
+        PropertyDeal(propertyName: "Porto Waterfront",      locationCity: "Porto",  porteosScore: 74, status: .review),
+        PropertyDeal(propertyName: "Madrid Logistics",      locationCity: "Madrid", porteosScore: 68, status: .pipeline),
     ]
     ZStack {
-        Color(hex: "#0F1115").ignoresSafeArea()
-        CommandPalette(
-            isPresented: .constant(true),
-            deals:       deals
-        )
+        DesignTokens.canvasBase.ignoresSafeArea()
+        CommandPalette(isPresented: .constant(true), deals: deals)
     }
     .frame(width: 700, height: 600)
 }

@@ -2,33 +2,27 @@ import SwiftUI
 import SwiftData
 
 // MARK: - AIVibePanel
-// Self-contained AI Vibe Check panel. Manages analysis state internally.
-// Displayed inside InspectorPane under the [AI VIBE] tab.
+// Figma img_00_6 — AI Vibe idle + result states inside InspectorPane.
 
 struct AIVibePanel: View {
 
     @Bindable var deal: PropertyDeal
-    /// Bumped by InspectorPane whenever deal data changes (edit commit or benchmark
-    /// apply). AIVibePanel watches this and clears its stale in-memory result so the
-    /// panel returns to idle and prompts a fresh run.
     let refreshID: UUID
 
     @Environment(\.modelContext) private var modelContext
 
     @State private var result:     AnalysisResult? = nil
-    @State private var isRunning:  Bool            = false
+    @State private var phase:      AnalysisPhase?  = nil
     @State private var analyzedID: UUID?           = nil
 
-    // MARK: Tokens
+    private var isRunning: Bool {
+        phase == .analyzingRules || phase == .generatingNarrative
+    }
 
-    private let shellBg       = Color(hex: "#0F1115")
-    private let shellSurface  = Color(hex: "#1A1D24")
-    private let shellElevated = Color(hex: "#23262E")
-    private let shellBorder   = Color(hex: "#2E333F")
-    private let accentRust    = Color(hex: "#C25E30")
-    private let textPrimary   = Color(hex: "#F8F9FA")
-    private let textSecondary = Color(hex: "#94A3B8")
-    private let textTertiary  = Color(hex: "#64748B")
+    private static let modelName = "porteos-score-v2.1"
+    private static let signalLabels = [
+        "LOCATION SCORE", "MARKET TIMING", "CASH FLOW", "RISK PROFILE", "ESG COMPLIANCE"
+    ]
 
     // MARK: Body
 
@@ -45,215 +39,373 @@ struct AIVibePanel: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .onAppear {
-            // Restore persisted analysis without re-running
-            if let stored = deal.aiAnalysisText, !stored.isEmpty, result == nil {
-                analyzedID = deal.id
-                result = quickResult(from: stored)
-            }
-        }
-        .onChange(of: deal.id) {
-            // Deal switched in the inspector — clear stale result
-            result     = nil
+        .onAppear { restoreStoredAnalysis() }
+        .onChange(of: deal.id) { _, _ in
+            result = nil
             analyzedID = nil
-            if let stored = deal.aiAnalysisText, !stored.isEmpty {
-                analyzedID = deal.id
-                result = quickResult(from: stored)
-            }
+            restoreStoredAnalysis()
         }
-        .onChange(of: refreshID) {
-            // InspectorPane bumped refreshID because deal data was edited or a
-            // benchmark was applied. Invalidate the in-memory result so the panel
-            // returns to idle and the user is prompted to re-run the analysis.
-            result     = nil
+        .onChange(of: refreshID) { _, _ in
+            result = nil
             analyzedID = nil
         }
     }
 
-    // MARK: Idle State
+    // MARK: Idle
 
     private var idleState: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionHeader("01 // AI_VIBE_CHECK")
+            statusBox(
+                title: "PORTEOS AI",
+                lines: [
+                    "NO ANALYSIS FOUND.",
+                    "Run to generate AI signals, risk flags and suggestions."
+                ]
+            )
 
-            VStack(alignment: .leading, spacing: 8) {
-                logLine(">", "no analysis run for this deal")
-                logLine(">", "triggers on: commit, manual run")
-                logLine(">", "reads: RE · hospitality · design · circular")
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-
-            Rectangle().fill(shellBorder).frame(height: 1)
+            fullWidthDivider
 
             runButton(label: "[ RUN ANALYSIS ]")
+
+            metadataBlock(lastRun: lastRunLabel)
+
+            footerHint
         }
     }
 
-    // MARK: Running State
+    // MARK: Running
 
     private var runningState: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionHeader("01 // AI_VIBE_CHECK")
+            sectionHeader("AI VIBE CHECK")
 
             VStack(alignment: .leading, spacing: 8) {
                 logLine(">", "scanning real estate metrics...")
                 logLine(">", "scanning hospitality metrics...")
                 logLine(">", "scanning design metrics...")
                 logLine(">", "scanning circular economy metrics...")
-                logLine(">", "assembling narrative...")
+                if phase == .generatingNarrative {
+                    logLine(">", "[ ANALYZING_RULES... ] done")
+                    logLine(">", "[ GENERATING_NARRATIVE... ] calling local LLM...")
+                } else {
+                    logLine(">", "[ ANALYZING_RULES... ]")
+                }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, DesignTokens.blockGutter)
             .padding(.vertical, 12)
         }
     }
 
-    // MARK: Result View
+    // MARK: Result
 
     @ViewBuilder
     private func resultView(_ r: AnalysisResult) -> some View {
-        // Grade banner
-        gradeBanner(r)
-        Rectangle().fill(shellBorder).frame(height: 1)
+        resultHero(r)
+        fullWidthDivider
 
-        // Headline
-        Text(r.headline)
-            .font(.custom("JetBrains Mono", size: 12))
-            .foregroundStyle(textSecondary)
-            .lineSpacing(1.6)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-
-        Rectangle().fill(shellBorder).frame(height: 1)
-
-        // Signal sections
-        signalSection(title: "REAL ESTATE",         signals: r.realEstateSignals)
-        signalSection(title: "HOSPITALITY",         signals: r.hospitalitySignals)
-        signalSection(title: "DESIGN",              signals: r.designSignals)
-        signalSection(title: "CIRCULAR ECONOMY",    signals: r.circularSignals)
-        signalSection(title: "MARKET INTELLIGENCE", signals: r.marketIntelligenceSignals)
-
-        // Assessment
-        if !r.summary.isEmpty {
-            sectionHeader("// ASSESSMENT")
-            Text(r.summary)
-                .font(.custom("JetBrains Mono", size: 12))
-                .foregroundStyle(textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .lineSpacing(1.6)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-            Rectangle().fill(shellBorder).frame(height: 1)
+        if case .done(let llmOffline) = phase, llmOffline {
+            llmOfflineBanner
+            fullWidthDivider
         }
 
-        // Stat summary row
-        statRow(r)
-        Rectangle().fill(shellBorder).frame(height: 1)
+        let barSignals = topBarSignals(from: r)
+        if !barSignals.isEmpty {
+            sectionHeader("AI SIGNALS")
+            VStack(spacing: 0) {
+                ForEach(Array(barSignals.enumerated()), id: \.offset) { idx, item in
+                    AISignalBarRow(
+                        label: item.label,
+                        score: item.score,
+                        detail: item.detail,
+                        barColor: sentimentColor(item.sentiment)
+                    )
+                    if idx < barSignals.count - 1 { insetDivider }
+                }
+            }
+            fullWidthDivider
+        }
 
-        // Regenerate button
+        let suggestions = r.allSignals.compactMap { signal -> AnalysisSignal? in
+            signal.action == nil ? nil : signal
+        }
+        if !suggestions.isEmpty {
+            sectionHeader("SUGGESTIONS")
+            VStack(spacing: 0) {
+                ForEach(Array(suggestions.enumerated()), id: \.offset) { idx, signal in
+                    suggestionRow(signal)
+                    if idx < suggestions.count - 1 { insetDivider }
+                }
+            }
+            fullWidthDivider
+        }
+
         runButton(label: "[ REGENERATE ]")
+        metadataBlock(lastRun: lastRunLabel)
+        footerHint
     }
 
-    // MARK: Grade Banner
+    // MARK: Hero
 
-    private func gradeBanner(_ r: AnalysisResult) -> some View {
+    private func resultHero(_ r: AnalysisResult) -> some View {
         let gradeColor = Color(hex: r.grade.hexColor)
-        return VStack(spacing: 6) {
-            Text(r.grade.rawValue)
-                .font(.custom("JetBrains Mono", size: 48).weight(.bold))
+        let scoreText  = deal.porteosScore.map { "\(Int($0.rounded()))" } ?? "—"
+
+        return HStack(alignment: .center, spacing: 12) {
+            Text(scoreText)
+                .porteosScoreHero()
                 .monospacedDigit()
-                .foregroundStyle(gradeColor)
+                .foregroundStyle(DesignTokens.textPrimary)
 
-            Text(r.grade.label)
-                .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                .tracking(0.1)
-                .foregroundStyle(gradeColor)
-
-            if let score = deal.porteosScore {
-                Text("\(Int(score.rounded())) / 100 PORTEOS SCORE")
-                    .font(.custom("JetBrains Mono", size: 10))
-                    .foregroundStyle(textTertiary)
-                    .monospacedDigit()
-            } else {
-                Text("SCORE PENDING — COMMIT DEAL DATA")
-                    .font(.custom("JetBrains Mono", size: 10))
-                    .foregroundStyle(textTertiary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("PORTEOS AI")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                Text(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)
+                    .porteosRowValue()
+                    .foregroundStyle(DesignTokens.textPrimary)
+                    .lineLimit(2)
             }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 18)
-        .background(shellElevated)
-    }
 
-    // MARK: Signal Section
+            Spacer(minLength: 0)
 
-    @ViewBuilder
-    private func signalSection(title: String, signals: [AnalysisSignal]) -> some View {
-        if !signals.isEmpty {
-            sectionHeader("// \(title)")
-
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(signals.indices, id: \.self) { i in
-                    signalRow(signals[i])
+            Text(r.grade.rawValue)
+                .porteosScoreGrade()
+                .foregroundStyle(gradeColor)
+                .frame(width: 36, height: 36)
+                .background(DesignTokens.surfaceElevated)
+                .overlay {
+                    Rectangle().strokeBorder(gradeColor.opacity(0.45), lineWidth: DesignTokens.dividerWidth)
                 }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-
-            Rectangle().fill(shellBorder).frame(height: 1)
+                .clipShape(Rectangle())
         }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, 14)
+        .background(DesignTokens.surfaceElevated)
     }
 
-    private func signalRow(_ signal: AnalysisSignal) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .top, spacing: 8) {
-                Text(signal.prefix)
-                    .font(.custom("JetBrains Mono", size: 12).weight(.bold))
-                    .foregroundStyle(sentimentColor(signal.sentiment))
-                    .frame(width: 12, alignment: .leading)
+    // MARK: Rows
 
-                Text(signal.message)
-                    .font(.custom("JetBrains Mono", size: 12))
-                    .foregroundStyle(textSecondary)
-                    .lineSpacing(1.6)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.leading, 2)
-            }
+    private func suggestionRow(_ signal: AnalysisSignal) -> some View {
+        HStack(alignment: .center, spacing: 8) {
+            Text(signal.message)
+                .porteosRowValue()
+                .foregroundStyle(DesignTokens.textSecondary)
+                .lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-            // Actionable suggestion — only rendered when the signal carries one
             if let action = signal.action {
-                HStack(spacing: 8) {
-                    // Indent to align with message text
-                    Rectangle().fill(Color.clear).frame(width: 22)
-
-                    Button { applyAction(action) } label: {
-                        Text("[ APPLY ]")
-                            .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-                            .foregroundStyle(Color(hex: "#0F1115"))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 8)
-                            .background(Color(hex: "#C25E30"))
-                            .clipShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-
-                    if case .applyBenchmark(let value, let field) = action {
-                        Text("→ sets \(fieldLabel(field)) to \(formatActionValue(value, field: field))")
-                            .font(.custom("JetBrains Mono", size: 11))
-                            .foregroundStyle(Color(hex: "#64748B"))
-                    }
+                Button { applyAction(action) } label: {
+                    Text("[ APPLY ]")
+                        .porteosButtonPrimary()
+                        .foregroundStyle(DesignTokens.accentRust)
                 }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, 10)
+        .background(DesignTokens.surfacePanel)
+    }
+
+    // MARK: Shared chrome
+
+    private func statusBox(title: String, lines: [String]) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .porteosButtonPrimary()
+                .foregroundStyle(DesignTokens.textPrimary)
+            ForEach(lines, id: \.self) { line in
+                Text(line)
+                    .porteosRowValue()
+                    .foregroundStyle(DesignTokens.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(DesignTokens.blockGutter)
+        .background(DesignTokens.surfacePanel)
+        .overlay {
+            Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
+        }
+        .padding(DesignTokens.blockGutter)
+    }
+
+    private func metadataBlock(lastRun: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            metadataLine("MODEL", Self.modelName)
+            metadataLine("LAST RUN", lastRun)
+        }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, 10)
+    }
+
+    private func metadataLine(_ key: String, _ value: String) -> some View {
+        HStack(spacing: 8) {
+            Text(key)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+            Text(value)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textSecondary)
+        }
+    }
+
+    private var footerHint: some View {
+        Text("CMD+ENTER to run / ESC to close")
+            .porteosMeta()
+            .foregroundStyle(DesignTokens.textDim)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 10)
+    }
+
+    private func runButton(label: String) -> some View {
+        Button { runAnalysis() } label: {
+            Text(label)
+                .porteosButtonPrimary()
+                .foregroundStyle(DesignTokens.canvasBase)
+                .frame(maxWidth: .infinity)
+                .frame(height: DesignTokens.rowHeightButton)
+                .background(DesignTokens.accentRust)
+                .clipShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, 10)
+        .keyboardShortcut(.return, modifiers: .command)
+    }
+
+    private var llmOfflineBanner: some View {
+        HStack(spacing: 6) {
+            Text("~")
+                .porteosButtonPrimary()
+                .foregroundStyle(DesignTokens.statusWarn)
+            Text("Local LLM offline. Using rule-based analysis only.")
+                .porteosRowLabel()
+                .foregroundStyle(DesignTokens.textSecondary)
+        }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(DesignTokens.surfacePanel)
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .porteosModuleCmd()
+            .foregroundStyle(DesignTokens.textDim)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 10)
+    }
+
+    private func logLine(_ prefix: String, _ text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text(prefix)
+                .porteosRowValue()
+                .foregroundStyle(DesignTokens.accentRust)
+            Text(text)
+                .porteosRowValue()
+                .foregroundStyle(DesignTokens.textSecondary)
+        }
+    }
+
+    private var fullWidthDivider: some View {
+        Rectangle()
+            .fill(DesignTokens.dividerStructural)
+            .frame(height: DesignTokens.dividerWidth)
+    }
+
+    private var insetDivider: some View {
+        Rectangle()
+            .fill(DesignTokens.dividerStructural)
+            .frame(height: DesignTokens.dividerWidth)
+            .padding(.horizontal, DesignTokens.blockGutter)
+    }
+
+    // MARK: Signal mapping
+
+    private struct BarSignalItem {
+        let label: String
+        let score: Int
+        let detail: String
+        let sentiment: AnalysisSignal.Sentiment
+    }
+
+    private func topBarSignals(from r: AnalysisResult) -> [BarSignalItem] {
+        let signals = r.allSignals.filter { $0.action == nil }
+        return Array(signals.prefix(5).enumerated()).map { idx, signal in
+            BarSignalItem(
+                label: idx < Self.signalLabels.count ? Self.signalLabels[idx] : "SIGNAL \(idx + 1)",
+                score: scoreForSignal(signal, index: idx),
+                detail: signal.message,
+                sentiment: signal.sentiment
+            )
+        }
+    }
+
+    private func scoreForSignal(_ signal: AnalysisSignal, index: Int) -> Int {
+        switch signal.sentiment {
+        case .positive: return min(99, 88 + index)
+        case .neutral:  return 75 + index
+        case .warning:  return max(45, 68 - index * 2)
+        case .critical: return max(25, 42 - index * 3)
+        }
+    }
+
+    private var lastRunLabel: String {
+        guard deal.aiAnalysisText != nil, analyzedID == deal.id else { return "Never" }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: deal.updatedAt, relativeTo: Date())
+    }
+
+    // MARK: Analysis
+
+    private func restoreStoredAnalysis() {
+        guard let stored = deal.aiAnalysisText, !stored.isEmpty, result == nil else { return }
+        analyzedID = deal.id
+        result = quickResult(from: stored)
+    }
+
+    private func runAnalysis() {
+        phase = .analyzingRules
+        Task {
+            let r = await AIAnalysisService.shared.analyze(
+                deal,
+                context: modelContext,
+                onPhaseChange: { [self] newPhase in
+                    self.phase = newPhase
+                }
+            )
+            await MainActor.run {
+                result     = r
+                analyzedID = deal.id
+                deal.aiAnalysisText = r.formattedText
+                try? modelContext.save()
             }
         }
     }
 
-    // MARK: Apply Benchmark
+    private func quickResult(from text: String) -> AnalysisResult {
+        let grade = VibeGrade.from(score: deal.porteosScore)
+        let name  = deal.propertyName.isEmpty ? "This asset" : deal.propertyName
+        return AnalysisResult(
+            grade:                     grade,
+            headline:                  "\(name) — previously analysed. Tap regenerate to refresh.",
+            realEstateSignals:         [],
+            hospitalitySignals:        [],
+            designSignals:             [],
+            circularSignals:           [],
+            marketIntelligenceSignals: [],
+            summary:                   text,
+            formattedText:             text
+        )
+    }
 
     private func applyAction(_ action: AnalysisSignal.Action) {
         switch action {
         case .applyBenchmark(let value, let field):
-            // Snapshot BEFORE mutating so the user can undo this benchmark apply.
             DealHistoryManager.shared.push(
                 deal:  deal,
                 label: "Benchmark: \(fieldLabel(field))"
@@ -280,159 +432,83 @@ struct AIVibePanel: View {
         }
     }
 
-    private func formatActionValue(_ v: Double, field: String) -> String {
-        switch field {
-        case "interestRate", "vacancyRate", "hospitalityOccupancyRate":
-            return String(format: "%.2f%%", v)
-        case "hospitalityADR":
-            return String(format: "€%.0f", v)
-        default:
-            return String(format: "%.2f", v)
+    private func sentimentColor(_ sentiment: AnalysisSignal.Sentiment) -> Color {
+        switch sentiment {
+        case .positive: return DesignTokens.statusGo
+        case .neutral:  return ProfileType.circular.accentColor
+        case .warning:  return DesignTokens.statusWarn
+        case .critical: return DesignTokens.statusCritical
         }
     }
+}
 
-    // MARK: Stat Summary Row
+// MARK: - AISignalBarRow
 
-    private func statRow(_ r: AnalysisResult) -> some View {
-        HStack(spacing: 0) {
-            statCell(label: "PROFILES", value: "\(r.activeProfileCount)")
-            divider
-            statCell(label: "POSITIVE", value: "\(r.positiveCount)", color: Color(hex: "#10B981"))
-            divider
-            statCell(label: "CAUTION", value: "\(r.warningCount)",   color: Color(hex: "#F59E0B"))
-            divider
-            statCell(label: "CRITICAL", value: "\(r.criticalCount)", color: Color(hex: "#EF4444"))
-        }
-        .frame(height: 44)
-        .background(shellElevated)
-    }
+private struct AISignalBarRow: View {
 
-    private func statCell(label: String, value: String, color: Color = Color(hex: "#94A3B8")) -> some View {
-        VStack(spacing: 2) {
-            Text(value)
-                .font(.custom("JetBrains Mono", size: 17).weight(.bold))
-                .monospacedDigit()
-                .foregroundStyle(color)
-            Text(label)
-                .font(.custom("JetBrains Mono", size: 9).weight(.medium))
-                .tracking(0.06)
-                .foregroundStyle(Color(hex: "#64748B"))
-        }
-        .frame(maxWidth: .infinity)
-    }
+    let label: String
+    let score: Int
+    let detail: String
+    let barColor: Color
 
-    private var divider: some View {
-        Rectangle().fill(shellBorder).frame(width: 1, height: 28)
-    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Text(label)
+                    .porteosMetricLabel()
+                    .foregroundStyle(DesignTokens.textDim)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .lineLimit(1)
 
-    // MARK: Run Button
+                TerminalSegmentBar(
+                    fillRatio: Double(score) / 100,
+                    barColor: barColor,
+                    height: 6
+                )
+                .frame(width: 72)
 
-    private func runButton(label: String) -> some View {
-        Button { runAnalysis() } label: {
-            Text(label)
-                .font(.custom("JetBrains Mono", size: 13).weight(.bold))
-                .foregroundStyle(Color(hex: "#0F1115"))
-                .frame(maxWidth: .infinity)
-                .frame(height: 36)
-                .background(accentRust)
-                .clipShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-    }
-
-    // MARK: Section Header
-
-    private func sectionHeader(_ title: String) -> some View {
-        Text(title)
-            .font(.custom("JetBrains Mono", size: 11).weight(.bold))
-            .tracking(0.08)
-            .foregroundStyle(textTertiary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-    }
-
-    private func logLine(_ prefix: String, _ text: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            Text(prefix)
-                .font(.custom("JetBrains Mono", size: 13))
-                .foregroundStyle(accentRust)
-            Text(text)
-                .font(.custom("JetBrains Mono", size: 13))
-                .foregroundStyle(textSecondary)
-        }
-    }
-
-    // MARK: Analysis Runner
-
-    private func runAnalysis() {
-        isRunning = true
-        Task {
-            let r = await AIAnalysisService.shared.analyze(deal, context: modelContext)
-            await MainActor.run {
-                result              = r
-                analyzedID          = deal.id
-                isRunning           = false
-                // Persist analysis text only — do NOT touch deal.updatedAt here.
-                // Setting updatedAt would trigger InspectorPane's onChange which
-                // immediately wipes the text we just stored.
-                deal.aiAnalysisText = r.formattedText
-                try? modelContext.save()
+                Text("\(score)")
+                    .porteosMetricValue()
+                    .monospacedDigit()
+                    .foregroundStyle(barColor)
+                    .frame(width: 28, alignment: .trailing)
             }
+
+            Text(detail)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+                .fixedSize(horizontal: false, vertical: true)
         }
-    }
-
-    // MARK: Restore from stored text
-
-    /// Builds a minimal AnalysisResult from the stored plain-text so the panel
-    /// shows something without re-running the analysis on every appear.
-    private func quickResult(from text: String) -> AnalysisResult {
-        let grade = VibeGrade.from(score: deal.porteosScore)
-        let name  = deal.propertyName.isEmpty ? "This asset" : deal.propertyName
-        return AnalysisResult(
-            grade:                     grade,
-            headline:                  "\(name) — previously analysed. Tap regenerate to refresh.",
-            realEstateSignals:         [],
-            hospitalitySignals:        [],
-            designSignals:             [],
-            circularSignals:           [],
-            marketIntelligenceSignals: [],
-            summary:                   text,
-            formattedText:             text
-        )
-    }
-
-    // MARK: Helpers
-
-    private func sentimentColor(_ s: AnalysisSignal.Sentiment) -> Color {
-        switch s {
-        case .positive: return Color(hex: "#10B981")
-        case .neutral:  return Color(hex: "#64748B")
-        case .warning:  return Color(hex: "#F59E0B")
-        case .critical: return Color(hex: "#EF4444")
-        }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, 10)
+        .background(DesignTokens.surfacePanel)
     }
 }
 
 // MARK: - Preview
 
-#Preview {
+#Preview("Idle") {
     let config    = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: PropertyDeal.self, configurations: config)
-    let deal      = PropertyDeal(propertyName: "Lisbon Office Block A", purchasePrice: 2_000_000,
-                                 grossPotentialIncome: 180_000, vacancyRate: 5,
-                                 operatingExpenses: 55_000, loanAmount: 1_500_000,
-                                 interestRate: 4.5, porteosScore: 73)
+    let deal      = PropertyDeal(propertyName: "Lisbon Office Block A")
     container.mainContext.insert(deal)
-    return HStack(spacing: 0) {
-        Spacer()
-        AIVibePanel(deal: deal, refreshID: UUID())
-            .frame(width: 320)
-            .background(Color(hex: "#1A1D24"))
-    }
-    .frame(width: 600, height: 800)
-    .background(Color(hex: "#0F1115"))
-    .modelContainer(container)
+    return AIVibePanel(deal: deal, refreshID: UUID())
+        .frame(width: DesignTokens.inspectorPaneWidth)
+        .background(DesignTokens.surfacePanel)
+        .modelContainer(container)
+}
+
+#Preview("Result") {
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: PropertyDeal.self, configurations: config)
+    let deal = PropertyDeal(
+        propertyName: "Lisbon Office Block A",
+        purchasePrice: 2_000_000,
+        porteosScore: 87
+    )
+    container.mainContext.insert(deal)
+    return AIVibePanel(deal: deal, refreshID: UUID())
+        .frame(width: DesignTokens.inspectorPaneWidth)
+        .background(DesignTokens.surfacePanel)
+        .modelContainer(container)
 }

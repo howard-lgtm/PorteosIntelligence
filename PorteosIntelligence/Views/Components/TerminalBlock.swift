@@ -1,78 +1,73 @@
 import SwiftUI
 
 // MARK: - TerminalBlock
-// Reusable container that wraps any content in a CLI-styled terminal block.
-// Header mimics a shell command execution line; body is the "output".
+// V2.06 Figma module chrome: 4px profile accent strip + panel + divider border.
 
 struct TerminalBlock<Content: View>: View {
 
     let command: String
     let accentColor: Color
-    /// Padding applied around the content area. Pass `0` for full-bleed lists of TerminalMetricRows.
-    var contentPadding: CGFloat = 12
+    var contentPadding: CGFloat = DesignTokens.blockGutter
     @ViewBuilder let content: () -> Content
 
-    // MARK: Tokens
-
-    private let shellBorder  = Color(hex: "#2E333F")
-    private let textTertiary = Color(hex: "#64748B")
-
-    // MARK: Body
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            blockHeader
-            Rectangle().fill(shellBorder).frame(height: 1)
-            contentArea
+        HStack(alignment: .top, spacing: 0) {
+            Rectangle()
+                .fill(accentColor)
+                .frame(width: DesignTokens.profileBarHeight)
+
+            VStack(alignment: .leading, spacing: 0) {
+                blockHeader
+                TerminalStructuralDivider()
+                contentArea
+            }
+        }
+        .background(DesignTokens.surfacePanel)
+        .overlay {
+            Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
         }
         .clipShape(Rectangle())
     }
 
-    // MARK: Header
-
     private var blockHeader: some View {
         HStack(spacing: 0) {
             Text("porteos@system ~ % ")
-                .font(.custom("JetBrains Mono", size: 11))
-                .foregroundStyle(textTertiary)
+                .porteosCliPrompt()
+                .foregroundStyle(DesignTokens.textDim)
 
             Text(command)
-                .font(.custom("JetBrains Mono", size: 11).weight(.medium))
-                .foregroundStyle(textTertiary)
+                .porteosModuleCmd()
+                .foregroundStyle(accentColor)
 
             Spacer()
         }
-        .padding(.horizontal, 12)
-        .frame(height: 24)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: DesignTokens.rowHeightData)
+        .background(DesignTokens.surfaceElevated)
     }
-
-    // MARK: Content Area (16pt padding)
 
     private var contentArea: some View {
         VStack(alignment: .leading, spacing: 0) {
             content()
         }
         .padding(contentPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(DesignTokens.canvasBase)
     }
 }
 
 // MARK: - Preview
 
 #Preview {
-    VStack(spacing: 16) {
-        TerminalBlock(command: "stats --quick-look", accentColor: Color(hex: "#C25E30")) {
-            VStack(spacing: 0) {
-                TerminalMetricRow(label: "Net Operating Income", value: "€125,000", state: .neutral)
-                TerminalMetricRow(label: "Cap Rate",             value: "6.20%",    state: .optimal)
-                TerminalMetricRow(label: "DSCR",                 value: "0.98",     state: .danger)
+    VStack(spacing: DesignTokens.blockSpacing) {
+        TerminalBlock(command: "01 // CORE_FINANCIALS_REVENUE", accentColor: DesignTokens.accentRust) {
+            TerminalMetricGrid(fixedColumnCount: 2) {
+                TerminalMetricCell(label: "NOI", value: "€125,000")
+                TerminalMetricCell(label: "Cap Rate", value: "6.20%", state: .optimal)
             }
         }
-
-        TerminalBlock(command: "hospitality --dashboard", accentColor: Color(hex: "#14B8A6")) {
-            TerminalMetricRow(label: "Occupancy Rate", value: "78.5%", state: .warning)
-        }
     }
-    .padding(16)
+    .padding(DesignTokens.blockGutter)
     .frame(width: 520)
-    .background(Color(hex: "#0F1115"))
+    .background(DesignTokens.canvasBase)
 }

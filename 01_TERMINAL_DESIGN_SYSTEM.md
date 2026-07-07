@@ -1,98 +1,287 @@
-# Porteos Intelligence - Native Terminal Design System V3.1
+# Porteos Intelligence — Terminal Design System V2.06_STABLE
 
-**Purpose:** The absolute source of truth for all UI, layout, typography, and component styling.
-**Target Platform:** macOS 14.0+ (SwiftUI)
-**Last Updated:** June 27, 2026
-
----
-
-## 0. DESIGN PHILOSOPHY: "INSTITUTIONAL TERMINAL"
-
-We are building a native macOS application that mimics the aesthetic and density of a high-end terminal emulator (like Apple Terminal/iTerm2) while retaining native macOS interaction models.
-
-- **Core Aesthetic:** Institutional Brutalist / Terminal TUI Hybrid.
-- **Zero Rounded Corners:** `cornerRadius: 0` everywhere. Sharp rectangles only.
-- **Monospace Dominance:** JetBrains Mono exclusively for 100% of the UI. No proportional fonts.
-- **Strict Grid Alignment:** Every element snaps to an 8pt character/cell grid.
-- **Native Implementation:** Use standard SwiftUI views (`VStack`, `HStack`, `Grid`) styled to *look* like a terminal. **DO NOT** use `NSTextView` or raw TUI libraries.
-
-### 0.1 Color & Richness Philosophy (CRITICAL RULE)
-
-**The "State vs. Identity" Rule:**
-
-We DO NOT assign unique colors to specific metrics (e.g., Teal for RevPAR, Purple for MCI). This creates cognitive overload. Richness is achieved through:
-
-1. **State Semantics:** Colors (Green/Amber/Red) are ONLY used to indicate threshold breaches. Normal metrics are White/Grey.
-2. **Typographic Hierarchy:** Font Weight (Bold vs Regular) and Brightness (White vs Dim Grey) draw the eye to primary metrics.
-3. **Profile Identity:** The active Profile Accent Color (Rust, Teal, etc.) is ONLY used for section headers, active tabs, indicator bar fills, and score rings.
-4. **Cell Highlighting:** Outliers are pinpointed using sharp 2px left-borders and subtle 5% opacity background tints.
+**Purpose:** Absolute source of truth for UI, layout, typography, and components.  
+**Code authority:** `PorteosIntelligence/Utilities/DesignTokens.swift`  
+**Execution plan:** `DESIGN_EXECUTION_PLAN.md` (phased rollout)  
+**Platform:** macOS 14.0+ · SwiftUI  
+**Last updated:** July 1, 2026
 
 ---
 
-## 1. COLOR SYSTEM (Exact Hex Values)
+## 0. Design Philosophy — Institutional Terminal
 
-### 1.1 Base Shell Colors
+Native macOS app styled as a high-end terminal emulator (iTerm2-class) with standard SwiftUI interaction models.
+
+| Law | Rule |
+|-----|------|
+| Structural honesty | Zero-margin data plate; panels separated only by 1px dividers |
+| Geometry | `cornerRadius: 0` everywhere |
+| Typography | JetBrains Mono 100%; `.monospacedDigit()` on all numbers |
+| Interaction | Bracket triggers `[ ACTION ]`; no pill buttons, no shadows |
+| Density | 28pt data rows; maximum aligned information per square inch |
+| Native | SwiftUI `VStack`/`HStack`/`Grid` — not NSTextView, not web cards |
+
+### 0.1 State vs Identity (Critical)
+
+1. **State semantics** — Green/Amber/Red ONLY on threshold breach or delta direction  
+2. **Typographic hierarchy** — Weight + brightness draw the eye; not rainbow metrics  
+3. **Profile identity** — Rust/Teal/Purple/Blue ONLY on section headers, CLI paths, score hero, slider fills  
+4. **Cell highlight** — 2px left border + 5% tint on warning/danger rows  
+
+### 0.2 Hermetic Balance (Reference Quality Bar)
+
+Balanced UI = **fixed grid + typographic hierarchy + restrained palette**.  
+See crypto/fintech references for grid discipline only — not rounded cards or sans-serif.
+
+---
+
+## 1. Color System
+
+**Use `DesignTokens` in code. Do not hardcode hex in views.**
+
+### 1.1 Shell (V2.06)
 
 | Token | Hex | Usage |
-| --- | --- | --- |
-| `shell-bg` | `#0F1115` | Main window background (near-black) |
-| `shell-surface` | `#1A1D24` | Panels, sidebars, inspector backgrounds |
-| `shell-elevated` | `#23262E` | Modals, popovers, tooltips |
-| `shell-border` | `#2E333F` | All dividers, table borders, panel edges (1px or 2px) |
-| `text-primary` | `#F8F9FA` | Primary text, high-priority metrics (near-white) |
-| `text-secondary` | `#94A3B8` | Labels, secondary text, standard metrics (slate) |
-| `text-tertiary` | `#64748B` | Disabled, placeholder text, column headers |
+|-------|-----|-------|
+| `canvasBase` | `#0A0A0A` | Window, center workspace background |
+| `surfacePanel` | `#111111` | Nav, inspector, module interiors |
+| `surfaceElevated` | `#1A1A1A` | Active nav row, sheet bodies |
+| `dividerStructural` | `#333333` | All 1px dividers and borders |
 
-### 1.2 Profile Accent Colors (Identity Only)
+Legacy aliases (`shellBg`, `shellSurface`, `shellBorder`) map to the above — **deprecated for new code**.
 
-| Profile | Primary | Hover | Icon |
-| --- | --- | --- | --- |
-| Real Estate | `#C25E30` (Rust) | `#A84D25` |  |
-| Hospitality | `#14B8A6` (Teal) | `#0D9488` | 🏨 |
-| Design | `#A855F7` (Purple) | `#9333EA` | ✏️ |
-| Circular Economy | `#3B82F6` (Blue) | `#2563EB` | ️ |
-| Pipeline | `#F59E0B` (Amber) | `#D97706` | 📊 |
+### 1.2 Text
 
-**Note:** The Rust/Orange (`#C25E30`) replaces the previous Gold (`#D4AF37`) for Real Estate to match the institutional terminal aesthetic.
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `textPrimary` | `#F8F9FA` | Values, active paths, headers |
+| `textSecondary` | `#94A3B8` | Standard copy, secondary metrics |
+| `textDim` | `#666666` | Labels, prompts, inactive commands |
 
-### 1.3 Semantic Colors (Strict Thresholds Only)
+### 1.3 Semantic (Terminal Palette)
 
-These colors are NEVER used for standard metric labels. They are ONLY applied when a metric breaches a defined threshold.
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `statusGo` | `#27C93F` | Optimal threshold, positive delta, approvals |
+| `statusWarn` | `#FFBD2E` | Caution threshold, watchlist |
+| `statusCritical` | `#FF5F56` | Fail threshold, reject, high risk |
 
-| Meaning | Hex | Usage & Threshold Examples |
-| --- | --- | --- |
-| Success / Optimal | `#10B981` (Green) | DSCR ≥ 1.25, LTV ≤ 75%, Positive Cash Flow, Score ≥ 80 |
-| Warning / Review | `#F59E0B` (Amber) | DSCR 1.10-1.24, LTV 76-85%, Vacancy > 8%, Score 60-79 |
-| Danger / Poor | `#EF4444` (Red) | DSCR < 1.10, LTV > 90%, Negative Cash Flow, Score < 60 |
-| Info / Neutral | `#3B82F6` (Blue) | Informational tags, links, neutral states |
+**Deprecated:** `#10B981`, `#F59E0B`, `#EF4444` — migrate to terminal semantics above.
 
-**Cell Highlight Technique (For Danger/Warning States):**
+### 1.4 Chrome vs Profile
 
-When a metric hits a Warning/Danger state:
-1. Text color changes to the semantic color.
-2. A sharp 2px left-border is added to the metric row/cell in the semantic color.
-3. A subtle 5% opacity background tint of the semantic color is applied to the cell background.
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `accentRust` | `#A34121` | Nav 2px selection bar, system wordmark |
+
+**Profile accents (`ProfileType.accentColor`):**
+
+| Profile | Hex |
+|---------|-----|
+| Command Center | `#94A3B8` |
+| Real Estate | `#C25E30` |
+| Hospitality | `#14B8A6` |
+| Design | `#A855F7` |
+| Circular Economy | `#3B82F6` |
+| Pipeline (badges) | `#F59E0B` |
 
 ---
 
-## 2. TYPOGRAPHY SYSTEM
+## 2. Typography (Phase A — locked in `DesignTokens.TypeScale`)
 
-### 2.1 Font Families
-
-- **Exclusive Font:** JetBrains Mono. Used for ALL UI elements — financial values, metrics, percentages, labels, inputs, buttons, navigation, and headers. Weights: Regular (400), Bold (700).
-- **Inter has been removed entirely.** No proportional fonts anywhere in the application.
-
-### 2.2 Typographic Hierarchy for Data Density
-
-- **Hero Numbers (The "Pinpoints"):** JetBrains Mono, 48pt, Weight: Bold. Color: Profile Accent or `text-primary`. Usage: Porteos Score, Efficiency Score, Global Circularity Index.
-- **Primary Metrics:** JetBrains Mono, 14pt, Weight: Bold. Color: `text-primary`. Usage: NOI, Cap Rate, RevPAR.
-- **Secondary Metrics:** JetBrains Mono, 12pt, Weight: Regular. Color: `text-secondary`. Usage: Supporting metrics, historical data.
-- **Tertiary/Contextual Data (Labels):** JetBrains Mono, 10pt, Weight: Bold, Uppercase, Tracking 0.08. Color: `text-tertiary`. Usage: Metric labels, units, column headers, module titles, section headers, field labels.
-
-### 2.3 Numeric Style (All Numbers)
+| Tier | Size | Weight | Usage |
+|------|------|--------|-------|
+| Hero score | 36pt | Bold | Porteos score |
+| Hero grade | 20pt | Bold | Score letter |
+| Metric value | 16pt | Semibold | Grid cell values |
+| Metric label | 11pt | Medium | Grid cell labels |
+| Row value | 12pt | Medium | List/table values |
+| Row label | 11pt | Regular | List/table labels |
+| Module cmd | 11pt | Medium | `01 // MODULE` |
+| Meta | 10pt | Regular | LN:120, timestamps only |
 
 ```swift
-.font(.custom("JetBrains Mono", size: 14).weight(.bold))
-.tracking(-0.02)
-.monospacedDigit()
-.foregroundColor(.textPrimary)
+DesignTokens.metricValueFont()   // 16pt semibold + tnum
+DesignTokens.metricLabelFont()   // 11pt medium
+DesignTokens.rowValueFont()      // 12pt medium
+DesignTokens.heroScoreFont()     // 36pt bold
+```
+
+**Rule:** No hardcoded font sizes in views.
+
+---
+
+## 3. Layout System
+
+### 3.1 App Shell
+
+| Region | Width | Background |
+|--------|-------|------------|
+| Navigation | 260pt fixed | `surfacePanel` |
+| Center | Flexible | `canvasBase` |
+| Inspector | 280pt fixed | `surfacePanel` |
+| Dividers | 1px | `dividerStructural` |
+
+### 3.2 Row Heights (Fixed)
+
+| Token | pt | Usage |
+|-------|-----|-------|
+| `rowHeightData` | 28 | Metric rows, list rows, table rows |
+| `rowHeightButton` | 32 | Bracket buttons, command bar |
+| `rowHeightHeader` | 36 | CLI breadcrumb, inspector section headers |
+| `rowHeightPaneBar` | 40 | TopHeaderBar |
+
+### 3.3 Spacing
+
+| Token | pt | Usage |
+|-------|-----|-------|
+| Block gutter | 12 | ScrollView padding, pane insets |
+| Block spacing | 6 | Between TerminalBlocks |
+| Grid gap | 6 | Between metric inset cells |
+| Cell padding | 8 | Inside bordered metric cells |
+
+### 3.4 Metric Grid
+
+- **2 columns default**; **4 columns** when center pane ≥ 900pt
+- **Inset cell:** `surfaceElevated` + 1px border, min 52pt
+- **Never** use `GridItem(.adaptive(minimum:maximum:))`
+
+### 3.5 Key-Value Rows (Sheets, PDF, Inspector)
+
+- Label column: 40% width, left-aligned, dim  
+- Value column: 60% width, right-aligned, primary  
+- Row height: 28pt  
+
+---
+
+## 4. Component Specifications
+
+### 4.1 TerminalBlock
+
+```
+porteos@system ~ % 01 // MODULE_NAME    ← accentColor on command segment
+───────────────────────────────────────
+[ 4-col grid or list content ]
+```
+
+- Header height: 28pt  
+- Content padding: 12pt (0 for full-bleed lists)  
+- Background: inherits parent surface  
+
+### 4.2 TerminalMetricRow (Lists)
+
+- Height: 28pt  
+- Layout: `[2px border?] [label] [spacer] [value]`  
+- Warning/danger: 2px left border + 5% background tint  
+
+### 4.3 TerminalMetricCell (Grids) — Phase B
+
+```
+┌─────────────────────────┐  surfaceElevated + 1px border
+│ LABEL (11pt)            │  8pt padding
+│ €144          [sparkline]│  min 52pt; 2px left accent if warn/danger
+└─────────────────────────┘
+```
+
+### 4.4 PorteosScoreBlock (Hero)
+
+```
+[ 36pt score ]                    [ PORTEOS SCORE / 20pt grade ]
+```
+
+- 12pt horizontal inset; background `surfacePanel`
+- 1px border: `dividerStructural`  
+
+### 4.5 Buttons
+
+**Primary filled:** `TerminalButtonStyle(color: .rust|.green|…)`  
+**Semantic ribbon:** `TerminalButtonStyle(semantic: .approve|.watchlist|.reject)`  
+**Secondary:** bordered, no fill, profile or rust text  
+
+Format: `[ ACTION_NAME ]` — JetBrains Mono 11pt bold  
+
+### 4.6 TerminalAsciiGauge vs TerminalSparkline
+
+| Type | Use |
+|------|-----|
+| ASCII `[████░░░░]` | Static thresholds: LTV, DSCR, occupancy |
+| Sparkline | Time series; color from `TerminalSparkline.color(forDelta:)` |
+
+### 4.7 Tags
+
+`TerminalTagChip`: `[tag_name]` — border only, no fill, `dividerStructural` stroke  
+
+### 4.8 AIVibePanel
+
+- Idle → Running (`[ ANALYZING_RULES... ]` → `[ GENERATING_NARRATIVE... ]`) → Result  
+- Grade badge 48pt centered  
+- Signals: prefix `+` `~` `!` with semantic color  
+- LLM offline: amber `~` banner  
+
+### 4.9 GlobalCommandBar
+
+```
+porteos@system ~ % [input________________] █    MAN_PAGES  SYS_STAT  KERNEL_LOG  LN:120
+```
+
+---
+
+## 5. Per-Profile Module Map
+
+See `DESIGN_EXECUTION_PLAN.md` §4 for full module numbering.
+
+Each deal profile dashboard structure:
+
+1. CLI header (36pt, profile accent command)  
+2. `SystemLogBlock` (validation)  
+3. Numbered `TerminalBlock` modules with 4-col grid  
+4. Profile sensitivity block  
+5. `MarketTrendModule`  
+
+Command Center uses list rows instead of grid — same tokens and row heights.
+
+---
+
+## 6. Surface Checklist
+
+| Category | Files |
+|----------|-------|
+| Shell | `AppShell`, `NavigationPane`, `InspectorPane`, `DetachedPaneViews` |
+| Headers | `TopHeaderBar`, `GlobalCommandBar` |
+| Dashboards | 5 profiles + `ComparisonView` |
+| Components | 33 in `Views/Components/` |
+| Sheets | 12 in `Views/Sheets/` |
+| Overlays | `CommandPalette`, `IngestionToast`, `AdvancedFilterPanel` |
+
+---
+
+## 7. Migration Status (July 1, 2026)
+
+| Layer | Status |
+|-------|--------|
+| `DesignTokens.swift` | ✅ Complete |
+| Shell chrome | 🟡 ~60% |
+| Dashboards | ❌ Legacy hex + adaptive grid |
+| Sheets | ❌ Legacy hex |
+| Components | 🟡 ~11/33 migrated |
+
+**Next:** Phase 1 layout primitives → Hospitality reference dashboard.
+
+---
+
+## 8. Deprecated Values — Do Not Use
+
+| Deprecated | Replacement |
+|------------|-------------|
+| `#0F1115` | `DesignTokens.canvasBase` |
+| `#1A1D24` | `DesignTokens.surfacePanel` |
+| `#2E333F` | `DesignTokens.dividerStructural` |
+| `#10B981` / `#F59E0B` / `#EF4444` | `statusGo` / `statusWarn` / `statusCritical` |
+| `#D4AF37` (Gold RE) | `#C25E30` profile rust |
+| Inter font | JetBrains Mono |
+| `GridItem(.adaptive(...))` | Fixed 4-column grid |
+| SF Symbols in chrome | Bracket text or JetBrains glyphs |
+
+---
+
+*This document is canonical. In-app copy at `PorteosIntelligence/01_TERMINAL_DESIGN_SYSTEM.md` redirects here.*
