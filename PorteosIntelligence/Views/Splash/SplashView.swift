@@ -215,12 +215,38 @@ struct SplashView: View {
 
     // MARK: Asset loading
 
+    private static let heroResourceNames = ["porteos_splash_000", "splash-hero@2x", "splash-hero"]
+
     private static func loadHeroImage() -> NSImage? {
-        let names = ["porteos_splash_000", "splash-hero@2x", "splash-hero"]
-        for name in names {
-            if let url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Splash"),
+        for name in heroResourceNames {
+            if let url = heroImageURL(named: name),
                let image = NSImage(contentsOf: url) {
                 return image
+            }
+        }
+        return nil
+    }
+
+    /// Xcode file-system sync copies `PorteosIntelligence/Resources/Splash/` into the
+    /// bundle as `Resources/Splash/` — not top-level `Splash/`. Try several layouts.
+    private static func heroImageURL(named name: String) -> URL? {
+        let subdirectories = ["Resources/Splash", "Splash", nil as String?]
+        for subdir in subdirectories {
+            if let url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: subdir) {
+                return url
+            }
+        }
+
+        guard let base = Bundle.main.resourceURL else { return nil }
+        let relativePaths = [
+            "Resources/Splash/\(name).png",
+            "Splash/\(name).png",
+            "\(name).png",
+        ]
+        for path in relativePaths {
+            let url = base.appendingPathComponent(path)
+            if FileManager.default.fileExists(atPath: url.path) {
+                return url
             }
         }
         return nil
