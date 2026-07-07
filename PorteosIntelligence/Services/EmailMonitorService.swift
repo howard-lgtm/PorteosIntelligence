@@ -195,7 +195,7 @@ final class EmailMonitorService {
     // MARK: - Fetch-and-import pipeline
 
     private func fetchAndImport(creds: IMAPCredentials, container: ModelContainer) async throws -> Int {
-        let baseURL = "imaps://\(creds.imapHost):\(creds.imapPort)/\(creds.folder)"
+        let baseURL = imapMailboxURL(host: creds.imapHost, port: creds.imapPort, folder: creds.folder)
 
         // Step 1: SEARCH UNSEEN → get sequence numbers
         let searchOutput = try await runCurl([
@@ -328,7 +328,14 @@ final class EmailMonitorService {
                         data: errPipe.fileHandleForReading.readDataToEndOfFile(),
                         encoding: .utf8
                     ) ?? ""
-                    let msg = errOut.isEmpty ? "exit code \(proc.terminationStatus)" : errOut
+                    let msg: String
+                    if proc.terminationStatus == 100 {
+                        msg = errOut.isEmpty
+                            ? "Mailbox response too large (exit 100). Use a dedicated label folder with fewer unread messages, or mark old mail as read."
+                            : errOut
+                    } else {
+                        msg = errOut.isEmpty ? "exit code \(proc.terminationStatus)" : errOut
+                    }
                     continuation.resume(throwing: IMAPError.curlFailed(msg))
                 }
             }
@@ -339,6 +346,23 @@ final class EmailMonitorService {
                 continuation.resume(throwing: error)
             }
         }
+    }
+
+    // MARK: - IMAP URL helpers
+
+    /// Builds `imaps://host:port/Encoded/Path` with per-segment percent-encoding
+    /// (spaces in labels like `PORTEOS CAPITAL` → `PORTEOS%20CAPITAL`).
+    private func imapMailboxURL(host: String, port: Int, folder: String) -> String {
+        let trimmed = folder.trimmingCharacters(in: .whitespacesAndNewlines)
+        let path = trimmed.split(separator: "/").map { encodeIMAPPathComponent(String($0)) }.joined(separator: "/")
+        return "imaps://\(host):\(port)/\(path)"
+    }
+
+    private func encodeIMAPPathComponent(_ component: String) -> String {
+        // Encode everything except unreserved + dot/underscore (Gmail label names).
+        var allowed = CharacterSet.alphanumerics
+        allowed.insert(charactersIn: "-_.")
+        return component.addingPercentEncoding(withAllowedCharacters: allowed) ?? component
     }
 
     // MARK: - IMAP response parsing
