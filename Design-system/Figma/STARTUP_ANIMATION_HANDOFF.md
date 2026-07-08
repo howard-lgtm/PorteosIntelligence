@@ -1,121 +1,122 @@
-# Startup Animation — Figma → macOS Handoff
-
-**Status:** Figma export in progress (Howard)  
-**App integration:** scaffold ready — awaiting PNG sequence in repo  
-**Last updated:** 7 July 2026
 
 ---
 
-## 1. Asset source
+## Hero image spec (designer to supply)
 
-Copy from local machine into this repo:
+| Property | Value |
+|---|---|
+| Layer name in Figma | `splash-hero` |
+| Canvas | 720 × 460 pt (design at 1×) |
+| Export @1x | `splash-hero.png` — **720 × 460 px** |
+| Export @2x | `splash-hero@2x.png` — **1440 × 920 px** (Retina, preferred) |
+| Format | PNG-24, sRGB, **no transparency** (full-bleed rectangle) |
+| Safe area | Keep important content inside **680 × 420 pt** center (20 pt margin all sides) |
+| Crop mode | Cover — no letterboxing, no Figma UI chrome |
+| Behaviour | App fades entire image to `#0A0A0A` by t = 0.7s (ease-in). Do **not** bake text into image. |
 
-| Local (CascadeProjects) | Repo destination |
-|-------------------------|------------------|
-| `Design-system/Figma/STARTUP_ANIMATION_HANDOFF.md` | `Design-system/Figma/STARTUP_ANIMATION_HANDOFF.md` (this file) |
-| `Design-system/Figma/Splash Image/porteos_splash_*.png` | `PorteosIntelligence/Resources/Splash/` |
+> **Do not export as JPG** — banding is visible on the fade-to-black.
 
-First frame reference: `porteos_splash_000.png`
-
----
-
-## 2. Figma export spec (fill in when export is complete)
-
-| Property | Value | Notes |
-|----------|-------|-------|
-| Frame naming | `porteos_splash_{###}.png` | Zero-padded 3 digits |
-| First frame | `porteos_splash_000.png` | |
-| Last frame | `porteos_splash___` | _TBD_ |
-| Total frames | | _TBD_ |
-| FPS | | _TBD — typical 24 or 30_ |
-| Duration | | _TBD — e.g. 1.5s_ |
-| Canvas size | | _TBD — e.g. 1200×800 or 800×600_ |
-| Background | `#0F1115` | Match `shell-bg` |
-| Loop | No | Play once on cold launch |
+Current Figma placeholder: rust gradient (`#C25E30 → #0A0A0A`). Replace fill in node `248:483 → splash-image` layer before export.
 
 ---
 
-## 3. How it connects to the app
+## Window
 
-### Architecture
-
-```
-PorteosIntelligenceApp
-  └── RootView                    ← new root coordinator
-        ├── AppShell()            ← main UI (loads underneath)
-        └── SplashView (overlay)  ← full-window, z-index on top
-              └── PNG frame sequence timer
-```
-
-### Launch sequence
-
-1. **App init** — `ModelContainer` + ingestion services initialise (existing `PorteosIntelligenceApp`).
-2. **RootView appears** — `AppShell` mounts immediately (data ready); splash overlay covers it.
-3. **SplashView** — plays `porteos_splash_000` → `porteos_splash_NNN` at configured FPS.
-4. **Dismiss** — when last frame shown + optional minimum duration elapsed → opacity fade (0.35s) → remove overlay.
-5. **AppShell visible** — user lands on last-used state / empty state as today.
-
-### Why overlay, not a separate window?
-
-- macOS SwiftUI `WindowGroup` has no built-in storyboard launch screen like iOS.
-- Overlay on `AppShell` lets the app load SwiftData and auto-start ingestion server while the animation plays.
-- Avoids a blank window flash before content appears.
-
-### Files
-
-| File | Role |
-|------|------|
-| `Views/Splash/SplashView.swift` | Frame sequence player |
-| `Views/Splash/RootView.swift` | Splash + AppShell coordinator |
-| `PorteosIntelligenceApp.swift` | Entry point uses `RootView` instead of `AppShell` |
-| `Resources/Splash/*.png` | Frame sequence (bundle resources) |
-
-Xcode uses `PBXFileSystemSynchronizedRootGroup` — files under `PorteosIntelligence/` are picked up automatically.
+| Property | Value |
+|---|---|
+| Type | `NSPanel` — borderless, no title bar |
+| Size | 720 × 460 pt |
+| Background | `#0A0A0A` |
+| Corner radius | 10 pt |
+| Position | Centered on primary display at launch |
 
 ---
 
-## 4. Configuration
+## Animation sequence (~4.4s total) — implemented in code
 
-Edit constants at top of `SplashView.swift`:
-
-```swift
-static let frameCount = 60        // set from handoff
-static let fps: Double = 24       // set from handoff
-static let minimumDuration: Double = 1.2  // never shorter than this
-static let fadeOutDuration: Double = 0.35
-```
-
-Or load from a small `splash-config.json` in the Splash bundle folder if Figma export includes one.
+| Phase | Timing | Description |
+|---|---|---|
+| 1 | 0.00 – 0.70s | Hero image fully visible → fades to `#0A0A0A` (ease-in) |
+| 2 | 0.70 – 0.80s | Dark screen — cursor block appears, begins blinking |
+| 3 | 0.80 – 2.40s | Typewriter: 20 chars × 80 ms each, cursor trails right |
+| 4 | 2.40 – 2.90s | `v2.06` fades in (0.4s ease-out); progress bar fills to 100% |
+| — | 4.40s | Main window appears, splash dismissed |
 
 ---
 
-## 5. Acceptance criteria
+## Typography
 
-- [ ] Cold launch shows splash on `#0F1115` background — no white flash
-- [ ] All frames play in order at correct FPS
-- [ ] Splash dismisses smoothly into `AppShell`
-- [ ] App is interactive immediately after fade (no extra delay)
-- [ ] Missing frames → graceful fallback (static logo / skip splash, log warning)
-- [ ] Re-launch behaviour matches decision: every launch vs first launch only
+| Property | Value |
+|---|---|
+| Font | JetBrains Mono Regular (already in app bundle) |
+| Size | 18 pt |
+| Color | `#C25E30` |
+| Letter spacing | 3 pt |
+| Content | `PORTEOS INTELLIGENCE` |
 
----
-
-## 6. Optional follow-ups
-
-| Item | Priority |
-|------|----------|
-| User preference: show splash on every launch | Low |
-| `UserDefaults` flag: `hasSeenSplash` for first-launch only | Low |
-| Replace PNG sequence with Lottie if Figma exports `.json` | Future |
-| Match splash to Figma redesign tokens when UI overhaul lands | Medium |
+**Version string:** 11 pt · `#666666` · centered below main text · content: `v2.06`
 
 ---
 
-## 7. Cursor execution
+## Cursor
 
-When PNGs are in `PorteosIntelligence/Resources/Splash/`:
+| Property | Value |
+|---|---|
+| Shape | Rectangle 10 × 24 pt |
+| Fill | `#C25E30` |
+| Blink interval | 500 ms — opacity 1 → 0 → 1 (linear) |
+| Blink phases | Before typing (0.70–0.80s) and after complete (2.40s+) |
+| During typing | Always visible, no blink |
+| Advance | 11 pt per character |
 
-1. Read this file for `frameCount` and `fps`
-2. Update `SplashView.swift` constants
-3. Run app — verify cold launch
-4. Mark punchlist items S4–S5 complete in `PUNCHLIST.md`
+---
+
+## Progress bar
+
+| Property | Value |
+|---|---|
+| Track | 640 × 2 pt · `#262626` · x:40 y:428 |
+| Fill | `#C25E30` @ 60% opacity |
+| Timing | 0s → 10% at 0.8s (ease-out) → 92% at 2.4s (linear) → 100% at 2.9s (ease-out) |
+
+---
+
+## Design tokens
+
+| Token | Hex | Usage |
+|---|---|---|
+| `rust` | `#C25E30` | Text, cursor, progress fill |
+| `canvas-base` | `#0A0A0A` | Window background |
+| `text/dim` | `#666666` | Version string |
+| `divider` | `#262626` | Progress track |
+
+---
+
+## Figma reference
+
+| Asset | Node |
+|---|---|
+| Motion frame (timing reference) | `248:483` — *Splash — Motion (macOS)* |
+| 3-up design states | `248:454` — *macOS Splash — Reference States* |
+| File key | `7XdLK0I2aWj7KVkvhnJEyE` |
+
+---
+
+## Do not export
+
+- Frame sequences, Lottie, GIF, MP4
+- Per-frame PNGs (`porteos_splash_000.png` etc.)
+- The typewriter animation, cursor, progress bar, or version string — all rendered in code
+
+---
+
+## Export checklist
+
+- [ ] `splash-hero@2x.png` — 1440 × 920 px, PNG-24, full-bleed, no transparency
+- [ ] `splash-hero.png` — 720 × 460 px (1× fallback)
+- [ ] Rust gradient placeholder **removed** from Figma node `248:483`
+- [ ] Hero image reads clearly at 460 pt tall
+- [ ] No text baked into hero image
+- [ ] File names lowercase and hyphenated (exact match above)
+- [ ] `splash-ref-states.png` — exported to `Design-system/Figma/Splash Image/`
+- [ ] `splash-ref-motion.png` — exported to `Design-system/Figma/Splash Image/`
