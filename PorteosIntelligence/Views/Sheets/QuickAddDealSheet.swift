@@ -32,9 +32,7 @@ struct QuickAddDealSheet: View {
     @State private var status:        DealStatus
     @State private var notes:         String
 
-    private let propertyTypes: [String] = [
-        "Residential", "Commercial", "Mixed-Use", "Hospitality", "Industrial", "Other"
-    ]
+    private let propertyTypes: [String] = PropertyTypes.defaults
 
     private var isEditing: Bool { editingDeal != nil }
     private var canSave:   Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
