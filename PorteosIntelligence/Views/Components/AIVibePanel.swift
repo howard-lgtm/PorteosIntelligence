@@ -14,6 +14,7 @@ struct AIVibePanel: View {
     @State private var result:     AnalysisResult? = nil
     @State private var phase:      AnalysisPhase?  = nil
     @State private var analyzedID: UUID?           = nil
+    @State private var expandedSignalIndex: Int?   = nil
 
     private var isRunning: Bool {
         phase == .analyzingRules || phase == .generatingNarrative
@@ -43,11 +44,13 @@ struct AIVibePanel: View {
         .onChange(of: deal.id) { _, _ in
             result = nil
             analyzedID = nil
+            expandedSignalIndex = nil
             restoreStoredAnalysis()
         }
         .onChange(of: refreshID) { _, _ in
             result = nil
             analyzedID = nil
+            expandedSignalIndex = nil
         }
     }
 
@@ -117,7 +120,11 @@ struct AIVibePanel: View {
                         label: item.label,
                         score: item.score,
                         detail: item.detail,
-                        barColor: sentimentColor(item.sentiment)
+                        barColor: sentimentColor(item.sentiment),
+                        isExpanded: expandedSignalIndex == idx,
+                        onToggle: {
+                            expandedSignalIndex = expandedSignalIndex == idx ? nil : idx
+                        }
                     )
                     if idx < barSignals.count - 1 { insetDivider }
                 }
@@ -450,6 +457,8 @@ private struct AISignalBarRow: View {
     let score: Int
     let detail: String
     let barColor: Color
+    let isExpanded: Bool
+    let onToggle: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -472,16 +481,40 @@ private struct AISignalBarRow: View {
                     .monospacedDigit()
                     .foregroundStyle(barColor)
                     .frame(width: 28, alignment: .trailing)
+
+                Button(action: onToggle) {
+                    Text(isExpanded ? "[ − ]" : "[ + ]")
+                        .porteosMeta()
+                        .foregroundStyle(isExpanded ? DesignTokens.accentRust : DesignTokens.textDim)
+                        .frame(width: 34, alignment: .trailing)
+                }
+                .buttonStyle(.plain)
             }
 
-            Text(detail)
-                .porteosMeta()
-                .foregroundStyle(DesignTokens.textDim)
-                .fixedSize(horizontal: false, vertical: true)
+            Group {
+                if isExpanded {
+                    Text(detail)
+                        .font(DesignTokens.TypeScale.rowValue)
+                        .foregroundStyle(DesignTokens.textDim)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    Text(detail)
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textDim)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
         }
         .padding(.horizontal, DesignTokens.blockGutter)
         .padding(.vertical, 10)
-        .background(DesignTokens.surfacePanel)
+        .background(isExpanded ? DesignTokens.surfaceElevated : DesignTokens.surfacePanel)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onToggle)
+        .animation(.easeOut(duration: 0.15), value: isExpanded)
     }
 }
 
