@@ -9,6 +9,7 @@ struct GlossarySheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var query: String = ""
+    @State private var expandedTermID: String? = nil
 
     private let shellBg       = DesignTokens.canvasBase
     private let shellSurface  = DesignTokens.surfacePanel
@@ -58,7 +59,7 @@ struct GlossarySheet: View {
                     }
                 }
             }
-            .frame(maxHeight: 420)
+            .frame(maxHeight: 480)
 
             divider
             footerBar
@@ -102,6 +103,7 @@ struct GlossarySheet: View {
                 .textFieldStyle(.plain)
                 .porteosRowValue()
                 .foregroundStyle(textPrimary)
+                .onChange(of: query) { _, _ in expandedTermID = nil }
         }
         .padding(.horizontal, DesignTokens.blockGutter)
         .frame(height: DesignTokens.rowHeightHeader)
@@ -128,14 +130,46 @@ struct GlossarySheet: View {
     }
 
     private func entryRow(_ entry: GlossaryEntry) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(entry.term.uppercased())
-                .porteosRowLabel()
-                .foregroundStyle(textPrimary)
-            Text(entry.definition)
-                .porteosRowValue()
-                .foregroundStyle(textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+        let isExpanded = expandedTermID == entry.id
+
+        return VStack(alignment: .leading, spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    expandedTermID = isExpanded ? nil : entry.id
+                }
+            } label: {
+                HStack(alignment: .top, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(entry.term.uppercased())
+                            .porteosRowLabel()
+                            .foregroundStyle(textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        if !isExpanded {
+                            Text(entry.definition)
+                                .font(DesignTokens.TypeScale.rowValue)
+                                .foregroundStyle(textSecondary)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+
+                    Text(isExpanded ? "[ − ]" : "[ + ]")
+                        .porteosButtonPrimary()
+                        .foregroundStyle(isExpanded ? accentRust : textTertiary)
+                }
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                Text(entry.definition)
+                    .font(DesignTokens.TypeScale.rowValue)
+                    .foregroundStyle(textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 6)
+            }
         }
         .padding(.horizontal, DesignTokens.blockGutter)
         .padding(.vertical, 8)

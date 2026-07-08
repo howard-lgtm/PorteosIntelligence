@@ -400,7 +400,7 @@ struct FullDealEditSheet: View {
 
             sectionLabel("CARBON", color: accentBlue)
             TerminalInputField(label: "CO2 Embodied",         placeholder: "0",   prefix: nil, suffix: "kg",        text: numStr($deal.circularCO2Embodied)).focused($focusedField, equals: .co2Embodied)
-            TerminalInputField(label: "Operational Carbon",   placeholder: "0.0", prefix: nil, suffix: "tCO2e/yr",  value: $deal.circularOperationalCarbon, formatter: Self.decimalFormatter(maxFractionDigits: 4)).focused($focusedField, equals: .operationalCarbon)
+            TerminalInputField(label: "Operational Carbon",   placeholder: "0.00", prefix: nil, suffix: "tCO2e/yr",  value: $deal.circularOperationalCarbon, formatter: Self.carbonFormatter).focused($focusedField, equals: .operationalCarbon)
             TerminalInputField(label: "Building Area",        placeholder: "0",   prefix: nil, suffix: "m²",        text: numStr($deal.circularBuildingAreaM2)).focused($focusedField, equals: .buildingArea)
             TerminalInputField(label: "Water Recycling Rate", placeholder: "0.0", prefix: nil, suffix: "%",         value: $deal.circularWaterRecyclingRate, formatter: Self.percentFormatter).focused($focusedField, equals: .waterRecyclingRate)
         }
@@ -455,6 +455,12 @@ struct FullDealEditSheet: View {
 
     private static let percentFormatter: NumberFormatter = {
         decimalFormatter(maxFractionDigits: 2)
+    }()
+
+    private static let carbonFormatter: NumberFormatter = {
+        let formatter = decimalFormatter(maxFractionDigits: 2)
+        formatter.minimumFractionDigits = 2
+        return formatter
     }()
 
     private static func decimalFormatter(maxFractionDigits: Int) -> NumberFormatter {
