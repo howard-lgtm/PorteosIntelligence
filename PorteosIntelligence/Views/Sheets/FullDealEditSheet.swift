@@ -245,7 +245,7 @@ struct FullDealEditSheet: View {
                 label: "Property Type",
                 placeholder: "e.g. Hotel, Office A-Class",
                 text: $deal.propertyType,
-                suggestions: PropertyTypes.suggestions(matching:),
+                suggestions: { DealPropertyTypes.suggestions(matching: $0) },
                 focus: $focusedField,
                 equals: .propertyType
             )

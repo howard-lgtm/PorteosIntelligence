@@ -1,9 +1,10 @@
 import Foundation
 
-// MARK: - PropertyTypes
+// MARK: - DealPropertyTypes
 // Shared property-type vocabulary for Quick Add, Full Edit, and email ingestion.
+// Named DealPropertyTypes to avoid colliding with SDK symbols named PropertyTypes.
 
-struct PropertyTypes {
+struct DealPropertyTypes {
 
     static let defaults: [String] = [
         "Apartment",
@@ -29,7 +30,6 @@ struct PropertyTypes {
         let ranked = defaults.filter { $0.lowercased().contains(needle) }
         if ranked.count >= limit { return Array(ranked.prefix(limit)) }
 
-        // Include close prefix matches from ingestion vocabulary.
         let extras = ingestionAliases
             .filter { $0.lowercased().contains(needle) && !ranked.contains($0) }
         return Array((ranked + extras).prefix(limit))
