@@ -9,7 +9,8 @@ struct GlossarySheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var query: String = ""
-    @State private var expandedTermID: String? = nil
+    /// Terms whose definitions are collapsed (term-only). Default: all expanded.
+    @State private var collapsedTermIDs: Set<String> = []
 
     private let shellBg       = DesignTokens.canvasBase
     private let shellSurface  = DesignTokens.surfacePanel
@@ -103,7 +104,7 @@ struct GlossarySheet: View {
                 .textFieldStyle(.plain)
                 .porteosRowValue()
                 .foregroundStyle(textPrimary)
-                .onChange(of: query) { _, _ in expandedTermID = nil }
+                .onChange(of: query) { _, _ in collapsedTermIDs.removeAll() }
         }
         .padding(.horizontal, DesignTokens.blockGutter)
         .frame(height: DesignTokens.rowHeightHeader)
@@ -130,49 +131,48 @@ struct GlossarySheet: View {
     }
 
     private func entryRow(_ entry: GlossaryEntry) -> some View {
-        let isExpanded = expandedTermID == entry.id
+        let isCollapsed = collapsedTermIDs.contains(entry.id)
 
-        return VStack(alignment: .leading, spacing: 0) {
+        return VStack(alignment: .leading, spacing: 6) {
             Button {
                 withAnimation(.easeInOut(duration: 0.15)) {
-                    expandedTermID = isExpanded ? nil : entry.id
+                    if isCollapsed {
+                        collapsedTermIDs.remove(entry.id)
+                    } else {
+                        collapsedTermIDs.insert(entry.id)
+                    }
                 }
             } label: {
                 HStack(alignment: .top, spacing: 8) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(entry.term.uppercased())
-                            .porteosRowLabel()
-                            .foregroundStyle(textPrimary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                    Text(entry.term.uppercased())
+                        .font(DesignTokens.TypeScale.rowLabel)
+                        .tracking(DesignTokens.Tracking.rowLabel)
+                        .foregroundStyle(textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                        if !isExpanded {
-                            Text(entry.definition)
-                                .font(DesignTokens.TypeScale.rowValue)
-                                .foregroundStyle(textSecondary)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                    }
-
-                    Text(isExpanded ? "[ − ]" : "[ + ]")
+                    Text(isCollapsed ? "[ + ]" : "[ − ]")
                         .porteosButtonPrimary()
-                        .foregroundStyle(isExpanded ? accentRust : textTertiary)
+                        .foregroundStyle(isCollapsed ? textTertiary : accentRust)
                 }
             }
             .buttonStyle(.plain)
 
-            if isExpanded {
-                Text(entry.definition)
-                    .font(DesignTokens.TypeScale.rowValue)
-                    .foregroundStyle(textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 6)
+            if !isCollapsed {
+                definitionText(entry.definition)
             }
         }
         .padding(.horizontal, DesignTokens.blockGutter)
         .padding(.vertical, 8)
+    }
+
+    /// Body copy — plain font, no fixed line height (avoids porteosRowValue truncation).
+    private func definitionText(_ text: String) -> some View {
+        Text(text)
+            .font(DesignTokens.TypeScale.rowValue)
+            .foregroundStyle(textSecondary)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: Footer
