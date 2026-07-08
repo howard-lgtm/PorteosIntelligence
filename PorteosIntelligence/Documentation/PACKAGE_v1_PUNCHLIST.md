@@ -207,6 +207,53 @@
 
 ---
 
+## P10 — Global Intelligence profile (6th profile) — **Figma → engineering epic**
+
+**Goal:** Geo-anchored portfolio map + market news intelligence + optional AI briefing layer. Distinct from Command Center (portfolio CRM).
+
+**Figma brief (copy-paste for designer):** [`Design-system/Figma/GLOBAL_INTELLIGENCE_FIGMA_BRIEF.md`](../../Design-system/Figma/GLOBAL_INTELLIGENCE_FIGMA_BRIEF.md)
+
+### Product scope (v1 design target)
+
+| Capability | Description |
+|------------|-------------|
+| Map | MapKit canvas; pins at geocoded deal locations (not live GPS) |
+| Pin select | Populates asset context + news filtered to city/market |
+| Market focus | Filter by country/region/city (e.g. Portugal); zoom + aggregate |
+| News feed | Daily-cadence headlines; **30–60 day** window; terminal accordion rows |
+| AI (exploratory) | Figma proposes briefing block / agent console / signal cards — not chat-first |
+
+### Figma deliverables
+
+| ID | Task | Status |
+|----|------|--------|
+| P10-01 | 6 reference frames @ 1200×800 (default, pin selected, market PT, geocode empty, news expand, AI variants) | `[ ]` |
+| P10-02 | Terminal map overlay + pin component spec | `[ ]` |
+| P10-03 | News feed module + market filter bar | `[ ]` |
+| P10-04 | Nav integration — `GLOBAL_INTELLIGENCE` ⌘5 + header `porteos@geo` | `[ ]` |
+| P10-05 | AI module — 3 variants for review (briefing / agent / signals) | `[ ]` |
+| P10-06 | Handoff doc `GLOBAL_INTELLIGENCE_HANDOFF.md` | `[ ]` |
+
+### Engineering tasks (after Figma sign-off)
+
+| ID | Task | Status |
+|----|------|--------|
+| P10-10 | `ProfileType.globalIntelligence` + nav ⌘5 + accent `#06B6D4` | `[ ]` |
+| P10-11 | `PropertyDeal` lat/lon + geocode on save | `[ ]` |
+| P10-12 | `GlobalIntelligenceDashboardView` + MapKit | `[ ]` |
+| P10-13 | News cache model + daily refresh (30–60d window) | `[ ]` |
+| P10-14 | Pin selection → inspector context + filtered news | `[ ]` |
+| P10-15 | AI market brief module (pick Figma variant) | `[ ]` |
+
+### Anti-scope (v1)
+
+- Live GPS / device location tracking  
+- Real-time news ticker  
+- ChatGPT-style conversational agent as primary UI  
+- Replacing Command Center  
+
+---
+
 ## Recommended fix order (when you return)
 
 1. **P6-17** — email CHECK_NOW exit 100 (credentials work; fetch pipeline broken)
@@ -219,6 +266,7 @@
 8. **P3** — PDF trust for external sharing
 9. **PKG-04–07** — if handing app to another machine
 10. **P7-03** — extension DOM maintenance
+11. **P10** — Global Intelligence Figma frames (parallel track; does not block v1 wild-use fixes)
 
 ---
 

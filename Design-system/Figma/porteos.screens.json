@@ -86,6 +86,22 @@
       "modules": ["PORTEOS_SCORE", "01 // MATERIAL_FLOW_LOG", "02 // CARBON_LIFECYCLE_SUMMARY", "03 // RESOURCE_EFFICIENCY", "SENSITIVITY", "VALIDATION_LOG", "MARKET_TRENDS"]
     },
     {
+      "id": "dashboard-global-intelligence",
+      "name": "Global Intelligence Dashboard",
+      "page": "03 — Dashboards",
+      "priority": "P1",
+      "profile": "global_intelligence",
+      "accent": "#06B6D4",
+      "modules": [
+        "01 // GEO_PORTFOLIO_MAP",
+        "02 // MARKET_NEWS_FEED",
+        "03 // DAILY_INTEL_BRIEF",
+        "MKT // GLOBAL_SIGNALS",
+        "VALIDATION_LOG"
+      ],
+      "note": "6th profile — map + market news + AI briefing. See GLOBAL_INTELLIGENCE_FIGMA_BRIEF.md"
+    },
+    {
       "id": "comparison-view",
       "name": "Comparison View",
       "page": "03 — Dashboards",
