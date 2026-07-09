@@ -220,6 +220,7 @@ struct QuickAddDealSheet: View {
             )
             deal.porteosScore = PropertyDealViewModel(deal: deal).porteosScore.finalScore
             modelContext.insert(deal)
+            GeocodingService.shared.scheduleGeocode(deal: deal, context: modelContext)
             onSave?(deal.id)
         }
         dismiss()

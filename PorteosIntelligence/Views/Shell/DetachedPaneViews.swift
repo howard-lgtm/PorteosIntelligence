@@ -122,6 +122,9 @@ struct DetachedCenterView: View {
         if wm.activeProfile == .cmdCenter {
             CmdCenterView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if wm.activeProfile == .globalIntelligence {
+            GlobalIntelligenceDashboardView(deals: deals)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let deal = selectedDeal {
             ScrollView {
                 VStack(spacing: 0) {
@@ -181,7 +184,15 @@ struct DetachedInspectorView: View {
     var body: some View {
         VStack(spacing: 0) {
             DetachedWindowHeader(title: "INSPECTOR", pane: .inspector)
-            if let deal = selectedDeal {
+            if wm.activeProfile == .globalIntelligence {
+                if let deal = selectedDeal {
+                    InspectorPane(deal: deal)
+                } else if let marketId = wm.geoMarketFilterId {
+                    MarketContextInspector(marketId: marketId, deals: deals)
+                } else {
+                    GlobalIntelligenceIdleInspector()
+                }
+            } else if let deal = selectedDeal {
                 InspectorPane(deal: deal)
             } else {
                 VStack {

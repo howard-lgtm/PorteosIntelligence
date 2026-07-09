@@ -295,6 +295,10 @@ struct AppShell: View {
             CmdCenterView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(shellBg)
+        } else if wm.activeProfile == .globalIntelligence {
+            GlobalIntelligenceDashboardView(deals: deals)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(shellBg)
         } else if let deal = selectedDeal {
             Group {
                 switch wm.activeProfile {
@@ -339,6 +343,8 @@ struct AppShell: View {
     private func loadSampleDeal() {
         let deal = PropertyDeal(
             propertyName:           "Lisbon Office Block A",
+            address:                "Av. da Liberdade 125, Lisboa",
+            locationCity:           "Lisbon",
             purchasePrice:          1_250_000,
             closingCosts:           37_500,
             grossPotentialIncome:   125_000,
@@ -356,6 +362,7 @@ struct AppShell: View {
             opexCapitalReserves:    3_500
         )
         modelContext.insert(deal)
+        GeocodingService.shared.scheduleGeocode(deal: deal, context: modelContext)
         wm.selectedDealID = deal.id
         wm.activeProfile  = .realEstate
     }
@@ -381,7 +388,17 @@ struct AppShell: View {
 
     @ViewBuilder
     private var inspectorPane: some View {
-        if let deal = selectedDeal {
+        if wm.activeProfile == .globalIntelligence {
+            if let deal = selectedDeal {
+                InspectorPane(deal: deal)
+            } else if let marketId = wm.geoMarketFilterId {
+                MarketContextInspector(marketId: marketId, deals: deals)
+                    .frame(width: inspectorPaneWidth)
+            } else {
+                GlobalIntelligenceIdleInspector()
+                    .frame(width: inspectorPaneWidth)
+            }
+        } else if let deal = selectedDeal {
             InspectorPane(deal: deal)
         } else {
             VStack {

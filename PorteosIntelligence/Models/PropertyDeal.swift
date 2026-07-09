@@ -11,6 +11,15 @@ enum DealStatus: String, Codable, CaseIterable {
     case pipeline
 }
 
+// MARK: - GeocodeStatus
+
+enum GeocodeStatus: String, Codable, CaseIterable {
+    case none
+    case pending
+    case ok
+    case failed
+}
+
 // MARK: - PropertyDeal
 
 @Model
@@ -26,6 +35,12 @@ final class PropertyDeal {
     var propertyType:    String
     var totalArea:       Double
     var locationCity:    String
+
+    // MARK: Global Intelligence / Geo
+    var latitude:         Double?
+    var longitude:        Double?
+    var geocodeStatusRaw: String
+    var marketId:         String
 
     // MARK: Real Estate Core Financials
     var purchasePrice:        Double
@@ -123,6 +138,20 @@ final class PropertyDeal {
         return lineItemSum > 0 ? lineItemSum : operatingExpenses
     }
 
+    var geocodeStatus: GeocodeStatus {
+        get { GeocodeStatus(rawValue: geocodeStatusRaw) ?? .none }
+        set { geocodeStatusRaw = newValue.rawValue }
+    }
+
+    var isGeocoded: Bool {
+        geocodeStatus == .ok && latitude != nil && longitude != nil
+    }
+
+    var needsGeocode: Bool {
+        geocodeStatus == .none || geocodeStatus == .pending
+            || (geocodeStatus == .failed && (!address.isEmpty || !locationCity.isEmpty))
+    }
+
     // MARK: - Init
 
     init(
@@ -134,6 +163,10 @@ final class PropertyDeal {
         propertyType:                String  = "",
         totalArea:                   Double  = 0,
         locationCity:                String  = "",
+        latitude:                    Double? = nil,
+        longitude:                   Double? = nil,
+        geocodeStatusRaw:            String  = GeocodeStatus.none.rawValue,
+        marketId:                    String  = "",
         purchasePrice:               Double  = 0,
         closingCosts:                Double  = 0,
         renovationBudget:            Double  = 0,
@@ -209,6 +242,10 @@ final class PropertyDeal {
         self.propertyType                   = propertyType
         self.totalArea                      = totalArea
         self.locationCity                   = locationCity
+        self.latitude                       = latitude
+        self.longitude                      = longitude
+        self.geocodeStatusRaw               = geocodeStatusRaw
+        self.marketId                       = marketId
         self.purchasePrice                  = purchasePrice
         self.closingCosts                   = closingCosts
         self.renovationBudget               = renovationBudget
