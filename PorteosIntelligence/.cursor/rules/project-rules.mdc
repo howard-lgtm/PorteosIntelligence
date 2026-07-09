@@ -92,3 +92,5 @@ Font: 11pt; command segment in profile accent
 ## Enforcement
 
 Violations will be rejected. When in doubt, read `DESIGN_EXECUTION_PLAN.md` Phase order.
+
+All changes must pass `zero-defect-quality.mdc` gates before completion.

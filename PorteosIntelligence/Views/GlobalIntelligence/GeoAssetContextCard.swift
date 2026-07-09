@@ -2,6 +2,7 @@ import SwiftData
 import SwiftUI
 
 // MARK: - GeoAssetContextCard
+// Figma frame 2 — compact strip between map and news (not a full TerminalBlock).
 
 struct GeoAssetContextCard: View {
 
@@ -12,46 +13,98 @@ struct GeoAssetContextCard: View {
 
     private let accent = ProfileType.globalIntelligence.accentColor
 
+    private var grade: VibeGrade { VibeGrade.from(score: deal.porteosScore) }
+
     var body: some View {
-        TerminalBlock(command: "asset --context", accentColor: accent) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)
-                        .porteosRowValue()
-                        .foregroundStyle(DesignTokens.textPrimary)
-                    Spacer()
-                    Button(action: onDismiss) {
-                        Text("[ × ]")
-                            .porteosMeta()
-                            .foregroundStyle(DesignTokens.textDim)
-                    }
-                    .buttonStyle(.plain)
-                    .help("Deselect pin")
-                }
+        HStack(alignment: .top, spacing: 0) {
+            Rectangle()
+                .fill(accent)
+                .frame(width: DesignTokens.profileBarHeight)
 
-                if !deal.locationCity.isEmpty {
-                    metaRow("CITY", deal.locationCity)
-                }
-                if !deal.address.isEmpty {
-                    metaRow("ADDRESS", deal.address)
-                }
-                if !deal.marketId.isEmpty, let market = MarketFeedRegistry.market(id: deal.marketId) {
-                    metaRow("MARKET", market.displayName)
-                }
-                if let score = deal.porteosScore {
-                    metaRow("SCORE", String(format: "%.1f", score))
-                }
-
-                metaRow("GEOCODE", geocodeStatusLabel)
-
-                if let coords = coordinateLabel {
-                    metaRow("COORDS", coords)
-                }
-
+            VStack(alignment: .leading, spacing: 4) {
+                headerRow
+                Text(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)
+                    .porteosRowValue()
+                    .foregroundStyle(DesignTokens.textPrimary)
+                    .lineLimit(1)
+                Text(contextLine)
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textSecondary)
+                    .lineLimit(1)
+                Text(statsLine)
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                    .lineLimit(1)
                 geoActionRow
             }
+            .padding(.horizontal, 10)
             .padding(.vertical, 8)
         }
+        .background(DesignTokens.surfacePanel)
+        .overlay {
+            Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
+        }
+    }
+
+    private var headerRow: some View {
+        HStack(spacing: 8) {
+            Text("// ASSET_CONTEXT")
+                .porteosMeta()
+                .foregroundStyle(accent)
+            Spacer(minLength: 8)
+            Button {
+                wmOpenInRealEstate()
+            } label: {
+                Text("[ OPEN DEAL ↗ ]")
+                    .porteosMeta()
+                    .foregroundStyle(accent)
+            }
+            .buttonStyle(.plain)
+            Button(action: onDismiss) {
+                Text("[ × ]")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+            }
+            .buttonStyle(.plain)
+            .help("Deselect pin")
+        }
+    }
+
+    private var contextLine: String {
+        var parts: [String] = []
+        if !deal.locationCity.isEmpty { parts.append(deal.locationCity) }
+        if let market = resolvedMarketName { parts.append(market) }
+        if !deal.propertyType.isEmpty { parts.append(deal.propertyType) }
+        parts.append(deal.status.rawValue.uppercased())
+        return parts.joined(separator: " · ")
+    }
+
+    private var statsLine: String {
+        var parts: [String] = []
+        if let score = deal.porteosScore {
+            parts.append("Score \(String(format: "%.0f", score)) / 100")
+            parts.append("Grade \(grade.rawValue)")
+        }
+        if deal.purchasePrice > 0 {
+            parts.append(GeoPinHoverBanner.formatEUR(deal.purchasePrice))
+        }
+        if deal.totalArea > 0 {
+            parts.append("\(Int(deal.totalArea)) m²")
+        }
+        parts.append("Geocode \(geocodeStatusLabel)")
+        return parts.joined(separator: " · ")
+    }
+
+    private var resolvedMarketName: String? {
+        if let market = MarketFeedRegistry.market(id: deal.marketId) {
+            return market.displayName
+        }
+        if !deal.locationCity.isEmpty,
+           let metro = MarketFeedRegistry.resolveMarketId(city: deal.locationCity),
+           let market = MarketFeedRegistry.market(id: metro) {
+            return market.displayName
+        }
+        return nil
     }
 
     @ViewBuilder
@@ -66,56 +119,30 @@ struct GeoAssetContextCard: View {
                 }
             } else if deal.geocodeStatus == .failed {
                 Text("// GEOCODE_FAILED")
-                    .porteosRowLabel()
+                    .porteosMeta()
                     .foregroundStyle(DesignTokens.statusWarn)
                 actionButton("[ RE-GEOCODE ]") {
                     GeocodingService.shared.scheduleGeocode(deal: deal, context: modelContext)
                 }
-                if deal.latitude != nil {
-                    actionButton("[ CLEAR PIN ]", role: .destructive) {
-                        GeocodingService.shared.clearPin(deal: deal, context: modelContext)
-                    }
-                }
             } else if deal.needsGeocode {
-                Text("// GEOCODE_PENDING")
-                    .porteosRowLabel()
-                    .foregroundStyle(DesignTokens.statusWarn)
                 actionButton("[ GEOCODE NOW ]") {
                     GeocodingService.shared.scheduleGeocode(deal: deal, context: modelContext)
                 }
-            } else {
-                Text("// NO_COORDINATES — add city or address in deal edit")
-                    .porteosRowLabel()
-                    .foregroundStyle(DesignTokens.textDim)
             }
         }
     }
 
     private var geocodeStatusLabel: String {
         switch deal.geocodeStatus {
-        case .none:    return "NONE"
-        case .pending: return "PENDING"
-        case .ok:      return "OK"
-        case .failed:  return "FAILED"
+        case .none:    return "—"
+        case .pending: return "pending"
+        case .ok:      return "ok"
+        case .failed:  return "failed"
         }
     }
 
-    private var coordinateLabel: String? {
-        guard let lat = deal.latitude, let lon = deal.longitude else { return nil }
-        return String(format: "%.5f, %.5f", lat, lon)
-    }
-
-    private func metaRow(_ label: String, _ value: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            Text(label)
-                .porteosRowLabel()
-                .foregroundStyle(DesignTokens.textDim)
-                .frame(width: 64, alignment: .leading)
-            Text(value)
-                .porteosMeta()
-                .foregroundStyle(DesignTokens.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
+    private func wmOpenInRealEstate() {
+        WindowManager.shared.activeProfile = .realEstate
     }
 
     private enum ActionRole { case normal, destructive }

@@ -127,4 +127,10 @@ enum ProfileType: String, CaseIterable, Identifiable {
             return "./dashboard --asset=\"\(name)\""
         }
     }
+
+    /// Global Intelligence header — reflects active market filter chip.
+    static func geoCommandLine(marketId: String?) -> String {
+        guard let marketId, !marketId.isEmpty else { return "intel --map" }
+        return "intel --map --market=\(marketId)"
+    }
 }

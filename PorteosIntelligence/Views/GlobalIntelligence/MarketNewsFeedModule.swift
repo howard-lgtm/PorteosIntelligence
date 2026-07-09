@@ -7,40 +7,93 @@ struct MarketNewsFeedModule: View {
     let articles: [IntelNewsArticle]
     let marketFilterId: String?
     let sectorFilter: IntelSector?
+    let windowDays: Int
+    let lastRefresh: Date?
+    let isRefreshing: Bool
     var onMarketFilterChange: (String?) -> Void
     var onSectorFilterChange: (IntelSector?) -> Void
+    var onWindowDaysChange: (Int) -> Void
+    var onRefresh: () -> Void
 
-    @State private var expandedIDs: Set<String> = []
+    @State private var expandedArticleID: String?
 
     private let accent = ProfileType.globalIntelligence.accentColor
 
-    var body: some View {
-        TerminalBlock(command: "feed --market-news --sectors", accentColor: accent) {
-            VStack(alignment: .leading, spacing: 0) {
-                marketFilterBar
-                    .padding(.bottom, 6)
-                sectorFilterBar
-                    .padding(.bottom, 8)
-                TerminalStructuralDivider()
-                    .padding(.vertical, 8)
+    private static let isoDate: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_GB")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
 
-                if articles.isEmpty {
-                    Text("// NO_SECTOR_HEADLINES — widen filter or refresh feeds")
-                        .porteosRowLabel()
-                        .foregroundStyle(DesignTokens.textDim)
-                        .padding(.vertical, 12)
-                } else {
-                    ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 0) {
-                            ForEach(articles) { article in
-                                newsRow(article)
-                                TerminalStructuralDivider()
-                            }
-                        }
+    private static let refreshStamp: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_GB")
+        f.dateFormat = "yyyy-MM-dd HH:mm"
+        f.timeZone = TimeZone(secondsFromGMT: 0)
+        return f
+    }()
+
+    var body: some View {
+        TerminalBlock(
+            command: "02 // MARKET_NEWS_FEED",
+            accentColor: accent,
+            contentPadding: 0,
+            headerActionLabel: isRefreshing ? "./refresh --news …" : "./refresh --news",
+            onHeaderAction: onRefresh
+        ) {
+            VStack(alignment: .leading, spacing: 0) {
+                filterBars
+                    .padding(.horizontal, DesignTokens.blockGutter)
+                    .padding(.top, 8)
+                    .padding(.bottom, 6)
+                TerminalStructuralDivider()
+                feedBody
+                refreshFooter
+                    .padding(.horizontal, DesignTokens.blockGutter)
+                    .padding(.bottom, 8)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var feedBody: some View {
+        if articles.isEmpty {
+            Text(emptyStateMessage)
+                .porteosRowLabel()
+                .foregroundStyle(DesignTokens.textDim)
+                .padding(.horizontal, DesignTokens.blockGutter)
+                .padding(.vertical, 12)
+        } else {
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    ForEach(articles) { article in
+                        newsRow(article)
+                            .padding(.horizontal, DesignTokens.blockGutter)
+                        TerminalStructuralDivider()
                     }
                 }
             }
-            .padding(.vertical, 8)
+        }
+    }
+
+    private var emptyStateMessage: String {
+        if sectorFilter != nil {
+            return "// NO_SECTOR_HEADLINES — try ALL sector or refresh feeds"
+        }
+        if marketFilterId != nil {
+            return "// NO_HEADLINES — tap ./refresh --news or widen window"
+        }
+        return "// NO_HEADLINES — tap ./refresh --news to fetch feeds"
+    }
+
+    private var filterBars: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            marketFilterBar
+            HStack(alignment: .top, spacing: 16) {
+                windowFilterBar
+                sectorFilterBar
+            }
         }
     }
 
@@ -53,9 +106,24 @@ struct MarketNewsFeedModule: View {
                 HStack(spacing: 6) {
                     marketChip(label: "ALL", marketId: nil, isActive: marketFilterId == nil)
                     ForEach(MarketFeedRegistry.countries) { country in
-                        marketChip(label: country.id, marketId: country.id, isActive: marketFilterId == country.id)
+                        let label = country.id == marketFilterId
+                            ? "\(country.displayName) *"
+                            : country.id
+                        marketChip(label: label, marketId: country.id, isActive: marketFilterId == country.id)
                     }
                 }
+            }
+        }
+    }
+
+    private var windowFilterBar: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("WINDOW")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+            HStack(spacing: 6) {
+                windowChip(days: 30)
+                windowChip(days: 60)
             }
         }
     }
@@ -80,9 +148,34 @@ struct MarketNewsFeedModule: View {
         }
     }
 
+    private var refreshFooter: some View {
+        HStack(spacing: 0) {
+            if let lastRefresh {
+                Text("Last refresh: \(Self.refreshStamp.string(from: lastRefresh)) UTC")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                Text(" · ")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+            }
+            Text("\(articles.count) article\(articles.count == 1 ? "" : "s")")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+            Spacer()
+        }
+        .padding(.top, 6)
+    }
+
     private func marketChip(label: String, marketId: String?, isActive: Bool) -> some View {
         Button { onMarketFilterChange(marketId) } label: {
             filterChipLabel(label, isActive: isActive)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func windowChip(days: Int) -> some View {
+        Button { onWindowDaysChange(days) } label: {
+            filterChipLabel("\(days)d", isActive: windowDays == days)
         }
         .buttonStyle(.plain)
     }
@@ -109,58 +202,96 @@ struct MarketNewsFeedModule: View {
     }
 
     private func newsRow(_ article: IntelNewsArticle) -> some View {
-        let isExpanded = expandedIDs.contains(article.id)
-        return VStack(alignment: .leading, spacing: 4) {
-            Button {
-                if isExpanded { expandedIDs.remove(article.id) }
-                else { expandedIDs.insert(article.id) }
-            } label: {
-                HStack(alignment: .top, spacing: 8) {
+        let isExpanded = expandedArticleID == article.id
+        let topicLabel = article.primarySector?.displayName ?? article.marketId
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .top, spacing: 8) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(metadataLine(article, topic: topicLabel))
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textDim)
+                    Text(article.title)
+                        .porteosRowValue()
+                        .foregroundStyle(DesignTokens.textPrimary)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer(minLength: 0)
+                Button {
+                    expandedArticleID = isExpanded ? nil : article.id
+                } label: {
                     Text(isExpanded ? "[ − ]" : "[ + ]")
                         .porteosMeta()
                         .foregroundStyle(DesignTokens.textDim)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(article.title)
-                            .porteosRowValue()
-                            .foregroundStyle(DesignTokens.textPrimary)
-                            .multilineTextAlignment(.leading)
-                        HStack(spacing: 8) {
-                            if let primary = article.primarySector {
-                                Text(primary.chipLabel)
-                                    .porteosMeta()
-                                    .foregroundStyle(accent)
-                            }
-                            Text(article.marketId)
-                                .porteosMeta()
-                                .foregroundStyle(DesignTokens.textSecondary)
-                            Text(article.pubDate, style: .date)
-                                .porteosMeta()
-                                .foregroundStyle(DesignTokens.textDim)
-                        }
-                    }
-                    Spacer(minLength: 0)
                 }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
 
             if isExpanded {
-                if article.sectorLabels.count > 1 {
-                    Text(article.sectorLabels.joined(separator: " · "))
-                        .porteosMeta()
-                        .foregroundStyle(DesignTokens.textSecondary)
-                        .padding(.leading, 28)
-                }
-                if let url = URL(string: article.link), !article.link.isEmpty {
-                    Link(destination: url) {
-                        Text(article.link)
-                            .porteosMeta()
-                            .foregroundStyle(accent)
-                            .lineLimit(2)
-                            .padding(.leading, 28)
-                    }
-                }
+                expandedBody(article)
             }
         }
         .padding(.vertical, 8)
+    }
+
+    private func metadataLine(_ article: IntelNewsArticle, topic: String) -> String {
+        let date = Self.isoDate.string(from: article.pubDate)
+        return "\(date) · \(article.sourceDisplayName) · \(topic)"
+    }
+
+    @ViewBuilder
+    private func expandedBody(_ article: IntelNewsArticle) -> some View {
+        let bodyText = article.summary.isEmpty ? article.title : article.summary
+        Text(bodyText)
+            .porteosMeta()
+            .foregroundStyle(DesignTokens.textSecondary)
+            .fixedSize(horizontal: false, vertical: true)
+
+        if let url = URL(string: article.link), !article.link.isEmpty {
+            Link(destination: url) {
+                Text("open \(truncatedLink(article.link))")
+                    .porteosMeta()
+                    .foregroundStyle(accent)
+                    .lineLimit(1)
+            }
+        }
+
+        topicPills(for: article)
+    }
+
+    private func truncatedLink(_ link: String) -> String {
+        let max = 48
+        guard link.count > max else { return link }
+        return String(link.prefix(max)) + "…"
+    }
+
+    @ViewBuilder
+    private func topicPills(for article: IntelNewsArticle) -> some View {
+        let pills = topicPillLabels(for: article)
+        if !pills.isEmpty {
+            HStack(spacing: 6) {
+                ForEach(pills, id: \.self) { pill in
+                    Text(pill)
+                        .porteosMeta()
+                        .foregroundStyle(accent)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .overlay {
+                            Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: 1)
+                        }
+                }
+            }
+            .padding(.top, 2)
+        }
+    }
+
+    private func topicPillLabels(for article: IntelNewsArticle) -> [String] {
+        var labels: [String] = []
+        if let market = MarketFeedRegistry.market(id: article.marketId) {
+            labels.append(market.displayName.uppercased())
+        } else {
+            labels.append(article.marketId)
+        }
+        labels.append(contentsOf: article.sectorLabels.map { $0.uppercased() })
+        return Array(Set(labels)).sorted()
     }
 }

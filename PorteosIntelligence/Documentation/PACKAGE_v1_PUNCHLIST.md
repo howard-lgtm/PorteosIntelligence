@@ -85,7 +85,7 @@
 | P2-05 | Footer cancel | `[ CANCEL ]` outlined | `[x]` | |
 | P2-06 | Sheet chrome | macOS rounded sheet corners | `[ ]` | `.presentationBackground` / overlay pattern |
 | P2-07 | Legacy sheets | Deprecate or align `EditDealSheet` / `NewDealSheet` / `QuickAddDealSheet` | `[ ]` | Confirm wiring vs Figma sheets |
-| P2-08 | Full Edit — Base | **Source URL field** — browser/email imports store URL in notes; expose as dedicated row (link or copy) in BASE tab, not buried in NOTES blob | `[ ]` | Casa Guerra Junqueiro; see P7-06 |
+| P2-08 | Full Edit — Base | **Source URL field** — browser/email imports store URL in notes; expose as dedicated row (link or copy) in BASE tab, not buried in NOTES blob | `[x]` | `ListingURLHelpers` + BASE tab link row |
 | P2-09 | **ComparisonView OPEX panel** | `[~]` Fixed layout + editable fields 2026-07-05; **fixed 2-digit input cap** same day (`OpexInlineAmountField`). **Follow-up:** OPEX per deal column; pre-fill from `operatingExpenses` | `[~]` | Wild-use |
 
 ---
@@ -158,8 +158,8 @@
 
 | ID | Task | Status |
 |----|------|--------|
-| P6-19 | **Show/hide password** toggle on `EmailSetupSheet` app-password field (verify paste, no Keychain plain-text log) | `[ ]` | Wild-use 2026-07-05 |
-| P6-17 | **Fix CHECK_NOW curl exit 100** — `EmailMonitorService.fetchAndImport` uses `curl -X SEARCH UNSEEN`; fails after TEST OK. Replace with bounded fetch (recent UIDs / `--list-only` + cap 50) or native IMAP; surface curl stderr in UI. Workaround: dedicated Gmail label + smaller unread set. | `[ ]` **next** |
+| P6-19 | **Show/hide password** toggle on `EmailSetupSheet` app-password field (verify paste, no Keychain plain-text log) | `[x]` | Wild-verify Jul 9 |
+| P6-17 | **Fix CHECK_NOW curl exit 100** — bounded `SEARCH UNSEEN SINCE` + fallback `SEARCH SINCE`; surface last-result summary in UI. Wild-verify after Idealista alerts resume. | `[~]` | Code complete Jul 9 — pending live Gmail test |
 | P6-18 | Improve IMAP error messages — map exit 67 → “login denied / check app password”, 100 → “inbox query too large or unsupported” | `[ ]` |
 | P6-10 | Wild-test IMAP with real Gmail + 10 broker emails | `[~]` | Auth OK 2026-07-05; blocked on P6-17 |
 | P6-11 | Parser golden fixtures per broker template | `[ ]` |
@@ -185,9 +185,9 @@
 | P7-02 | Extension POST payload schema documented | `[ ]` | Match `DealIngestionServer` |
 | P7-03 | Idealista / Zillow / Hemnet DOM drift | `[ ]` | Per-site maintenance |
 | P7-04 | Extension icons + Chrome Web Store | `[—]` | If public distribution |
-| P7-05 | **Pull purchase price from listing** — browser extension import landed Casa Guerra Junqueiro at **€0.00**; fix `content.js` scrape + `DealIngestionPayload.purchasePrice` mapping | `[ ]` | Wild-use 2026-07-05 |
-| P7-06 | **Source URL in deal model/UI** — URL written to notes today; add first-class field or BASE tab row so imports are traceable without parsing NOTES | `[ ]` | See P2-08 |
-| P7-07 | **Duplicate deals on import** — same listing imported twice (e.g. Lisbon Office Block A ×2, Semi-Detached ×2 in PIPELINE). Harden dedup: URL hash in `DealIngestionServer` + email `EmailImportRecord`; surface “duplicate skipped” in nav | `[ ]` | Wild-use 2026-07-05 |
+| P7-05 | **Pull purchase price from listing** — browser extension import landed Casa Guerra Junqueiro at **€0.00**; fix `content.js` scrape + `DealIngestionPayload.purchasePrice` mapping | `[x]` | `parsePrice` + JSON-LD fallback |
+| P7-06 | **Source URL in deal model/UI** — URL written to notes today; add first-class field or BASE tab row so imports are traceable without parsing NOTES | `[x]` | BASE tab link row |
+| P7-07 | **Duplicate deals on import** — same listing imported twice (e.g. Lisbon Office Block A ×2, Semi-Detached ×2 in PIPELINE). Harden dedup: URL hash in `DealIngestionServer` + email `EmailImportRecord`; surface “duplicate skipped” in nav | `[x]` | `EmailImportRecord` + normalized URL dedup |
 
 ---
 
@@ -317,18 +317,17 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 ## Recommended fix order (when you return)
 
 1. **P6-17** — email CHECK_NOW exit 100 (credentials work; fetch pipeline broken)
-2. **P7-05, P7-06, P7-07 / P2-08** — browser import price, source URL, duplicate rows
-3. **Wild-use log** → new P0s
-4. **P6-19** — email show-password toggle
-5. **P3-07** — PDF B&W mode build-out
-6. **P6** remainder — if inbox intake is top priority
-7. **P1-04, P1-05, P2** — visual finish to match Template Picker
-8. **P3** — PDF trust for external sharing
-9. **PKG-04–07** — if handing app to another machine
-10. **P7-03** — extension DOM maintenance
-11. **P11** — LLM integration (daily brief, shared provider)
-12. **P4-05** — macOS Help menu (in-app sheet or `.help` bundle)
-13. **P10-20** — Intelligence settings panel (sector keyword tweaks)
+2. **Wild-use log** → new P0s
+3. **P6-19** — email show-password toggle
+4. **P3-07** — PDF B&W mode build-out
+5. **P6** remainder — if inbox intake is top priority
+6. **P1-04, P1-05, P2** — visual finish to match Template Picker
+7. **P3** — PDF trust for external sharing
+8. **PKG-04–07** — if handing app to another machine
+9. **P7-03** — extension DOM maintenance
+10. **P11** — LLM integration (daily brief, shared provider)
+11. **P4-05** — macOS Help menu (in-app sheet or `.help` bundle)
+12. **P10-20** — Intelligence settings panel (sector keyword tweaks)
 
 ---
 
@@ -344,6 +343,7 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 - [x] GI design handoff — 6 frames + `GLOBAL_INTELLIGENCE_HANDOFF.md`
 - [x] Swift compiler warnings cleared (Jul 9)
 - [x] Full Edit QA ([PR #5](https://github.com/howard-lgtm/PorteosIntelligence/pull/5)) — glossary, Design↔Circular sync, carbon 2dp, property type combobox, notes height
+- [x] **P7 browser import cluster** — `parsePrice`, source URL row, `EmailImportRecord` dedup (Jul 9)
 
 ---
 

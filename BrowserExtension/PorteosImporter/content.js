@@ -22,9 +22,65 @@
   }
 
   function parseNumber(str) {
-    if (!str) return 0;
-    const n = parseFloat(str.replace(/[^\d.]/g, ""));
-    return isNaN(n) ? 0 : n;
+    return parsePrice(str);
+  }
+
+  /** Handles EU thousands (1.350.000 / 1 350 000), US (1,350,000), and decimals. */
+  function parsePrice(raw) {
+    if (!raw) return 0;
+    let s = String(raw).replace(/[^\d.,\s]/g, "").trim();
+    if (!s) return 0;
+
+    s = s.replace(/\s/g, "");
+
+    const hasComma = s.includes(",");
+    const hasDot = s.includes(".");
+
+    if (hasComma && hasDot) {
+      const lastComma = s.lastIndexOf(",");
+      const lastDot = s.lastIndexOf(".");
+      if (lastComma > lastDot) {
+        s = s.replace(/\./g, "").replace(",", ".");
+      } else {
+        s = s.replace(/,/g, "");
+      }
+    } else if (hasDot) {
+      const parts = s.split(".");
+      if (parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) {
+        s = s.replace(/\./g, "");
+      }
+    } else if (hasComma) {
+      const parts = s.split(",");
+      if (parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) {
+        s = s.replace(/,/g, "");
+      } else {
+        s = s.replace(",", ".");
+      }
+    }
+
+    const n = parseFloat(s);
+    return isNaN(n) || n < 1000 ? 0 : n;
+  }
+
+  function priceFromJsonLd() {
+    const ld = extractJsonLd();
+    if (!ld) return 0;
+    const items = Array.isArray(ld) ? ld : [ld];
+    for (const item of items) {
+      if (item?.price) {
+        const n = parsePrice(String(item.price));
+        if (n >= 1000) return n;
+      }
+      const offers = item?.offers;
+      const offerList = Array.isArray(offers) ? offers : offers ? [offers] : [];
+      for (const offer of offerList) {
+        if (offer?.price) {
+          const n = parsePrice(String(offer.price));
+          if (n >= 1000) return n;
+        }
+      }
+    }
+    return 0;
   }
 
   function extractJsonLd() {
@@ -139,15 +195,17 @@
     function price() {
       const raw = trySelect(
         ".info-data-price",
+        "span.info-data-price",
         "[class*='price-box']",
         "[class*='price_box']",
         "span[class*='price']",
         "[data-testid='price']",
-        ".price-container .price"
+        ".price-container .price",
+        ".main-info__title ~ .info-data .info-data-price"
       );
-      // Remove currency symbols, keep digits + decimal
-      const n = parseFloat((raw || "").replace(/[^\d.,]/g, "").replace(",", "."));
-      return isNaN(n) || n < 1000 ? 0 : n;
+      const fromDom = parsePrice(raw);
+      if (fromDom >= 1000) return fromDom;
+      return priceFromJsonLd();
     }
 
     function area() {
@@ -239,9 +297,9 @@
         "[class*='Text-c11n'][class*='price']",
         "span[class*='zsg-photo-card-price']"
       );
-      // Strip "$", commas, and whitespace
-      const n = parseFloat((raw || "").replace(/[^\d.]/g, ""));
-      return isNaN(n) ? 0 : n;
+      const fromDom = parsePrice(raw);
+      if (fromDom >= 1000) return fromDom;
+      return priceFromJsonLd();
     }
 
     function area() {

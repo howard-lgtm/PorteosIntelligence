@@ -218,64 +218,74 @@ struct AppShell: View {
         .onReceive(NotificationCenter.default.publisher(for: .showCommandPalette)) { _ in
             showCommandPalette = true
         }
-        .overlay {
-            if showCommandPalette {
-                ZStack(alignment: .top) {
-                    Color.black.opacity(0.55)
-                        .ignoresSafeArea()
-                        .onTapGesture { showCommandPalette = false }
-
-                    CommandPalette(
-                        isPresented: $showCommandPalette,
-                        deals:       deals,
-                        onSelectDeal: { deal in
-                            wm.selectedDealID = deal.id
-                            wm.activeProfile  = deal.hospitalityRoomCount > 0 || deal.hospitalityADR > 0
-                                ? .hospitality
-                                : .realEstate
-                        },
-                        onNewDeal: { showNewDealSheet = true },
-                        onImport: {
-                            NotificationCenter.default.post(name: .showImportDeals, object: nil)
-                        },
-                        onRunAI: {
-                            if let deal = selectedDeal {
-                                NotificationCenter.default.post(
-                                    name: .autoTriggerAI,
-                                    object: nil,
-                                    userInfo: ["dealID": deal.id]
-                                )
-                            }
-                            wm.activeProfile = .cmdCenter
-                        }
-                    )
-                    .padding(.top, 100)
-                }
-            }
-        }
-        .overlay {
-            if showShortcutsPanel {
-                ZStack {
-                    Color.black.opacity(0.55)
-                        .ignoresSafeArea()
-                        .onTapGesture { showShortcutsPanel = false }
-
-                    ShortcutsLegendView(onDismiss: { showShortcutsPanel = false })
-                }
-            }
-        }
+        .overlay { commandPaletteOverlay }
+        .overlay { shortcutsOverlay }
         .onReceive(NotificationCenter.default.publisher(for: .showGlossary)) { _ in
             showGlossaryPanel = true
         }
-        .overlay {
-            if showGlossaryPanel {
-                ZStack {
-                    Color.black.opacity(0.55)
-                        .ignoresSafeArea()
-                        .onTapGesture { showGlossaryPanel = false }
+        .overlay { glossaryOverlay }
+    }
 
-                    GlossarySheet(onDismiss: { showGlossaryPanel = false })
-                }
+    @ViewBuilder
+    private var commandPaletteOverlay: some View {
+        if showCommandPalette {
+            ZStack(alignment: .top) {
+                Color.black.opacity(0.55)
+                    .ignoresSafeArea()
+                    .onTapGesture { showCommandPalette = false }
+
+                CommandPalette(
+                    isPresented: $showCommandPalette,
+                    deals: deals,
+                    onSelectDeal: { deal in
+                        wm.selectedDealID = deal.id
+                        wm.activeProfile = deal.hospitalityRoomCount > 0 || deal.hospitalityADR > 0
+                            ? .hospitality : .realEstate
+                    },
+                    onNewDeal: { showNewDealSheet = true },
+                    onImport: {
+                        NotificationCenter.default.post(name: .showImportDeals, object: nil)
+                    },
+                    onRunAI: {
+                        if let deal = selectedDeal {
+                            NotificationCenter.default.post(
+                                name: .autoTriggerAI,
+                                object: nil,
+                                userInfo: ["dealID": deal.id]
+                            )
+                        }
+                        wm.activeProfile = .cmdCenter
+                    },
+                    onGlossary: {
+                        showCommandPalette = false
+                        NotificationCenter.default.post(name: .showGlossary, object: nil)
+                    }
+                )
+                .padding(.top, 100)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var shortcutsOverlay: some View {
+        if showShortcutsPanel {
+            ZStack {
+                Color.black.opacity(0.55)
+                    .ignoresSafeArea()
+                    .onTapGesture { showShortcutsPanel = false }
+                ShortcutsLegendView(onDismiss: { showShortcutsPanel = false })
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var glossaryOverlay: some View {
+        if showGlossaryPanel {
+            ZStack {
+                Color.black.opacity(0.55)
+                    .ignoresSafeArea()
+                    .onTapGesture { showGlossaryPanel = false }
+                GlossarySheet(onDismiss: { showGlossaryPanel = false })
             }
         }
     }
@@ -393,6 +403,9 @@ struct AppShell: View {
                 InspectorPane(deal: deal)
             } else if let marketId = wm.geoMarketFilterId {
                 MarketContextInspector(marketId: marketId, deals: deals)
+                    .frame(width: inspectorPaneWidth)
+            } else if deals.contains(where: { !$0.isGeocoded && (!$0.locationCity.isEmpty || !$0.address.isEmpty) }) {
+                GeocodeStatusInspector(deals: deals)
                     .frame(width: inspectorPaneWidth)
             } else {
                 GlobalIntelligenceIdleInspector()

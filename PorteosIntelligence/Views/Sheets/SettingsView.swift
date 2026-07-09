@@ -227,6 +227,18 @@ struct SettingsView: View {
 
             divider
 
+            generalRow(
+                label:    "GLOSSARY",
+                value:    "⌘⇧G",
+                action:   {
+                    NotificationCenter.default.post(name: .showGlossary, object: nil)
+                    dismiss()
+                },
+                btnLabel: "[ OPEN ]"
+            )
+
+            divider
+
             sectionHeader("02 // BUILD_INFO", subtitle: "")
 
             infoRow("ARCHITECTURE",  "Email Monitor (curl/IMAP) + HTTP Ingestion Server + Browser Extension")

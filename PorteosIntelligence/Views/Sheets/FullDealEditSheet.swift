@@ -201,6 +201,8 @@ struct FullDealEditSheet: View {
                 .focused($focusedField, equals: .location)
                 .onSubmit { checkForBenchmark() }
 
+            sourceURLField
+
             if showBenchmarkPrompt {
                 HStack(spacing: 12) {
                     Text("porteos@system ~ %")
@@ -264,6 +266,30 @@ struct FullDealEditSheet: View {
             }
             .pickerStyle(.menu)
             .labelsHidden()
+        }
+    }
+
+    @ViewBuilder
+    private var sourceURLField: some View {
+        if let url = ListingURLHelpers.extractFromNotes(deal.notes),
+           let link = URL(string: url) {
+            sectionLabel("SOURCE")
+            HStack(spacing: 8) {
+                Link(destination: link) {
+                    Text(url)
+                        .porteosMeta()
+                        .foregroundStyle(accentRust)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                .buttonStyle(.plain)
+                Spacer()
+            }
+            .padding(.horizontal, 8)
+            .frame(height: DesignTokens.rowHeightData)
+            .background(shellBg)
+            .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
+            .clipShape(Rectangle())
         }
     }
 

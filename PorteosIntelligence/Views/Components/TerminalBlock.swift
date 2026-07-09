@@ -8,6 +8,8 @@ struct TerminalBlock<Content: View>: View {
     let command: String
     let accentColor: Color
     var contentPadding: CGFloat = DesignTokens.blockGutter
+    var headerActionLabel: String? = nil
+    var onHeaderAction: (() -> Void)? = nil
     @ViewBuilder let content: () -> Content
 
     var body: some View {
@@ -40,6 +42,16 @@ struct TerminalBlock<Content: View>: View {
                 .foregroundStyle(accentColor)
 
             Spacer()
+
+            if let headerActionLabel, let onHeaderAction {
+                Button(action: onHeaderAction) {
+                    Text(headerActionLabel)
+                        .porteosMeta()
+                        .foregroundStyle(accentColor)
+                }
+                .buttonStyle(.plain)
+                .disabled(headerActionLabel.contains("…"))
+            }
         }
         .padding(.horizontal, DesignTokens.blockGutter)
         .frame(height: DesignTokens.rowHeightData)

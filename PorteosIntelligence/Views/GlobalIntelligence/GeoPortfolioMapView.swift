@@ -1,19 +1,24 @@
 import MapKit
+import SwiftData
 import SwiftUI
 
 // MARK: - GeoMapPin
 
 struct GeoMapPin: View {
     let isSelected: Bool
+    let status: DealStatus
     let accent: Color
 
     var body: some View {
         Rectangle()
-            .fill(isSelected ? accent : DesignTokens.canvasBase)
-            .frame(width: 12, height: 12)
+            .fill(isSelected ? accent : status.tokenColor)
+            .frame(width: isSelected ? 12 : 8, height: isSelected ? 12 : 8)
             .overlay {
                 Rectangle()
-                    .strokeBorder(isSelected ? DesignTokens.textPrimary : accent, lineWidth: isSelected ? 2 : 1)
+                    .strokeBorder(
+                        isSelected ? DesignTokens.textPrimary : status.tokenColor.opacity(0.9),
+                        lineWidth: isSelected ? 2 : 1
+                    )
             }
     }
 }
@@ -119,45 +124,138 @@ struct GeoPinHoverBanner: View {
 
 struct GeoPortfolioMapView: View {
 
+    @Environment(\.modelContext) private var modelContext
+
     let deals: [PropertyDeal]
     let marketFilterId: String?
     @Binding var selectedDealID: UUID?
 
     @State private var camera: MapCameraPosition = .automatic
+    @State private var lastRegion = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 39.5, longitude: -8.0),
+        span: MKCoordinateSpan(latitudeDelta: 25, longitudeDelta: 25)
+    )
     @State private var hoveredDealID: UUID?
 
     private let accent = ProfileType.globalIntelligence.accentColor
+    private let dealCenterSpan = 0.75
+
+    private var pendingGeocodeDeals: [PropertyDeal] {
+        deals.filter { !$0.isGeocoded && (!$0.locationCity.isEmpty || !$0.address.isEmpty) }
+    }
+
+    private var showGeocodeOverlay: Bool {
+        !pendingGeocodeDeals.isEmpty && selectedDealID == nil
+    }
+
+    private var selectedDeal: PropertyDeal? {
+        guard let id = selectedDealID else { return nil }
+        return deals.first { $0.id == id }
+    }
 
     private var mappableDeals: [PropertyDeal] {
         deals.filter { deal in
-            guard deal.isGeocoded, let lat = deal.latitude, let lon = deal.longitude else { return false }
-            guard lat != 0 || lon != 0 else { return false }
+            guard deal.hasPlottableCoordinates else { return false }
             guard matchesMarket(deal) else { return false }
             return true
         }
     }
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            Map(position: $camera, interactionModes: [.pan, .zoom]) {
-                ForEach(mappableDeals, id: \.id) { deal in
-                    if let lat = deal.latitude, let lon = deal.longitude {
-                        Annotation("", coordinate: .init(latitude: lat, longitude: lon), anchor: .bottom) {
-                            pinAnnotation(for: deal)
+        VStack(spacing: 0) {
+            ZStack(alignment: .topTrailing) {
+                Map(position: $camera, interactionModes: [.pan, .zoom]) {
+                    ForEach(mappableDeals, id: \.id) { deal in
+                        if let lat = deal.latitude, let lon = deal.longitude {
+                            Annotation("", coordinate: .init(latitude: lat, longitude: lon), anchor: .bottom) {
+                                pinAnnotation(for: deal)
+                            }
                         }
                     }
                 }
-            }
-            .mapStyle(.standard(elevation: .flat, emphasis: .muted))
-            .colorScheme(.dark)
-            .mapControlVisibility(.hidden)
+                .mapStyle(.standard(elevation: .flat, emphasis: .muted))
+                .colorScheme(.dark)
+                .mapControlVisibility(.hidden)
+                .onMapCameraChange(frequency: .onEnd) { context in
+                    lastRegion = context.region
+                }
 
-            mapControls
-                .padding(12)
+                if showGeocodeOverlay {
+                    Color.black.opacity(0.45)
+                    GeoGeocodePendingOverlay(pendingDeals: pendingGeocodeDeals) {
+                        GeocodingService.shared.scheduleGeocodeAllPending(
+                            deals: pendingGeocodeDeals,
+                            context: modelContext
+                        )
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped()
+
+            mapChromeBar
         }
         .onAppear { fitCamera() }
         .onChange(of: marketFilterId) { _, _ in fitCamera() }
-        .onChange(of: mappableDeals.count) { _, _ in fitCamera() }
+        .onChange(of: selectedDeal?.geocodeStatusRaw) { _, status in
+            guard status == GeocodeStatus.ok.rawValue,
+                  let deal = selectedDeal,
+                  let lat = deal.latitude, let lon = deal.longitude else { return }
+            centerOnCoordinate(latitude: lat, longitude: lon)
+        }
+    }
+
+    private var mapChromeBar: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                pinLegend
+            }
+            HStack(spacing: 4) {
+                Spacer(minLength: 0)
+                if let deal = selectedDeal, deal.hasPlottableCoordinates,
+                   let lat = deal.latitude, let lon = deal.longitude {
+                    mapControlButton("[ CENTER DEAL ]", accent: accent) {
+                        centerOnCoordinate(latitude: lat, longitude: lon)
+                    }
+                }
+                mapControlButton("[ + ]") { zoom(by: 0.72) }
+                mapControlButton("[ - ]") { zoom(by: 1.38) }
+                mapControlButton("[ FIT ALL ]") { fitCamera() }
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity)
+        .background(DesignTokens.surfacePanel)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(DesignTokens.dividerStructural)
+                .frame(height: DesignTokens.dividerWidth)
+        }
+    }
+
+    private var pinLegend: some View {
+        HStack(spacing: 8) {
+            Text("// PIN_STATUS")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+                .fixedSize()
+            legendItem("PIPELINE", DealStatus.pipeline.tokenColor)
+            legendItem("REVIEW", DealStatus.review.tokenColor)
+            legendItem("VIABLE", DealStatus.viable.tokenColor)
+            legendItem("ACQUIRED", DealStatus.acquired.tokenColor)
+        }
+    }
+
+    private func legendItem(_ label: String, _ color: Color) -> some View {
+        HStack(spacing: 4) {
+            Rectangle()
+                .fill(color)
+                .frame(width: 8, height: 8)
+            Text(label)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+        }
     }
 
     private func pinAnnotation(for deal: PropertyDeal) -> some View {
@@ -172,8 +270,12 @@ struct GeoPortfolioMapView: View {
 
             Button {
                 selectedDealID = deal.id
+                if deal.hasPlottableCoordinates,
+                   let lat = deal.latitude, let lon = deal.longitude {
+                    centerOnCoordinate(latitude: lat, longitude: lon)
+                }
             } label: {
-                GeoMapPin(isSelected: isSelected, accent: accent)
+                GeoMapPin(isSelected: isSelected, status: deal.status, accent: accent)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(deal.propertyName.isEmpty ? "Property pin" : "\(deal.propertyName) map pin")
@@ -187,20 +289,15 @@ struct GeoPortfolioMapView: View {
         }
     }
 
-    private var mapControls: some View {
-        VStack(spacing: 4) {
-            mapControlButton("[ FIT ]") { fitCamera() }
-            if let marketId = marketFilterId, let market = MarketFeedRegistry.market(id: marketId) {
-                mapControlButton("[ \(market.id) ]") { zoomToMarket(market) }
-            }
-        }
-    }
-
-    private func mapControlButton(_ label: String, action: @escaping () -> Void) -> some View {
+    private func mapControlButton(
+        _ label: String,
+        accent: Color? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             Text(label)
                 .porteosMeta()
-                .foregroundStyle(DesignTokens.textSecondary)
+                .foregroundStyle(accent ?? DesignTokens.textSecondary)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(DesignTokens.surfacePanel.opacity(0.92))
@@ -209,17 +306,47 @@ struct GeoPortfolioMapView: View {
         .buttonStyle(.plain)
     }
 
+    private func centerOnCoordinate(latitude: Double, longitude: Double) {
+        lastRegion = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: latitude, longitude: longitude),
+            span: MKCoordinateSpan(latitudeDelta: dealCenterSpan, longitudeDelta: dealCenterSpan)
+        )
+        camera = .region(lastRegion)
+    }
+
+    private func zoom(by factor: Double) {
+        var region = lastRegion
+        region.span.latitudeDelta  = min(120, max(0.05, region.span.latitudeDelta * factor))
+        region.span.longitudeDelta = min(120, max(0.05, region.span.longitudeDelta * factor))
+        lastRegion = region
+        camera = .region(region)
+    }
+
     private func matchesMarket(_ deal: PropertyDeal) -> Bool {
         guard let filter = marketFilterId, !filter.isEmpty else { return true }
-        if deal.marketId == filter { return true }
-        if let country = MarketFeedRegistry.countryId(for: filter), deal.marketId == country { return true }
-        if let parent = MarketFeedRegistry.market(id: deal.marketId)?.parentId, parent == filter { return true }
+        let dealMarket = effectiveMarketId(for: deal)
+        guard !dealMarket.isEmpty else {
+            return inferCountryFromCity(deal.locationCity) == filter
+        }
+        if dealMarket == filter { return true }
+        if let parent = MarketFeedRegistry.market(id: dealMarket)?.parentId, parent == filter { return true }
+        if MarketFeedRegistry.countryId(for: dealMarket) == filter { return true }
         return false
+    }
+
+    private func effectiveMarketId(for deal: PropertyDeal) -> String {
+        if !deal.marketId.isEmpty { return deal.marketId }
+        return MarketFeedRegistry.resolveMarketId(city: deal.locationCity) ?? ""
+    }
+
+    private func inferCountryFromCity(_ city: String) -> String? {
+        guard let metro = MarketFeedRegistry.resolveMarketId(city: city) else { return nil }
+        return MarketFeedRegistry.countryId(for: metro)
     }
 
     private func fitCamera() {
         if let marketId = marketFilterId, let market = MarketFeedRegistry.market(id: marketId) {
-            zoomToMarket(market)
+            fitToMarket(market)
             return
         }
         let coords = mappableDeals.compactMap { deal -> CLLocationCoordinate2D? in
@@ -227,14 +354,11 @@ struct GeoPortfolioMapView: View {
             return CLLocationCoordinate2D(latitude: lat, longitude: lon)
         }
         guard !coords.isEmpty else {
-            camera = .region(MKCoordinateRegion(
-                center: CLLocationCoordinate2D(latitude: 39.5, longitude: -8.0),
-                span: MKCoordinateSpan(latitudeDelta: 25, longitudeDelta: 25)
-            ))
+            applyRegion(center: .init(latitude: 39.5, longitude: -8.0), spanDelta: 6.0)
             return
         }
         if coords.count == 1, let c = coords.first {
-            camera = .region(MKCoordinateRegion(center: c, span: MKCoordinateSpan(latitudeDelta: 2, longitudeDelta: 2)))
+            centerOnCoordinate(latitude: c.latitude, longitude: c.longitude)
             return
         }
         var rect = MKMapRect.null
@@ -243,13 +367,26 @@ struct GeoPortfolioMapView: View {
             let r = MKMapRect(x: point.x, y: point.y, width: 1, height: 1)
             rect = rect.isNull ? r : rect.union(r)
         }
-        camera = .rect(rect.insetBy(dx: -rect.size.width * 0.25, dy: -rect.size.height * 0.25))
+        let inset = rect.insetBy(dx: -rect.size.width * 0.25, dy: -rect.size.height * 0.25)
+        lastRegion = MKCoordinateRegion(inset)
+        camera = .region(lastRegion)
+    }
+
+    /// Country/market chip active — frame the full market (e.g. all of Portugal for PT).
+    private func fitToMarket(_ market: MarketDefinition) {
+        let span = market.parentId == nil ? max(market.mapSpanDelta, 5.5) : market.mapSpanDelta
+        applyRegion(center: market.mapCenter, spanDelta: span)
+    }
+
+    private func applyRegion(center: CLLocationCoordinate2D, spanDelta: Double) {
+        lastRegion = MKCoordinateRegion(
+            center: center,
+            span: MKCoordinateSpan(latitudeDelta: spanDelta, longitudeDelta: spanDelta)
+        )
+        camera = .region(lastRegion)
     }
 
     private func zoomToMarket(_ market: MarketDefinition) {
-        camera = .region(MKCoordinateRegion(
-            center: market.mapCenter,
-            span: MKCoordinateSpan(latitudeDelta: market.mapSpanDelta, longitudeDelta: market.mapSpanDelta)
-        ))
+        fitToMarket(market)
     }
 }

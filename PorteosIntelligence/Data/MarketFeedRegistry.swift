@@ -166,9 +166,14 @@ struct MarketFeedRegistry {
 
     static let countries: [MarketDefinition] = [
         .init(id: "PT", displayName: "Portugal", countryCode: "PT", parentId: nil,
-              mapCenter: .init(latitude: 39.5, longitude: -8.0), mapSpanDelta: 4.5,
+              mapCenter: .init(latitude: 39.4, longitude: -8.2), mapSpanDelta: 6.0,
               investmentThesis: "Quintas, relic farmhouses, ecotourism conversions, below-market rural stock.",
-              rssFeeds: ["https://www.jornaldenegocios.pt/rss", "https://www.publico.pt/rss/economia"],
+              rssFeeds: [
+                  "https://www.jornaldenegocios.pt/rss",
+                  "https://www.publico.pt/rss/economia",
+                  "https://www.ecb.europa.eu/rss/press.html",
+                  "https://feeds.feedburner.com/euronews/en/business/rss",
+              ],
               cityAliases: ["portugal"]),
         .init(id: "ES", displayName: "Spain", countryCode: "ES", parentId: nil,
               mapCenter: .init(latitude: 40.0, longitude: -3.5), mapSpanDelta: 6.0,
@@ -178,7 +183,7 @@ struct MarketFeedRegistry {
         .init(id: "IT", displayName: "Italy", countryCode: "IT", parentId: nil,
               mapCenter: .init(latitude: 42.5, longitude: 12.5), mapSpanDelta: 6.0,
               investmentThesis: "€1-house towns, cheap rural casali, agriturismo conversions.",
-              rssFeeds: [],
+              rssFeeds: ["https://www.repubblica.it/rss/economia/rss2.0.xml"],
               cityAliases: ["italy", "italia"]),
         .init(id: "FR", displayName: "France", countryCode: "FR", parentId: nil,
               mapCenter: .init(latitude: 46.5, longitude: 2.5), mapSpanDelta: 6.0,

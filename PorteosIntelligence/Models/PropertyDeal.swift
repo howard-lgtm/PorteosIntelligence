@@ -147,6 +147,12 @@ final class PropertyDeal {
         geocodeStatus == .ok && latitude != nil && longitude != nil
     }
 
+    /// Map pin can render while geocode is pending — coords are kept until replaced.
+    var hasPlottableCoordinates: Bool {
+        guard let lat = latitude, let lon = longitude else { return false }
+        return lat != 0 || lon != 0
+    }
+
     var needsGeocode: Bool {
         geocodeStatus == .none || geocodeStatus == .pending
             || (geocodeStatus == .failed && (!address.isEmpty || !locationCity.isEmpty))

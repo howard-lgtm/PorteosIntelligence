@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 // MARK: - GlobalIntelligenceIdleInspector
@@ -96,5 +97,80 @@ struct MarketContextInspector: View {
         f.currencyCode = "EUR"
         f.maximumFractionDigits = 0
         return f.string(from: NSNumber(value: value)) ?? "€\(Int(value))"
+    }
+}
+
+// MARK: - GeocodeStatusInspector
+// Figma frame 4 — inspector when deals lack coordinates.
+
+struct GeocodeStatusInspector: View {
+
+    @Environment(\.modelContext) private var modelContext
+
+    let deals: [PropertyDeal]
+
+    private let accent = ProfileType.globalIntelligence.accentColor
+
+    private var locatable: [PropertyDeal] {
+        deals.filter { !$0.locationCity.isEmpty || !$0.address.isEmpty }
+    }
+
+    private var geocodedCount: Int { locatable.filter(\.isGeocoded).count }
+    private var pendingCount: Int {
+        locatable.filter { !$0.isGeocoded && $0.geocodeStatus != .failed }.count
+    }
+    private var failedCount: Int { locatable.filter { $0.geocodeStatus == .failed }.count }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("// GEOCODE_STATUS")
+                        .porteosModuleCmd()
+                        .foregroundStyle(accent)
+                    Text("Portfolio coordinate health")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textSecondary)
+                }
+                .padding(.bottom, 12)
+
+                TerminalStructuralDivider()
+                kpiRow("GEOCODED", "\(geocodedCount) / \(locatable.count)")
+                kpiRow("PENDING", "\(pendingCount)")
+                kpiRow("FAILED", "\(failedCount)")
+
+                if pendingCount > 0 || failedCount > 0 {
+                    TerminalStructuralDivider()
+                        .padding(.vertical, 12)
+                    Button {
+                        GeocodingService.shared.scheduleGeocodeAllPending(
+                            deals: locatable.filter { $0.needsGeocode },
+                            context: modelContext
+                        )
+                    } label: {
+                        Text("[ RUN GEOCODE PASS ]")
+                            .porteosMeta()
+                            .foregroundStyle(accent)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(DesignTokens.blockGutter)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(DesignTokens.surfacePanel)
+    }
+
+    private func kpiRow(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label)
+                .porteosRowLabel()
+                .foregroundStyle(DesignTokens.textDim)
+            Spacer()
+            Text(value)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textSecondary)
+        }
+        .padding(.vertical, 8)
     }
 }

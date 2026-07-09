@@ -21,6 +21,7 @@ struct EmailSetupSheet: View {
     @State private var isTesting    = false
     @State private var saveError:   String?
     @State private var didSave      = false
+    @State private var revealPassword = false
 
     // MARK: Design tokens
 
@@ -78,6 +79,7 @@ struct EmailSetupSheet: View {
         .clipShape(Rectangle())
         .frame(width: 520, height: 640)
         .onAppear { loadExisting() }
+        .onDisappear { revealPassword = false }
     }
 
     // MARK: - Sub-views
@@ -117,10 +119,25 @@ struct EmailSetupSheet: View {
                 }
                 Rectangle().fill(shellBorder).frame(height: 1)
                 row("PASSWORD") {
-                    SecureField("App password or token", text: $password)
+                    HStack(spacing: 8) {
+                        Group {
+                            if revealPassword {
+                                TextField("App password or token", text: $password)
+                            } else {
+                                SecureField("App password or token", text: $password)
+                            }
+                        }
                         .textFieldStyle(.plain)
                         .porteosRowLabel()
                         .foregroundColor(textPrimary)
+
+                        Button { revealPassword.toggle() } label: {
+                            Text(revealPassword ? "[ HIDE ]" : "[ SHOW ]")
+                                .porteosMeta()
+                                .foregroundColor(textTertiary)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
                 // Gmail note
                 if resolvedHost.contains("gmail") {
@@ -242,7 +259,9 @@ struct EmailSetupSheet: View {
                 note("• New deals imported with STATUS = PIPELINE")
                 note("• Tags: [ email_import ] [ source:platform ]")
                 note("• Deduplication: listing URL unique constraint")
-                note("• Max 50 messages processed per polling cycle")
+                note("• Max 50 messages per cycle · search window: last 14d (or since last check)")
+                note("• Gmail tip: filter Idealista → label → set FOLDER to that label path")
+                note("• 0 imports may mean duplicates skipped or alert emails paused at source")
                 note("• Credentials stored in system Keychain (never plain-text)")
             }
         }
@@ -267,6 +286,16 @@ struct EmailSetupSheet: View {
                     Text("\(ems.newImportCount)")
                         .porteosRowLabel()
                         .foregroundColor(ems.newImportCount > 0 ? accentGreen : textSecondary)
+                }
+                if let summary = ems.lastCheckSummary {
+                    Rectangle().fill(shellBorder).frame(height: 1)
+                    row("LAST_RESULT") {
+                        Text(summary)
+                            .porteosMeta()
+                            .foregroundColor(textSecondary)
+                            .lineLimit(4)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
                 if let err = ems.errorMessage {
                     Rectangle().fill(shellBorder).frame(height: 1)
@@ -415,6 +444,7 @@ struct EmailSetupSheet: View {
     private func clearForm() {
         email = ""; password = ""; customHost = ""; folder = "INBOX"; port = "993"; pollMinutes = 15
         selectedPreset = 0; testResult = nil; saveError = nil; didSave = false
+        revealPassword = false
     }
 
     private func save() {

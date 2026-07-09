@@ -17,6 +17,7 @@ final class GeocodingService {
 
         deal.geocodeStatus = .pending
         deal.updatedAt = Date()
+        try? context.save()
 
         do {
             guard let request = MKGeocodingRequest(addressString: query) else {
@@ -38,9 +39,13 @@ final class GeocodingService {
             deal.geocodeStatus = .ok
 
             let countryHint = addressContext(from: item)
-            if let resolved = MarketFeedRegistry.resolveMarketId(city: deal.locationCity, countryHint: countryHint) {
+            if let resolved = MarketFeedRegistry.resolveMarketId(
+                city: deal.locationCity,
+                countryHint: countryHint
+            ) {
                 deal.marketId = resolved
-            } else if let name = item.name,
+            } else if deal.marketId.isEmpty,
+                      let name = item.name,
                       let resolved = MarketFeedRegistry.resolveMarketId(city: name, countryHint: countryHint) {
                 deal.marketId = resolved
             }
@@ -65,6 +70,18 @@ final class GeocodingService {
         deal.geocodeStatus = .none
         deal.updatedAt = Date()
         try? context.save()
+    }
+
+    /// Geocode every deal that has address/city but no valid pin (Frame 4 — geocode empty).
+    func geocodeAllPending(deals: [PropertyDeal], context: ModelContext) async {
+        let pending = deals.filter { $0.needsGeocode }
+        for deal in pending {
+            await geocode(deal: deal, context: context)
+        }
+    }
+
+    func scheduleGeocodeAllPending(deals: [PropertyDeal], context: ModelContext) {
+        Task { await geocodeAllPending(deals: deals, context: context) }
     }
 
     private func geocodeQuery(for deal: PropertyDeal) -> String {

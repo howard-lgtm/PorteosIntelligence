@@ -6,6 +6,7 @@ import Observation
 struct IntelNewsArticle: Identifiable, Codable, Hashable, Sendable {
     let id: String
     let title: String
+    let summary: String
     let link: String
     let pubDate: Date
     let marketId: String
@@ -21,10 +22,77 @@ struct IntelNewsArticle: Identifiable, Codable, Hashable, Sendable {
     var primarySector: IntelSector? {
         topics.compactMap { IntelSector(rawValue: $0) }.first
     }
+
+    var sourceDisplayName: String {
+        Self.displayName(forFeed: sourceFeed)
+    }
+
+    /// Human-readable publisher label from feed URL host.
+    static func displayName(forFeed urlString: String) -> String {
+        guard let host = URL(string: urlString)?.host?
+            .replacingOccurrences(of: "www.", with: "") else {
+            return "RSS"
+        }
+        let known: [String: String] = [
+            "jornaldenegocios.pt": "Jornal de Negócios",
+            "publico.pt": "Público",
+            "feeds.elpais.com": "El País",
+            "elpais.com": "El País",
+            "feeds.bbci.co.uk": "BBC",
+            "bbc.co.uk": "BBC",
+            "lemonde.fr": "Le Monde",
+            "repubblica.it": "La Repubblica",
+            "di.se": "Dagens Industri",
+            "feeds.a.dj.com": "WSJ",
+            "japantimes.co.jp": "Japan Times",
+            "ecb.europa.eu": "ECB",
+            "feeds.feedburner.com": "Euronews",
+        ]
+        if let name = known[host] { return name }
+        if let name = known.first(where: { host.hasSuffix($0.key) })?.value { return name }
+        let stem = host.split(separator: ".").first.map(String.init) ?? host
+        return stem.prefix(1).uppercased() + stem.dropFirst()
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, summary, link, pubDate, marketId, sourceFeed, topics
+    }
+
+    init(
+        id: String,
+        title: String,
+        summary: String = "",
+        link: String,
+        pubDate: Date,
+        marketId: String,
+        sourceFeed: String,
+        topics: [String]
+    ) {
+        self.id = id
+        self.title = title
+        self.summary = summary
+        self.link = link
+        self.pubDate = pubDate
+        self.marketId = marketId
+        self.sourceFeed = sourceFeed
+        self.topics = topics
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        title = try c.decode(String.self, forKey: .title)
+        summary = try c.decodeIfPresent(String.self, forKey: .summary) ?? ""
+        link = try c.decode(String.self, forKey: .link)
+        pubDate = try c.decode(Date.self, forKey: .pubDate)
+        marketId = try c.decode(String.self, forKey: .marketId)
+        sourceFeed = try c.decode(String.self, forKey: .sourceFeed)
+        topics = try c.decode([String].self, forKey: .topics)
+    }
 }
 
 // MARK: - NewsAggregatorService
-// Daily RSS fetch with JSON disk cache; filters to 60-day window.
+// Daily RSS fetch with JSON disk cache; filters to 30–60-day window.
 
 @Observable
 @MainActor
@@ -54,7 +122,6 @@ final class NewsAggregatorService {
         let cutoff = Calendar.current.date(byAdding: .day, value: -withinDays, to: Date()) ?? .distantPast
         return articles
             .filter { $0.pubDate >= cutoff }
-            .filter { !$0.topics.isEmpty }
             .filter { matchesMarket($0, filter: marketId, dealMarketId: dealMarketId) }
             .filter { matchesSector($0, filter: sectorFilter) }
             .sorted { $0.pubDate > $1.pubDate }
@@ -148,13 +215,15 @@ final class NewsAggregatorService {
 
     /// Re-classify cached headlines when sector taxonomy changes.
     private func retagIfNeeded(_ article: IntelNewsArticle) -> IntelNewsArticle {
-        let sectors = MarketFeedRegistry.sectors(in: article.title)
-        guard !sectors.isEmpty else { return article }
-        let raw = sectors.map(\.rawValue)
+        let sectors = MarketFeedRegistry.sectors(in: "\(article.title) \(article.summary)")
+        let raw = sectors.isEmpty
+            ? [IntelSector.adjacent.rawValue]
+            : sectors.map(\.rawValue)
         guard raw != article.topics else { return article }
         return IntelNewsArticle(
             id: article.id,
             title: article.title,
+            summary: article.summary,
             link: article.link,
             pubDate: article.pubDate,
             marketId: article.marketId,
@@ -191,6 +260,7 @@ private final class RSSParserDelegate: NSObject, XMLParserDelegate {
 
     private var inItem = false
     private var currentTitle = ""
+    private var currentSummary = ""
     private var currentLink = ""
     private var currentPubDate = ""
     private var elementStack: [String] = []
@@ -208,6 +278,7 @@ private final class RSSParserDelegate: NSObject, XMLParserDelegate {
         if name == "item" || name == "entry" {
             inItem = true
             currentTitle = ""
+            currentSummary = ""
             currentLink = attributeDict["href"] ?? attributeDict["url"] ?? ""
             currentPubDate = ""
         }
@@ -222,6 +293,8 @@ private final class RSSParserDelegate: NSObject, XMLParserDelegate {
         case "title":     currentTitle += string
         case "link":      if currentLink.isEmpty { currentLink += string }
         case "pubdate", "published", "updated": currentPubDate += string
+        case "description", "summary", "content":
+            currentSummary += string
         default: break
         }
     }
@@ -237,22 +310,38 @@ private final class RSSParserDelegate: NSObject, XMLParserDelegate {
                 _ = elementStack.popLast()
                 return
             }
+            let summary = RSSHTMLStripper.plainText(from: currentSummary)
             let pub = RSSDateParser.parse(currentPubDate) ?? Date()
-            let sectors = MarketFeedRegistry.sectors(in: title)
-            guard !sectors.isEmpty else {
-                inItem = false
-                _ = elementStack.popLast()
-                return
-            }
-            let topics = sectors.map(\.rawValue)
+            let sectors = MarketFeedRegistry.sectors(in: "\(title) \(summary)")
+            let topics = sectors.isEmpty
+                ? [IntelSector.adjacent.rawValue]
+                : sectors.map(\.rawValue)
             let id = "\(feedURL)|\(link)|\(title)".data(using: .utf8).map { $0.base64EncodedString() } ?? UUID().uuidString
             items.append(IntelNewsArticle(
-                id: id, title: title, link: link, pubDate: pub,
+                id: id, title: title, summary: summary, link: link, pubDate: pub,
                 marketId: marketId, sourceFeed: feedURL, topics: topics
             ))
             inItem = false
         }
         if !elementStack.isEmpty { _ = elementStack.popLast() }
+    }
+}
+
+private enum RSSHTMLStripper {
+
+    static func plainText(from raw: String) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        return trimmed
+            .replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
+            .replacingOccurrences(of: "&nbsp;", with: " ")
+            .replacingOccurrences(of: "&amp;", with: "&")
+            .replacingOccurrences(of: "&lt;", with: "<")
+            .replacingOccurrences(of: "&gt;", with: ">")
+            .replacingOccurrences(of: "&quot;", with: "\"")
+            .replacingOccurrences(of: "&#39;", with: "'")
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 

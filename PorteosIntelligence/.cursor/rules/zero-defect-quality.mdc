@@ -1,0 +1,47 @@
+---
+description: Zero-defect quality gates — verify before ship, no false completions
+alwaysApply: true
+---
+
+# Zero-Defect Quality Standard
+
+**Target:** eliminate regressions and false fixes. A task is not done until verified.
+
+## Before writing code
+
+1. Read `PACKAGE_v1_PUNCHLIST.md` wild-use log + the specific item ID being fixed.
+2. Trace the **full pipeline** for the feature (e.g. extension → `DealIngestionServer` → `PropertyDeal` → sheet UI).
+3. Read surrounding code and match existing naming, types, and patterns — no parallel implementations.
+
+## While implementing
+
+- **Minimal diff** — fix the root cause; do not refactor or expand scope.
+- **Cross-boundary sync** — if one layer changes, update every consumer:
+  - `content.js` scrape ↔ `DealIngestionPayload` ↔ server mapping ↔ model ↔ UI display
+  - dedup logic ↔ `EmailImportRecord` ↔ toast/duplicate UX
+- **No assumptions** — confirm selectors, field names, and predicates against real code; do not guess DOM or API shapes.
+- **Design compliance** — follow `project-rules.mdc` (tokens, layout, terminal aesthetic).
+
+## Before marking anything complete
+
+| Gate | Required |
+|------|----------|
+| Build | `xcodebuild` **BUILD SUCCEEDED** for touched Swift |
+| Extension | Note if `content.js` changed — user must reload extension |
+| Punchlist | Mark `[x]` only when the fix addresses the logged symptom |
+| Honesty | State what was **not** tested (e.g. live Idealista page, existing DB rows) |
+
+Never mark a punchlist item `[x]` based on code-only reasoning.
+
+## After fixing
+
+- Update **one** living doc (`PACKAGE_v1_PUNCHLIST.md`) — do not fork status files.
+- Call out **residual manual steps** (delete stale duplicates, reload extension, re-enter credentials).
+- If fix is partial, leave item `[ ]` and note what remains.
+
+## Reject immediately
+
+- Shipping without a successful build when Swift changed
+- Claiming dedup/price/import fixes without checking server + extension + UI path
+- Schema migrations when a helper or notes-field approach suffices (see `build-prioritization.mdc`)
+- Marking wild-use issues resolved without naming the verification path

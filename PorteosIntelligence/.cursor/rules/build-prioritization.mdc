@@ -1,0 +1,16 @@
+---
+description: Prioritize logical, code-light, efficient fixes before heavier work
+alwaysApply: true
+---
+
+# Build Prioritization
+
+When choosing what to implement next:
+
+1. **Logical first** — group related issues (e.g. import price + source URL + dedup before unrelated subsystems).
+2. **Code-light** — smallest correct fix: parsing/display tweaks over new subsystems or schema migrations.
+3. **Efficient & accurate** — one focused change per problem; verify against real user flows (browser import, email, Full Edit).
+
+4. **Verify before ship** — follow `zero-defect-quality.mdc`; never mark punchlist items `[x]` without build + stated verification.
+
+Prefer extending existing patterns (`EmailImportRecord`, notes `URL:` line, shared helpers) over new models unless a first-class field is clearly required.

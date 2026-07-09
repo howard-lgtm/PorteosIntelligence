@@ -189,6 +189,8 @@ struct DetachedInspectorView: View {
                     InspectorPane(deal: deal)
                 } else if let marketId = wm.geoMarketFilterId {
                     MarketContextInspector(marketId: marketId, deals: deals)
+                } else if deals.contains(where: { !$0.isGeocoded && (!$0.locationCity.isEmpty || !$0.address.isEmpty) }) {
+                    GeocodeStatusInspector(deals: deals)
                 } else {
                     GlobalIntelligenceIdleInspector()
                 }

@@ -12,6 +12,7 @@ struct CommandPalette: View {
     var onNewDeal:    () -> Void             = {}
     var onImport:     () -> Void             = {}
     var onRunAI:      () -> Void             = {}
+    var onGlossary:   () -> Void             = {}
 
     @State private var query         = ""
     @State private var selectedIndex = 0
@@ -30,6 +31,7 @@ struct CommandPalette: View {
         [
             .init(id: "new",    command: "[ ./NEW_DEAL ]",     description: "Create new deal entry",   execute: onNewDeal),
             .init(id: "import", command: "[ ./IMPORT_DEALS ]", description: "Import CSV or API",       execute: onImport),
+            .init(id: "glossary", command: "[ ./GLOSSARY ]",   description: "Terminology reference",   execute: onGlossary),
             .init(id: "ai",     command: "[ ./RUN_AI ]",       description: "Run portfolio analysis", execute: onRunAI),
         ]
     }

@@ -36,7 +36,8 @@ struct GlobalIntelligenceDashboardView: View {
         news.articles(
             marketId: wm.geoMarketFilterId,
             dealMarketId: selectedDeal?.marketId,
-            sectorFilter: wm.geoSectorFilter
+            sectorFilter: wm.geoSectorFilter,
+            withinDays: wm.geoNewsWindowDays
         )
     }
 
@@ -46,9 +47,10 @@ struct GlobalIntelligenceDashboardView: View {
             TerminalStructuralDivider()
 
             GeometryReader { geo in
+                let mapShare = selectedDeal == nil ? 0.58 : 0.52
                 VStack(spacing: 0) {
                     mapSection
-                        .frame(height: geo.size.height * 0.58)
+                        .frame(height: geo.size.height * mapShare)
 
                     TerminalStructuralDivider()
 
@@ -58,19 +60,25 @@ struct GlobalIntelligenceDashboardView: View {
                                 wm.selectedDealID = nil
                             }
                             .padding(.horizontal, DesignTokens.blockGutter)
-                            .padding(.top, 8)
+                            .padding(.top, 6)
+                            .padding(.bottom, 4)
                         }
 
                         MarketNewsFeedModule(
                             articles: visibleArticles,
                             marketFilterId: wm.geoMarketFilterId,
                             sectorFilter: wm.geoSectorFilter,
+                            windowDays: wm.geoNewsWindowDays,
+                            lastRefresh: news.lastRefresh,
+                            isRefreshing: news.isRefreshing,
                             onMarketFilterChange: { wm.geoMarketFilterId = $0 },
-                            onSectorFilterChange: { wm.geoSectorFilter = $0 }
+                            onSectorFilterChange: { wm.geoSectorFilter = $0 },
+                            onWindowDaysChange: { wm.geoNewsWindowDays = $0 },
+                            onRefresh: { Task { await refreshNews(force: true) } }
                         )
                         .padding(DesignTokens.blockGutter)
                     }
-                    .frame(height: geo.size.height * 0.42)
+                    .frame(height: geo.size.height * (1 - mapShare))
                 }
             }
         }
@@ -80,35 +88,59 @@ struct GlobalIntelligenceDashboardView: View {
         .onChange(of: wm.geoMarketFilterId) { _, _ in Task { await refreshNews() } }
     }
 
+    private var giModeLabel: String {
+        if selectedDeal != nil { return "// PIN" }
+        if let market = wm.geoMarketFilterId { return "// MARKET:\(market)" }
+        if deals.contains(where: { !$0.isGeocoded && (!$0.locationCity.isEmpty || !$0.address.isEmpty) }) {
+            return "// GEOCODE"
+        }
+        return "// IDLE"
+    }
+
     private var dashboardHeader: some View {
         HStack(spacing: 0) {
-            Text("porteos@\(ProfileType.globalIntelligence.cliHost) ~ % ")
-                .porteosCliPrompt()
-                .foregroundStyle(DesignTokens.textDim)
-            Text(ProfileType.globalIntelligence.commandLine)
-                .porteosModuleCmd()
-                .foregroundStyle(accent)
-            Spacer()
-            if news.isRefreshing {
-                Text("// FETCHING_FEEDS")
+            HStack(spacing: 0) {
+                Text("porteos@\(ProfileType.globalIntelligence.cliHost) ~ % ")
+                    .porteosCliPrompt()
+                    .foregroundStyle(DesignTokens.textDim)
+                Text(geoHeaderCommand)
+                    .porteosModuleCmd()
+                    .foregroundStyle(accent)
+            }
+            .lineLimit(1)
+            .truncationMode(.tail)
+            .layoutPriority(0)
+
+            Spacer(minLength: 12)
+
+            HStack(spacing: 12) {
+                Text(giModeLabel)
                     .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
-            } else {
-                Button { Task { await refreshNews(force: true) } } label: {
-                    Text("[ REFRESH ]")
+                if news.isRefreshing {
+                    Text("// FETCHING_FEEDS")
                         .porteosMeta()
-                        .foregroundStyle(accent)
+                        .foregroundStyle(DesignTokens.textDim)
                 }
-                .buttonStyle(.plain)
             }
+            .fixedSize(horizontal: true, vertical: false)
+            .layoutPriority(1)
         }
         .padding(.horizontal, DesignTokens.blockGutter)
-        .padding(.vertical, 10)
+        .padding(.vertical, 8)
         .background(DesignTokens.surfacePanel)
     }
 
+    private var geoHeaderCommand: String {
+        if let deal = selectedDeal {
+            let name = deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName
+            return "intel --asset=\"\(name)\""
+        }
+        return ProfileType.geoCommandLine(marketId: wm.geoMarketFilterId)
+    }
+
     private var mapSection: some View {
-        TerminalBlock(command: "map --portfolio", accentColor: accent, contentPadding: 0) {
+        TerminalBlock(command: "01 // GEO_PORTFOLIO_MAP", accentColor: accent, contentPadding: 0) {
             GeoPortfolioMapView(
                 deals: deals,
                 marketFilterId: wm.geoMarketFilterId,

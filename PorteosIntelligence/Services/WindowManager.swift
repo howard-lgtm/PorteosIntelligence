@@ -21,6 +21,7 @@ final class WindowManager {
     var activeProfile:  ProfileType   = .cmdCenter
     var geoMarketFilterId: String?    = nil
     var geoSectorFilter: IntelSector?   = nil
+    var geoNewsWindowDays: Int          = 60
 
     // MARK: Non-Observable Storage
 

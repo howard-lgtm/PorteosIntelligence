@@ -350,6 +350,34 @@ final class DealIngestionServer {
 
     // MARK: Deal ingestion
 
+    private func findExistingDeal(forURL url: String, context: ModelContext) -> PropertyDeal? {
+        let normalized = ListingURLHelpers.normalize(url)
+
+        if let records = try? context.fetch(
+            FetchDescriptor<EmailImportRecord>(
+                predicate: #Predicate { $0.listingURL == normalized }
+            )
+        ), let record = records.first, let dealID = record.dealID {
+            let deals = try? context.fetch(
+                FetchDescriptor<PropertyDeal>(
+                    predicate: #Predicate { $0.id == dealID }
+                )
+            )
+            if let deal = deals?.first { return deal }
+        }
+
+        let urlCopy = url
+        if let dupes = try? context.fetch(
+            FetchDescriptor<PropertyDeal>(
+                predicate: #Predicate { $0.notes.contains(urlCopy) }
+            )
+        ), let first = dupes.first {
+            return first
+        }
+
+        return nil
+    }
+
     private func handleDealIngestion(_ req: HTTPRequest, conn: NWConnection) {
         guard let container = modelContainer else {
             send(.error("Server not ready — data container unavailable", status: 503), to: conn)
@@ -373,16 +401,10 @@ final class DealIngestionServer {
 
         // ── Dedup: skip if a deal with the same source URL already exists ────
         if let url = payload.url, !url.isEmpty {
-            let urlCopy = url
-            let dupes = try? ctx.fetch(
-                FetchDescriptor<PropertyDeal>(
-                    predicate: #Predicate { $0.notes.contains(urlCopy) }
-                )
-            )
-            if let dupes, !dupes.isEmpty {
+            if let existing = findExistingDeal(forURL: url, context: ctx) {
                 let reply: [String: Any] = [
                     "success":   true,
-                    "dealID":    dupes[0].id.uuidString,
+                    "dealID":    existing.id.uuidString,
                     "message":   "Deal already exists (deduplicated)",
                     "duplicate": true,
                 ]
@@ -391,9 +413,9 @@ final class DealIngestionServer {
                 appendLog(method: "POST", path: "/api/deals", status: 200,
                           source: payload.source ?? "unknown",
                           name: payload.propertyName ?? "duplicate",
-                          dealID: dupes[0].id)
+                          dealID: existing.id)
                 ToastManager.shared.show(IngestionToastData(
-                    dealID:       dupes[0].id,
+                    dealID:       existing.id,
                     propertyName: payload.propertyName ?? "Duplicate Deal",
                     location:     city,
                     price:        payload.purchasePrice ?? 0,
@@ -458,6 +480,16 @@ final class DealIngestionServer {
             status:               .pipeline
         )
         ctx.insert(deal)
+
+        if let url = payload.url, !url.isEmpty {
+            let record = EmailImportRecord(
+                listingURL: ListingURLHelpers.normalize(url),
+                source:     payload.source ?? "browser_extension",
+                rawSubject: payload.propertyName ?? deal.propertyName,
+                dealID:     deal.id
+            )
+            ctx.insert(record)
+        }
 
         do {
             try ctx.save()
