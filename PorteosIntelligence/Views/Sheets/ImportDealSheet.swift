@@ -400,6 +400,7 @@ struct ImportDealSheet: View {
                 purchasePrice: price
             )
             modelContext.insert(deal)
+            GeocodingService.shared.scheduleGeocode(deal: deal, context: modelContext)
         }
         try? modelContext.save()
         dismiss()

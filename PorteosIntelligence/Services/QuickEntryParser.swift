@@ -189,10 +189,6 @@ enum QuickEntryParser {
 
             let captureRange = m.numberOfRanges > 1 ? m.range(at: 1) : m.range
             guard let r = Range(captureRange, in: text) else { continue }
-            let raw = String(text[r])
-                .replacingOccurrences(of: ",", with: ".")
-                .replacingOccurrences(of: ".", with: "", range: raw_thousandRange(String(text[r])))
-                .replacingOccurrences(of: " ", with: "")
 
             let cleaned = cleanNumericString(String(text[r]))
             if let val = Double(cleaned), val > 0 {
@@ -208,8 +204,7 @@ enum QuickEntryParser {
         let stripped = raw.replacingOccurrences(of: " ", with: "")
         // Handle European format: 350.000 → 350000, 350,000 → 350000
         // But 1.5 (decimal) should stay 1.5
-        let commaCount = stripped.components(separatedBy: ",").count - 1
-        let dotCount   = stripped.components(separatedBy: ".").count - 1
+        let dotCount = stripped.components(separatedBy: ".").count - 1
 
         if dotCount == 1 && stripped.components(separatedBy: ".").last?.count == 2 {
             // Likely decimal: 350.00 or 1.25 → keep dot
@@ -219,11 +214,6 @@ enum QuickEntryParser {
         return stripped
             .replacingOccurrences(of: ".", with: "")
             .replacingOccurrences(of: ",", with: "")
-    }
-
-    // Unused helper to satisfy the compiler — range for thousand-sep removal
-    private static func raw_thousandRange(_ s: String) -> Range<String.Index> {
-        s.startIndex..<s.endIndex
     }
 
     // MARK: - Area extraction

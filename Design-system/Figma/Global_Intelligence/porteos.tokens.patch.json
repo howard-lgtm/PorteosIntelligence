@@ -1,0 +1,59 @@
+{
+  "$comment": "Merge into porteos.tokens.json \u2014 Global Intelligence additions v2.07",
+  "color": {
+    "profile": {
+      "globalIntelligence": {
+        "value": "#06B6D4",
+        "type": "color",
+        "description": "Cyan. Use for module headers, active chrome, profile indicator only. Never per-metric."
+      }
+    },
+    "geo": {
+      "pinPipeline": {
+        "value": "#444444",
+        "type": "color",
+        "description": "Map pin \u2014 pipeline"
+      },
+      "pinReview": {
+        "value": "#D97706",
+        "type": "color",
+        "description": "Map pin \u2014 review (amber)"
+      },
+      "pinViable": {
+        "value": "#16A34A",
+        "type": "color",
+        "description": "Map pin \u2014 viable (green)"
+      },
+      "pinAcquired": {
+        "value": "#06B6D4",
+        "type": "color",
+        "description": "Map pin \u2014 acquired (cyan)"
+      },
+      "pinSelectedRing": {
+        "value": "#06B6D4",
+        "type": "color",
+        "description": "2px ring on selected pin"
+      },
+      "mapBaseLand": {
+        "value": "#0D1117",
+        "type": "color",
+        "description": "MapKit dark land reference"
+      },
+      "mapBaseWater": {
+        "value": "#090D12",
+        "type": "color",
+        "description": "MapKit dark water reference"
+      },
+      "mapBorder": {
+        "value": "#2D3748",
+        "type": "color",
+        "description": "Country border lines"
+      },
+      "mapGrid": {
+        "value": "#1C2128",
+        "type": "color",
+        "description": "Grid overlay \u2014 use at 10% opacity"
+      }
+    }
+  }
+}

@@ -85,6 +85,7 @@ struct AppCommandsProvider: Commands {
             Button("Hospitality")    { navigate(.hospitality) }.keyboardShortcut("2", modifiers: .command)
             Button("Design")         { navigate(.design)      }.keyboardShortcut("3", modifiers: .command)
             Button("Circular Economy") { navigate(.circular)  }.keyboardShortcut("4", modifiers: .command)
+            Button("Global Intelligence") { navigate(.globalIntelligence) }.keyboardShortcut("5", modifiers: .command)
         }
 
         // ── Actions menu ──────────────────────────────────────────────────────
