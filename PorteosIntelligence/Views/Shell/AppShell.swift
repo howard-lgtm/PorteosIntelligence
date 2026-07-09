@@ -13,6 +13,7 @@ struct AppShell: View {
     @State private var showComparison      = false
     @State private var compareDeals:       [PropertyDeal] = []
     @State private var showShortcutsPanel  = false
+    @State private var showGlossaryPanel   = false
     @State private var showCommandPalette  = false
     @State private var showNewDealSheet    = false
     @State private var showEmailSetup      = false
@@ -260,6 +261,20 @@ struct AppShell: View {
                         .onTapGesture { showShortcutsPanel = false }
 
                     ShortcutsLegendView(onDismiss: { showShortcutsPanel = false })
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showGlossary)) { _ in
+            showGlossaryPanel = true
+        }
+        .overlay {
+            if showGlossaryPanel {
+                ZStack {
+                    Color.black.opacity(0.55)
+                        .ignoresSafeArea()
+                        .onTapGesture { showGlossaryPanel = false }
+
+                    GlossarySheet(onDismiss: { showGlossaryPanel = false })
                 }
             }
         }

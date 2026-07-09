@@ -316,20 +316,19 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 
 ## Recommended fix order (when you return)
 
-1. **PR #5** — merge Full Edit QA onto `main` (resolve ~5 conflicts with GI)
-2. **P6-17** — email CHECK_NOW exit 100 (credentials work; fetch pipeline broken)
-3. **P7-05, P7-06, P7-07 / P2-08** — browser import price, source URL, duplicate rows
-4. **Wild-use log** → new P0s
-5. **P6-19** — email show-password toggle
-6. **P3-07** — PDF B&W mode build-out
-7. **P6** remainder — if inbox intake is top priority
-8. **P1-04, P1-05, P2** — visual finish to match Template Picker
-9. **P3** — PDF trust for external sharing
-10. **PKG-04–07** — if handing app to another machine
-11. **P7-03** — extension DOM maintenance
-12. **P11** — LLM integration (daily brief, shared provider)
-13. **P4-05** — macOS Help menu (in-app sheet or `.help` bundle)
-14. **P10-20** — Intelligence settings panel (sector keyword tweaks)
+1. **P6-17** — email CHECK_NOW exit 100 (credentials work; fetch pipeline broken)
+2. **P7-05, P7-06, P7-07 / P2-08** — browser import price, source URL, duplicate rows
+3. **Wild-use log** → new P0s
+4. **P6-19** — email show-password toggle
+5. **P3-07** — PDF B&W mode build-out
+6. **P6** remainder — if inbox intake is top priority
+7. **P1-04, P1-05, P2** — visual finish to match Template Picker
+8. **P3** — PDF trust for external sharing
+9. **PKG-04–07** — if handing app to another machine
+10. **P7-03** — extension DOM maintenance
+11. **P11** — LLM integration (daily brief, shared provider)
+12. **P4-05** — macOS Help menu (in-app sheet or `.help` bundle)
+13. **P10-20** — Intelligence settings panel (sector keyword tweaks)
 
 ---
 
@@ -344,7 +343,7 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 - [x] **P10 Global Intelligence v1** — map, geocoding, sector news, pin UX ([PR #6](https://github.com/howard-lgtm/PorteosIntelligence/pull/6), `b9303d2`)
 - [x] GI design handoff — 6 frames + `GLOBAL_INTELLIGENCE_HANDOFF.md`
 - [x] Swift compiler warnings cleared (Jul 9)
-- [x] Full Edit QA on branch ([PR #5](https://github.com/howard-lgtm/PorteosIntelligence/pull/5)) — pending merge
+- [x] Full Edit QA ([PR #5](https://github.com/howard-lgtm/PorteosIntelligence/pull/5)) — glossary, Design↔Circular sync, carbon 2dp, property type combobox, notes height
 
 ---
 

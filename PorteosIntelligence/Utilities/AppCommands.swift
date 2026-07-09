@@ -18,6 +18,7 @@ extension Notification.Name {
     static let showQuickAdd         = Notification.Name("porteos.showQuickAdd")
     static let showServerConfig     = Notification.Name("porteos.showServerConfig")
     static let showSettings         = Notification.Name("porteos.showSettings")
+    static let showGlossary         = Notification.Name("porteos.showGlossary")
 }
 
 // MARK: - FocusedValue: hasDealSelected
@@ -135,6 +136,13 @@ struct AppCommandsProvider: Commands {
                 post(.showCommandPalette)
             }
             .keyboardShortcut("k", modifiers: .command)
+
+            Divider()
+
+            Button("Glossary…") {
+                post(.showGlossary)
+            }
+            .keyboardShortcut("g", modifiers: [.command, .shift])
         }
     }
 

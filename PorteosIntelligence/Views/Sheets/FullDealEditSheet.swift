@@ -241,8 +241,14 @@ struct FullDealEditSheet: View {
             statusPickerField
             TerminalInputField(label: "Area m²", placeholder: "0", prefix: nil, suffix: "m²", text: numStr($deal.totalArea))
                 .focused($focusedField, equals: .totalArea)
-            TerminalInputField(label: "Property Type", placeholder: "e.g. Office A-Class", prefix: nil, suffix: nil, text: $deal.propertyType)
-                .focused($focusedField, equals: .propertyType)
+            TerminalComboboxField(
+                label: "Property Type",
+                placeholder: "e.g. Hotel, Office A-Class",
+                text: $deal.propertyType,
+                suggestions: { DealPropertyTypes.suggestions(matching: $0) },
+                focus: $focusedField,
+                equals: .propertyType
+            )
 
             sectionLabel("NOTES")
             notesField
@@ -261,6 +267,12 @@ struct FullDealEditSheet: View {
         }
     }
 
+    private var notesFieldHeight: CGFloat {
+        let lineCount = max(1, deal.notes.components(separatedBy: .newlines).count)
+        let wrapped   = max(0, deal.notes.count / 72)
+        return min(320, max(140, CGFloat(lineCount + wrapped + 2) * 18))
+    }
+
     private var notesField: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("NOTES")
@@ -272,7 +284,7 @@ struct FullDealEditSheet: View {
                 .foregroundStyle(textPrimary)
                 .scrollContentBackground(.hidden)
                 .padding(8)
-                .frame(minHeight: 88)
+                .frame(minHeight: notesFieldHeight, maxHeight: 320)
                 .background(shellBg)
                 .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
                 .clipShape(Rectangle())
@@ -376,6 +388,7 @@ struct FullDealEditSheet: View {
     private var circularContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             sectionLabel("MATERIAL FLOW", color: accentBlue)
+            designCircularSyncBar
             TerminalInputField(label: "Total Construction Cost",  placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.circularTotalConstructionCost,  formatter: currencyFormatter).focused($focusedField, equals: .totalConstructionCost)
             TerminalInputField(label: "Repurposed Material Cost", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.circularRepurposedMaterialCost, formatter: currencyFormatter).focused($focusedField, equals: .repurposedMaterialCost)
             TerminalInputField(label: "Kg Materials Used",        placeholder: "0", prefix: nil,  suffix: "kg", text: numStr($deal.circularKgMaterialsUsed)).focused($focusedField, equals: .kgMaterialsUsed)
@@ -387,7 +400,7 @@ struct FullDealEditSheet: View {
 
             sectionLabel("CARBON", color: accentBlue)
             TerminalInputField(label: "CO2 Embodied",         placeholder: "0",   prefix: nil, suffix: "kg",        text: numStr($deal.circularCO2Embodied)).focused($focusedField, equals: .co2Embodied)
-            TerminalInputField(label: "Operational Carbon",   placeholder: "0.0", prefix: nil, suffix: "tCO2e/yr",  text: numStr($deal.circularOperationalCarbon, decimals: 2)).focused($focusedField, equals: .operationalCarbon)
+            TerminalInputField(label: "Operational Carbon",   placeholder: "0.00", prefix: nil, suffix: "tCO2e/yr",  value: $deal.circularOperationalCarbon, formatter: Self.carbonFormatter).focused($focusedField, equals: .operationalCarbon)
             TerminalInputField(label: "Building Area",        placeholder: "0",   prefix: nil, suffix: "m²",        text: numStr($deal.circularBuildingAreaM2)).focused($focusedField, equals: .buildingArea)
             TerminalInputField(label: "Water Recycling Rate", placeholder: "0.0", prefix: nil, suffix: "%",         value: $deal.circularWaterRecyclingRate, formatter: Self.percentFormatter).focused($focusedField, equals: .waterRecyclingRate)
         }
@@ -442,14 +455,85 @@ struct FullDealEditSheet: View {
     // ─────────────────────────────────────────────────────────────────────────
 
     private static let percentFormatter: NumberFormatter = {
+        decimalFormatter(maxFractionDigits: 2)
+    }()
+
+    private static let carbonFormatter: NumberFormatter = {
+        let formatter = decimalFormatter(maxFractionDigits: 2)
+        formatter.minimumFractionDigits = 2
+        return formatter
+    }()
+
+    private static func decimalFormatter(maxFractionDigits: Int) -> NumberFormatter {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
-        formatter.minimumFractionDigits = 2
-        formatter.maximumFractionDigits = 2
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = maxFractionDigits
         formatter.decimalSeparator = "."
         formatter.groupingSeparator = ","
         return formatter
-    }()
+    }
+
+    // MARK: Design ↔ Circular sync
+
+    private var designCircularSyncBar: some View {
+        let hasGFA      = deal.designGFA > 0
+        let hasReno     = deal.renovationBudget > 0
+        let hasArea     = deal.totalArea > 0
+
+        return Group {
+            if hasGFA || hasReno || hasArea {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Design & acquisition fields available — pull into material flow:")
+                        .porteosRowValue()
+                        .foregroundStyle(textPrimary)
+
+                    HStack(spacing: 8) {
+                        if hasGFA {
+                            syncButton("[ GFA → AREA ]") {
+                                deal.circularBuildingAreaM2 = deal.designGFA
+                            }
+                        } else if hasArea {
+                            syncButton("[ AREA → BUILDING ]") {
+                                deal.circularBuildingAreaM2 = deal.totalArea
+                            }
+                        }
+
+                        if hasReno {
+                            syncButton("[ RENO → COST ]") {
+                                deal.circularTotalConstructionCost = deal.renovationBudget
+                            }
+                        }
+
+                        if let estimate = estimatedConstructionCost {
+                            syncButton("[ EST. COST ]") {
+                                deal.circularTotalConstructionCost = estimate
+                            }
+                        }
+                    }
+                }
+                .padding(8)
+                .background(shellSurface)
+                .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
+                .clipShape(Rectangle())
+            }
+        }
+    }
+
+    private var estimatedConstructionCost: Double? {
+        guard deal.designGFA > 0 else { return nil }
+        if let metrics = MarketBenchmarks.benchmark(for: deal.locationCity) {
+            return deal.designGFA * metrics.avgConstructionCostPerSqm
+        }
+        return nil
+    }
+
+    private func syncButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(title, action: action)
+            .porteosButtonPrimary()
+            .foregroundStyle(accentBlue)
+            .buttonStyle(.plain)
+    }
 
     private let currencyFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
