@@ -21,6 +21,10 @@
 | 2026-07-05 | Deal list | **Duplicate PIPELINE rows** — e.g. two “LISBON OFFICE BLOCK A”, two “SEMI-DETACHED HOUSE…”; tighten dedup on import | major | P7-07 |
 | 2026-07-05 | ComparisonView | OPEX panel floated centered in scroll, read-only €0 fields, no deal label | major | P2-09 |
 | 2026-07-05 | ComparisonView OPEX | Input fields capped at ~**2 digits** (88pt + NumberFormatter) — can't enter e.g. €2,400 | major | P2-09 |
+| 2026-07-08 | Global Intelligence | Help menu shows system *“Help isn't available”* alert | minor | P4-05 |
+| 2026-07-08 | Global Intelligence | Wrong pin when deal lacks city/address (e.g. sample deal in Sweden) | major | P10-11 (fixed sample + geocode UX) |
+| 2026-07-09 | Global Intelligence | Pin hover showed duplicate banners (.help tooltip + custom card) | minor | fixed — hover-only banner |
+| 2026-07-09 | Deal list | Duplicate **LISBON OFFICE BLOCK A** rows still in PIPELINE | major | P7-07 |
 
 **Severity:** blocker · major · minor · cosmetic · idea
 
@@ -212,7 +216,7 @@
 
 **Goal:** Geo-anchored portfolio map + market news intelligence. Distinct from Command Center (portfolio CRM).
 
-**Workflow:** Build **locally on Mac** → test in Xcode → push to Git → cloud sync. Branch: `cursor/global-intelligence-3e3e` off `main`.
+**Workflow:** Shipped on `main` via [PR #6](https://github.com/howard-lgtm/PorteosIntelligence/pull/6) (9 Jul 2026). Branch: `cursor/global-intelligence-3e3e` (merged).
 
 **Design handoff (complete):** [`Design-system/Figma/Global_Intelligence/GLOBAL_INTELLIGENCE_HANDOFF.md`](../../Design-system/Figma/Global_Intelligence/GLOBAL_INTELLIGENCE_HANDOFF.md) + 6 PNG frames.
 
@@ -224,7 +228,7 @@
 |----------|--------|
 | Geocoding | On **import/save only** — no backfill job; sample deals geocode when created/imported later |
 | News feeds | **Universal registry** — see `MarketFeedRegistry.swift`. Launch markets below. Static RSS, daily cache, 30–60d. Topic tags tuned for **value-add / below-market** thesis. |
-| Code weight | **Happy medium** — one registry file, native MapKit + CLGeocoder + URLSession RSS; no external map/news SDKs |
+| Code weight | **Happy medium** — one registry file, native MapKit (`MKGeocodingRequest`) + URLSession RSS; no external map/news SDKs |
 | AI briefing | **Deferred to P11** — map + news ship first; Ollama/Qwen exists locally but not wired in v1 |
 | Inspector | **Hybrid** — see strategy below; no global InspectorPane refactor |
 
@@ -312,21 +316,20 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 
 ## Recommended fix order (when you return)
 
-1. **P6-17** — email CHECK_NOW exit 100 (credentials work; fetch pipeline broken)
-2. **P7-05, P7-06, P7-07 / P2-08** — browser import price, source URL, duplicate rows
-3. **Wild-use log** → new P0s
-4. **P6-19** — email show-password toggle
-5. **P3-07** — PDF B&W mode build-out
-6. **P6** remainder — if inbox intake is top priority
-7. **P1-04, P1-05, P2** — visual finish to match Template Picker
-8. **P3** — PDF trust for external sharing
-9. **PKG-04–07** — if handing app to another machine
-10. **P7-03** — extension DOM maintenance
-11. **P10** — Global Intelligence engineering (local branch `cursor/global-intelligence-3e3e`)
-12. **P11** — LLM integration (after P10 map + news ship)
+1. **PR #5** — merge Full Edit QA onto `main` (resolve ~5 conflicts with GI)
+2. **P6-17** — email CHECK_NOW exit 100 (credentials work; fetch pipeline broken)
+3. **P7-05, P7-06, P7-07 / P2-08** — browser import price, source URL, duplicate rows
+4. **Wild-use log** → new P0s
+5. **P6-19** — email show-password toggle
+6. **P3-07** — PDF B&W mode build-out
+7. **P6** remainder — if inbox intake is top priority
+8. **P1-04, P1-05, P2** — visual finish to match Template Picker
+9. **P3** — PDF trust for external sharing
+10. **PKG-04–07** — if handing app to another machine
+11. **P7-03** — extension DOM maintenance
+12. **P11** — LLM integration (daily brief, shared provider)
 13. **P4-05** — macOS Help menu (in-app sheet or `.help` bundle)
 14. **P10-20** — Intelligence settings panel (sector keyword tweaks)
-15. **P10-21** — Map pin hover banner polish (status, grade, selected-state persist)
 
 ---
 
@@ -338,6 +341,10 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 - [x] P0 PDF / suffix / server port fixes
 - [x] App icon asset set
 - [x] User QA: dashboards + triage + server config “fantastic”
+- [x] **P10 Global Intelligence v1** — map, geocoding, sector news, pin UX ([PR #6](https://github.com/howard-lgtm/PorteosIntelligence/pull/6), `b9303d2`)
+- [x] GI design handoff — 6 frames + `GLOBAL_INTELLIGENCE_HANDOFF.md`
+- [x] Swift compiler warnings cleared (Jul 9)
+- [x] Full Edit QA on branch ([PR #5](https://github.com/howard-lgtm/PorteosIntelligence/pull/5)) — pending merge
 
 ---
 
