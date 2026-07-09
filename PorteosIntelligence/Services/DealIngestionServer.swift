@@ -257,8 +257,9 @@ final class DealIngestionServer {
             // Try to parse; if headers are incomplete keep accumulating
             guard let request = HTTPRequest.parse(accumulated) else {
                 if !isDone && error == nil {
+                    let nextBuffer = accumulated
                     Task { @MainActor [weak self] in
-                        self?.receiveRequest(conn: conn, buffer: accumulated)
+                        self?.receiveRequest(conn: conn, buffer: nextBuffer)
                     }
                 } else {
                     conn.cancel()
@@ -268,8 +269,9 @@ final class DealIngestionServer {
 
             // If body is still arriving, accumulate more
             if !request.isComplete && !isDone && error == nil {
+                let nextBuffer = accumulated
                 Task { @MainActor [weak self] in
-                    self?.receiveRequest(conn: conn, buffer: accumulated)
+                    self?.receiveRequest(conn: conn, buffer: nextBuffer)
                 }
                 return
             }
@@ -463,6 +465,10 @@ final class DealIngestionServer {
             send(.error("Failed to save deal: \(error.localizedDescription)", status: 503), to: conn)
             consoleLog(req, status: 503, note: "save_failed")
             return
+        }
+
+        Task { @MainActor in
+            await GeocodingService.shared.geocode(deal: deal, context: ctx)
         }
 
         // Record metrics into the trend time-series for this city

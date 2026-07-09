@@ -45,19 +45,16 @@ final class PropertyDealViewModel {
         ))
     }
 
-    /// Kept for legacy callers in HospitalityDashboardView / PorteosScoreBlock that reference
-    /// `.effectiveGrossIncome` or `.debtServiceCoverageRatio` from the old struct.
-    /// New code should derive values from `realEstateFullMetrics` instead.
+    /// Maps full metrics for legacy callers that still expect `RealEstateMetrics`.
     var realEstateMetrics: RealEstateCalculator.RealEstateMetrics {
-        RealEstateCalculator.calculate(inputs: RealEstateCalculator.RealEstateInputs(
-            grossPotentialIncome: deal.grossPotentialIncome,
-            vacancyRate:          deal.vacancyRate,
-            operatingExpenses:    deal.operatingExpenses,
-            purchasePrice:        deal.purchasePrice,
-            loanAmount:           deal.loanAmount,
-            interestRate:         deal.interestRate,
-            amortizationMonths:   deal.amortizationMonths
-        ))
+        let m = realEstateFullMetrics
+        return RealEstateCalculator.RealEstateMetrics(
+            effectiveGrossIncome:     m.effectiveGrossIncome,
+            netOperatingIncome:       m.netOperatingIncome,
+            capRate:                  m.capRate,
+            loanToValue:              m.loanToValue,
+            debtServiceCoverageRatio: m.debtServiceCoverageRatio
+        )
     }
 
     var hospitalityMetrics: HospitalityCalculator.HospitalityMetrics {

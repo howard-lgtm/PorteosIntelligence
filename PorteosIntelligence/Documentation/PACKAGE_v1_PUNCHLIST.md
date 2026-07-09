@@ -108,6 +108,7 @@
 | P4-02 | Email Setup / Ingestion panel | Same | `[~]` | + P6-19 show password |
 | P4-03 | Settings | Legacy layout pass | `[ ]` | `SettingsView` |
 | P4-04 | Command palette / shortcuts legend | Visual parity | `[ ]` | Low priority |
+| P4-05 | **macOS Help menu** | Help → shows system alert *“Help isn't available for PorteosIntelligence”* — no Help Book bundled. Wire ⌘? / menu item to in-app help (shortcuts legend + profile overview) **or** ship `.help` bundle + `CFBundleHelpBookFolder` in Info.plist. | `[—]` | Wild-use 2026-07-08; defer post-v1 |
 
 ---
 
@@ -207,6 +208,108 @@
 
 ---
 
+## P10 — Global Intelligence profile (6th profile) — **engineering epic**
+
+**Goal:** Geo-anchored portfolio map + market news intelligence. Distinct from Command Center (portfolio CRM).
+
+**Workflow:** Build **locally on Mac** → test in Xcode → push to Git → cloud sync. Branch: `cursor/global-intelligence-3e3e` off `main`.
+
+**Design handoff (complete):** [`Design-system/Figma/Global_Intelligence/GLOBAL_INTELLIGENCE_HANDOFF.md`](../../Design-system/Figma/Global_Intelligence/GLOBAL_INTELLIGENCE_HANDOFF.md) + 6 PNG frames.
+
+**Figma brief (original):** [`Design-system/Figma/GLOBAL_INTELLIGENCE_FIGMA_BRIEF.md`](../../Design-system/Figma/GLOBAL_INTELLIGENCE_FIGMA_BRIEF.md)
+
+### Product decisions (8 Jul 2026)
+
+| Decision | Choice |
+|----------|--------|
+| Geocoding | On **import/save only** — no backfill job; sample deals geocode when created/imported later |
+| News feeds | **Universal registry** — see `MarketFeedRegistry.swift`. Launch markets below. Static RSS, daily cache, 30–60d. Topic tags tuned for **value-add / below-market** thesis. |
+| Code weight | **Happy medium** — one registry file, native MapKit + CLGeocoder + URLSession RSS; no external map/news SDKs |
+| AI briefing | **Deferred to P11** — map + news ship first; Ollama/Qwen exists locally but not wired in v1 |
+| Inspector | **Hybrid** — see strategy below; no global InspectorPane refactor |
+
+### Inspector strategy (v1)
+
+| State | Center pane | Inspector (280px) |
+|-------|-------------|-------------------|
+| Idle (no pin) | Map + all-market news | `// SELECT_PIN_OR_MARKET` + market aggregate when filter active |
+| Pin selected | Map + `GeoAssetContextCard` + filtered news | **Existing deal inspector** (weights / AI) — pin tap sets `selectedDealID` |
+| Market focus only | Map zoomed + market-scoped news | `MarketContextInspector` — deal count, exposure, prime yield chip |
+
+**Rationale:** Pin selection reuses the deal inspector users already know. Map-specific UI stays in the center pane (Figma). One `if activeProfile == .globalIntelligence` branch in inspector routing — no changes to RE/Hosp/Design/Circular inspectors.
+
+### Launch markets (8 Jul 2026)
+
+**ID convention:** `{COUNTRY}-{METRO}` — e.g. `UK-LON`, `US-NYC`, `US-LA`, `PT-ALG`
+
+**Investment lens:** Below-market / value-add — quintas & ecotourism (PT), cheap rural stock (IT, JP akiya), distressed US metros, Mediterranean holiday conversion, Nordic yield.
+
+| Region | Countries | Key metros |
+|--------|-----------|------------|
+| **Europe** | `PT` `ES` `IT` `FR` `UK` `HR` `GR` | `PT-LIS` `PT-OPO` `PT-ALG` · `ES-MAD` `ES-BCN` · `IT-ROM` `IT-MIL` `IT-RUR` · `FR-PAR` `FR-RUR` · `UK-LON` `UK-MAN` `UK-BIR` `UK-EDI` · `HR-ZAG` `HR-SPU` · `GR-ATH` `GR-ISL` |
+| **Nordics** | `SE` `DK` `NO` `FI` | `SE-STO` `SE-GOT` · `DK-CPH` · `NO-OSL` · `FI-HEL` |
+| **USA** | `US` | `US-NYC` `US-LA` `US-CHI` `US-MIA` `US-FLA` `US-TX` `US-DET` `US-ATL` `US-BOS` |
+| **Asia** | `JP` | `JP-TYO` `JP-RUR` |
+
+Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries + 35 metros**. RSS URLs filled incrementally.
+
+### Figma deliverables
+
+| ID | Task | Status |
+|----|------|--------|
+| P10-01 | 6 reference frames @ 1200×800 | `[x]` |
+| P10-02 | Terminal map overlay + pin component spec | `[x]` |
+| P10-03 | News feed module + market filter bar | `[x]` |
+| P10-04 | Nav integration — `GLOBAL_INTELLIGENCE` ⌘5 + header `porteos@geo` | `[x]` |
+| P10-05 | AI module — 3 variants (engineering picks A for v2) | `[x]` |
+| P10-06 | Handoff doc `GLOBAL_INTELLIGENCE_HANDOFF.md` | `[x]` |
+
+### Engineering phases (v1 — map + news only)
+
+| ID | Task | Status |
+|----|------|--------|
+| P10-10 | `ProfileType.globalIntelligence` + nav ⌘5 + accent `#06B6D4` + AppShell routing | `[x]` |
+| P10-11 | `PropertyDeal` lat/lon/geocodeStatus + `GeocodingService` on save/import/ingest | `[x]` |
+| P10-12 | `GlobalIntelligenceDashboardView` — map 60% / news 40% split | `[x]` |
+| P10-13 | `GeoPortfolioMapView` — MapKit dark + square pins + zoom controls | `[x]` |
+| P10-14 | `MarketFeedRegistry` — PT/ES/IT/FR/UK/HR/GR + Nordics + US metros + JP (value-add thesis) | `[x]` |
+| P10-15 | `NewsAggregatorService` — daily fetch, JSON disk cache, 30–60d filter | `[x]` |
+| P10-16 | `MarketNewsFeedModule` + filter bar + accordion rows | `[x]` |
+| P10-17 | Pin tap → `selectedDealID` + `GeoAssetContextCard` + scoped news | `[x]` |
+| P10-18 | Inspector routing — idle / market context modes for GI profile only | `[x]` |
+| P10-19 | Geocode-empty state + `[ GEOCODE NOW ]` on pending imports | `[x]` |
+| P10-20 | Settings › **Intelligence** tab — sector keyword overrides, headline preview tester, reset-to-defaults (JSON in Application Support) | `[—]` | User note 2026-07-08; defer |
+| P10-21 | **Map pin hover banner** polish — show deal `status` (e.g. PIPELINE), Porteos **grade letter**, keep banner visible while pin **selected** (not hover-only) | `[x]` | `GeoPinHoverBanner` 2026-07-09 |
+
+### Anti-scope (v1)
+
+- Live GPS / device location tracking  
+- Real-time news ticker  
+- ChatGPT-style conversational agent as primary UI  
+- Replacing Command Center  
+- Ollama / LLM briefing (→ P11)  
+- Backfill geocode for existing deals  
+
+---
+
+## P11 — Integrated LLM onboarding (deferred — revisit after P10 ships)
+
+**Context:** Ollama + Qwen already on dev machine. Decide how intelligence is delivered app-wide, not only in Global Intelligence.
+
+| ID | Decision / task | Status |
+|----|-----------------|--------|
+| P11-01 | **Architecture choice:** baked-in service vs optional plugin vs Settings-toggle provider | `[ ]` |
+| P11-02 | `IntelAgentService` — abstract `LLMProvider` protocol (Ollama, future cloud) | `[ ]` |
+| P11-03 | Settings surface — endpoint, model name (`qwen` / `llama3.2:3b`), privacy footer | `[ ]` |
+| P11-04 | Global Intelligence Variant A — `03 // DAILY_INTEL_BRIEF` + `[ REGENERATE ]` | `[ ]` |
+| P11-05 | Reuse path for AI Vibe panel — shared provider, different prompts | `[ ]` |
+| P11-06 | Offline fallback UX — `// AGENT_OFFLINE` + retry (per Figma handoff) | `[ ]` |
+| P11-07 | App Store / privacy — document local-only default; no portfolio data leaves device | `[ ]` |
+
+**Lean recommendation (for discussion):** Bake a thin `LLMProvider` into the app (not a separate plugin binary). Ollama is the default local backend; user configures URL + model in Settings. Global Intelligence and AI Vibe both call the same service with different system prompts. Ship P10 without any of this; add in P11.
+
+---
+
 ## Recommended fix order (when you return)
 
 1. **P6-17** — email CHECK_NOW exit 100 (credentials work; fetch pipeline broken)
@@ -219,6 +322,11 @@
 8. **P3** — PDF trust for external sharing
 9. **PKG-04–07** — if handing app to another machine
 10. **P7-03** — extension DOM maintenance
+11. **P10** — Global Intelligence engineering (local branch `cursor/global-intelligence-3e3e`)
+12. **P11** — LLM integration (after P10 map + news ship)
+13. **P4-05** — macOS Help menu (in-app sheet or `.help` bundle)
+14. **P10-20** — Intelligence settings panel (sector keyword tweaks)
+15. **P10-21** — Map pin hover banner polish (status, grade, selected-state persist)
 
 ---
 

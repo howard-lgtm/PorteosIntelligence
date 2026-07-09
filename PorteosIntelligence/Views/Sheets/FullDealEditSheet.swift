@@ -428,6 +428,7 @@ struct FullDealEditSheet: View {
         do {
             try modelContext.save()
             print("[SUCCESS] Deal saved: \(deal.propertyName)")
+            GeocodingService.shared.scheduleGeocode(deal: deal, context: modelContext)
         } catch {
             print("[ERROR] Failed to save: \(error)")
         }

@@ -9,7 +9,8 @@ enum ProfileType: String, CaseIterable, Identifiable {
     case realEstate  = "real_estate"
     case hospitality = "hospitality"
     case design      = "design"
-    case circular    = "circular"
+    case circular           = "circular"
+    case globalIntelligence = "global_intelligence"
 
     var id: String { rawValue }
 
@@ -23,7 +24,8 @@ enum ProfileType: String, CaseIterable, Identifiable {
         case .realEstate:  return "REAL_ESTATE_PROFILE"
         case .hospitality: return "HOSPITALITY_PROFILE"
         case .design:      return "DESIGN_PROFILE"
-        case .circular:    return "CIRCULAR_ECONOMY_PROFILE"
+        case .circular:           return "CIRCULAR_ECONOMY_PROFILE"
+        case .globalIntelligence: return "GLOBAL_INTELLIGENCE_PROFILE"
         }
     }
 
@@ -34,7 +36,8 @@ enum ProfileType: String, CaseIterable, Identifiable {
         case .realEstate:  return "REAL_ESTATE"
         case .hospitality: return "HOSPITALITY"
         case .design:      return "DESIGN"
-        case .circular:    return "CIRCULAR_ECONOMY"
+        case .circular:           return "CIRCULAR_ECONOMY"
+        case .globalIntelligence: return "GLOBAL_INTELLIGENCE"
         }
     }
 
@@ -57,7 +60,8 @@ enum ProfileType: String, CaseIterable, Identifiable {
         case .realEstate:  return "real_estate --dashboard"
         case .hospitality: return "hospitality --dashboard"
         case .design:      return "design --dashboard"
-        case .circular:    return "circular_economy --dashboard"
+        case .circular:           return "circular_economy --dashboard"
+        case .globalIntelligence: return "intel --map --market=PT"
         }
     }
 
@@ -68,7 +72,8 @@ enum ProfileType: String, CaseIterable, Identifiable {
         case .realEstate:  return Color(hex: "#C25E30")   // Rust
         case .hospitality: return Color(hex: "#14B8A6")   // Teal
         case .design:      return Color(hex: "#A855F7")   // Purple
-        case .circular:    return Color(hex: "#3B82F6")   // Blue
+        case .circular:           return Color(hex: "#3B82F6")   // Blue
+        case .globalIntelligence: return Color(hex: "#06B6D4")   // Cyan
         }
     }
 
@@ -79,7 +84,8 @@ enum ProfileType: String, CaseIterable, Identifiable {
         case .realEstate:  return "real-estate"
         case .hospitality: return "hospitality"
         case .design:      return "design"
-        case .circular:    return "circular"
+        case .circular:           return "circular"
+        case .globalIntelligence: return "geo"
         }
     }
 
@@ -90,7 +96,8 @@ enum ProfileType: String, CaseIterable, Identifiable {
         case .realEstate:  return "REAL ESTATE"
         case .hospitality: return "HOSPITALITY"
         case .design:      return "DESIGN"
-        case .circular:    return "CIRCULAR"
+        case .circular:           return "CIRCULAR"
+        case .globalIntelligence: return "GLOBAL INTELLIGENCE"
         }
     }
 
@@ -103,16 +110,19 @@ enum ProfileType: String, CaseIterable, Identifiable {
         case .realEstate:  return "realEstate"
         case .hospitality: return "hospitality"
         case .design:      return "design"
-        case .circular:    return "circular"
-        case .cmdCenter:   return "cmdCenter"
+        case .circular:           return "circular"
+        case .globalIntelligence: return "globalIntelligence"
+        case .cmdCenter:          return "cmdCenter"
         }
     }
 
     func dashboardCLI(assetName: String) -> String {
         let name = assetName.isEmpty ? "Untitled Deal" : assetName
         switch self {
+        case .globalIntelligence:
+            return "./intel --map --portfolio=geo"
         case .cmdCenter:
-            return "./dashboard --portfolio=overview --profiles=5"
+            return "./dashboard --portfolio=overview --profiles=6"
         default:
             return "./dashboard --asset=\"\(name)\""
         }

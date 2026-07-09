@@ -125,7 +125,7 @@ final class AIAnalysisService {
     ) async -> AnalysisResult {
 
         // ── Phase 1: rule-based signals ───────────────────────────────────────
-        await onPhaseChange?(.analyzingRules)
+        await notifyPhase(.analyzingRules, handler: onPhaseChange)
 
         let re   = analyzeRealEstate(deal)
         let hosp = analyzeHospitality(deal)
@@ -137,7 +137,7 @@ final class AIAnalysisService {
         let ruleSummary = buildSummary(re: re, hosp: hosp, des: des, circ: circ, mkt: mkt, grade: grade)
 
         // ── Phase 2: LLM narrative (optional, non-blocking) ───────────────────
-        await onPhaseChange?(.generatingNarrative)
+        await notifyPhase(.generatingNarrative, handler: onPhaseChange)
 
         let allSignals = (re + hosp + des + circ + mkt).map(\.message)
         var finalSummary = ruleSummary
@@ -155,7 +155,7 @@ final class AIAnalysisService {
             llmOffline = true
         }
 
-        await onPhaseChange?(.done(llmOffline: llmOffline))
+        await notifyPhase(.done(llmOffline: llmOffline), handler: onPhaseChange)
 
         let text = formatText(deal: deal, grade: grade,
                               re: re, hosp: hosp, des: des, circ: circ, mkt: mkt,
@@ -171,6 +171,14 @@ final class AIAnalysisService {
             summary:                   finalSummary,
             formattedText:             text
         )
+    }
+
+    private func notifyPhase(
+        _ phase: AnalysisPhase,
+        handler: (@MainActor (AnalysisPhase) -> Void)?
+    ) async {
+        guard let handler else { return }
+        await MainActor.run { handler(phase) }
     }
 
     // MARK: Market Intelligence Analysis
