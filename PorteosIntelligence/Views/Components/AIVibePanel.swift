@@ -108,6 +108,11 @@ struct AIVibePanel: View {
             fullWidthDivider
         }
 
+        if let swot = r.swot {
+            swotSection(swot)
+            fullWidthDivider
+        }
+
         let barSignals = topBarSignals(from: r)
         if !barSignals.isEmpty {
             sectionHeader("AI SIGNALS")
@@ -147,40 +152,93 @@ struct AIVibePanel: View {
     // MARK: Hero
 
     private func resultHero(_ r: AnalysisResult) -> some View {
-        let gradeColor = Color(hex: r.grade.hexColor)
-        let scoreText  = deal.porteosScore.map { "\(Int($0.rounded()))" } ?? "—"
+        let gradeColor   = Color(hex: r.grade.hexColor)
+        let verdictColor = Color(hex: r.verdict.hexColor)
+        let scoreText    = deal.porteosScore.map { "\(Int($0.rounded()))" } ?? "—"
 
-        return HStack(alignment: .center, spacing: 12) {
-            Text(scoreText)
-                .porteosScoreHero()
-                .monospacedDigit()
-                .foregroundStyle(DesignTokens.textPrimary)
+        return VStack(spacing: 0) {
+            HStack(alignment: .center, spacing: 12) {
+                Text(scoreText)
+                    .porteosScoreHero()
+                    .monospacedDigit()
+                    .foregroundStyle(DesignTokens.textPrimary)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("PORTEOS AI")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("PORTEOS AI")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textDim)
+                    Text(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)
+                        .porteosRowValue()
+                        .foregroundStyle(DesignTokens.textPrimary)
+                        .lineLimit(2)
+                }
+
+                Spacer(minLength: 0)
+
+                Text(r.grade.rawValue)
+                    .porteosScoreGrade()
+                    .foregroundStyle(gradeColor)
+                    .frame(width: 36, height: 36)
+                    .background(DesignTokens.surfaceElevated)
+                    .overlay {
+                        Rectangle().strokeBorder(gradeColor.opacity(0.45), lineWidth: DesignTokens.dividerWidth)
+                    }
+                    .clipShape(Rectangle())
+            }
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 14)
+
+            // Verdict bar
+            HStack {
+                Text("VERDICT")
                     .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
-                Text(deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName)
-                    .porteosRowValue()
-                    .foregroundStyle(DesignTokens.textPrimary)
-                    .lineLimit(2)
+                Spacer()
+                Text(r.verdict.label)
+                    .porteosMeta()
+                    .foregroundStyle(verdictColor)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(verdictColor.opacity(0.12))
+                    .overlay { Rectangle().strokeBorder(verdictColor.opacity(0.5), lineWidth: 1) }
             }
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 8)
+            .background(DesignTokens.surfaceElevated)
+        }
+        .background(DesignTokens.surfaceElevated)
+    }
 
-            Spacer(minLength: 0)
+    // MARK: SWOT
 
-            Text(r.grade.rawValue)
-                .porteosScoreGrade()
-                .foregroundStyle(gradeColor)
-                .frame(width: 36, height: 36)
-                .background(DesignTokens.surfaceElevated)
-                .overlay {
-                    Rectangle().strokeBorder(gradeColor.opacity(0.45), lineWidth: DesignTokens.dividerWidth)
-                }
-                .clipShape(Rectangle())
+    @ViewBuilder
+    private func swotSection(_ swot: SWOTAnalysis) -> some View {
+        sectionHeader("SWOT ANALYSIS")
+        VStack(alignment: .leading, spacing: 0) {
+            swotRow("S", swot.strength,    color: DesignTokens.statusGo)
+            insetDivider
+            swotRow("W", swot.weakness,    color: DesignTokens.statusCritical)
+            insetDivider
+            swotRow("O", swot.opportunity, color: DesignTokens.statusWarn)
+            insetDivider
+            swotRow("T", swot.threat,      color: DesignTokens.textSecondary)
+        }
+    }
+
+    private func swotRow(_ label: String, _ text: String, color: Color) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(label)
+                .porteosMeta()
+                .foregroundStyle(color)
+                .frame(width: 16)
+            Text(text)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, DesignTokens.blockGutter)
-        .padding(.vertical, 14)
-        .background(DesignTokens.surfaceElevated)
+        .padding(.vertical, 8)
+        .background(DesignTokens.surfacePanel)
     }
 
     // MARK: Rows
@@ -392,6 +450,7 @@ struct AIVibePanel: View {
         let name  = deal.propertyName.isEmpty ? "This asset" : deal.propertyName
         return AnalysisResult(
             grade:                     grade,
+            verdict:                   DealVerdict.from(grade: grade),
             headline:                  "\(name) — previously analysed. Tap regenerate to refresh.",
             realEstateSignals:         [],
             hospitalitySignals:        [],
@@ -399,7 +458,8 @@ struct AIVibePanel: View {
             circularSignals:           [],
             marketIntelligenceSignals: [],
             summary:                   text,
-            formattedText:             text
+            formattedText:             text,
+            swot:                      nil
         )
     }
 

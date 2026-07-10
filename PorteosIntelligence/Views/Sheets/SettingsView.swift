@@ -26,11 +26,16 @@ struct SettingsView: View {
     enum Tab: String, CaseIterable {
         case email  = "EMAIL_INGESTION"
         case server = "INGESTION_SERVER"
+        case intel  = "INTELLIGENCE"
         case general = "GENERAL"
     }
 
     @State private var activeTab: Tab = .email
     @State private var showEmailSetup = false
+    @State private var llmEndpoint: String = UserDefaults.standard.string(forKey: LLMAnalysisService.Keys.baseURL) ?? LLMAnalysisService.defaultBaseURL
+    @State private var llmModel: String = UserDefaults.standard.string(forKey: LLMAnalysisService.Keys.modelName) ?? LLMAnalysisService.defaultModelName
+    @State private var llmPingResult: String? = nil
+    @State private var llmPinging = false
 
     // MARK: Body
 
@@ -103,6 +108,7 @@ struct SettingsView: View {
             switch activeTab {
             case .email:   emailTab
             case .server:  serverTab
+            case .intel:   intelligenceTab
             case .general: generalTab
             }
         }
@@ -192,6 +198,113 @@ struct SettingsView: View {
 
             Spacer(minLength: 20)
         }
+    }
+
+    // MARK: – Intelligence tab
+
+    private var intelligenceTab: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            sectionHeader(
+                "01 // LOCAL_LLM",
+                subtitle: "Ollama endpoint for AI Vibe analysis and Global Intelligence market briefs."
+            )
+
+            VStack(alignment: .leading, spacing: 0) {
+                // Endpoint
+                HStack(spacing: 12) {
+                    Text("ENDPOINT")
+                        .porteosMeta()
+                        .foregroundStyle(tp3)
+                        .frame(width: 100, alignment: .leading)
+                    TextField("http://localhost:11434", text: $llmEndpoint)
+                        .textFieldStyle(.plain)
+                        .porteosMeta()
+                        .foregroundStyle(tp1)
+                        .onSubmit { saveLLMConfig() }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+
+                divider
+
+                // Model
+                HStack(spacing: 12) {
+                    Text("MODEL")
+                        .porteosMeta()
+                        .foregroundStyle(tp3)
+                        .frame(width: 100, alignment: .leading)
+                    TextField("qwen2.5:0.5b", text: $llmModel)
+                        .textFieldStyle(.plain)
+                        .porteosMeta()
+                        .foregroundStyle(tp1)
+                        .onSubmit { saveLLMConfig() }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+
+                divider
+
+                // Ping
+                HStack(spacing: 12) {
+                    Button {
+                        saveLLMConfig()
+                        llmPinging = true
+                        llmPingResult = nil
+                        Task {
+                            let ok = await LLMAnalysisService.shared.isAvailable()
+                            llmPingResult = ok ? "// ONLINE" : "// OFFLINE"
+                            llmPinging = false
+                        }
+                    } label: {
+                        Text(llmPinging ? "[ TESTING … ]" : "[ TEST CONNECTION ]")
+                    }
+                    .buttonStyle(TerminalButtonStyle(color: .muted, fontSize: 10, height: 26))
+                    .disabled(llmPinging)
+
+                    if let result = llmPingResult {
+                        Text(result)
+                            .porteosMeta()
+                            .foregroundStyle(result.contains("ONLINE") ? accentGreen : DesignTokens.statusWarn)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+            }
+            .background(shellSurface)
+
+            divider.padding(.top, 8)
+
+            sectionHeader("02 // PRIVACY", subtitle: "")
+            infoRow("DATA POLICY",  "// LOCAL LLM · NO DATA LEAVES DEVICE")
+            infoRow("STORAGE",      "Signals cached in UserDefaults; deal data stays in SwiftData on-device")
+            infoRow("NETWORK",      "Ollama runs on this machine at the configured endpoint only")
+
+            divider.padding(.top, 8)
+
+            sectionHeader("03 // DEFAULTS", subtitle: "")
+            infoRow("DEFAULT ENDPOINT",  LLMAnalysisService.defaultBaseURL)
+            infoRow("DEFAULT MODEL",     LLMAnalysisService.defaultModelName)
+
+            HStack {
+                Button("[ RESET TO DEFAULTS ]") {
+                    llmEndpoint = LLMAnalysisService.defaultBaseURL
+                    llmModel    = LLMAnalysisService.defaultModelName
+                    saveLLMConfig()
+                }
+                .buttonStyle(TerminalButtonStyle(color: .muted, fontSize: 10, height: 26))
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+
+            Spacer(minLength: 20)
+        }
+    }
+
+    private func saveLLMConfig() {
+        UserDefaults.standard.set(llmEndpoint, forKey: LLMAnalysisService.Keys.baseURL)
+        UserDefaults.standard.set(llmModel,    forKey: LLMAnalysisService.Keys.modelName)
     }
 
     // MARK: – General tab

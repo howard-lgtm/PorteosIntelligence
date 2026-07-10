@@ -73,10 +73,43 @@ struct AnalysisSignal {
     }
 }
 
+// MARK: - DealVerdict
+
+enum DealVerdict {
+    case go       // Grade A or B  (score ≥ 65)
+    case review   // Grade C       (score 50–64)
+    case noGo     // Grade D or F  (score < 50)
+
+    static func from(grade: VibeGrade) -> DealVerdict {
+        switch grade {
+        case .a, .b: return .go
+        case .c:     return .review
+        case .d, .f: return .noGo
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .go:     return "GO"
+        case .review: return "REVIEW"
+        case .noGo:   return "NO GO"
+        }
+    }
+
+    var hexColor: String {
+        switch self {
+        case .go:     return "#27C93F"
+        case .review: return "#FFBD2E"
+        case .noGo:   return "#FF5F56"
+        }
+    }
+}
+
 // MARK: - AnalysisResult
 
 struct AnalysisResult {
     let grade:                      VibeGrade
+    let verdict:                    DealVerdict
     let headline:                   String
     let realEstateSignals:          [AnalysisSignal]
     let hospitalitySignals:         [AnalysisSignal]
@@ -85,6 +118,8 @@ struct AnalysisResult {
     let marketIntelligenceSignals:  [AnalysisSignal]
     let summary:                    String
     let formattedText:              String
+    /// Parsed SWOT sections from LLM output. Nil when LLM was offline.
+    let swot:                       SWOTAnalysis?
 
     var allSignals: [AnalysisSignal] {
         realEstateSignals + hospitalitySignals + designSignals + circularSignals + marketIntelligenceSignals
@@ -96,6 +131,14 @@ struct AnalysisResult {
         [!realEstateSignals.isEmpty, !hospitalitySignals.isEmpty,
          !designSignals.isEmpty,     !circularSignals.isEmpty].filter { $0 }.count
     }
+}
+
+struct SWOTAnalysis {
+    let strength:    String
+    let weakness:    String
+    let opportunity: String
+    let threat:      String
+    let verdict:     DealVerdict   // as parsed from LLM; may differ from rule-based
 }
 
 // MARK: - AnalysisPhase
@@ -136,32 +179,41 @@ final class AIAnalysisService {
         let headline = buildHeadline(deal: deal, grade: grade)
         let ruleSummary = buildSummary(re: re, hosp: hosp, des: des, circ: circ, mkt: mkt, grade: grade)
 
-        // ── Phase 2: LLM narrative (optional, non-blocking) ───────────────────
+        // ── Phase 2: LLM SWOT (optional, non-blocking) ────────────────────────
         await notifyPhase(.generatingNarrative, handler: onPhaseChange)
 
-        let allSignals = (re + hosp + des + circ + mkt).map(\.message)
+        let allSignalMessages = (re + hosp + des + circ + mkt).map(\.message)
         var finalSummary = ruleSummary
         var llmOffline   = false
+        var swot: SWOTAnalysis? = nil
 
         do {
-            let narrative = try await LLMAnalysisService.shared.generateVibeNarrative(
+            let raw = try await LLMAnalysisService.shared.generateSWOT(
                 dealName: deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName,
                 grade:    "\(grade.rawValue) — \(grade.label)",
                 score:    deal.porteosScore,
-                signals:  allSignals
+                signals:  allSignalMessages
             )
-            finalSummary = narrative + "\n\n" + ruleSummary
+            swot = parseSWOT(from: raw, fallbackGrade: grade)
+            if let s = swot {
+                finalSummary = formatSWOTSummary(s) + "\n\n" + ruleSummary
+            } else {
+                finalSummary = raw + "\n\n" + ruleSummary
+            }
         } catch {
             llmOffline = true
         }
 
         await notifyPhase(.done(llmOffline: llmOffline), handler: onPhaseChange)
 
+        let verdict = DealVerdict.from(grade: swot?.verdict.label == "GO" ? grade :
+                                             swot?.verdict.label == "REVIEW" ? .c : grade)
         let text = formatText(deal: deal, grade: grade,
                               re: re, hosp: hosp, des: des, circ: circ, mkt: mkt,
                               summary: finalSummary)
         return AnalysisResult(
             grade:                     grade,
+            verdict:                   DealVerdict.from(grade: grade),
             headline:                  headline,
             realEstateSignals:         re,
             hospitalitySignals:        hosp,
@@ -169,7 +221,8 @@ final class AIAnalysisService {
             circularSignals:           circ,
             marketIntelligenceSignals: mkt,
             summary:                   finalSummary,
-            formattedText:             text
+            formattedText:             text,
+            swot:                      swot
         )
     }
 
@@ -718,6 +771,46 @@ final class AIAnalysisService {
 
     // MARK: Plain-text Formatter
 
+    // MARK: SWOT Parsing
+
+    /// Parses the structured LLM SWOT output into a typed value.
+    /// Expected format:
+    ///   VERDICT: GO
+    ///   S: ...
+    ///   W: ...
+    ///   O: ...
+    ///   T: ...
+    private func parseSWOT(from raw: String, fallbackGrade: VibeGrade) -> SWOTAnalysis? {
+        var verdictRaw = ""
+        var s = ""; var w = ""; var o = ""; var t = ""
+        for line in raw.components(separatedBy: "\n") {
+            let upper = line.trimmingCharacters(in: .whitespaces)
+            if upper.hasPrefix("VERDICT:") { verdictRaw = upper.dropPrefix("VERDICT:").trimmingCharacters(in: .whitespaces) }
+            else if upper.hasPrefix("S:") { s = upper.dropPrefix("S:").trimmingCharacters(in: .whitespaces) }
+            else if upper.hasPrefix("W:") { w = upper.dropPrefix("W:").trimmingCharacters(in: .whitespaces) }
+            else if upper.hasPrefix("O:") { o = upper.dropPrefix("O:").trimmingCharacters(in: .whitespaces) }
+            else if upper.hasPrefix("T:") { t = upper.dropPrefix("T:").trimmingCharacters(in: .whitespaces) }
+        }
+        guard !s.isEmpty, !w.isEmpty, !o.isEmpty, !t.isEmpty else { return nil }
+        let verdict: DealVerdict
+        switch verdictRaw.uppercased() {
+        case "GO":     verdict = .go
+        case "NO GO":  verdict = .noGo
+        default:       verdict = .review
+        }
+        return SWOTAnalysis(strength: s, weakness: w, opportunity: o, threat: t, verdict: verdict)
+    }
+
+    private func formatSWOTSummary(_ swot: SWOTAnalysis) -> String {
+        """
+VERDICT: \(swot.verdict.label)
+S: \(swot.strength)
+W: \(swot.weakness)
+O: \(swot.opportunity)
+T: \(swot.threat)
+"""
+    }
+
     private func formatText(
         deal: PropertyDeal, grade: VibeGrade,
         re: [AnalysisSignal], hosp: [AnalysisSignal],
@@ -767,4 +860,13 @@ final class AIAnalysisService {
     private func f1(_ v: Double) -> String { String(format: "%.1f", v) }
     private func f2(_ v: Double) -> String { String(format: "%.2f", v) }
     private func f3(_ v: Double) -> String { String(format: "%.3f", v) }
+}
+
+// MARK: - String helper
+
+private extension String {
+    func dropPrefix(_ prefix: String) -> String {
+        guard hasPrefix(prefix) else { return self }
+        return String(dropFirst(prefix.count))
+    }
 }
