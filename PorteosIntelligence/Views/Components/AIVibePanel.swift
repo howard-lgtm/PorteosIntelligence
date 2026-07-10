@@ -56,22 +56,22 @@ struct AIVibePanel: View {
 
     private var idleState: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // Run button at top — always visible without scrolling
+            runButton(label: "[ RUN ANALYSIS ]")
+
+            fullWidthDivider
+
             statusBox(
                 title: "PORTEOS AI",
                 lines: [
-                    "NO ANALYSIS FOUND.",
-                    "Run to generate AI signals, risk flags and suggestions."
+                    "No analysis yet.",
+                    "Apply market benchmarks below to baseline missing fields, then run."
                 ]
             )
 
             fullWidthDivider
 
-            // Benchmark apply (idle state — most useful before first run)
             benchmarkApplySection
-
-            fullWidthDivider
-
-            runButton(label: "[ RUN ANALYSIS ]")
 
             metadataBlock(lastRun: lastRunLabel)
 
@@ -109,10 +109,18 @@ struct AIVibePanel: View {
         resultHero(r)
         fullWidthDivider
 
+        // Action row: always at top of results, never hidden by scrolling
+        runButton(label: "[ REGENERATE ]")
+        fullWidthDivider
+
         if case .done(let llmOffline) = phase, llmOffline {
             llmOfflineBanner
             fullWidthDivider
         }
+
+        // Benchmark apply: second most important — show before signals
+        benchmarkApplySection
+        fullWidthDivider
 
         if let swot = r.swot {
             swotSection(swot)
@@ -150,10 +158,6 @@ struct AIVibePanel: View {
             fullWidthDivider
         }
 
-        benchmarkApplySection
-        fullWidthDivider
-
-        runButton(label: "[ REGENERATE ]")
         metadataBlock(lastRun: lastRunLabel)
         footerHint
     }
@@ -480,7 +484,19 @@ struct AIVibePanel: View {
 
     @ViewBuilder
     private var benchmarkApplySection: some View {
-        if let bm = cityBenchmark {
+        if deal.locationCity.isEmpty {
+            HStack(spacing: 6) {
+                Text("// MARKET_BENCHMARKS")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                Spacer()
+                Text("set city in deal to enable")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+            }
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 10)
+        } else if let bm = cityBenchmark {
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
