@@ -530,7 +530,9 @@
         apartamento: "Apartment", moradia: "House", vivenda: "House",
         escritorio: "Office", loja: "Retail", armazem: "Warehouse",
         terreno: "Land", quinta: "Farm/Rural", garagem: "Garage",
-        hotel: "Hotel",
+        hotel: "Hotel", predio: "Building", edificio: "Building",
+        villa: "House", chalet: "House", townhouse: "House",
+        comercial: "Commercial", industrial: "Industrial",
       };
       return map[type] || (type ? type.charAt(0).toUpperCase() + type.slice(1) : "Property");
     }
