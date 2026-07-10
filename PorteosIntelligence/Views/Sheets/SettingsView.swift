@@ -154,6 +154,7 @@ struct SettingsView: View {
             // Supported sources
             sectionHeader("02 // SUPPORTED_SOURCES", subtitle: "Emails from these senders are auto-parsed.")
             sourceRow("Idealista",  domain: "idealista.pt / idealista.com", icon: "IE")
+            sourceRow("RE/MAX PT",  domain: "remax.pt",                     icon: "RM")
             sourceRow("Zillow",     domain: "zillow.com",                   icon: "ZW")
             sourceRow("Hemnet",     domain: "hemnet.se",                    icon: "HN")
             sourceRow("Generic",    domain: "Any listing email",             icon: "──")

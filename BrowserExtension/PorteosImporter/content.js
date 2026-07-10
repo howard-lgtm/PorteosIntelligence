@@ -1,6 +1,6 @@
 /**
- * Porteos Importer — content.js (v4.0)
- * Supports Idealista (PT), Zillow (US), and Hemnet (SE).
+ * Porteos Importer — content.js (v4.1)
+ * Supports Idealista (PT), Zillow (US), Hemnet (SE), RE/MAX Portugal.
  * Each site has its own init function; shared utilities live at the top.
  */
 
@@ -176,6 +176,8 @@
     initZillow();
   } else if (hostname.includes("hemnet.se")) {
     initHemnet();
+  } else if (hostname.includes("remax.pt")) {
+    initRemax();
   }
 
   // ── TASK 1 / 2: Idealista ──────────────────────────────────────────────────
@@ -501,6 +503,224 @@
     });
 
     console.log("[Porteos Importer v4] Hemnet button injected");
+  }
+
+  // ── RE/MAX Portugal ────────────────────────────────────────────────────────
+  // URL pattern: /pt/imoveis/venda-{type}-t{n}-{city}-{area}/{id}
+  // Price format: "385 000 €" (space thousands, dot decimals)
+
+  function initRemax() {
+    const path = window.location.pathname;
+    // Only fire on individual listing pages (contain /imoveis/ and /venda- or /arrendar-)
+    if (!path.includes("/imoveis/")) return;
+    if (!path.includes("/venda-") && !path.includes("/arrendar-")) return;
+
+    // ── URL slug helpers ──────────────────────────────────────────────────
+    // Extract from slug like "venda-apartamento-t2-lisboa-estrela"
+    function slugParts() {
+      const slug = path.split("/").find((p) => p.startsWith("venda-") || p.startsWith("arrendar-")) || "";
+      return slug.split("-");
+    }
+
+    function typeFromSlug() {
+      const parts = slugParts();
+      const idx = parts.findIndex((p) => p === "venda" || p === "arrendar");
+      const type = parts[idx + 1] || "";
+      const map = {
+        apartamento: "Apartment", moradia: "House", vivenda: "House",
+        escritorio: "Office", loja: "Retail", armazem: "Warehouse",
+        terreno: "Land", quinta: "Farm/Rural", garagem: "Garage",
+        hotel: "Hotel",
+      };
+      return map[type] || (type ? type.charAt(0).toUpperCase() + type.slice(1) : "Property");
+    }
+
+    function bedroomsFromSlug() {
+      // "t2", "t3" etc in the slug
+      const parts = slugParts();
+      const tx = parts.find((p) => /^t\d+$/i.test(p));
+      return tx ? parseInt(tx.slice(1), 10) : 0;
+    }
+
+    function cityFromSlug() {
+      // Slug: venda-apartamento-t2-{city}-{area} → word after the T-type
+      const parts = slugParts();
+      const txIdx = parts.findIndex((p) => /^t\d+$/i.test(p));
+      if (txIdx >= 0 && parts[txIdx + 1]) {
+        return parts[txIdx + 1].charAt(0).toUpperCase() + parts[txIdx + 1].slice(1);
+      }
+      return "";
+    }
+
+    // ── Price ────────────────────────────────────────────────────────────
+    function price() {
+      // Try DOM selectors (remax.pt uses various class names)
+      const raw = trySelect(
+        "h2 span",
+        "[class*='listing-price']",
+        "[class*='listingPrice']",
+        "[class*='price']",
+        "#listing-price",
+        "strong[class*='price']"
+      );
+      const fromDom = parsePrice(raw);
+      if (fromDom >= 1000) return fromDom;
+
+      // Try JSON-LD
+      const fromLd = priceFromJsonLd();
+      if (fromLd >= 1000) return fromLd;
+
+      // Regex on visible text: "385 000 €" or "1 298 000 €"
+      const bodyText = document.body.innerText;
+      // Match price with space-thousands and € symbol
+      const euroMatch = bodyText.match(/([\d][\d\s.]*\d)\s*€/);
+      if (euroMatch) {
+        const n = parsePrice(euroMatch[1]);
+        if (n >= 1000) return n;
+      }
+      return 0;
+    }
+
+    // ── Area ─────────────────────────────────────────────────────────────
+    function area() {
+      // "Área Bruta Privativa m² 98" or "98 m²" in page text
+      const bodyText = document.body.innerText;
+      // Prefer "Área Bruta Privativa" (legal gross area)
+      const brutaMatch = bodyText.match(/[Áá]rea Bruta[^0-9]*(\d+)/i);
+      if (brutaMatch) return parseFloat(brutaMatch[1]) || 0;
+      // Fallback: first m² figure
+      const mMatch = bodyText.match(/(\d+(?:[,.]\d+)?)\s*m[²2]/i);
+      return mMatch ? parseFloat(mMatch[1].replace(",", ".")) || 0 : 0;
+    }
+
+    // ── Bedrooms ─────────────────────────────────────────────────────────
+    function bedrooms() {
+      // Primary: slug (most reliable on remax.pt)
+      const fromSlug = bedroomsFromSlug();
+      if (fromSlug > 0) return fromSlug;
+      // Fallback: "Quartos 2" or "T2" in text
+      const bodyText = document.body.innerText;
+      const quartosMatch = bodyText.match(/Quartos\s*(\d+)/i);
+      if (quartosMatch) return parseInt(quartosMatch[1], 10);
+      const tMatch = bodyText.match(/\bT(\d)\b/);
+      return tMatch ? parseInt(tMatch[1], 10) : 0;
+    }
+
+    // ── Bathrooms ────────────────────────────────────────────────────────
+    function bathrooms() {
+      const bodyText = document.body.innerText;
+      const match = bodyText.match(/(?:WC|casas? de banho|Wc\/Casas de banho)\s*[:/]?\s*(\d+)/i);
+      return match ? parseInt(match[1], 10) : 0;
+    }
+
+    // ── City / Address ───────────────────────────────────────────────────
+    function city() {
+      const fromSlug = cityFromSlug();
+      if (fromSlug) return fromSlug;
+      return trySelect(
+        "h1 span",
+        "[class*='location']",
+        "[class*='address']",
+        "h5.listing-address",
+        ".breadcrumb li:last-child"
+      );
+    }
+
+    function address() {
+      // JSON-LD first
+      const ld = extractJsonLd();
+      const ldArr = Array.isArray(ld) ? ld : ld ? [ld] : [];
+      for (const item of ldArr) {
+        const addr = item?.address;
+        if (addr?.streetAddress) return addr.streetAddress;
+        if (typeof addr === "string" && addr.length > 3) return addr;
+      }
+      // h1 often contains "Apartamento T2 à venda em Estrela, Lisboa"
+      const h1 = document.querySelector("h1");
+      if (h1) {
+        const text = h1.textContent.trim();
+        // Extract "em {location}" from h1
+        const emMatch = text.match(/\bem\s+(.+)$/i);
+        if (emMatch) return emMatch[1].trim();
+      }
+      return "";
+    }
+
+    // ── Coordinates ──────────────────────────────────────────────────────
+    function coordinates() {
+      // JSON-LD geo
+      const ld = extractJsonLd();
+      const ldArr = Array.isArray(ld) ? ld : ld ? [ld] : [];
+      for (const item of ldArr) {
+        if (item?.geo?.latitude)
+          return { lat: parseFloat(item.geo.latitude), lng: parseFloat(item.geo.longitude) };
+      }
+      // __NEXT_DATA__ (remax.pt uses Next.js)
+      const nd = document.getElementById("__NEXT_DATA__");
+      if (nd) {
+        try {
+          const data = JSON.parse(nd.textContent);
+          // Walk known paths
+          const props = data?.props?.pageProps;
+          const listing = props?.listing || props?.property || props?.data;
+          if (listing?.latitude && listing?.longitude)
+            return { lat: parseFloat(listing.latitude), lng: parseFloat(listing.longitude) };
+          if (listing?.coordinates?.latitude)
+            return {
+              lat: parseFloat(listing.coordinates.latitude),
+              lng: parseFloat(listing.coordinates.longitude),
+            };
+        } catch { /* continue */ }
+      }
+      // data attributes on map container
+      const mapEl = document.querySelector("[data-lat][data-lng], [data-latitude][data-longitude]");
+      if (mapEl) {
+        const lat = mapEl.dataset.lat || mapEl.dataset.latitude;
+        const lng = mapEl.dataset.lng || mapEl.dataset.longitude;
+        if (lat && lng) return { lat: parseFloat(lat), lng: parseFloat(lng) };
+      }
+      // Google Maps iframe
+      const iframe = document.querySelector('iframe[src*="google.com/maps"], iframe[src*="google.pt/maps"]');
+      if (iframe) {
+        const m = iframe.src.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+        if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+        const q = iframe.src.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+        if (q) return { lat: parseFloat(q[1]), lng: parseFloat(q[2]) };
+      }
+      return null;
+    }
+
+    // ── Title ────────────────────────────────────────────────────────────
+    function title() {
+      const h1 = trySelect("h1", "[class*='listing-title']", "#listing-title");
+      if (h1 && h1.length > 3) return h1.replace(/\s+/g, " ").trim();
+      // Fallback: compose from type + city
+      const t = typeFromSlug();
+      const c = city();
+      return c ? `${t} in ${c}` : t || document.title.split("|")[0].trim();
+    }
+
+    injectButton(() => {
+      const coords = coordinates();
+      return {
+        source:              "remax_pt",
+        url:                 window.location.href,
+        propertyName:        title(),
+        locationFullAddress: address(),
+        locationCity:        city(),
+        locationCountry:     "Portugal",
+        currency:            "EUR",
+        latitude:            coords?.lat || null,
+        longitude:           coords?.lng || null,
+        purchasePrice:       price(),
+        totalArea:           area(),
+        bedrooms:            bedrooms(),
+        bathrooms:           bathrooms(),
+        description:         document.querySelector("meta[name='description']")?.content || "",
+      };
+    });
+
+    console.log("[Porteos Importer v4.1] RE/MAX Portugal button injected");
   }
 
 })();

@@ -305,11 +305,76 @@ struct GenericListingEmailParser: ListingEmailParser {
     }
 }
 
+// MARK: - RE/MAX Portugal Parser
+
+struct RemaxPTEmailParser: ListingEmailParser {
+    let sourceName = "remax_pt"
+
+    func canParse(subject: String, senderDomain: String) -> Bool {
+        senderDomain.contains("remax.pt") ||
+        subject.lowercased().contains("re/max") ||
+        subject.lowercased().contains("remax")
+    }
+
+    func parse(subject: String, body: String) -> ParsedListing? {
+        let combined = subject + " " + body
+        guard let price = parseEuroPrice(from: combined) else { return nil }
+
+        // RE/MAX Portugal uses Portuguese location patterns: "em Lisboa", "em Porto"
+        var location = "Portugal"
+        let locPatterns = [
+            "\\bem\\s+([A-ZÀ-Ú][a-zà-ú\\-]+(?: [A-ZÀ-Ú][a-zà-ú\\-]+)*)",
+            "\\bde\\s+([A-ZÀ-Ú][a-zà-ú\\-]+(?: [A-ZÀ-Ú][a-zà-ú\\-]+)*)",
+        ]
+        for pattern in locPatterns {
+            if let re = try? NSRegularExpression(pattern: pattern),
+               let m  = re.firstMatch(in: subject, range: NSRange(subject.startIndex..., in: subject)),
+               let r  = Range(m.range(at: 1), in: subject) {
+                location = String(subject[r])
+                break
+            }
+        }
+
+        // Bedrooms from T1/T2/T3 pattern common in Portuguese listings
+        let beds = parseBedrooms(from: combined)
+
+        // Area in m²
+        var areaSqM: Double? = nil
+        let areaPatterns = ["(\\d+(?:[.,]\\d+)?)\\s*m[²2]", "área(?:[^0-9]*)(\\d+)"]
+        for pattern in areaPatterns {
+            if let re = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+               let m  = re.firstMatch(in: combined, range: NSRange(combined.startIndex..., in: combined)),
+               let r  = Range(m.range(at: 1), in: combined),
+               let v  = Double(String(combined[r]).replacingOccurrences(of: ",", with: ".")) {
+                areaSqM = v
+                break
+            }
+        }
+
+        let url  = extractURL(from: body, containing: "remax.pt") ?? extractAnyURL(from: body)
+        let type = parsePropertyType(from: combined)
+
+        return ParsedListing(
+            propertyName: "RE/MAX: \(type) in \(location)",
+            location:     location,
+            price:        price,
+            currency:     "EUR",
+            listingURL:   url,
+            source:       sourceName,
+            rawSubject:   subject,
+            propertyType: type,
+            areaSqM:      areaSqM,
+            bedrooms:     beds
+        )
+    }
+}
+
 // MARK: - Parser registry
 
 let allListingParsers: [any ListingEmailParser] = [
     IdealistaEmailParser(),
+    RemaxPTEmailParser(),
     ZillowEmailParser(),
     HemnetEmailParser(),
-    GenericListingEmailParser(),
+    GenericListingEmailParser(),   // always last
 ]
