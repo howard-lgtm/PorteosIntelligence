@@ -206,8 +206,6 @@ final class AIAnalysisService {
 
         await notifyPhase(.done(llmOffline: llmOffline), handler: onPhaseChange)
 
-        let verdict = DealVerdict.from(grade: swot?.verdict.label == "GO" ? grade :
-                                             swot?.verdict.label == "REVIEW" ? .c : grade)
         let text = formatText(deal: deal, grade: grade,
                               re: re, hosp: hosp, des: des, circ: circ, mkt: mkt,
                               summary: finalSummary)
