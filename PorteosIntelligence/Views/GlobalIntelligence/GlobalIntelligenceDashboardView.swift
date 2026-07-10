@@ -2,7 +2,7 @@ import SwiftData
 import SwiftUI
 
 // MARK: - GlobalIntelligenceDashboardView
-// Center pane: map 60% + market news 40% (Profile 6).
+// Center pane: [ MAP ] / [ INTEL ] tab bar + respective content.
 
 struct GlobalIntelligenceDashboardView: View {
 
@@ -10,7 +10,7 @@ struct GlobalIntelligenceDashboardView: View {
 
     let deals: [PropertyDeal]
 
-    private let wm = WindowManager.shared
+    private let wm   = WindowManager.shared
     private let news = NewsAggregatorService.shared
     private let accent = ProfileType.globalIntelligence.accentColor
 
@@ -18,18 +18,8 @@ struct GlobalIntelligenceDashboardView: View {
         deals.first { $0.id == wm.selectedDealID }
     }
 
-    private var marketFilterBinding: Binding<String?> {
-        Binding(
-            get: { wm.geoMarketFilterId },
-            set: { wm.geoMarketFilterId = $0 }
-        )
-    }
-
     private var selectedDealBinding: Binding<UUID?> {
-        Binding(
-            get: { wm.selectedDealID },
-            set: { wm.selectedDealID = $0 }
-        )
+        Binding(get: { wm.selectedDealID }, set: { wm.selectedDealID = $0 })
     }
 
     private var visibleArticles: [IntelNewsArticle] {
@@ -45,41 +35,13 @@ struct GlobalIntelligenceDashboardView: View {
         VStack(spacing: 0) {
             dashboardHeader
             TerminalStructuralDivider()
+            giTabBar
+            TerminalStructuralDivider()
 
-            GeometryReader { geo in
-                let mapShare = selectedDeal == nil ? 0.58 : 0.52
-                VStack(spacing: 0) {
-                    mapSection
-                        .frame(height: geo.size.height * mapShare)
-
-                    TerminalStructuralDivider()
-
-                    VStack(spacing: 0) {
-                        if let deal = selectedDeal {
-                            GeoAssetContextCard(deal: deal) {
-                                wm.selectedDealID = nil
-                            }
-                            .padding(.horizontal, DesignTokens.blockGutter)
-                            .padding(.top, 6)
-                            .padding(.bottom, 4)
-                        }
-
-                        MarketNewsFeedModule(
-                            articles: visibleArticles,
-                            marketFilterId: wm.geoMarketFilterId,
-                            sectorFilter: wm.geoSectorFilter,
-                            windowDays: wm.geoNewsWindowDays,
-                            lastRefresh: news.lastRefresh,
-                            isRefreshing: news.isRefreshing,
-                            onMarketFilterChange: { wm.geoMarketFilterId = $0 },
-                            onSectorFilterChange: { wm.geoSectorFilter = $0 },
-                            onWindowDaysChange: { wm.geoNewsWindowDays = $0 },
-                            onRefresh: { Task { await refreshNews(force: true) } }
-                        )
-                        .padding(DesignTokens.blockGutter)
-                    }
-                    .frame(height: geo.size.height * (1 - mapShare))
-                }
+            if wm.geoActiveTab == "map" {
+                mapTabContent
+            } else {
+                IntelBriefView(deals: deals, marketId: wm.geoMarketFilterId)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -88,6 +50,95 @@ struct GlobalIntelligenceDashboardView: View {
         .onChange(of: wm.geoMarketFilterId) { _, _ in Task { await refreshNews() } }
     }
 
+    // MARK: - Tab Bar
+
+    private var giTabBar: some View {
+        HStack(spacing: 0) {
+            tabButton(label: "[ MAP ]",   id: "map")
+            tabButton(label: "[ INTEL ]", id: "intel")
+            Spacer()
+            if wm.geoActiveTab == "map" {
+                Text(giModeLabel)
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                    .padding(.trailing, DesignTokens.blockGutter)
+            }
+        }
+        .frame(height: 32)
+        .background(DesignTokens.surfacePanel)
+    }
+
+    private func tabButton(label: String, id: String) -> some View {
+        let isActive = wm.geoActiveTab == id
+        return Button { wm.geoActiveTab = id } label: {
+            VStack(spacing: 0) {
+                Spacer()
+                Text(label)
+                    .porteosMeta()
+                    .foregroundStyle(isActive ? DesignTokens.textPrimary : DesignTokens.textDim)
+                    .padding(.horizontal, 10)
+                Spacer()
+                Rectangle()
+                    .fill(isActive ? accent : Color.clear)
+                    .frame(height: 2)
+            }
+            .frame(height: 32)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - MAP tab
+
+    private var mapTabContent: some View {
+        GeometryReader { geo in
+            let mapShare: CGFloat = selectedDeal == nil ? 0.58 : 0.52
+            VStack(spacing: 0) {
+                mapSection
+                    .frame(height: geo.size.height * mapShare)
+
+                TerminalStructuralDivider()
+
+                VStack(spacing: 0) {
+                    if let deal = selectedDeal {
+                        GeoAssetContextCard(deal: deal) { wm.selectedDealID = nil }
+                            .padding(.horizontal, DesignTokens.blockGutter)
+                            .padding(.top, 6)
+                            .padding(.bottom, 4)
+                    }
+
+                    MarketNewsFeedModule(
+                        articles: visibleArticles,
+                        marketFilterId: wm.geoMarketFilterId,
+                        sectorFilter: wm.geoSectorFilter,
+                        windowDays: wm.geoNewsWindowDays,
+                        lastRefresh: news.lastRefresh,
+                        isRefreshing: news.isRefreshing,
+                        onMarketFilterChange: { wm.geoMarketFilterId = $0 },
+                        onSectorFilterChange: { wm.geoSectorFilter = $0 },
+                        onWindowDaysChange: { wm.geoNewsWindowDays = $0 },
+                        onRefresh: { Task { await refreshNews(force: true) } }
+                    )
+                    .padding(DesignTokens.blockGutter)
+                }
+                .frame(height: geo.size.height * (1 - mapShare))
+            }
+        }
+    }
+
+    private var mapSection: some View {
+        TerminalBlock(command: "01 // GEO_PORTFOLIO_MAP", accentColor: accent, contentPadding: 0) {
+            GeoPortfolioMapView(
+                deals: deals,
+                marketFilterId: wm.geoMarketFilterId,
+                selectedDealID: selectedDealBinding
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .padding(DesignTokens.blockGutter)
+    }
+
+    // MARK: - Header
+
     private var giModeLabel: String {
         if selectedDeal != nil { return "// PIN" }
         if let market = wm.geoMarketFilterId { return "// MARKET:\(market)" }
@@ -95,6 +146,14 @@ struct GlobalIntelligenceDashboardView: View {
             return "// GEOCODE"
         }
         return "// IDLE"
+    }
+
+    private var geoHeaderCommand: String {
+        if let deal = selectedDeal {
+            let name = deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName
+            return "intel --asset=\"\(name)\""
+        }
+        return ProfileType.geoCommandLine(marketId: wm.geoMarketFilterId)
     }
 
     private var dashboardHeader: some View {
@@ -113,43 +172,20 @@ struct GlobalIntelligenceDashboardView: View {
 
             Spacer(minLength: 12)
 
-            HStack(spacing: 12) {
-                Text(giModeLabel)
+            if news.isRefreshing {
+                Text("// FETCHING_FEEDS")
                     .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
-                if news.isRefreshing {
-                    Text("// FETCHING_FEEDS")
-                        .porteosMeta()
-                        .foregroundStyle(DesignTokens.textDim)
-                }
+                    .fixedSize()
+                    .layoutPriority(1)
             }
-            .fixedSize(horizontal: true, vertical: false)
-            .layoutPriority(1)
         }
         .padding(.horizontal, DesignTokens.blockGutter)
         .padding(.vertical, 8)
         .background(DesignTokens.surfacePanel)
     }
 
-    private var geoHeaderCommand: String {
-        if let deal = selectedDeal {
-            let name = deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName
-            return "intel --asset=\"\(name)\""
-        }
-        return ProfileType.geoCommandLine(marketId: wm.geoMarketFilterId)
-    }
-
-    private var mapSection: some View {
-        TerminalBlock(command: "01 // GEO_PORTFOLIO_MAP", accentColor: accent, contentPadding: 0) {
-            GeoPortfolioMapView(
-                deals: deals,
-                marketFilterId: wm.geoMarketFilterId,
-                selectedDealID: selectedDealBinding
-            )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .padding(DesignTokens.blockGutter)
-    }
+    // MARK: - News refresh
 
     private func refreshNews(force: Bool = false) async {
         var marketIds = MarketFeedRegistry.countryIds

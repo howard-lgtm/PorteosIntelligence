@@ -161,6 +161,8 @@ struct GeoPortfolioMapView: View {
         }
     }
 
+    private var assetsInMarketCount: Int { mappableDeals.count }
+
     var body: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .topTrailing) {
@@ -189,6 +191,11 @@ struct GeoPortfolioMapView: View {
                         )
                     }
                 }
+
+                if let _ = marketFilterId {
+                    assetsInMarketChip
+                        .padding(8)
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipped()
@@ -203,6 +210,20 @@ struct GeoPortfolioMapView: View {
                   let lat = deal.latitude, let lon = deal.longitude else { return }
             centerOnCoordinate(latitude: lat, longitude: lon)
         }
+    }
+
+    private var assetsInMarketChip: some View {
+        HStack(spacing: 5) {
+            Rectangle()
+                .fill(accent)
+                .frame(width: 8, height: 8)
+            Text("\(assetsInMarketCount) ASSETS IN MARKET")
+                .porteosMeta()
+                .foregroundStyle(.black)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(accent)
     }
 
     private var mapChromeBar: some View {

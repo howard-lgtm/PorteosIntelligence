@@ -186,7 +186,7 @@ struct DetachedInspectorView: View {
             DetachedWindowHeader(title: "INSPECTOR", pane: .inspector)
             if wm.activeProfile == .globalIntelligence {
                 if let deal = selectedDeal {
-                    InspectorPane(deal: deal)
+                    GeoAssetInspectorPanel(deal: deal)
                 } else if let marketId = wm.geoMarketFilterId {
                     MarketContextInspector(marketId: marketId, deals: deals)
                 } else if deals.contains(where: { !$0.isGeocoded && (!$0.locationCity.isEmpty || !$0.address.isEmpty) }) {

@@ -22,6 +22,7 @@ final class WindowManager {
     var geoMarketFilterId: String?    = nil
     var geoSectorFilter: IntelSector?   = nil
     var geoNewsWindowDays: Int          = 60
+    var geoActiveTab: String            = "map"   // "map" | "intel"
 
     // MARK: Non-Observable Storage
 

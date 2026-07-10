@@ -400,7 +400,8 @@ struct AppShell: View {
     private var inspectorPane: some View {
         if wm.activeProfile == .globalIntelligence {
             if let deal = selectedDeal {
-                InspectorPane(deal: deal)
+                GeoAssetInspectorPanel(deal: deal)
+                    .frame(width: inspectorPaneWidth)
             } else if let marketId = wm.geoMarketFilterId {
                 MarketContextInspector(marketId: marketId, deals: deals)
                     .frame(width: inspectorPaneWidth)
