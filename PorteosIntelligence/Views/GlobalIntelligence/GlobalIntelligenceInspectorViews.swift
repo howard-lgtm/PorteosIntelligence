@@ -39,19 +39,28 @@ struct GeoAssetInspectorPanel: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Text("// GI_INSPECTOR")
+            // Top row: label only — keep right edge clear of the [ ↗ ] detach overlay
+            Text("// GI_INSPECTOR")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, DesignTokens.blockGutter)
+                .frame(height: DesignTokens.rowHeightHeader)
+                .background(DesignTokens.surfacePanel)
+
+            TerminalStructuralDivider()
+
+            // Action row below (same pattern as InspectorPane)
+            Button { showEditSheet = true } label: {
+                Text("[ EDIT DEAL DATA ]")
                     .porteosMeta()
-                    .foregroundStyle(DesignTokens.textDim)
-                Spacer()
-                Button { showEditSheet = true } label: {
-                    Text("[ EDIT ]")
-                        .porteosMeta()
-                        .foregroundStyle(accent)
-                }
-                .buttonStyle(.plain)
-                .help("Edit deal in full sheet")
+                    .foregroundStyle(accent)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: DesignTokens.rowHeightData)
+                    .background(accent.opacity(0.10))
+                    .overlay { Rectangle().strokeBorder(accent.opacity(0.4), lineWidth: 1) }
             }
+            .buttonStyle(.plain)
             .padding(.horizontal, DesignTokens.blockGutter)
             .padding(.vertical, 8)
             .background(DesignTokens.surfacePanel)
