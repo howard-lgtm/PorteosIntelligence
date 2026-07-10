@@ -424,13 +424,10 @@ final class EmailMonitorService {
                         encoding: .utf8
                     ) ?? ""
                     let trimmed = errOut.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let msg: String
-                    if trimmed.isEmpty {
-                        msg = "curl exit \(proc.terminationStatus)"
-                    } else {
-                        let line = trimmed.components(separatedBy: .newlines).first ?? trimmed
-                        msg = String(line.prefix(200))
-                    }
+                    let msg: String = Self.humanReadableCurlError(
+                        exitCode: Int(proc.terminationStatus),
+                        stderr: trimmed
+                    )
                     continuation.resume(throwing: IMAPError.curlFailed(msg))
                 }
             }
@@ -440,6 +437,35 @@ final class EmailMonitorService {
             } catch {
                 continuation.resume(throwing: error)
             }
+        }
+    }
+
+    // MARK: - curl exit code mapping (P6-18)
+
+    /// Maps curl exit codes to human-readable IMAP error messages.
+    /// See https://curl.se/docs/manpage.html for the full exit code table.
+    nonisolated private static func humanReadableCurlError(exitCode: Int, stderr: String) -> String {
+        switch exitCode {
+        case 67:
+            return "Login denied — check app password and Gmail IMAP is enabled (Settings › Security)."
+        case 100:
+            return "Inbox query too large or unsupported — try reducing polling window or using SEARCH SINCE fallback."
+        case 6:
+            return "Could not resolve IMAP host — check server address in Email Setup."
+        case 7:
+            return "Could not connect to IMAP server — check host, port, and network connection."
+        case 35:
+            return "SSL/TLS handshake failed — verify SSL mode and server certificate."
+        case 28:
+            return "Connection timed out — IMAP server not responding."
+        case 78:
+            return "Remote file not found — mailbox path may be incorrect."
+        default:
+            if !stderr.isEmpty {
+                let line = stderr.components(separatedBy: .newlines).first ?? stderr
+                return String(line.prefix(200))
+            }
+            return "IMAP error (curl exit \(exitCode)) — check logs for details."
         }
     }
 

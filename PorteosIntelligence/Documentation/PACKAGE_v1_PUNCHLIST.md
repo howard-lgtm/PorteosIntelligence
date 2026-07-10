@@ -100,7 +100,7 @@
 | P3-04 | PDF page 3+ | Field mapping (e.g. GFA `400000 m²`) | `[ ]` | Data vs display |
 | P3-05 | B&W mode | Untested output | `[ ]` | Superseded by P3-07 build-out |
 | P3-06 | External share | Cover KPI spacing OK for send-out | `[ ]` | Re-verify after wild PDFs |
-| P3-07 | **B&W mode build-out** | Toggle exists in `PDFReportSheet` but output not fully implemented — user note: “Need to build this out”. Wire `blackAndWhite` through `PDFReportGenerator`; verify print-safe contrast. | `[ ]` | Wild-use 2026-07-05 |
+| P3-07 | **B&W mode build-out** | Toggle exists in `PDFReportSheet` but output not fully implemented — user note: “Need to build this out”. Wire `blackAndWhite` through `PDFReportGenerator`; verify print-safe contrast. | `[x]` | `c()` greyscale resolver verified in `PDFReportGenerator` Jul 10 |
 
 ---
 
@@ -160,7 +160,7 @@
 |----|------|--------|
 | P6-19 | **Show/hide password** toggle on `EmailSetupSheet` app-password field (verify paste, no Keychain plain-text log) | `[x]` | Wild-verify Jul 9 |
 | P6-17 | **Fix CHECK_NOW curl exit 100** — bounded `SEARCH UNSEEN SINCE` + fallback `SEARCH SINCE`; surface last-result summary in UI. Wild-verify after Idealista alerts resume. | `[~]` | Code complete Jul 9 — pending live Gmail test |
-| P6-18 | Improve IMAP error messages — map exit 67 → “login denied / check app password”, 100 → “inbox query too large or unsupported” | `[ ]` |
+| P6-18 | Improve IMAP error messages — map exit 67 → “login denied / check app password”, 100 → “inbox query too large or unsupported” | `[x]` | `humanReadableCurlError()` Jul 10 |
 | P6-10 | Wild-test IMAP with real Gmail + 10 broker emails | `[~]` | Auth OK 2026-07-05; blocked on P6-17 |
 | P6-11 | Parser golden fixtures per broker template | `[ ]` |
 | P6-12 | Batch triage integration for email imports | `[ ]` |
@@ -206,8 +206,8 @@
 
 | ID | Task | Status |
 |----|------|--------|
-| P9-01 | AI vibe panel useful on real deals | `[ ]` |
-| P9-02 | LLM endpoint config + privacy note | `[ ]` |
+| P9-01 | AI vibe panel useful on real deals | `[x]` | qwen2.5:0.5b wired; SWOT + DealVerdict added Jul 10 |
+| P9-02 | LLM endpoint config + privacy note | `[x]` | Settings › INTELLIGENCE tab: endpoint, model, ping, privacy Jul 10 |
 | P9-03 | Portfolio learning engine feedback loop | `[ ]` | Scaffold exists |
 
 ---
@@ -305,9 +305,9 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 | P11-01 | **Architecture choice:** baked-in service vs optional plugin vs Settings-toggle provider | `[ ]` |
 | P11-02 | `IntelAgentService` — abstract `LLMProvider` protocol (Ollama, future cloud) | `[ ]` |
 | P11-03 | Settings surface — endpoint, model name (`qwen` / `llama3.2:3b`), privacy footer | `[ ]` |
-| P11-04 | Global Intelligence Variant A — `03 // DAILY_INTEL_BRIEF` + `[ REGENERATE ]` | `[ ]` |
-| P11-05 | Reuse path for AI Vibe panel — shared provider, different prompts | `[ ]` |
-| P11-06 | Offline fallback UX — `// AGENT_OFFLINE` + retry (per Figma handoff) | `[ ]` |
+| P11-04 | Global Intelligence Variant A — `03 // DAILY_INTEL_BRIEF` + `[ REGENERATE ]` | `[x]` | IntelBriefView + LLMAnalysisService.generateMarketBrief() Jul 10 |
+| P11-05 | Reuse path for AI Vibe panel — shared provider, different prompts | `[x]` | Single LLMAnalysisService gateway for AI Vibe + INTEL tab Jul 10 |
+| P11-06 | Offline fallback UX — `// AGENT_OFFLINE` + retry (per Figma handoff) | `[x]` | // AGENT_OFFLINE + RETRY + DISMISS in IntelBriefView Jul 10 |
 | P11-07 | App Store / privacy — document local-only default; no portfolio data leaves device | `[ ]` |
 
 **Lean recommendation (for discussion):** Bake a thin `LLMProvider` into the app (not a separate plugin binary). Ollama is the default local backend; user configures URL + model in Settings. Global Intelligence and AI Vibe both call the same service with different system prompts. Ship P10 without any of this; add in P11.
