@@ -11,9 +11,10 @@ struct AIVibePanel: View {
 
     @Environment(\.modelContext) private var modelContext
 
-    @State private var result:     AnalysisResult? = nil
-    @State private var phase:      AnalysisPhase?  = nil
-    @State private var analyzedID: UUID?           = nil
+    @State private var result:          AnalysisResult? = nil
+    @State private var phase:           AnalysisPhase?  = nil
+    @State private var analyzedID:      UUID?           = nil
+    @State private var benchmarkApplied: String?        = nil   // summary shown after bulk apply
 
     private var isRunning: Bool {
         phase == .analyzingRules || phase == .generatingNarrative
@@ -62,6 +63,11 @@ struct AIVibePanel: View {
                     "Run to generate AI signals, risk flags and suggestions."
                 ]
             )
+
+            fullWidthDivider
+
+            // Benchmark apply (idle state — most useful before first run)
+            benchmarkApplySection
 
             fullWidthDivider
 
@@ -143,6 +149,9 @@ struct AIVibePanel: View {
             }
             fullWidthDivider
         }
+
+        benchmarkApplySection
+        fullWidthDivider
 
         runButton(label: "[ REGENERATE ]")
         metadataBlock(lastRun: lastRunLabel)
@@ -461,6 +470,133 @@ struct AIVibePanel: View {
             formattedText:             text,
             swot:                      nil
         )
+    }
+
+    // MARK: Benchmark Apply Section
+
+    private var cityBenchmark: CityMetrics? {
+        MarketBenchmarks.benchmark(for: deal.locationCity)
+    }
+
+    @ViewBuilder
+    private var benchmarkApplySection: some View {
+        if let bm = cityBenchmark {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("// MARKET_BENCHMARKS")
+                            .porteosMeta()
+                            .foregroundStyle(DesignTokens.textDim)
+                        Text("\(bm.cityName), \(bm.country)")
+                            .porteosRowValue()
+                            .foregroundStyle(DesignTokens.textPrimary)
+                            .lineLimit(1)
+                    }
+                    Spacer()
+                    Button { applyAllBenchmarks(bm) } label: {
+                        Text("[ APPLY ]")
+                            .porteosButtonPrimary()
+                            .foregroundStyle(DesignTokens.accentRust)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Fill empty deal fields with \(bm.cityName) market rates")
+                }
+
+                benchmarkPreviewGrid(bm)
+
+                if let note = benchmarkApplied {
+                    Text(note)
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.statusGo)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 10)
+        }
+    }
+
+    private func benchmarkPreviewGrid(_ bm: CityMetrics) -> some View {
+        VStack(spacing: 3) {
+            benchmarkRow("Cap Rate",   String(format: "%.1f%%", bm.avgCapRate),
+                         current: deal.vacancyRate > 0 ? nil : "—")
+            benchmarkRow("Vacancy",    String(format: "%.1f%%", bm.avgVacancyRate),
+                         current: deal.vacancyRate > 0 ? String(format: "%.1f%%", deal.vacancyRate) : "—")
+            if deal.totalArea > 0 {
+                let gpi = bm.avgGPIPerSqm * deal.totalArea
+                benchmarkRow("GPI (est.)", "€\(Int(gpi))/yr",
+                             current: deal.grossPotentialIncome > 0 ? nil : "—")
+                let opex = bm.avgOpExPerSqm * deal.totalArea
+                benchmarkRow("OpEx (est.)", "€\(Int(opex))/yr",
+                             current: deal.operatingExpenses > 0 ? nil : "—")
+            }
+            benchmarkRow("Interest",   String(format: "%.1f%%", bm.avgInterestRate),
+                         current: deal.interestRate > 0 ? String(format: "%.1f%%", deal.interestRate) : "—")
+        }
+    }
+
+    private func benchmarkRow(_ label: String, _ market: String, current: String?) -> some View {
+        HStack(spacing: 0) {
+            Text(label)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(market)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textSecondary)
+                .frame(width: 90, alignment: .trailing)
+            if let cur = current {
+                Text(cur == "—" ? "missing" : cur)
+                    .porteosMeta()
+                    .foregroundStyle(cur == "—" ? DesignTokens.statusWarn : DesignTokens.textDim)
+                    .frame(width: 60, alignment: .trailing)
+            }
+        }
+    }
+
+    private func applyAllBenchmarks(_ bm: CityMetrics) {
+        DealHistoryManager.shared.push(deal: deal, label: "Apply \(bm.cityName) benchmarks")
+
+        var applied: [String] = []
+
+        if deal.vacancyRate == 0 {
+            deal.vacancyRate = bm.avgVacancyRate
+            applied.append("vacancy \(String(format: "%.1f", bm.avgVacancyRate))%")
+        }
+        if deal.interestRate == 0 {
+            deal.interestRate = bm.avgInterestRate
+            applied.append("interest \(String(format: "%.1f", bm.avgInterestRate))%")
+        }
+        if deal.totalArea > 0 {
+            if deal.grossPotentialIncome == 0 {
+                deal.grossPotentialIncome = bm.avgGPIPerSqm * deal.totalArea
+                applied.append("GPI €\(Int(bm.avgGPIPerSqm * deal.totalArea))/yr")
+            }
+            if deal.operatingExpenses == 0 {
+                deal.operatingExpenses = bm.avgOpExPerSqm * deal.totalArea
+                applied.append("OpEx €\(Int(bm.avgOpExPerSqm * deal.totalArea))/yr")
+            }
+        }
+        if deal.hospitalityADR == 0, bm.avgADR > 0 {
+            deal.hospitalityADR = bm.avgADR
+            applied.append("ADR €\(Int(bm.avgADR))")
+        }
+        if deal.hospitalityOccupancyRate == 0, bm.avgOccupancyRate > 0 {
+            deal.hospitalityOccupancyRate = bm.avgOccupancyRate
+            applied.append("occupancy \(Int(bm.avgOccupancyRate))%")
+        }
+
+        deal.updatedAt = Date()
+        try? modelContext.save()
+
+        if applied.isEmpty {
+            benchmarkApplied = "// All fields already populated — no changes made."
+        } else {
+            benchmarkApplied = "// Applied: \(applied.joined(separator: " · "))\n// Run analysis to re-score."
+            // Reset prior result so next run reflects updated data
+            result     = nil
+            analyzedID = nil
+        }
     }
 
     private func applyAction(_ action: AnalysisSignal.Action) {

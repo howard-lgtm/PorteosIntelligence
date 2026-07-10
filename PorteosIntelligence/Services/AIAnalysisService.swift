@@ -187,12 +187,16 @@ final class AIAnalysisService {
         var llmOffline   = false
         var swot: SWOTAnalysis? = nil
 
+        // Resolve city benchmark — used to ground the LLM in local market norms
+        let cityBenchmark = MarketBenchmarks.benchmark(for: deal.locationCity)
+
         do {
             let raw = try await LLMAnalysisService.shared.generateSWOT(
-                dealName: deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName,
-                grade:    "\(grade.rawValue) — \(grade.label)",
-                score:    deal.porteosScore,
-                signals:  allSignalMessages
+                dealName:  deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName,
+                grade:     "\(grade.rawValue) — \(grade.label)",
+                score:     deal.porteosScore,
+                signals:   allSignalMessages,
+                benchmark: cityBenchmark
             )
             swot = parseSWOT(from: raw, fallbackGrade: grade)
             if let s = swot {

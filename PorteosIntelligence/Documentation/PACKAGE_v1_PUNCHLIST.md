@@ -199,6 +199,7 @@
 | P8-02 | Scenario save/load edge cases | `[ ]` |
 | P8-03 | Market benchmark wrong city alias | `[ ]` |
 | P8-04 | SwiftData export before schema change | `[ ]` |
+| P8-05 | **Expand MarketBenchmarks PT coverage** — add Braga, Coimbra, Cascais/Sintra, Funchal (Madeira), Setúbal, Aveiro, Évora, Leiria. Also expand US: LA, Chicago, Miami, Dallas, Atlanta; IT: Florence, Naples; ES: Valencia, Bilbao. Enables granular benchmark-apply in AI Vibe for all value-add thesis markets. | `[ ]` | Next version |
 
 ---
 

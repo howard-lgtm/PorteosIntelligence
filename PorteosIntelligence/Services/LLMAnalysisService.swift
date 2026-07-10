@@ -43,14 +43,16 @@ final class LLMAnalysisService {
     // MARK: Public API — Deal Analysis (AI Vibe)
 
     /// Generates a SWOT analysis + Go/Review/NoGo verdict for a deal.
-    /// Used by `AIAnalysisService` in Phase 2 of deal analysis.
+    /// `benchmark` provides city-level market reference data for a grounded assessment.
     func generateSWOT(
         dealName: String,
         grade: String,
         score: Double?,
-        signals: [String]
+        signals: [String],
+        benchmark: CityMetrics? = nil
     ) async throws -> String {
-        let prompt = buildSWOTPrompt(dealName: dealName, grade: grade, score: score, signals: signals)
+        let prompt = buildSWOTPrompt(dealName: dealName, grade: grade, score: score,
+                                     signals: signals, benchmark: benchmark)
         return try await call(prompt: prompt)
     }
 
@@ -116,25 +118,47 @@ final class LLMAnalysisService {
         dealName: String,
         grade: String,
         score: Double?,
-        signals: [String]
+        signals: [String],
+        benchmark: CityMetrics? = nil
     ) -> String {
         let scoreStr = score.map { "Score: \(Int($0.rounded()))/100" } ?? "Score: N/A"
         let signalList = signals.prefix(12).enumerated()
             .map { "  \($0.offset + 1). \($0.element)" }
             .joined(separator: "\n")
 
+        let benchmarkBlock: String
+        if let bm = benchmark {
+            benchmarkBlock = """
+
+Market benchmarks for \(bm.cityName), \(bm.country):
+  Prime yield (cap rate): \(String(format: "%.1f", bm.avgCapRate))%
+  Typical vacancy rate:   \(String(format: "%.1f", bm.avgVacancyRate))%
+  Gross potential income: €\(String(format: "%.0f", bm.avgGPIPerSqm))/m²/yr
+  Operating expenses:     €\(String(format: "%.0f", bm.avgOpExPerSqm))/m²/yr
+  Insurance (est.):       €\(String(format: "%.1f", bm.avgInsuranceRatePerSqm))/m²/yr
+  Market interest rate:   \(String(format: "%.1f", bm.avgInterestRate))%
+  Property tax rate:      \(String(format: "%.2f", bm.avgPropertyTaxRate))%\
+\(bm.avgADR > 0 ? "\n  Hospitality ADR:        €\(String(format: "%.0f", bm.avgADR))" : "")\
+\(bm.avgOccupancyRate > 0 ? "\n  Hospitality occupancy:  \(String(format: "%.0f", bm.avgOccupancyRate))%" : "")
+
+Use these benchmarks when assessing the deal. Flag explicitly when deal metrics deviate from market norms above.
+"""
+        } else {
+            benchmarkBlock = ""
+        }
+
         return """
 You are a professional real estate investment analyst. Analyse the following deal and produce a structured response in exactly this format with no other text:
 
 VERDICT: [GO | REVIEW | NO GO]
-S: [one sentence — key strength]
-W: [one sentence — main weakness dragging the score]
-O: [one concrete action that would raise the score to the next grade]
-T: [one sentence — biggest external risk]
+S: [one sentence — key strength, referencing a specific metric or market comparison]
+W: [one sentence — main weakness or data gap dragging the score]
+O: [one concrete, specific action that would raise the score to the next grade]
+T: [one sentence — biggest external risk for this market and deal type]
 
 Deal: \(dealName)
 Grade: \(grade) | \(scoreStr)
-
+\(benchmarkBlock)
 Signals:
 \(signalList.isEmpty ? "  No signals available." : signalList)
 """
