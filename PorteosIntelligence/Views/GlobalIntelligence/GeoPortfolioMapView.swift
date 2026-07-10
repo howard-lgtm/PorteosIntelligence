@@ -161,7 +161,23 @@ struct GeoPortfolioMapView: View {
         }
     }
 
-    private var assetsInMarketCount: Int { mappableDeals.count }
+    // All deals in market (geocoded or not) — matches Figma "N ASSETS IN MARKET"
+    private var assetsInMarketCount: Int {
+        guard let filter = marketFilterId, !filter.isEmpty else { return deals.count }
+        return deals.filter { deal in
+            let dm = deal.marketId
+            if dm == filter { return true }
+            if let parent = MarketFeedRegistry.market(id: dm)?.parentId, parent == filter { return true }
+            if MarketFeedRegistry.countryId(for: dm) == filter { return true }
+            // Fallback: infer from city if marketId not set
+            if dm.isEmpty,
+               let inferred = MarketFeedRegistry.resolveMarketId(city: deal.locationCity),
+               (inferred == filter || MarketFeedRegistry.countryId(for: inferred) == filter) {
+                return true
+            }
+            return false
+        }.count
+    }
 
     var body: some View {
         VStack(spacing: 0) {

@@ -243,7 +243,8 @@ struct IntelBriefView: View {
         }
 
         // Build context from cached news + in-scope deals
-        let contextArticles = articles.prefix(12).map { "- \($0.title)" }.joined(separator: "\n")
+        let currentArticles = articles  // capture once
+        let contextArticles = currentArticles.prefix(12).map { "- \($0.title)" }.joined(separator: "\n")
         let dealNames = deals
             .filter { marketId == nil || $0.marketId == marketId || MarketFeedRegistry.countryId(for: $0.marketId) == marketId }
             .prefix(6)
@@ -251,6 +252,16 @@ struct IntelBriefView: View {
             .joined(separator: ", ")
 
         let market = marketId.flatMap { MarketFeedRegistry.market(id: $0)?.displayName } ?? "all markets"
+
+        // If no news cached yet, surface a clear message instead of a confusing brief
+        if currentArticles.isEmpty {
+            signals = [
+                IntelSignal(text: "No headlines cached yet — tap ./refresh --news on the MAP tab to fetch feeds, then regenerate."),
+            ]
+            briefState = .ready
+            return
+        }
+
         let prompt = """
 You are a real estate portfolio intelligence assistant. Based on the following market news headlines and portfolio assets, generate exactly 5 brief, one-sentence market signal observations relevant to a property investor. Format each as a single sentence starting with a key observation. Be factual and concise.
 

@@ -6,8 +6,6 @@ import SwiftUI
 
 struct GlobalIntelligenceDashboardView: View {
 
-    @Environment(\.modelContext) private var modelContext
-
     let deals: [PropertyDeal]
 
     private let wm   = WindowManager.shared
@@ -125,8 +123,16 @@ struct GlobalIntelligenceDashboardView: View {
         }
     }
 
+    private var mapBlockCommand: String {
+        if let market = wm.geoMarketFilterId,
+           let name = MarketFeedRegistry.market(id: market)?.displayName {
+            return "01 // GEO_PORTFOLIO_MAP > \(name.uppercased())"
+        }
+        return "01 // GEO_PORTFOLIO_MAP"
+    }
+
     private var mapSection: some View {
-        TerminalBlock(command: "01 // GEO_PORTFOLIO_MAP", accentColor: accent, contentPadding: 0) {
+        TerminalBlock(command: mapBlockCommand, accentColor: accent, contentPadding: 0) {
             GeoPortfolioMapView(
                 deals: deals,
                 marketFilterId: wm.geoMarketFilterId,

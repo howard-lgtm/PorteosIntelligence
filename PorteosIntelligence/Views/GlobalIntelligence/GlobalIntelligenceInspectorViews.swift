@@ -1,3 +1,4 @@
+import AppKit
 import SwiftData
 import SwiftUI
 
@@ -31,38 +32,67 @@ struct GeoAssetInspectorPanel: View {
 
     let deal: PropertyDeal
 
+    @State private var showEditSheet = false
+
     private let accent = ProfileType.globalIntelligence.accentColor
     private var grade: VibeGrade { VibeGrade.from(score: deal.porteosScore) }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                panelHeader
-                TerminalStructuralDivider()
-                kpiRow("STATUS",  deal.status.rawValue.uppercased(), color: deal.status.tokenColor)
-                if let score = deal.porteosScore {
-                    kpiRow("SCORE",   String(format: "%.0f / 100", score))
-                    kpiRow("GRADE",   grade.rawValue, color: Color(hex: grade.hexColor))
+        VStack(spacing: 0) {
+            HStack {
+                Text("// GI_INSPECTOR")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                Spacer()
+                Button { showEditSheet = true } label: {
+                    Text("[ EDIT ]")
+                        .porteosMeta()
+                        .foregroundStyle(accent)
                 }
-                if deal.purchasePrice > 0 {
-                    kpiRow("PRICE",   formatCurrency(deal.purchasePrice))
-                }
-                if deal.totalArea > 0 {
-                    kpiRow("AREA",    "\(Int(deal.totalArea)) m²")
-                }
-                kpiRow("GEOCODE", geocodeLabel, color: geocodeColor)
-
-                TerminalStructuralDivider()
-                    .padding(.vertical, 10)
-
-                actionLink("[ OPEN IN REAL ESTATE ↗ ]") {
-                    WindowManager.shared.activeProfile = .realEstate
-                }
+                .buttonStyle(.plain)
+                .help("Edit deal in full sheet")
             }
-            .padding(DesignTokens.blockGutter)
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 8)
+            .background(DesignTokens.surfacePanel)
+
+            TerminalStructuralDivider()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    panelHeader
+                    TerminalStructuralDivider()
+                    kpiRow("STATUS",  deal.status.rawValue.uppercased(), color: deal.status.tokenColor)
+                    if let score = deal.porteosScore {
+                        kpiRow("SCORE",   String(format: "%.0f / 100", score))
+                        kpiRow("GRADE",   grade.rawValue, color: Color(hex: grade.hexColor))
+                    }
+                    if deal.purchasePrice > 0 {
+                        kpiRow("PRICE",   formatCurrency(deal.purchasePrice))
+                    }
+                    if deal.totalArea > 0 {
+                        kpiRow("AREA",    "\(Int(deal.totalArea)) m²")
+                    }
+                    kpiRow("GEOCODE", geocodeLabel, color: geocodeColor)
+
+                    TerminalStructuralDivider()
+                        .padding(.vertical, 10)
+
+                    actionLink("[ OPEN IN REAL ESTATE ↗ ]") {
+                        WindowManager.shared.activeProfile = .realEstate
+                    }
+                    actionLink("[ VIEW ON MAP ]") {
+                        WindowManager.shared.geoActiveTab = "map"
+                    }
+                }
+                .padding(DesignTokens.blockGutter)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(DesignTokens.surfacePanel)
+        .sheet(isPresented: $showEditSheet) {
+            FullDealEditSheet(deal: deal)
+        }
     }
 
     private var panelHeader: some View {
@@ -164,6 +194,33 @@ struct MarketContextInspector: View {
         return counts.max(by: { $0.value < $1.value })?.key
     }
 
+    // Static macro indicators per country (2024–2026 estimates, labelled // BENCHMARK)
+    private struct MacroIndicators {
+        let gdpGrowth: String
+        let tourismIndex: String
+    }
+
+    private var macroIndicators: MacroIndicators? {
+        let id = MarketFeedRegistry.countryId(for: marketId) ?? marketId
+        switch id {
+        case "PT": return MacroIndicators(gdpGrowth: "2.1 %", tourismIndex: "↑ +4%")
+        case "ES": return MacroIndicators(gdpGrowth: "2.4 %", tourismIndex: "↑ +6%")
+        case "IT": return MacroIndicators(gdpGrowth: "0.7 %", tourismIndex: "↑ +2%")
+        case "FR": return MacroIndicators(gdpGrowth: "1.1 %", tourismIndex: "↑ +3%")
+        case "UK": return MacroIndicators(gdpGrowth: "0.8 %", tourismIndex: "↑ +1%")
+        case "DE": return MacroIndicators(gdpGrowth: "0.2 %", tourismIndex: "→ flat")
+        case "HR": return MacroIndicators(gdpGrowth: "3.0 %", tourismIndex: "↑ +8%")
+        case "GR": return MacroIndicators(gdpGrowth: "2.2 %", tourismIndex: "↑ +5%")
+        case "SE": return MacroIndicators(gdpGrowth: "0.5 %", tourismIndex: "→ flat")
+        case "DK": return MacroIndicators(gdpGrowth: "1.8 %", tourismIndex: "↑ +2%")
+        case "NO": return MacroIndicators(gdpGrowth: "1.2 %", tourismIndex: "↑ +3%")
+        case "FI": return MacroIndicators(gdpGrowth: "0.3 %", tourismIndex: "→ flat")
+        case "US": return MacroIndicators(gdpGrowth: "2.8 %", tourismIndex: "↑ +5%")
+        case "JP": return MacroIndicators(gdpGrowth: "0.9 %", tourismIndex: "↑ +18%")
+        default:   return nil
+        }
+    }
+
     // Capital city of this market for benchmark lookup
     private var benchmarkCity: String {
         switch marketId {
@@ -219,6 +276,10 @@ struct MarketContextInspector: View {
                            note: "// vs ECB 4.0%")
                     kpiRow("INT. RATE",    String(format: "%.1f %%", bm.avgInterestRate),
                            note: "// BENCHMARK")
+                }
+                if let macro = macroIndicators {
+                    kpiRow("GDP GROWTH",    macro.gdpGrowth,    note: "// BENCHMARK")
+                    kpiRow("TOURISM INDEX", macro.tourismIndex, note: "// BENCHMARK")
                 }
 
                 if let market = MarketFeedRegistry.market(id: marketId),
