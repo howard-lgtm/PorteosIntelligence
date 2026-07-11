@@ -41,7 +41,7 @@ struct MarketBenchmarks {
 
     static let benchmarks: [CityMetrics] = [
 
-        // ── PORTUGAL ───────────────────────────────────────────────────────────
+        // ── PORTUGAL — major, secondary, tertiary ──────────────────────────────
 
         CityMetrics(
             cityName: "Lisbon", country: "Portugal", region: "Europe",
@@ -71,7 +71,138 @@ struct MarketBenchmarks {
             avgConstructionCostPerSqm: 1200.0, avgInsuranceRatePerSqm: 8.5
         ),
 
-        // ── SPAIN ──────────────────────────────────────────────────────────────
+        // PT secondary — university, tech, industrial
+        CityMetrics(
+            cityName: "Braga", country: "Portugal", region: "Europe",
+            avgCapRate: 6.8, avgVacancyRate: 12.0,
+            avgOpExPerSqm: 32.0, avgGPIPerSqm: 110.0,
+            avgADR: 75.0, avgOccupancyRate: 65.0, avgRevPAR: 48.8,
+            typicalDaylighting: 58.0, typicalCoolingDegreeDays: 280,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.35,
+            avgConstructionCostPerSqm: 1100.0, avgInsuranceRatePerSqm: 7.5
+        ),
+        CityMetrics(
+            cityName: "Coimbra", country: "Portugal", region: "Europe",
+            avgCapRate: 7.0, avgVacancyRate: 13.0,
+            avgOpExPerSqm: 30.0, avgGPIPerSqm: 100.0,
+            avgADR: 70.0, avgOccupancyRate: 63.0, avgRevPAR: 44.1,
+            typicalDaylighting: 60.0, typicalCoolingDegreeDays: 350,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.35,
+            avgConstructionCostPerSqm: 1050.0, avgInsuranceRatePerSqm: 7.0
+        ),
+        CityMetrics(
+            cityName: "Aveiro", country: "Portugal", region: "Europe",
+            avgCapRate: 7.2, avgVacancyRate: 13.0,
+            avgOpExPerSqm: 28.0, avgGPIPerSqm: 95.0,
+            avgADR: 70.0, avgOccupancyRate: 62.0, avgRevPAR: 43.4,
+            typicalDaylighting: 57.0, typicalCoolingDegreeDays: 260,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.35,
+            avgConstructionCostPerSqm: 1000.0, avgInsuranceRatePerSqm: 7.0
+        ),
+        CityMetrics(
+            cityName: "Guimaraes", country: "Portugal", region: "Europe",
+            avgCapRate: 7.5, avgVacancyRate: 14.0,
+            avgOpExPerSqm: 27.0, avgGPIPerSqm: 88.0,
+            avgADR: 65.0, avgOccupancyRate: 60.0, avgRevPAR: 39.0,
+            typicalDaylighting: 57.0, typicalCoolingDegreeDays: 270,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.34,
+            avgConstructionCostPerSqm: 980.0, avgInsuranceRatePerSqm: 6.5
+        ),
+        CityMetrics(
+            cityName: "Setubal", country: "Portugal", region: "Europe",
+            avgCapRate: 6.8, avgVacancyRate: 12.0,
+            avgOpExPerSqm: 32.0, avgGPIPerSqm: 105.0,
+            avgADR: 72.0, avgOccupancyRate: 62.0, avgRevPAR: 44.6,
+            typicalDaylighting: 63.0, typicalCoolingDegreeDays: 400,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.35,
+            avgConstructionCostPerSqm: 1050.0, avgInsuranceRatePerSqm: 7.5
+        ),
+        CityMetrics(
+            cityName: "Evora", country: "Portugal", region: "Europe",
+            avgCapRate: 7.5, avgVacancyRate: 15.0,
+            avgOpExPerSqm: 25.0, avgGPIPerSqm: 85.0,
+            avgADR: 80.0, avgOccupancyRate: 64.0, avgRevPAR: 51.2,
+            typicalDaylighting: 68.0, typicalCoolingDegreeDays: 680,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.34,
+            avgConstructionCostPerSqm: 950.0, avgInsuranceRatePerSqm: 7.0
+        ),
+        CityMetrics(
+            cityName: "Leiria", country: "Portugal", region: "Europe",
+            avgCapRate: 7.3, avgVacancyRate: 14.0,
+            avgOpExPerSqm: 26.0, avgGPIPerSqm: 90.0,
+            avgADR: 65.0, avgOccupancyRate: 60.0, avgRevPAR: 39.0,
+            typicalDaylighting: 60.0, typicalCoolingDegreeDays: 380,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.34,
+            avgConstructionCostPerSqm: 980.0, avgInsuranceRatePerSqm: 7.0
+        ),
+        // PT Lisbon metro — premium suburbs
+        CityMetrics(
+            cityName: "Cascais", country: "Portugal", region: "Europe",
+            avgCapRate: 5.2, avgVacancyRate: 9.0,
+            avgOpExPerSqm: 42.0, avgGPIPerSqm: 160.0,
+            avgADR: 130.0, avgOccupancyRate: 72.0, avgRevPAR: 93.6,
+            typicalDaylighting: 66.0, typicalCoolingDegreeDays: 420,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.4,
+            avgConstructionCostPerSqm: 1500.0, avgInsuranceRatePerSqm: 10.0
+        ),
+        CityMetrics(
+            cityName: "Sintra", country: "Portugal", region: "Europe",
+            avgCapRate: 5.5, avgVacancyRate: 10.0,
+            avgOpExPerSqm: 40.0, avgGPIPerSqm: 145.0,
+            avgADR: 115.0, avgOccupancyRate: 68.0, avgRevPAR: 78.2,
+            typicalDaylighting: 62.0, typicalCoolingDegreeDays: 380,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.4,
+            avgConstructionCostPerSqm: 1400.0, avgInsuranceRatePerSqm: 9.5
+        ),
+        CityMetrics(
+            cityName: "Almada", country: "Portugal", region: "Europe",
+            avgCapRate: 5.8, avgVacancyRate: 10.0,
+            avgOpExPerSqm: 38.0, avgGPIPerSqm: 130.0,
+            avgADR: 85.0, avgOccupancyRate: 66.0, avgRevPAR: 56.1,
+            typicalDaylighting: 65.0, typicalCoolingDegreeDays: 440,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.38,
+            avgConstructionCostPerSqm: 1250.0, avgInsuranceRatePerSqm: 8.5
+        ),
+        // PT Algarve submarkets
+        CityMetrics(
+            cityName: "Portimao", country: "Portugal", region: "Europe",
+            avgCapRate: 6.2, avgVacancyRate: 14.0,
+            avgOpExPerSqm: 34.0, avgGPIPerSqm: 115.0,
+            avgADR: 105.0, avgOccupancyRate: 67.0, avgRevPAR: 70.4,
+            typicalDaylighting: 73.0, typicalCoolingDegreeDays: 640,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.35,
+            avgConstructionCostPerSqm: 1200.0, avgInsuranceRatePerSqm: 8.5
+        ),
+        CityMetrics(
+            cityName: "Lagos", country: "Portugal", region: "Europe",
+            avgCapRate: 6.0, avgVacancyRate: 15.0,
+            avgOpExPerSqm: 33.0, avgGPIPerSqm: 118.0,
+            avgADR: 115.0, avgOccupancyRate: 67.0, avgRevPAR: 77.1,
+            typicalDaylighting: 74.0, typicalCoolingDegreeDays: 660,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.35,
+            avgConstructionCostPerSqm: 1180.0, avgInsuranceRatePerSqm: 8.5
+        ),
+        CityMetrics(
+            cityName: "Albufeira", country: "Portugal", region: "Europe",
+            avgCapRate: 5.8, avgVacancyRate: 15.0,
+            avgOpExPerSqm: 35.0, avgGPIPerSqm: 125.0,
+            avgADR: 120.0, avgOccupancyRate: 69.0, avgRevPAR: 82.8,
+            typicalDaylighting: 74.0, typicalCoolingDegreeDays: 660,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.35,
+            avgConstructionCostPerSqm: 1220.0, avgInsuranceRatePerSqm: 9.0
+        ),
+        // PT islands
+        CityMetrics(
+            cityName: "Funchal", country: "Portugal", region: "Europe",
+            avgCapRate: 6.0, avgVacancyRate: 11.0,
+            avgOpExPerSqm: 36.0, avgGPIPerSqm: 130.0,
+            avgADR: 120.0, avgOccupancyRate: 72.0, avgRevPAR: 86.4,
+            typicalDaylighting: 72.0, typicalCoolingDegreeDays: 800,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.35,
+            avgConstructionCostPerSqm: 1250.0, avgInsuranceRatePerSqm: 9.0
+        ),
+
+        // ── SPAIN — expanded ───────────────────────────────────────────────────
 
         CityMetrics(
             cityName: "Madrid", country: "Spain", region: "Europe",
@@ -101,6 +232,43 @@ struct MarketBenchmarks {
             avgConstructionCostPerSqm: 1400.0, avgInsuranceRatePerSqm: 10.0
         ),
 
+        CityMetrics(
+            cityName: "Valencia", country: "Spain", region: "Europe",
+            avgCapRate: 5.2, avgVacancyRate: 11.0,
+            avgOpExPerSqm: 40.0, avgGPIPerSqm: 165.0,
+            avgADR: 110.0, avgOccupancyRate: 73.0, avgRevPAR: 80.3,
+            typicalDaylighting: 67.0, typicalCoolingDegreeDays: 790,
+            avgInterestRate: 3.8, avgPropertyTaxRate: 0.65,
+            avgConstructionCostPerSqm: 1450.0, avgInsuranceRatePerSqm: 10.5
+        ),
+        CityMetrics(
+            cityName: "Malaga", country: "Spain", region: "Europe",
+            avgCapRate: 5.5, avgVacancyRate: 12.0,
+            avgOpExPerSqm: 38.0, avgGPIPerSqm: 155.0,
+            avgADR: 115.0, avgOccupancyRate: 74.0, avgRevPAR: 85.1,
+            typicalDaylighting: 70.0, typicalCoolingDegreeDays: 820,
+            avgInterestRate: 3.8, avgPropertyTaxRate: 0.65,
+            avgConstructionCostPerSqm: 1400.0, avgInsuranceRatePerSqm: 10.0
+        ),
+        CityMetrics(
+            cityName: "Bilbao", country: "Spain", region: "Europe",
+            avgCapRate: 5.0, avgVacancyRate: 9.0,
+            avgOpExPerSqm: 44.0, avgGPIPerSqm: 180.0,
+            avgADR: 120.0, avgOccupancyRate: 74.0, avgRevPAR: 88.8,
+            typicalDaylighting: 50.0, typicalCoolingDegreeDays: 110,
+            avgInterestRate: 3.8, avgPropertyTaxRate: 0.68,
+            avgConstructionCostPerSqm: 1600.0, avgInsuranceRatePerSqm: 11.0
+        ),
+        CityMetrics(
+            cityName: "Granada", country: "Spain", region: "Europe",
+            avgCapRate: 5.8, avgVacancyRate: 13.0,
+            avgOpExPerSqm: 34.0, avgGPIPerSqm: 130.0,
+            avgADR: 90.0, avgOccupancyRate: 70.0, avgRevPAR: 63.0,
+            typicalDaylighting: 68.0, typicalCoolingDegreeDays: 820,
+            avgInterestRate: 3.8, avgPropertyTaxRate: 0.65,
+            avgConstructionCostPerSqm: 1200.0, avgInsuranceRatePerSqm: 9.5
+        ),
+
         // ── FRANCE ─────────────────────────────────────────────────────────────
 
         CityMetrics(
@@ -120,6 +288,25 @@ struct MarketBenchmarks {
             typicalDaylighting: 50.0, typicalCoolingDegreeDays: 210,
             avgInterestRate: 3.5, avgPropertyTaxRate: 1.4,
             avgConstructionCostPerSqm: 2200.0, avgInsuranceRatePerSqm: 16.0
+        ),
+
+        CityMetrics(
+            cityName: "Marseille", country: "France", region: "Europe",
+            avgCapRate: 5.0, avgVacancyRate: 12.0,
+            avgOpExPerSqm: 48.0, avgGPIPerSqm: 200.0,
+            avgADR: 115.0, avgOccupancyRate: 70.0, avgRevPAR: 80.5,
+            typicalDaylighting: 62.0, typicalCoolingDegreeDays: 560,
+            avgInterestRate: 3.5, avgPropertyTaxRate: 1.4,
+            avgConstructionCostPerSqm: 2000.0, avgInsuranceRatePerSqm: 15.0
+        ),
+        CityMetrics(
+            cityName: "Bordeaux", country: "France", region: "Europe",
+            avgCapRate: 4.5, avgVacancyRate: 9.0,
+            avgOpExPerSqm: 52.0, avgGPIPerSqm: 240.0,
+            avgADR: 120.0, avgOccupancyRate: 70.0, avgRevPAR: 84.0,
+            typicalDaylighting: 52.0, typicalCoolingDegreeDays: 220,
+            avgInterestRate: 3.5, avgPropertyTaxRate: 1.4,
+            avgConstructionCostPerSqm: 2100.0, avgInsuranceRatePerSqm: 15.0
         ),
 
         // ── UNITED KINGDOM ─────────────────────────────────────────────────────
@@ -150,6 +337,25 @@ struct MarketBenchmarks {
             typicalDaylighting: 35.0, typicalCoolingDegreeDays: 20,
             avgInterestRate: 5.2, avgPropertyTaxRate: 0.35,
             avgConstructionCostPerSqm: 2500.0, avgInsuranceRatePerSqm: 17.0
+        ),
+
+        CityMetrics(
+            cityName: "Bristol", country: "United Kingdom", region: "Europe",
+            avgCapRate: 5.2, avgVacancyRate: 9.0,
+            avgOpExPerSqm: 55.0, avgGPIPerSqm: 260.0,
+            avgADR: 120.0, avgOccupancyRate: 73.0, avgRevPAR: 87.6,
+            typicalDaylighting: 36.0, typicalCoolingDegreeDays: 20,
+            avgInterestRate: 5.2, avgPropertyTaxRate: 0.35,
+            avgConstructionCostPerSqm: 2600.0, avgInsuranceRatePerSqm: 17.0
+        ),
+        CityMetrics(
+            cityName: "Leeds", country: "United Kingdom", region: "Europe",
+            avgCapRate: 5.5, avgVacancyRate: 10.0,
+            avgOpExPerSqm: 50.0, avgGPIPerSqm: 240.0,
+            avgADR: 120.0, avgOccupancyRate: 73.0, avgRevPAR: 87.6,
+            typicalDaylighting: 35.0, typicalCoolingDegreeDays: 20,
+            avgInterestRate: 5.2, avgPropertyTaxRate: 0.35,
+            avgConstructionCostPerSqm: 2400.0, avgInsuranceRatePerSqm: 17.0
         ),
 
         // ── GERMANY ────────────────────────────────────────────────────────────
@@ -231,6 +437,43 @@ struct MarketBenchmarks {
             typicalDaylighting: 54.0, typicalCoolingDegreeDays: 310,
             avgInterestRate: 4.2, avgPropertyTaxRate: 0.76,
             avgConstructionCostPerSqm: 2600.0, avgInsuranceRatePerSqm: 13.0
+        ),
+
+        CityMetrics(
+            cityName: "Florence", country: "Italy", region: "Europe",
+            avgCapRate: 5.0, avgVacancyRate: 9.0,
+            avgOpExPerSqm: 52.0, avgGPIPerSqm: 260.0,
+            avgADR: 180.0, avgOccupancyRate: 74.0, avgRevPAR: 133.2,
+            typicalDaylighting: 58.0, typicalCoolingDegreeDays: 480,
+            avgInterestRate: 4.2, avgPropertyTaxRate: 0.76,
+            avgConstructionCostPerSqm: 2200.0, avgInsuranceRatePerSqm: 12.0
+        ),
+        CityMetrics(
+            cityName: "Naples", country: "Italy", region: "Europe",
+            avgCapRate: 6.0, avgVacancyRate: 14.0,
+            avgOpExPerSqm: 38.0, avgGPIPerSqm: 175.0,
+            avgADR: 120.0, avgOccupancyRate: 68.0, avgRevPAR: 81.6,
+            typicalDaylighting: 63.0, typicalCoolingDegreeDays: 680,
+            avgInterestRate: 4.2, avgPropertyTaxRate: 0.76,
+            avgConstructionCostPerSqm: 1500.0, avgInsuranceRatePerSqm: 10.0
+        ),
+        CityMetrics(
+            cityName: "Palermo", country: "Italy", region: "Europe",
+            avgCapRate: 6.5, avgVacancyRate: 16.0,
+            avgOpExPerSqm: 32.0, avgGPIPerSqm: 140.0,
+            avgADR: 95.0, avgOccupancyRate: 65.0, avgRevPAR: 61.8,
+            typicalDaylighting: 68.0, typicalCoolingDegreeDays: 820,
+            avgInterestRate: 4.2, avgPropertyTaxRate: 0.76,
+            avgConstructionCostPerSqm: 1200.0, avgInsuranceRatePerSqm: 9.0
+        ),
+        CityMetrics(
+            cityName: "Bologna", country: "Italy", region: "Europe",
+            avgCapRate: 5.0, avgVacancyRate: 8.0,
+            avgOpExPerSqm: 50.0, avgGPIPerSqm: 240.0,
+            avgADR: 145.0, avgOccupancyRate: 72.0, avgRevPAR: 104.4,
+            typicalDaylighting: 55.0, typicalCoolingDegreeDays: 380,
+            avgInterestRate: 4.2, avgPropertyTaxRate: 0.76,
+            avgConstructionCostPerSqm: 2000.0, avgInsuranceRatePerSqm: 12.0
         ),
 
         // ── IRELAND ────────────────────────────────────────────────────────────
@@ -419,6 +662,36 @@ struct MarketBenchmarks {
             avgConstructionCostPerSqm: 900.0, avgInsuranceRatePerSqm: 6.5
         ),
 
+        // ── CROATIA & GREECE — value-add Adriatic/Mediterranean ────────────────
+
+        CityMetrics(
+            cityName: "Split", country: "Croatia", region: "Europe",
+            avgCapRate: 7.0, avgVacancyRate: 16.0,
+            avgOpExPerSqm: 28.0, avgGPIPerSqm: 130.0,
+            avgADR: 110.0, avgOccupancyRate: 65.0, avgRevPAR: 71.5,
+            typicalDaylighting: 68.0, typicalCoolingDegreeDays: 560,
+            avgInterestRate: 4.5, avgPropertyTaxRate: 0.3,
+            avgConstructionCostPerSqm: 1100.0, avgInsuranceRatePerSqm: 6.0
+        ),
+        CityMetrics(
+            cityName: "Dubrovnik", country: "Croatia", region: "Europe",
+            avgCapRate: 6.5, avgVacancyRate: 14.0,
+            avgOpExPerSqm: 32.0, avgGPIPerSqm: 155.0,
+            avgADR: 150.0, avgOccupancyRate: 70.0, avgRevPAR: 105.0,
+            typicalDaylighting: 68.0, typicalCoolingDegreeDays: 580,
+            avgInterestRate: 4.5, avgPropertyTaxRate: 0.3,
+            avgConstructionCostPerSqm: 1300.0, avgInsuranceRatePerSqm: 7.0
+        ),
+        CityMetrics(
+            cityName: "Thessaloniki", country: "Greece", region: "Europe",
+            avgCapRate: 7.0, avgVacancyRate: 15.0,
+            avgOpExPerSqm: 26.0, avgGPIPerSqm: 110.0,
+            avgADR: 85.0, avgOccupancyRate: 65.0, avgRevPAR: 55.3,
+            typicalDaylighting: 65.0, typicalCoolingDegreeDays: 900,
+            avgInterestRate: 5.0, avgPropertyTaxRate: 0.5,
+            avgConstructionCostPerSqm: 950.0, avgInsuranceRatePerSqm: 6.0
+        ),
+
         // ── AMERICAS ───────────────────────────────────────────────────────────
 
         CityMetrics(
@@ -447,6 +720,70 @@ struct MarketBenchmarks {
             typicalDaylighting: 65.0, typicalCoolingDegreeDays: 1400,
             avgInterestRate: 12.0, avgPropertyTaxRate: 1.0,
             avgConstructionCostPerSqm: 1200.0, avgInsuranceRatePerSqm: 9.0
+        ),
+
+        CityMetrics(
+            cityName: "Los Angeles", country: "United States", region: "Americas",
+            avgCapRate: 4.5, avgVacancyRate: 11.0,
+            avgOpExPerSqm: 95.0, avgGPIPerSqm: 650.0,
+            avgADR: 235.0, avgOccupancyRate: 79.0, avgRevPAR: 185.7,
+            typicalDaylighting: 72.0, typicalCoolingDegreeDays: 950,
+            avgInterestRate: 7.0, avgPropertyTaxRate: 1.1,
+            avgConstructionCostPerSqm: 4800.0, avgInsuranceRatePerSqm: 28.0
+        ),
+        CityMetrics(
+            cityName: "Chicago", country: "United States", region: "Americas",
+            avgCapRate: 5.5, avgVacancyRate: 15.0,
+            avgOpExPerSqm: 90.0, avgGPIPerSqm: 500.0,
+            avgADR: 185.0, avgOccupancyRate: 75.0, avgRevPAR: 138.8,
+            typicalDaylighting: 50.0, typicalCoolingDegreeDays: 680,
+            avgInterestRate: 7.0, avgPropertyTaxRate: 2.2,
+            avgConstructionCostPerSqm: 3800.0, avgInsuranceRatePerSqm: 26.0
+        ),
+        CityMetrics(
+            cityName: "Detroit", country: "United States", region: "Americas",
+            avgCapRate: 8.5, avgVacancyRate: 22.0,
+            avgOpExPerSqm: 60.0, avgGPIPerSqm: 280.0,
+            avgADR: 120.0, avgOccupancyRate: 65.0, avgRevPAR: 78.0,
+            typicalDaylighting: 47.0, typicalCoolingDegreeDays: 560,
+            avgInterestRate: 7.0, avgPropertyTaxRate: 2.5,
+            avgConstructionCostPerSqm: 2200.0, avgInsuranceRatePerSqm: 22.0
+        ),
+        CityMetrics(
+            cityName: "Atlanta", country: "United States", region: "Americas",
+            avgCapRate: 6.0, avgVacancyRate: 12.0,
+            avgOpExPerSqm: 72.0, avgGPIPerSqm: 420.0,
+            avgADR: 175.0, avgOccupancyRate: 74.0, avgRevPAR: 129.5,
+            typicalDaylighting: 62.0, typicalCoolingDegreeDays: 1460,
+            avgInterestRate: 7.0, avgPropertyTaxRate: 1.0,
+            avgConstructionCostPerSqm: 2900.0, avgInsuranceRatePerSqm: 25.0
+        ),
+        CityMetrics(
+            cityName: "Dallas", country: "United States", region: "Americas",
+            avgCapRate: 5.5, avgVacancyRate: 13.0,
+            avgOpExPerSqm: 68.0, avgGPIPerSqm: 380.0,
+            avgADR: 160.0, avgOccupancyRate: 72.0, avgRevPAR: 115.2,
+            typicalDaylighting: 65.0, typicalCoolingDegreeDays: 2000,
+            avgInterestRate: 7.0, avgPropertyTaxRate: 1.7,
+            avgConstructionCostPerSqm: 2700.0, avgInsuranceRatePerSqm: 22.0
+        ),
+        CityMetrics(
+            cityName: "Seattle", country: "United States", region: "Americas",
+            avgCapRate: 4.8, avgVacancyRate: 11.0,
+            avgOpExPerSqm: 85.0, avgGPIPerSqm: 520.0,
+            avgADR: 200.0, avgOccupancyRate: 78.0, avgRevPAR: 156.0,
+            typicalDaylighting: 40.0, typicalCoolingDegreeDays: 130,
+            avgInterestRate: 7.0, avgPropertyTaxRate: 1.0,
+            avgConstructionCostPerSqm: 4000.0, avgInsuranceRatePerSqm: 24.0
+        ),
+        CityMetrics(
+            cityName: "Orlando", country: "United States", region: "Americas",
+            avgCapRate: 6.0, avgVacancyRate: 10.0,
+            avgOpExPerSqm: 70.0, avgGPIPerSqm: 400.0,
+            avgADR: 155.0, avgOccupancyRate: 76.0, avgRevPAR: 117.8,
+            typicalDaylighting: 72.0, typicalCoolingDegreeDays: 2500,
+            avgInterestRate: 7.0, avgPropertyTaxRate: 1.1,
+            avgConstructionCostPerSqm: 2600.0, avgInsuranceRatePerSqm: 35.0
         ),
 
         // ── ASIA-PACIFIC ───────────────────────────────────────────────────────
@@ -479,6 +816,15 @@ struct MarketBenchmarks {
             avgConstructionCostPerSqm: 3200.0, avgInsuranceRatePerSqm: 15.0
         ),
         CityMetrics(
+            cityName: "Osaka", country: "Japan", region: "APAC",
+            avgCapRate: 4.5, avgVacancyRate: 5.0,
+            avgOpExPerSqm: 70.0, avgGPIPerSqm: 360.0,
+            avgADR: 150.0, avgOccupancyRate: 78.0, avgRevPAR: 117.0,
+            typicalDaylighting: 54.0, typicalCoolingDegreeDays: 1400,
+            avgInterestRate: 1.0, avgPropertyTaxRate: 0.3,
+            avgConstructionCostPerSqm: 3000.0, avgInsuranceRatePerSqm: 12.0
+        ),
+        CityMetrics(
             cityName: "Hong Kong", country: "China SAR", region: "APAC",
             avgCapRate: 3.2, avgVacancyRate: 14.0,
             avgOpExPerSqm: 110.0, avgGPIPerSqm: 750.0,
@@ -505,39 +851,105 @@ struct MarketBenchmarks {
 
         // Alias map: alternate spellings → canonical city name
         let aliases: [String: String] = [
-            "lisboa":        "Lisbon",
-            "lisbonne":      "Lisbon",
-            "lissabon":      "Lisbon",
-            "porto":         "Porto",
-            "oporto":        "Porto",
-            "nueva york":    "New York",
-            "nyc":           "New York",
-            "ny":            "New York",
-            "rome":          "Rome",
-            "roma":          "Rome",
-            "munich":        "Munich",
-            "münchen":       "Munich",
-            "muenchen":      "Munich",
-            "cologne":       "Frankfurt",
-            "köln":          "Frankfurt",
-            "wien":          "Vienna",
-            "vienne":        "Vienna",
-            "zuerich":       "Zurich",
-            "zürich":        "Zurich",
-            "genève":        "Geneva",
-            "genf":          "Geneva",
-            "bruxelles":     "Brussels",
-            "brüssel":       "Brussels",
-            "venecia":       "Venice",
-            "venezia":       "Venice",
-            "atenas":        "Athens",
-            "athènes":       "Athens",
-            "athína":        "Athens",
-            "dubai city":    "Dubai",
-            "hong-kong":     "Hong Kong",
-            "singapour":     "Singapore",
-            "tokio":         "Tokyo",
-            "sao paulo":     "São Paulo",
+            // Portugal
+            "lisboa":           "Lisbon",
+            "lisbonne":         "Lisbon",
+            "lissabon":         "Lisbon",
+            "porto":            "Porto",
+            "oporto":           "Porto",
+            "gaia":             "Porto",
+            "vila nova de gaia":"Porto",
+            "faro":             "Faro",
+            "algarve":          "Faro",
+            "braga":            "Braga",
+            "coimbra":          "Coimbra",
+            "aveiro":           "Aveiro",
+            "guimarães":        "Guimaraes",
+            "guimaraes":        "Guimaraes",
+            "setúbal":          "Setubal",
+            "setubal":          "Setubal",
+            "évora":            "Evora",
+            "evora":            "Evora",
+            "leiria":           "Leiria",
+            "cascais":          "Cascais",
+            "sintra":           "Sintra",
+            "almada":           "Almada",
+            "portimão":         "Portimao",
+            "portimao":         "Portimao",
+            "lagos":            "Lagos",
+            "albufeira":        "Albufeira",
+            "tavira":           "Faro",
+            "luz":              "Lagos",
+            "funchal":          "Funchal",
+            "madeira":          "Funchal",
+            // Spain
+            "valencia":         "Valencia",
+            "málaga":           "Malaga",
+            "malaga":           "Malaga",
+            "bilbao":           "Bilbao",
+            "granada":          "Granada",
+            "sevilla":          "Seville",
+            "seville":          "Seville",
+            // France
+            "marseille":        "Marseille",
+            "bordeaux":         "Bordeaux",
+            // Italy
+            "firenze":          "Florence",
+            "florence":         "Florence",
+            "napoli":           "Naples",
+            "naples":           "Naples",
+            "palermo":          "Palermo",
+            "bologna":          "Bologna",
+            "venezia":          "Venice",
+            "venecia":          "Venice",
+            "roma":             "Rome",
+            "rome":             "Rome",
+            "milano":           "Milan",
+            // Germany
+            "münchen":          "Munich",
+            "muenchen":         "Munich",
+            "cologne":          "Frankfurt",
+            "köln":             "Frankfurt",
+            // Croatia
+            "split":            "Split",
+            "dubrovnik":        "Dubrovnik",
+            "zadar":            "Split",
+            "dalmatia":         "Split",
+            // Greece
+            "thessaloniki":     "Thessaloniki",
+            "atenas":           "Athens",
+            "athènes":          "Athens",
+            "athína":           "Athens",
+            // Austria/Switzerland/Belgium
+            "wien":             "Vienna",
+            "vienne":           "Vienna",
+            "zürich":           "Zurich",
+            "zuerich":          "Zurich",
+            "genève":           "Geneva",
+            "genf":             "Geneva",
+            "bruxelles":        "Brussels",
+            "brüssel":          "Brussels",
+            // USA
+            "nueva york":       "New York",
+            "nyc":              "New York",
+            "ny":               "New York",
+            "new york city":    "New York",
+            "los angeles":      "Los Angeles",
+            "la":               "Los Angeles",
+            "chicago":          "Chicago",
+            "detroit":          "Detroit",
+            "atlanta":          "Atlanta",
+            "dallas":           "Dallas",
+            "seattle":          "Seattle",
+            "orlando":          "Orlando",
+            // Japan
+            "tokio":            "Tokyo",
+            "osaka":            "Osaka",
+            // Other
+            "dubai city":       "Dubai",
+            "hong-kong":        "Hong Kong",
+            "singapour":        "Singapore",
+            "sao paulo":        "São Paulo",
         ]
 
         if let canonical = aliases[query],
