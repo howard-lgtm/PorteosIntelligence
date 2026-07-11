@@ -397,7 +397,14 @@ final class DealIngestionServer {
         }
 
         let ctx  = ModelContext(container)
-        let city = payload.locationCity ?? ""
+        // Infer city from available text if the scraper didn't capture it
+        let city = (payload.locationCity ?? "").trimmingCharacters(in: .whitespaces).isEmpty
+            ? DealIngestionServer.inferCity(
+                name:    payload.propertyName    ?? "",
+                address: "",
+                country: payload.locationCountry ?? "",
+                url:     payload.url             ?? "")
+            : payload.locationCity ?? ""
 
         // ── Dedup: skip if a deal with the same source URL already exists ────
         if let url = payload.url, !url.isEmpty {
@@ -574,6 +581,68 @@ final class DealIngestionServer {
                               dealID: dealID)
         recentLogs.insert(entry, at: 0)
         if recentLogs.count > 50 { recentLogs = Array(recentLogs.prefix(50)) }
+    }
+}
+
+// MARK: - City inference
+
+extension DealIngestionServer {
+
+    /// Tries to extract a city name from available import metadata.
+    /// Returns empty string if inference fails — callers should treat "" as "unknown".
+    static func inferCity(name: String, address: String, country: String, url: String) -> String {
+        let candidates = [name, address, url]
+
+        // 1. "in Porto", "em Lisboa", "en Madrid" pattern in property name or address
+        let locPatterns = [
+            #"\bin\s+([A-ZÀ-Ú][a-zA-ZÀ-ú\-]{2,}(?:\s[A-ZÀ-Ú][a-zA-ZÀ-ú\-]+)?)"#,
+            #"\bem\s+([A-ZÀ-Ú][a-zA-ZÀ-ú\-]{2,}(?:\s[A-ZÀ-Ú][a-zA-ZÀ-ú\-]+)?)"#,
+            #"\ben\s+([A-ZÀ-Ú][a-zA-ZÀ-ú\-]{2,}(?:\s[A-ZÀ-Ú][a-zA-ZÀ-ú\-]+)?)"#,
+        ]
+        for source in [name, address] {
+            for pattern in locPatterns {
+                if let re = try? NSRegularExpression(pattern: pattern),
+                   let m  = re.firstMatch(in: source, range: NSRange(source.startIndex..., in: source)),
+                   let r  = Range(m.range(at: 1), in: source) {
+                    let city = String(source[r]).trimmingCharacters(in: .whitespaces)
+                    if MarketBenchmarks.benchmark(for: city) != nil { return city }
+                }
+            }
+        }
+
+        // 2. URL slug: "venda-predio-t10-porto-bonfim" → segment after T-type
+        if !url.isEmpty {
+            let parts = url.components(separatedBy: "/")
+            if let slug = parts.first(where: { $0.hasPrefix("venda-") || $0.hasPrefix("arrendar-") }) {
+                let segs = slug.components(separatedBy: "-")
+                if let txIdx = segs.firstIndex(where: { $0.range(of: #"^t\d+$"#, options: .regularExpression) != nil }),
+                   txIdx + 1 < segs.count {
+                    let raw = segs[txIdx + 1].prefix(1).uppercased() + segs[txIdx + 1].dropFirst()
+                    if MarketBenchmarks.benchmark(for: String(raw)) != nil { return String(raw) }
+                }
+            }
+        }
+
+        // 3. Last comma-separated segment of address ("Rua X, Porto" → "Porto")
+        if !address.isEmpty {
+            let segments = address.components(separatedBy: ",")
+            if let last = segments.last?.trimmingCharacters(in: .whitespaces), last.count > 2 {
+                if MarketBenchmarks.benchmark(for: last) != nil { return last }
+            }
+        }
+
+        // 4. Country fallback — returns the national capital so benchmarks degrade gracefully
+        switch country.lowercased() {
+        case "portugal":       return "Lisbon"
+        case "spain":          return "Madrid"
+        case "italy":          return "Rome"
+        case "france":         return "Paris"
+        case "united kingdom": return "London"
+        case "usa", "united states": return "New York"
+        case "sweden":         return "Stockholm"
+        case "japan":          return "Tokyo"
+        default:               return ""
+        }
     }
 }
 

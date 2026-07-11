@@ -292,6 +292,13 @@ struct GenericListingEmailParser: ListingEmailParser {
             location = String(subject[r])
         }
 
+        // Attempt inference if location is still generic
+        if location == "Unknown" {
+            let inferred = DealIngestionServer.inferCity(
+                name: subject, address: "", country: "", url: url ?? "")
+            if !inferred.isEmpty { location = inferred }
+        }
+
         return ParsedListing(
             propertyName: "Import: \(type) in \(location)",
             location:     location,

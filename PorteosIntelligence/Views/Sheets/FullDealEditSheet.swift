@@ -197,9 +197,15 @@ struct FullDealEditSheet: View {
                 .focused($focusedField, equals: .propertyName)
             TerminalInputField(label: "Address", placeholder: "Street address", prefix: nil, suffix: nil, text: $deal.address)
                 .focused($focusedField, equals: .address)
-            TerminalInputField(label: "City", placeholder: "City, Country", prefix: nil, suffix: nil, text: $deal.locationCity)
-                .focused($focusedField, equals: .location)
-                .onSubmit { checkForBenchmark() }
+            TerminalComboboxField(
+                label: "City",
+                placeholder: "Start typing…",
+                text: $deal.locationCity,
+                suggestions: { query in Self.citySuggestions(for: query) },
+                focus: $focusedField,
+                equals: .location
+            )
+            .onChange(of: deal.locationCity) { _, _ in checkForBenchmark() }
 
             sourceURLField
 
@@ -479,6 +485,32 @@ struct FullDealEditSheet: View {
     // ─────────────────────────────────────────────────────────────────────────
     // MARK: Helpers
     // ─────────────────────────────────────────────────────────────────────────
+
+    // MARK: City autocomplete
+
+    /// All city names from MarketBenchmarks + MarketFeedRegistry aliases, deduplicated and sorted.
+    private static let allCityNames: [String] = {
+        var names = Set<String>()
+        // Benchmark city names (all have data — best for autocomplete)
+        MarketBenchmarks.benchmarks.forEach { names.insert($0.cityName) }
+        // Friendly aliases from MarketFeedRegistry metro definitions
+        MarketFeedRegistry.metros.forEach { metro in
+            metro.cityAliases.forEach { alias in
+                let cap = alias.prefix(1).uppercased() + alias.dropFirst()
+                names.insert(cap)
+            }
+            names.insert(metro.displayName)
+        }
+        return names.sorted()
+    }()
+
+    static func citySuggestions(for query: String) -> [String] {
+        guard query.count >= 2 else { return [] }
+        let q = query.lowercased()
+        let prefix  = allCityNames.filter { $0.lowercased().hasPrefix(q) }
+        let contains = allCityNames.filter { !$0.lowercased().hasPrefix(q) && $0.lowercased().contains(q) }
+        return Array((prefix + contains).prefix(8))
+    }
 
     private static let percentFormatter: NumberFormatter = {
         decimalFormatter(maxFractionDigits: 2)

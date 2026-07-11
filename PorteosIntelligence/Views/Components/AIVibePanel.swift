@@ -224,6 +224,8 @@ struct AIVibePanel: View {
 
     // MARK: SWOT
 
+    @State private var expandedSWOTKey: String? = nil
+
     @ViewBuilder
     private func swotSection(_ swot: SWOTAnalysis) -> some View {
         sectionHeader("SWOT ANALYSIS")
@@ -239,19 +241,35 @@ struct AIVibePanel: View {
     }
 
     private func swotRow(_ label: String, _ text: String, color: Color) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            Text(label)
-                .porteosMeta()
-                .foregroundStyle(color)
-                .frame(width: 16)
-            Text(text)
-                .porteosMeta()
-                .foregroundStyle(DesignTokens.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+        let isExpanded = expandedSWOTKey == label
+        let preview = text.count > 55 ? String(text.prefix(55)) + "…" : text
+
+        return Button {
+            expandedSWOTKey = isExpanded ? nil : label
+        } label: {
+            HStack(alignment: .top, spacing: 10) {
+                Text(label)
+                    .porteosMeta()
+                    .foregroundStyle(color)
+                    .frame(width: 16)
+                Text(isExpanded ? text : preview)
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: 0)
+                if text.count > 55 {
+                    Text(isExpanded ? "▲" : "▼")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textDim)
+                }
+            }
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 8)
+            .background(DesignTokens.surfacePanel)
+            .contentShape(Rectangle())
         }
-        .padding(.horizontal, DesignTokens.blockGutter)
-        .padding(.vertical, 8)
-        .background(DesignTokens.surfacePanel)
+        .buttonStyle(.plain)
     }
 
     // MARK: Rows
@@ -479,7 +497,15 @@ struct AIVibePanel: View {
     // MARK: Benchmark Apply Section
 
     private var cityBenchmark: CityMetrics? {
-        MarketBenchmarks.benchmark(for: deal.locationCity)
+        if !deal.locationCity.isEmpty,
+           let bm = MarketBenchmarks.benchmark(for: deal.locationCity) { return bm }
+        // Fallback: infer city from property name / address / notes URL
+        let inferred = DealIngestionServer.inferCity(
+            name:    deal.propertyName,
+            address: deal.address,
+            country: "",
+            url:     deal.notes)
+        return inferred.isEmpty ? nil : MarketBenchmarks.benchmark(for: inferred)
     }
 
     @ViewBuilder
@@ -592,6 +618,11 @@ struct AIVibePanel: View {
                 deal.operatingExpenses = bm.avgOpExPerSqm * deal.totalArea
                 applied.append("OpEx €\(Int(bm.avgOpExPerSqm * deal.totalArea))/yr")
             }
+        }
+        // Loan amount at 65% LTV (standard market assumption for value-add)
+        if deal.loanAmount == 0, deal.purchasePrice > 0 {
+            deal.loanAmount = deal.purchasePrice * 0.65
+            applied.append("loan 65% LTV €\(Int(deal.purchasePrice * 0.65))")
         }
         if deal.hospitalityADR == 0, bm.avgADR > 0 {
             deal.hospitalityADR = bm.avgADR
