@@ -310,6 +310,8 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 | P11-05 | Reuse path for AI Vibe panel — shared provider, different prompts | `[x]` | Single LLMAnalysisService gateway for AI Vibe + INTEL tab Jul 10 |
 | P11-06 | Offline fallback UX — `// AGENT_OFFLINE` + retry (per Figma handoff) | `[x]` | // AGENT_OFFLINE + RETRY + DISMISS in IntelBriefView Jul 10 |
 | P11-07 | App Store / privacy — document local-only default; no portfolio data leaves device | `[ ]` |
+| P11-08 | **Multi-model selection UI** — enumerate installed Ollama models (`GET /api/tags`), let user assign different models per task: *SWOT analysis* vs *market brief* vs *AI Vibe*. Enables e.g. phi4-mini for fast signals + qwen2.5:32b for deep SWOT. Builds on `LLMProvider` protocol (P11-02). Settings → INTELLIGENCE: model picker per task instead of single global field. | `[ ]` | v1.1 |
+| P11-09 | **Cloud LLM fallback** (optional, user-configured) — abstract `LLMProvider` to support OpenAI-compatible endpoints (OpenAI, Mistral API, local LM Studio). User opts in explicitly; privacy note prominent. Portfolio data never sent without explicit consent toggle. | `[ ]` | v2 |
 
 **Lean recommendation (for discussion):** Bake a thin `LLMProvider` into the app (not a separate plugin binary). Ollama is the default local backend; user configures URL + model in Settings. Global Intelligence and AI Vibe both call the same service with different system prompts. Ship P10 without any of this; add in P11.
 
