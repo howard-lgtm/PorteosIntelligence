@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UniformTypeIdentifiers
 
 // MARK: - FullDealEditSheet
 
@@ -63,6 +64,10 @@ struct FullDealEditSheet: View {
     // MARK: Benchmark State
     @State private var showBenchmarkPrompt:  Bool   = false
     @State private var pendingBenchmarkCity: String = ""
+
+    // MARK: Research Import State
+    @State private var showResearchImporter: Bool          = false
+    @State private var researchImportResult: String?       = nil   // success/failure line
 
     // MARK: Body
 
@@ -243,12 +248,15 @@ struct FullDealEditSheet: View {
                 .padding(.top, 4)
             }
 
+            researchImportRow
+
             sectionLabel("FINANCIAL DETAILS")
             TerminalInputField(label: "Purchase Price", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.purchasePrice, formatter: currencyFormatter)
                 .focused($focusedField, equals: .purchasePrice)
             statusPickerField
             TerminalInputField(label: "Area m²", placeholder: "0", prefix: nil, suffix: "m²", text: numStr($deal.totalArea))
                 .focused($focusedField, equals: .totalArea)
+            TerminalInputField(label: "Land m²", placeholder: "0", prefix: nil, suffix: "m²", text: numStr($deal.landArea))
             TerminalComboboxField(
                 label: "Property Type",
                 placeholder: "e.g. Hotel, Office A-Class",
@@ -272,6 +280,61 @@ struct FullDealEditSheet: View {
             }
             .pickerStyle(.menu)
             .labelsHidden()
+        }
+    }
+
+    // MARK: Research Import
+
+    private var researchImportRow: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 10) {
+                Button("[ IMPORT RESEARCH JSON ]") {
+                    showResearchImporter = true
+                }
+                .porteosRowLabel()
+                .foregroundStyle(accentRust)
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                if let result = researchImportResult {
+                    Text(result)
+                        .porteosMeta()
+                        .foregroundStyle(result.hasPrefix("//") ? textTertiary : DesignTokens.statusGo)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+            }
+            .padding(.horizontal, 8)
+            .frame(height: DesignTokens.rowHeightData)
+            .background(shellBg)
+            .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
+            .clipShape(Rectangle())
+        }
+        .fileImporter(
+            isPresented: $showResearchImporter,
+            allowedContentTypes: [.json],
+            allowsMultipleSelection: false
+        ) { result in
+            guard let url = try? result.get().first,
+                  url.startAccessingSecurityScopedResource() else {
+                researchImportResult = "// Could not access file"
+                return
+            }
+            defer { url.stopAccessingSecurityScopedResource() }
+
+            guard let data = try? Data(contentsOf: url) else {
+                researchImportResult = "// Could not read file"
+                return
+            }
+
+            let importResult = DealResearchImporter.apply(json: data, to: deal, context: modelContext)
+            if importResult.applied.isEmpty {
+                researchImportResult = "// No new fields — already populated"
+            } else {
+                let gpsNote = importResult.hadGPS ? " · GPS pinned ✓" : ""
+                researchImportResult = "Applied: \(importResult.applied.joined(separator: " · "))\(gpsNote)"
+            }
         }
     }
 

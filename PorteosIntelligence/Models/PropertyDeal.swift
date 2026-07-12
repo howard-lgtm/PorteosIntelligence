@@ -33,7 +33,8 @@ final class PropertyDeal {
     var propertyName:    String
     var address:         String
     var propertyType:    String
-    var totalArea:       Double
+    var totalArea:       Double   // built / floor area (m²)
+    var landArea:        Double   // rustic / plot area (m²) — quintas, rural
     var locationCity:    String
 
     // MARK: Global Intelligence / Geo
@@ -168,6 +169,7 @@ final class PropertyDeal {
         address:                     String  = "",
         propertyType:                String  = "",
         totalArea:                   Double  = 0,
+        landArea:                    Double  = 0,
         locationCity:                String  = "",
         latitude:                    Double? = nil,
         longitude:                   Double? = nil,
@@ -247,6 +249,7 @@ final class PropertyDeal {
         self.address                        = address
         self.propertyType                   = propertyType
         self.totalArea                      = totalArea
+        self.landArea                       = landArea
         self.locationCity                   = locationCity
         self.latitude                       = latitude
         self.longitude                      = longitude
