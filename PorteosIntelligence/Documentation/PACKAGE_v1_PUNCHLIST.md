@@ -35,7 +35,7 @@
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
 | PKG-01 | App icon in `AppIcon.appiconset` | `[x]` | 1024 + all macOS slots (2026-07-04) |
-| PKG-02 | Confirm version/build in Xcode (1.0 / 1) | `[ ]` | `MARKETING_VERSION` already 1.0 |
+| PKG-02 | Confirm version/build in Xcode (1.0 / 1) | `[x]` | Confirmed: MARKETING_VERSION=1.0, CURRENT_PROJECT_VERSION=1 Jul 12 | `MARKETING_VERSION` already 1.0 |
 | PKG-03 | Clean git tree + tag `v1.0.0-wild` after icon commit | `[ ]` | Exclude `.DS_Store`, `xcuserstate` |
 | PKG-04 | Archive → Export `.app` for personal install | `[~]` | See `Documentation/DISTRIBUTION.md` |
 | PKG-05 | Smoke test on clean machine (fonts load, SwiftData, server port) | `[ ]` | |
@@ -67,7 +67,7 @@
 | P1-02 | Nav sections | `// NAVIGATION` meta-bold | `[x]` | |
 | P1-03 | Nav footer | Bulk export row vs Figma nav footer | `[ ]` | `img_00_21` left column |
 | P1-04 | Filter panel | Advanced filter visually “admin” | `[ ]` | `AdvancedFilterPanel` spacing/layout |
-| P1-05 | Detached inspector | Empty horizontal margins | `[ ]` | `DetachedPaneViews` width cap |
+| P1-05 | Detached inspector | Empty horizontal margins | `[x]` | frame(maxWidth: inspectorPaneWidth) in DetachedPaneViews Jul 10 | `DetachedPaneViews` width cap |
 | P1-06 | Deal rows | Right column: cap rate vs status chip | `[ ]` | Figma `img_00_22` |
 | P1-07 | HTTP endpoint display | `monospacedDigit` on full URL line | `[ ]` | Server Config / nav status |
 | P1-08 | **Keyboard nav (↑↓ ←→)** | Navigate **profile links** and **deal rows** in left pane with arrow keys; terminal-style focus ring + selection pip follows keyboard. Document in shortcuts legend. | `[ ]` | Wild-use 2026-07-05 |
@@ -98,7 +98,7 @@
 | P3-02 | Sheet chrome | Rounded corners | `[ ]` |
 | P3-03 | PDF cover output | Overlap | `[x]` |
 | P3-04 | PDF page 3+ | Field mapping (e.g. GFA `400000 m²`) | `[ ]` | Data vs display |
-| P3-05 | B&W mode | Untested output | `[ ]` | Superseded by P3-07 build-out |
+| P3-05 | B&W mode | Untested output | `[—]` | Superseded by P3-07 (done) | Superseded by P3-07 build-out |
 | P3-06 | External share | Cover KPI spacing OK for send-out | `[ ]` | Re-verify after wild PDFs |
 | P3-07 | **B&W mode build-out** | Toggle exists in `PDFReportSheet` but output not fully implemented — user note: “Need to build this out”. Wire `blackAndWhite` through `PDFReportGenerator`; verify print-safe contrast. | `[x]` | `c()` greyscale resolver verified in `PDFReportGenerator` Jul 10 |
 
@@ -199,7 +199,7 @@
 | P8-02 | Scenario save/load edge cases | `[ ]` |
 | P8-03 | Market benchmark wrong city alias | `[ ]` |
 | P8-04 | SwiftData export before schema change | `[ ]` |
-| P8-05 | **Expand MarketBenchmarks PT coverage** — add Braga, Coimbra, Cascais/Sintra, Funchal (Madeira), Setúbal, Aveiro, Évora, Leiria. Also expand US: LA, Chicago, Miami, Dallas, Atlanta; IT: Florence, Naples; ES: Valencia, Bilbao. Enables granular benchmark-apply in AI Vibe for all value-add thesis markets. | `[ ]` | Next version |
+| P8-05 | **Expand MarketBenchmarks PT coverage** — add Braga, Coimbra, Cascais/Sintra, Funchal (Madeira), Setúbal, Aveiro, Évora, Leiria. Also expand US: LA, Chicago, Miami, Dallas, Atlanta; IT: Florence, Naples; ES: Valencia, Bilbao. Enables granular benchmark-apply in AI Vibe for all value-add thesis markets. | `[x]` | 80+ cities: PT/ES/FR/UK/IT/HR/GR/US/JP expanded Jul 11 | Next version |
 
 ---
 
@@ -305,7 +305,7 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 |----|-----------------|--------|
 | P11-01 | **Architecture choice:** baked-in service vs optional plugin vs Settings-toggle provider | `[ ]` |
 | P11-02 | `IntelAgentService` — abstract `LLMProvider` protocol (Ollama, future cloud) | `[ ]` |
-| P11-03 | Settings surface — endpoint, model name (`qwen` / `llama3.2:3b`), privacy footer | `[ ]` |
+| P11-03 | Settings surface — endpoint, model name (`qwen` / `llama3.2:3b`), privacy footer | `[x]` | Settings › INTELLIGENCE tab: endpoint, model, ping, privacy Jul 10 |
 | P11-04 | Global Intelligence Variant A — `03 // DAILY_INTEL_BRIEF` + `[ REGENERATE ]` | `[x]` | IntelBriefView + LLMAnalysisService.generateMarketBrief() Jul 10 |
 | P11-05 | Reuse path for AI Vibe panel — shared provider, different prompts | `[x]` | Single LLMAnalysisService gateway for AI Vibe + INTEL tab Jul 10 |
 | P11-06 | Offline fallback UX — `// AGENT_OFFLINE` + retry (per Figma handoff) | `[x]` | // AGENT_OFFLINE + RETRY + DISMISS in IntelBriefView Jul 10 |
