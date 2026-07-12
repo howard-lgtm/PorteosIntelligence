@@ -242,34 +242,33 @@ struct AIVibePanel: View {
 
     private func swotRow(_ label: String, _ text: String, color: Color) -> some View {
         let isExpanded = expandedSWOTKey == label
-        let preview = text.count > 55 ? String(text.prefix(55)) + "…" : text
+        let needsExpand = text.count > 55
+        let preview = needsExpand ? String(text.prefix(55)) + "…" : text
 
-        return Button {
-            expandedSWOTKey = isExpanded ? nil : label
-        } label: {
-            HStack(alignment: .top, spacing: 10) {
-                Text(label)
+        return HStack(alignment: .top, spacing: 10) {
+            Text(label)
+                .porteosMeta()
+                .foregroundStyle(color)
+                .frame(width: 16)
+            Text(isExpanded ? text : preview)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .multilineTextAlignment(.leading)
+            Spacer(minLength: 0)
+            if needsExpand {
+                Text(isExpanded ? "▲" : "▼")
                     .porteosMeta()
-                    .foregroundStyle(color)
-                    .frame(width: 16)
-                Text(isExpanded ? text : preview)
-                    .porteosMeta()
-                    .foregroundStyle(DesignTokens.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .multilineTextAlignment(.leading)
-                Spacer(minLength: 0)
-                if text.count > 55 {
-                    Text(isExpanded ? "▲" : "▼")
-                        .porteosMeta()
-                        .foregroundStyle(DesignTokens.textDim)
-                }
+                    .foregroundStyle(DesignTokens.textDim)
             }
-            .padding(.horizontal, DesignTokens.blockGutter)
-            .padding(.vertical, 8)
-            .background(DesignTokens.surfacePanel)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, 8)
+        .background(DesignTokens.surfacePanel)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            expandedSWOTKey = isExpanded ? nil : label
+        }
     }
 
     // MARK: Rows

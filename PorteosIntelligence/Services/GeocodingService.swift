@@ -85,8 +85,45 @@ final class GeocodingService {
     }
 
     private func geocodeQuery(for deal: PropertyDeal) -> String {
-        let parts = [deal.address, deal.locationCity].filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
-        return parts.joined(separator: ", ")
+        let parts = [deal.address, deal.locationCity]
+            .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        var query = parts.joined(separator: ", ")
+        guard !query.isEmpty else { return "" }
+
+        // Append country context to prevent mis-geocoding ambiguous place names
+        if let country = inferCountry(for: deal), !query.lowercased().contains(country.lowercased()) {
+            query += ", \(country)"
+        }
+        return query
+    }
+
+    /// Derives a country name from marketId prefix or benchmark lookup.
+    private func inferCountry(for deal: PropertyDeal) -> String? {
+        // 1. marketId prefix (most reliable when set post-geocode)
+        let idPrefix = String(deal.marketId.prefix(2))
+        let countryByCode: [String: String] = [
+            "PT": "Portugal", "ES": "Spain", "IT": "Italy", "FR": "France",
+            "UK": "United Kingdom", "DE": "Germany", "HR": "Croatia",
+            "GR": "Greece", "SE": "Sweden", "DK": "Denmark",
+            "NO": "Norway", "FI": "Finland", "US": "United States",
+            "JP": "Japan",
+        ]
+        if let country = countryByCode[idPrefix] { return country }
+
+        // 2. Benchmark lookup on city
+        if let bm = MarketBenchmarks.benchmark(for: deal.locationCity) {
+            return bm.country
+        }
+
+        // 3. Portuguese place-name heuristic (São, da, do, de + no Latin-Am marker)
+        let city = deal.locationCity + " " + deal.propertyName
+        let ptMarkers = ["são", "lourinhã", "alcobaca", "setúbal", "algarve",
+                         "évora", "alentejo", "ribatejo", "minho", "douro"]
+        if ptMarkers.contains(where: { city.lowercased().contains($0) }) {
+            return "Portugal"
+        }
+
+        return nil
     }
 
     private func addressContext(from item: MKMapItem) -> String {
