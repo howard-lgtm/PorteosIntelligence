@@ -32,8 +32,6 @@ struct GeoAssetInspectorPanel: View {
 
     let deal: PropertyDeal
 
-    @State private var showEditSheet = false
-
     private let accent = ProfileType.globalIntelligence.accentColor
     private var grade: VibeGrade { VibeGrade.from(score: deal.porteosScore) }
 
@@ -50,8 +48,14 @@ struct GeoAssetInspectorPanel: View {
 
             TerminalStructuralDivider()
 
-            // Action row below (same pattern as InspectorPane)
-            Button { showEditSheet = true } label: {
+            // Navigate to RE profile for full edit — avoids nested sheet ownership conflicts
+            Button {
+                WindowManager.shared.activeProfile = .realEstate
+                // Brief delay so RE dashboard appears before the edit sheet opens
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    NotificationCenter.default.post(name: .showEditDeal, object: deal.id)
+                }
+            } label: {
                 Text("[ EDIT DEAL DATA ]")
                     .porteosMeta()
                     .foregroundStyle(accent)
@@ -99,9 +103,7 @@ struct GeoAssetInspectorPanel: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(DesignTokens.surfacePanel)
-        .sheet(isPresented: $showEditSheet) {
-            FullDealEditSheet(deal: deal)
-        }
+        // No .sheet here — sheet ownership belongs to AppShell only
     }
 
     private var panelHeader: some View {
