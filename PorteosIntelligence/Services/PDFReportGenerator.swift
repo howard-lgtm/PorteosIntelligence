@@ -406,16 +406,21 @@ final class PDFReportGenerator {
         y = sectionHeader(ctx, "03 // DESIGN PERFORMANCE", at: y, accent: purple)
         y -= 8
 
-        y = metricRow(ctx, "GFA",                  "\(f0(des.gfa)) m²",             y: y, alt: true)
-        y = metricRow(ctx, "NIA",                  "\(f0(des.nia)) m²",             y: y)
-        y = metricRow(ctx, "NET-TO-GROSS RATIO",   pct(des.netToGrossRatio),        y: y, alt: true, valueColor: purple)
-        y = metricRow(ctx, "SPACE UTILIZATION",    pct(des.spaceUtilization),       y: y)
-        y = metricRow(ctx, "DAYLIGHTING COVERAGE", pct(des.daylighting),            y: y, alt: true)
-        y = metricRow(ctx, "INDOOR CO₂",           "\(Int(des.co2ppm)) ppm",        y: y)
-        y = metricRow(ctx, "AIR CHANGES / HOUR",   "\(f1(des.ach)) ACH",            y: y, alt: true)
-        y = metricRow(ctx, "THERMAL COMFORT",      pct(des.thermalComfort),         y: y)
-        y = metricRow(ctx, "ACOUSTIC COMFORT",     pct(des.acousticComfort),        y: y, alt: true)
-        y = metricRow(ctx, "BIOPHILIC ELEMENTS",   "\(des.biophilicCount)",         y: y)
+        // GFA/NIA: use designGFA if populated, fall back to totalArea for the PDF.
+        // Guard against 0 (unfilled) to avoid showing "0 m²" or misleading values.
+        let gfaDisplay = des.gfa > 0 ? "\(f0(des.gfa)) m²"
+                       : deal.totalArea > 0 ? "\(f0(deal.totalArea)) m² (built area)" : "—"
+        let niaDisplay = des.nia > 0 ? "\(f0(des.nia)) m²" : "—"
+        y = metricRow(ctx, "GFA",                  gfaDisplay,                      y: y, alt: true)
+        y = metricRow(ctx, "NIA",                  niaDisplay,                      y: y)
+        y = metricRow(ctx, "NET-TO-GROSS RATIO",   des.netToGrossRatio > 0 ? pct(des.netToGrossRatio) : "—",  y: y, alt: true, valueColor: purple)
+        y = metricRow(ctx, "SPACE UTILIZATION",    des.spaceUtilization > 0 ? pct(des.spaceUtilization) : "—", y: y)
+        y = metricRow(ctx, "DAYLIGHTING COVERAGE", des.daylighting > 0 ? pct(des.daylighting) : "—",          y: y, alt: true)
+        y = metricRow(ctx, "INDOOR CO₂",           des.co2ppm > 0 ? "\(Int(des.co2ppm)) ppm" : "—",           y: y)
+        y = metricRow(ctx, "AIR CHANGES / HOUR",   des.ach > 0 ? "\(f1(des.ach)) ACH" : "—",                 y: y, alt: true)
+        y = metricRow(ctx, "THERMAL COMFORT",      des.thermalComfort > 0 ? pct(des.thermalComfort) : "—",    y: y)
+        y = metricRow(ctx, "ACOUSTIC COMFORT",     des.acousticComfort > 0 ? pct(des.acousticComfort) : "—", y: y, alt: true)
+        y = metricRow(ctx, "BIOPHILIC ELEMENTS",   des.biophilicCount > 0 ? "\(des.biophilicCount)" : "—",   y: y)
         y -= 12
 
         // ── Circular Economy ──────────────────────────────────────────────────

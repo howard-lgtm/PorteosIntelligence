@@ -38,6 +38,30 @@ struct NavigationPane: View {
         return deal.status == filter
     }
 
+    /// Right column label: cap rate if computable, score if available, else status.
+    private func dealRowRightLabel(_ deal: PropertyDeal) -> String {
+        if deal.purchasePrice > 0 && deal.grossPotentialIncome > 0 {
+            let egi = deal.grossPotentialIncome * (1 - deal.vacancyRate / 100)
+            let noi = max(0, egi - deal.operatingExpenses)
+            if noi > 0 {
+                let cr = noi / deal.purchasePrice * 100
+                return String(format: "%.1f%%", cr)
+            }
+        }
+        if let score = deal.porteosScore { return "\(Int(score.rounded()))" }
+        return deal.status.rawValue.uppercased()
+    }
+
+    private func dealRowRightColor(_ deal: PropertyDeal) -> Color {
+        if deal.purchasePrice > 0 && deal.grossPotentialIncome > 0 {
+            let egi = deal.grossPotentialIncome * (1 - deal.vacancyRate / 100)
+            let noi = max(0, egi - deal.operatingExpenses)
+            if noi > 0 { return DesignTokens.textSecondary }
+        }
+        if deal.porteosScore != nil { return DesignTokens.textSecondary }
+        return deal.status.tokenColor
+    }
+
     private func profileFor(_ deal: PropertyDeal) -> ProfileType {
         if deal.hospitalityRoomCount > 0 || deal.hospitalityADR > 0 {
             return .hospitality
@@ -395,10 +419,10 @@ struct NavigationPane: View {
 
                     Spacer()
 
-                    Text(deal.status.rawValue.uppercased())
+                    Text(dealRowRightLabel(deal))
                         .porteosMeta()
                         .monospacedDigit()
-                        .foregroundStyle(deal.status.tokenColor)
+                        .foregroundStyle(dealRowRightColor(deal))
                 }
                 .padding(.leading, 10)
                 .padding(.trailing, 12)
