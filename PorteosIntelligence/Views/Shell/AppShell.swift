@@ -22,6 +22,9 @@ struct AppShell: View {
     @State private var showSettings        = false
     @State private var pendingAITriggerID: UUID? = nil
 
+    @AppStorage("porteos.didCompleteOnboarding") private var didCompleteOnboarding = false
+    @State private var showOnboarding = false
+
     // Toast manager — @Observable, body re-renders on currentToast changes
     private let toastManager = ToastManager.shared
 
@@ -66,6 +69,34 @@ struct AppShell: View {
 
     var body: some View {
         coreView
+        .onAppear {
+            if !didCompleteOnboarding && deals.isEmpty {
+                showOnboarding = true
+            }
+        }
+        .sheet(isPresented: $showOnboarding) {
+            FirstLaunchSheet(
+                onDismiss: {
+                    didCompleteOnboarding = true
+                    showOnboarding = false
+                },
+                onNewDeal: {
+                    didCompleteOnboarding = true
+                    showOnboarding = false
+                    showNewDealSheet = true
+                },
+                onEmailSetup: {
+                    didCompleteOnboarding = true
+                    showOnboarding = false
+                    showEmailSetup = true
+                },
+                onSettings: {
+                    didCompleteOnboarding = true
+                    showOnboarding = false
+                    showSettings = true
+                }
+            )
+        }
         .sheet(isPresented: $showNewDealSheet) {
             TemplatePickerSheet { newID in
                 pendingDealID    = newID

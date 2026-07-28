@@ -84,7 +84,7 @@
 | P2-04 | Template Picker | Reference finish level | `[x]` | Use as sheet gold standard |
 | P2-05 | Footer cancel | `[ CANCEL ]` outlined | `[x]` | |
 | P2-06 | Sheet chrome | macOS rounded sheet corners | `[ ]` | `.presentationBackground` / overlay pattern |
-| P2-07 | Legacy sheets | Deprecate or align `EditDealSheet` / `NewDealSheet` / `QuickAddDealSheet` | `[ ]` | Confirm wiring vs Figma sheets |
+| P2-07 | Legacy sheets | Deprecate or align `EditDealSheet` / `NewDealSheet` / `QuickAddDealSheet` | `[~]` | `QuickAddDealSheet` deleted Jul 28 (dead). `EditDealSheet` still used in NavigationPane context menu; `NewDealSheet` in DetachedPaneViews. Route both through `FullDealEditSheet` in v1.2. |
 | P2-08 | Full Edit — Base | **Source URL field** — browser/email imports store URL in notes; expose as dedicated row (link or copy) in BASE tab, not buried in NOTES blob | `[x]` | `ListingURLHelpers` + BASE tab link row |
 | P2-09 | **ComparisonView OPEX panel** | `[~]` Fixed layout + editable fields 2026-07-05; **fixed 2-digit input cap** same day (`OpexInlineAmountField`). **Follow-up:** OPEX per deal column; pre-fill from `operatingExpenses` | `[~]` | Wild-use |
 
@@ -187,7 +187,7 @@
 | P7-04 | Extension icons + Chrome Web Store | `[—]` | If public distribution |
 | P7-05 | **Pull purchase price from listing** — browser extension import landed Casa Guerra Junqueiro at **€0.00**; fix `content.js` scrape + `DealIngestionPayload.purchasePrice` mapping | `[x]` | `parsePrice` + JSON-LD fallback |
 | P7-06 | **Source URL in deal model/UI** — URL written to notes today; add first-class field or BASE tab row so imports are traceable without parsing NOTES | `[x]` | BASE tab link row |
-| P7-07 | **Duplicate deals on import** — same listing imported twice (e.g. Lisbon Office Block A ×2, Semi-Detached ×2 in PIPELINE). Harden dedup: URL hash in `DealIngestionServer` + email `EmailImportRecord`; surface “duplicate skipped” in nav | `[x]` | `EmailImportRecord` + normalized URL dedup |
+| P7-07 | **Duplicate deals on import** — same listing imported twice (e.g. Lisbon Office Block A ×2, Semi-Detached ×2 in PIPELINE). Harden dedup: URL hash in `DealIngestionServer` + email `EmailImportRecord`; surface “duplicate skipped” in nav | `[~]` | URL-hash dedup works for imports with URL. Manual entries and partial imports (no URL) still bypass dedup — gap remains. |
 
 ---
 
@@ -347,6 +347,27 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 - [x] Swift compiler warnings cleared (Jul 9)
 - [x] Full Edit QA ([PR #5](https://github.com/howard-lgtm/PorteosIntelligence/pull/5)) — glossary, Design↔Circular sync, carbon 2dp, property type combobox, notes height
 - [x] **P7 browser import cluster** — `parsePrice`, source URL row, `EmailImportRecord` dedup (Jul 9)
+
+---
+
+## P12 — Onboarding & first-launch experience
+
+| ID | Task | Status |
+|----|------|--------|
+| P12-01 | **First-launch checklist** — `FirstLaunchSheet` shown once when `deals.isEmpty`. Four setup paths: add deal, browser extension, email, local AI. Key shortcuts. Privacy note. Dismissed to `AppStorage` flag. | `[x]` | Jul 28 |
+| P12-02 | macOS Help menu — wire ⌘? to `ShortcutsLegendView` in-app (deferred from P4-05) | `[ ]` | v1.2 |
+
+---
+
+## P13 — Security & data integrity
+
+| ID | Task | Status |
+|----|------|--------|
+| P13-01 | **SwiftData backup before store wipe** — copies `.store` / `.store-shm` / `.store-wal` to `~/Documents/PorteosBackups/` with ISO8601 timestamp before deleting on migration failure. Shows `NSAlert` to user before wiping. | `[x]` | Jul 28 |
+| P13-02 | **HTTP server loopback guard** — `DealIngestionServer` already drops non-loopback connections (lines 213–218); server binds to all interfaces but connection handler rejects LAN/WAN requests. | `[x]` | Pre-existing, documented Jul 28 |
+| P13-03 | **Dead boilerplate removed** — deleted `Item.swift` (orphaned `@Model`), `ContentView.swift` (Xcode template), `QuickAddDealSheet.swift` (unreferenced). | `[x]` | Jul 28 |
+| P13-04 | URL-less deal dedup — deals imported without a URL (manual entry, partial imports) bypass the URL-hash dedup in `DealIngestionServer`. Needs an address/name hash fallback key. | `[ ]` | v1.2 |
+| P13-05 | marketId corruption post-geocode — failed geocode can leave `marketId` set to a wrong metro (e.g. "Atlanta Metro" on a PT property) from a stale resolution. Clear `marketId` when `geocodeStatus` changes to `.failed`. | `[ ]` | |
 
 ---
 

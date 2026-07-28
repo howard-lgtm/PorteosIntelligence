@@ -15,22 +15,58 @@ struct PorteosIntelligenceApp: App {
             EmailImportRecord.self,
             MarketTrend.self,
         ])
-        
+
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
-            // Schema migration failed - delete the old store and recreate
-            print("[PorteosApp] ModelContainer failed - resetting store. Error: \(error)")
-            
-            // Get the store URL directly (it's non-optional)
+            // Schema migration failed — back up all store files before wiping.
+            print("[PorteosApp] ModelContainer failed — attempting backup before reset. Error: \(error)")
+
             let storeURL = modelConfiguration.url
-            let dir = storeURL.deletingLastPathComponent()
-            let name = storeURL.deletingPathExtension().lastPathComponent
-            
+            let dir      = storeURL.deletingLastPathComponent()
+            let name     = storeURL.deletingPathExtension().lastPathComponent
+
+            // ── Dated backup in ~/Documents/PorteosBackups/ ───────────────────
+            let docs    = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let backups = docs.appendingPathComponent("PorteosBackups", isDirectory: true)
+            try? FileManager.default.createDirectory(at: backups, withIntermediateDirectories: true)
+
+            let stamp = ISO8601DateFormatter().string(from: Date())
+                .replacingOccurrences(of: ":", with: "-")
+
+            for suffix in ["store", "store-shm", "store-wal"] {
+                let src = dir.appendingPathComponent("\(name).\(suffix)")
+                guard FileManager.default.fileExists(atPath: src.path) else { continue }
+                let dst = backups.appendingPathComponent("deals-\(stamp).\(suffix)")
+                do {
+                    try FileManager.default.copyItem(at: src, to: dst)
+                    print("[PorteosApp] Backed up \(suffix) → \(dst.lastPathComponent)")
+                } catch {
+                    print("[PorteosApp] Backup failed for \(suffix): \(error.localizedDescription)")
+                }
+            }
+
+            // ── Post a user-visible alert via NSAlert before continuing ───────
+            DispatchQueue.main.async {
+                let alert             = NSAlert()
+                alert.messageText     = "Porteos — Data Store Reset"
+                alert.informativeText = """
+A schema migration was needed and the deal database was reset.
+
+Your data has been backed up to:
+~/Documents/PorteosBackups/
+
+Files are named deals-\(stamp).store — contact support to recover them.
+"""
+                alert.alertStyle      = .warning
+                alert.addButton(withTitle: "Continue")
+                alert.runModal()
+            }
+
+            // ── Delete old store files ────────────────────────────────────────
             print("[PorteosApp] Removing store files at: \(dir.path)")
-            
             for suffix in ["store", "store-shm", "store-wal"] {
                 let file = dir.appendingPathComponent("\(name).\(suffix)")
                 let existed = FileManager.default.fileExists(atPath: file.path)
@@ -53,7 +89,6 @@ struct PorteosIntelligenceApp: App {
         WindowGroup {
             AppShell()
                 .modelContainer(sharedModelContainer)
-                // Stop ingestion server cleanly when the app quits
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
                     DealIngestionServer.shared.stop()
                     EmailMonitorService.shared.stopMonitoring()
