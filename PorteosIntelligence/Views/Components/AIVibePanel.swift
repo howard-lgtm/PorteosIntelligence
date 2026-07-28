@@ -20,7 +20,7 @@ struct AIVibePanel: View {
         phase == .analyzingRules || phase == .generatingNarrative
     }
 
-    private static let modelName = "porteos-score-v2.1"
+    private var activeModelName: String { LLMAnalysisService.shared.modelName }
     private static let signalLabels = [
         "LOCATION SCORE", "MARKET TIMING", "CASH FLOW", "RISK PROFILE", "ESG COMPLIANCE"
     ]
@@ -125,7 +125,14 @@ struct AIVibePanel: View {
         if let swot = r.swot {
             swotSection(swot)
             fullWidthDivider
+        } else if !r.summary.isEmpty {
+            // SWOT didn't parse — show raw LLM response so it's not silently lost
+            rawLLMSection(r.summary)
+            fullWidthDivider
         }
+
+        dealMetricsSection
+        fullWidthDivider
 
         let barSignals = topBarSignals(from: r)
         if !barSignals.isEmpty {
@@ -242,8 +249,9 @@ struct AIVibePanel: View {
 
     private func swotRow(_ label: String, _ text: String, color: Color) -> some View {
         let isExpanded = expandedSWOTKey == label
-        let needsExpand = text.count > 55
-        let preview = needsExpand ? String(text.prefix(55)) + "…" : text
+        // Show expand indicator whenever text is longer than ~30 chars (1 line in inspector)
+        let needsExpand = text.count > 30
+        let preview = needsExpand ? String(text.prefix(72)) + "…" : text
 
         return HStack(alignment: .top, spacing: 10) {
             Text(label)
@@ -320,7 +328,7 @@ struct AIVibePanel: View {
 
     private func metadataBlock(lastRun: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            metadataLine("MODEL", Self.modelName)
+            metadataLine("MODEL", activeModelName)
             metadataLine("LAST RUN", lastRun)
         }
         .padding(.horizontal, DesignTokens.blockGutter)
@@ -375,6 +383,124 @@ struct AIVibePanel: View {
         .padding(.horizontal, DesignTokens.blockGutter)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .background(DesignTokens.surfacePanel)
+    }
+
+    // MARK: Raw LLM fallback
+
+    @ViewBuilder
+    private func rawLLMSection(_ text: String) -> some View {
+        sectionHeader("LLM RESPONSE")
+        Text(text)
+            .porteosMeta()
+            .foregroundStyle(DesignTokens.textSecondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 8)
+    }
+
+    // MARK: Deal Metrics section
+
+    @ViewBuilder
+    private var dealMetricsSection: some View {
+        let bm = cityBenchmark
+        let metrics = computedMetrics
+        if metrics.capRate > 0 || metrics.loanToValue > 0 || metrics.debtServiceCoverageRatio > 0 {
+            sectionHeader("DEAL METRICS")
+            VStack(spacing: 0) {
+                if metrics.capRate > 0 {
+                    metricsRow(
+                        "CAP RATE",
+                        String(format: "%.2f%%", metrics.capRate),
+                        benchmark: bm.map { String(format: "%.1f%%", $0.avgCapRate) },
+                        good: bm.map { metrics.capRate >= $0.avgCapRate } ?? true
+                    )
+                    insetDivider
+                }
+                if metrics.loanToValue > 0 {
+                    metricsRow(
+                        "LTV",
+                        String(format: "%.1f%%", metrics.loanToValue),
+                        benchmark: "≤65% safe",
+                        good: metrics.loanToValue <= 65
+                    )
+                    insetDivider
+                }
+                if metrics.debtServiceCoverageRatio > 0 {
+                    metricsRow(
+                        "DSCR",
+                        String(format: "%.2fx", metrics.debtServiceCoverageRatio),
+                        benchmark: "≥1.25 safe",
+                        good: metrics.debtServiceCoverageRatio >= 1.25
+                    )
+                    insetDivider
+                }
+                if metrics.netOperatingIncome > 0 {
+                    metricsRow(
+                        "NOI",
+                        "€\(Int(metrics.netOperatingIncome))",
+                        benchmark: nil,
+                        good: true
+                    )
+                    insetDivider
+                }
+                if metrics.cashOnCashReturn > 0 {
+                    metricsRow(
+                        "CASH-ON-CASH",
+                        String(format: "%.1f%%", metrics.cashOnCashReturn),
+                        benchmark: "≥8% target",
+                        good: metrics.cashOnCashReturn >= 8
+                    )
+                }
+            }
+        }
+    }
+
+    private var computedMetrics: RealEstateCalculator.FullMetrics {
+        RealEstateCalculator.calculateFull(inputs: .init(
+            grossPotentialIncome:   deal.grossPotentialIncome,
+            vacancyRate:            deal.vacancyRate,
+            otherIncome:            deal.otherIncome,
+            operatingExpenses:      deal.operatingExpenses,
+            opexPropertyManagement: deal.opexPropertyManagement,
+            opexPropertyTax:        deal.opexPropertyTax,
+            opexInsurance:          deal.opexInsurance,
+            opexUtilities:          deal.opexUtilities,
+            opexMaintenance:        deal.opexMaintenance,
+            opexCapitalReserves:    deal.opexCapitalReserves,
+            purchasePrice:          deal.purchasePrice,
+            closingCosts:           deal.closingCosts,
+            renovationBudget:       deal.renovationBudget,
+            loanAmount:             deal.loanAmount,
+            interestRate:           deal.interestRate,
+            amortizationMonths:     deal.amortizationMonths,
+            exitCapRate:            deal.exitCapRate
+        ))
+    }
+
+    private func metricsRow(
+        _ label: String,
+        _ value: String,
+        benchmark: String?,
+        good: Bool
+    ) -> some View {
+        HStack(spacing: 8) {
+            Text(label)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            if let bm = benchmark {
+                Text(bm)
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+            }
+            Text(value)
+                .porteosMeta()
+                .foregroundStyle(good ? DesignTokens.statusGo : DesignTokens.statusCritical)
+                .monospacedDigit()
+        }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, 7)
         .background(DesignTokens.surfacePanel)
     }
 

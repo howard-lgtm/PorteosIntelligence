@@ -190,12 +190,50 @@ final class AIAnalysisService {
         // Resolve city benchmark — used to ground the LLM in local market norms
         let cityBenchmark = MarketBenchmarks.benchmark(for: deal.locationCity)
 
+        // Compute key metrics to include in the LLM prompt for grounded analysis
+        let computedMetrics = RealEstateCalculator.calculateFull(inputs: .init(
+            grossPotentialIncome:   deal.grossPotentialIncome,
+            vacancyRate:            deal.vacancyRate,
+            otherIncome:            deal.otherIncome,
+            operatingExpenses:      deal.operatingExpenses,
+            opexPropertyManagement: deal.opexPropertyManagement,
+            opexPropertyTax:        deal.opexPropertyTax,
+            opexInsurance:          deal.opexInsurance,
+            opexUtilities:          deal.opexUtilities,
+            opexMaintenance:        deal.opexMaintenance,
+            opexCapitalReserves:    deal.opexCapitalReserves,
+            purchasePrice:          deal.purchasePrice,
+            closingCosts:           deal.closingCosts,
+            renovationBudget:       deal.renovationBudget,
+            loanAmount:             deal.loanAmount,
+            interestRate:           deal.interestRate,
+            amortizationMonths:     deal.amortizationMonths,
+            exitCapRate:            deal.exitCapRate
+        ))
+        var dealMetricLines: [String] = []
+        if computedMetrics.capRate > 0 {
+            dealMetricLines.append("Cap rate: \(String(format: "%.2f", computedMetrics.capRate))%")
+        }
+        if computedMetrics.loanToValue > 0 {
+            dealMetricLines.append("LTV: \(String(format: "%.1f", computedMetrics.loanToValue))%")
+        }
+        if computedMetrics.debtServiceCoverageRatio > 0 {
+            dealMetricLines.append("DSCR: \(String(format: "%.2f", computedMetrics.debtServiceCoverageRatio))x")
+        }
+        if computedMetrics.cashOnCashReturn > 0 {
+            dealMetricLines.append("Cash-on-cash: \(String(format: "%.1f", computedMetrics.cashOnCashReturn))%")
+        }
+        if deal.purchasePrice > 0 {
+            dealMetricLines.append("Purchase price: €\(Int(deal.purchasePrice))")
+        }
+        let enrichedSignals = allSignalMessages + dealMetricLines
+
         do {
             let raw = try await LLMAnalysisService.shared.generateSWOT(
                 dealName:  deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName,
                 grade:     "\(grade.rawValue) — \(grade.label)",
                 score:     deal.porteosScore,
-                signals:   allSignalMessages,
+                signals:   enrichedSignals,
                 benchmark: cityBenchmark
             )
             swot = parseSWOT(from: raw, fallbackGrade: grade)
@@ -783,22 +821,44 @@ final class AIAnalysisService {
     ///   O: ...
     ///   T: ...
     private func parseSWOT(from raw: String, fallbackGrade: VibeGrade) -> SWOTAnalysis? {
+        // Strip markdown bold/italic so "**S:**" → "S:" and "*VERDICT:*" → "VERDICT:"
+        let cleaned = raw
+            .replacingOccurrences(of: "**", with: "")
+            .replacingOccurrences(of: "__", with: "")
+            .replacingOccurrences(of: "*",  with: "")
+
         var verdictRaw = ""
         var s = ""; var w = ""; var o = ""; var t = ""
-        for line in raw.components(separatedBy: "\n") {
-            let upper = line.trimmingCharacters(in: .whitespaces)
-            if upper.hasPrefix("VERDICT:") { verdictRaw = upper.dropPrefix("VERDICT:").trimmingCharacters(in: .whitespaces) }
-            else if upper.hasPrefix("S:") { s = upper.dropPrefix("S:").trimmingCharacters(in: .whitespaces) }
-            else if upper.hasPrefix("W:") { w = upper.dropPrefix("W:").trimmingCharacters(in: .whitespaces) }
-            else if upper.hasPrefix("O:") { o = upper.dropPrefix("O:").trimmingCharacters(in: .whitespaces) }
-            else if upper.hasPrefix("T:") { t = upper.dropPrefix("T:").trimmingCharacters(in: .whitespaces) }
+
+        for line in cleaned.components(separatedBy: "\n") {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            let up = trimmed.uppercased()
+            // Case-insensitive prefix matching
+            if up.hasPrefix("VERDICT:") {
+                verdictRaw = trimmed.dropPrefix(trimmed.prefix(8).description)
+                    .trimmingCharacters(in: .whitespaces)
+            } else if up.hasPrefix("S:") && s.isEmpty {
+                s = trimmed.dropFirst(2).trimmingCharacters(in: .whitespaces)
+            } else if up.hasPrefix("W:") && w.isEmpty {
+                w = trimmed.dropFirst(2).trimmingCharacters(in: .whitespaces)
+            } else if up.hasPrefix("O:") && o.isEmpty {
+                o = trimmed.dropFirst(2).trimmingCharacters(in: .whitespaces)
+            } else if up.hasPrefix("T:") && t.isEmpty {
+                t = trimmed.dropFirst(2).trimmingCharacters(in: .whitespaces)
+            }
         }
         guard !s.isEmpty, !w.isEmpty, !o.isEmpty, !t.isEmpty else { return nil }
+
+        let vUp = verdictRaw.uppercased()
         let verdict: DealVerdict
-        switch verdictRaw.uppercased() {
-        case "GO":     verdict = .go
-        case "NO GO":  verdict = .noGo
-        default:       verdict = .review
+        if vUp.contains("NO GO") || vUp.contains("NOGO") || vUp.contains("NO-GO") {
+            verdict = .noGo
+        } else if vUp.contains("REVIEW") {
+            verdict = .review
+        } else if vUp.contains("GO") {
+            verdict = .go
+        } else {
+            verdict = DealVerdict.from(grade: fallbackGrade)
         }
         return SWOTAnalysis(strength: s, weakness: w, opportunity: o, threat: t, verdict: verdict)
     }
