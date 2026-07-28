@@ -43,6 +43,20 @@ struct AppCommandsProvider: Commands {
 
     var body: some Commands {
 
+        // ── Help menu — replaces the system "Help isn't available" alert ─────────
+        CommandGroup(replacing: .help) {
+            Button("Porteos Keyboard Shortcuts") {
+                post(.showShortcutsLegend)
+            }
+            Button("Command Palette") {
+                post(.showCommandPalette)
+            }
+            Divider()
+            Button("Glossary…") {
+                post(.showGlossary)
+            }
+        }
+
         // ── Edit menu: Undo / Redo ─────────────────────────────────────────────
         // Replaces the system undo slot so ⌘Z / ⌘⇧Z route through our stack.
         CommandGroup(replacing: .undoRedo) {

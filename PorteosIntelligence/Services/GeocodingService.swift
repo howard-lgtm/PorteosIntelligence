@@ -38,15 +38,14 @@ final class GeocodingService {
             deal.longitude = location.coordinate.longitude
             deal.geocodeStatus = .ok
 
+            // Only resolve marketId from the deal's own city — never from item.name,
+            // which can be any place name from a wrong geocode result (was causing
+            // "Atlanta Metro" to appear on PT properties when CLGeocoder mis-geocoded).
             let countryHint = addressContext(from: item)
             if let resolved = MarketFeedRegistry.resolveMarketId(
                 city: deal.locationCity,
                 countryHint: countryHint
             ) {
-                deal.marketId = resolved
-            } else if deal.marketId.isEmpty,
-                      let name = item.name,
-                      let resolved = MarketFeedRegistry.resolveMarketId(city: name, countryHint: countryHint) {
                 deal.marketId = resolved
             }
 

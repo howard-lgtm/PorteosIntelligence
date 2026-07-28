@@ -350,6 +350,19 @@ final class DealIngestionServer {
 
     // MARK: Deal ingestion
 
+    /// Dedup fallback for imports with no URL — matches on normalised name+city.
+    /// Only triggers when both name and city are non-empty (avoids false positives).
+    private func findExistingDeal(byName name: String, city: String, context: ModelContext) -> PropertyDeal? {
+        let trimName = name.trimmingCharacters(in: .whitespaces).lowercased()
+        let trimCity = city.trimmingCharacters(in: .whitespaces).lowercased()
+        guard trimName.count > 3, trimCity.count > 1 else { return nil }
+        guard let deals = try? context.fetch(FetchDescriptor<PropertyDeal>()) else { return nil }
+        return deals.first { deal in
+            deal.propertyName.lowercased() == trimName &&
+            deal.locationCity.lowercased() == trimCity
+        }
+    }
+
     private func findExistingDeal(forURL url: String, context: ModelContext) -> PropertyDeal? {
         let normalized = ListingURLHelpers.normalize(url)
 
@@ -406,31 +419,41 @@ final class DealIngestionServer {
                 url:     payload.url             ?? "")
             : payload.locationCity ?? ""
 
-        // ── Dedup: skip if a deal with the same source URL already exists ────
-        if let url = payload.url, !url.isEmpty {
-            if let existing = findExistingDeal(forURL: url, context: ctx) {
-                let reply: [String: Any] = [
-                    "success":   true,
-                    "dealID":    existing.id.uuidString,
-                    "message":   "Deal already exists (deduplicated)",
-                    "duplicate": true,
-                ]
-                send(.json(reply), to: conn)
-                consoleLog(req, status: 200, note: "duplicate")
-                appendLog(method: "POST", path: "/api/deals", status: 200,
-                          source: payload.source ?? "unknown",
-                          name: payload.propertyName ?? "duplicate",
-                          dealID: existing.id)
-                ToastManager.shared.show(IngestionToastData(
-                    dealID:       existing.id,
-                    propertyName: payload.propertyName ?? "Duplicate Deal",
-                    location:     city,
-                    price:        payload.purchasePrice ?? 0,
-                    source:       payload.source ?? "browser_extension",
-                    isDuplicate:  true
-                ))
-                return
-            }
+        // ── Dedup: URL match (primary) or name+city hash (fallback for no-URL imports) ─
+        let duplicateByURL: PropertyDeal? = {
+            guard let url = payload.url, !url.isEmpty else { return nil }
+            return findExistingDeal(forURL: url, context: ctx)
+        }()
+        let duplicateByNameCity: PropertyDeal? = duplicateByURL == nil
+            ? findExistingDeal(
+                byName: payload.propertyName ?? "",
+                city:   city,
+                context: ctx)
+            : nil
+        let duplicateExisting = duplicateByURL ?? duplicateByNameCity
+
+        if let existing = duplicateExisting {
+            let reply: [String: Any] = [
+                "success":   true,
+                "dealID":    existing.id.uuidString,
+                "message":   "Deal already exists (deduplicated)",
+                "duplicate": true,
+            ]
+            send(.json(reply), to: conn)
+            consoleLog(req, status: 200, note: "duplicate")
+            appendLog(method: "POST", path: "/api/deals", status: 200,
+                      source: payload.source ?? "unknown",
+                      name: payload.propertyName ?? "duplicate",
+                      dealID: existing.id)
+            ToastManager.shared.show(IngestionToastData(
+                dealID:       existing.id,
+                propertyName: payload.propertyName ?? "Duplicate Deal",
+                location:     city,
+                price:        payload.purchasePrice ?? 0,
+                source:       payload.source ?? "browser_extension",
+                isDuplicate:  true
+            ))
+            return
         }
 
         // ── Market benchmarks (reuse Data/MarketBenchmarks.swift) ────────────
