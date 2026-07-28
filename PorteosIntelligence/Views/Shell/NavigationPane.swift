@@ -82,7 +82,7 @@ struct NavigationPane: View {
         }
         .clipShape(Rectangle())
         .sheet(item: $dealToEdit) { deal in
-            EditDealSheet(deal: deal)
+            FullDealEditSheet(deal: deal)
         }
         .sheet(isPresented: $showImportSheet) {
             ImportDealSheet()

@@ -92,7 +92,12 @@ struct PDFReportSheet: View {
             infoRow("STATUS", deal.status.rawValue.uppercased())
             insetDivider
             infoRow("PORTEOS SCORE", deal.porteosScore.map { "\(Int($0.rounded())) / 100" } ?? "—")
+            insetDivider
+            infoRow("PURCHASE PRICE", deal.purchasePrice > 0
+                ? "€\(String(format: "%.0f", deal.purchasePrice))"
+                : "—")
         }
+        .clipShape(Rectangle())  // prevent text overflowing the block edge
     }
 
     // MARK: Sections
@@ -199,15 +204,17 @@ struct PDFReportSheet: View {
     }
 
     private func infoRow(_ label: String, _ value: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .center, spacing: 12) {
             Text(label)
                 .porteosRowLabel()
                 .foregroundStyle(DesignTokens.textSecondary)
-            Spacer()
+                .fixedSize()
+            Spacer(minLength: 8)
             Text(value)
                 .porteosRowValue()
                 .foregroundStyle(DesignTokens.textPrimary)
-                .multilineTextAlignment(.trailing)
+                .lineLimit(1)
+                .truncationMode(.tail)
         }
         .padding(.horizontal, DesignTokens.blockGutter)
         .padding(.vertical, 9)
