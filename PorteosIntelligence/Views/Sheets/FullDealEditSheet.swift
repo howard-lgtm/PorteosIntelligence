@@ -69,6 +69,10 @@ struct FullDealEditSheet: View {
     @State private var showResearchImporter: Bool          = false
     @State private var researchImportResult: String?       = nil   // success/failure line
 
+    // MARK: Preload State
+    @State private var showPreloadReview: Bool             = false
+    @State private var preloadEstimate: DealPreloader.PreloadEstimate? = nil
+
     // MARK: Live score (computed from current deal fields — no save needed)
     private var liveScore: (score: Double, grade: String, color: Color)? {
         let reInputs = RealEstateCalculator.FullInputs(
@@ -284,6 +288,44 @@ struct FullDealEditSheet: View {
                 equals: .location
             )
             .onChange(of: deal.locationCity) { _, _ in checkForBenchmark() }
+
+            // Preload button — appears when city + area are set
+            if !deal.locationCity.isEmpty && deal.totalArea > 0 {
+                Button {
+                    preloadEstimate = DealPreloader.estimate(
+                        city:          deal.locationCity,
+                        area:          deal.totalArea,
+                        landArea:      deal.landArea,
+                        purchasePrice: deal.purchasePrice,
+                        propertyType:  deal.propertyType,
+                        propertyName:  deal.propertyName
+                    )
+                    if preloadEstimate != nil { showPreloadReview = true }
+                } label: {
+                    HStack(spacing: 8) {
+                        Text("[ PRELOAD MARKET ASSUMPTIONS ]")
+                            .porteosRowLabel()
+                            .foregroundStyle(accentRust)
+                        Spacer()
+                        Text("// \(deal.locationCity) benchmarks")
+                            .porteosMeta()
+                            .foregroundStyle(textTertiary)
+                    }
+                    .padding(.horizontal, 8)
+                    .frame(height: DesignTokens.rowHeightData)
+                    .background(accentRust.opacity(0.05))
+                    .overlay(Rectangle().strokeBorder(accentRust.opacity(0.3), lineWidth: DesignTokens.dividerWidth))
+                    .clipShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .sheet(isPresented: $showPreloadReview) {
+                    if let est = preloadEstimate {
+                        PreloadReviewSheet(deal: deal, estimate: est) {
+                            showPreloadReview = false
+                        }
+                    }
+                }
+            }
 
             sourceURLField
 
