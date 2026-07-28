@@ -69,6 +69,58 @@ struct FullDealEditSheet: View {
     @State private var showResearchImporter: Bool          = false
     @State private var researchImportResult: String?       = nil   // success/failure line
 
+    // MARK: Live score (computed from current deal fields — no save needed)
+    private var liveScore: (score: Double, grade: String, color: Color)? {
+        let reInputs = RealEstateCalculator.FullInputs(
+            grossPotentialIncome:   deal.grossPotentialIncome,
+            vacancyRate:            deal.vacancyRate,
+            otherIncome:            deal.otherIncome,
+            operatingExpenses:      effectiveOpEx,
+            opexPropertyManagement: deal.opexPropertyManagement,
+            opexPropertyTax:        deal.opexPropertyTax,
+            opexInsurance:          deal.opexInsurance,
+            opexUtilities:          deal.opexUtilities,
+            opexMaintenance:        deal.opexMaintenance,
+            opexCapitalReserves:    deal.opexCapitalReserves,
+            purchasePrice:          deal.purchasePrice,
+            closingCosts:           deal.closingCosts,
+            renovationBudget:       deal.renovationBudget,
+            loanAmount:             deal.loanAmount,
+            interestRate:           deal.interestRate,
+            amortizationMonths:     deal.amortizationMonths,
+            exitCapRate:            deal.exitCapRate
+        )
+        let re   = RealEstateCalculator.calculateFull(inputs: reInputs)
+        let hosp = HospitalityCalculator.calculateFull(inputs: .init(
+            roomCount:        deal.hospitalityRoomCount,
+            adr:              deal.hospitalityADR,
+            occupancyRate:    deal.hospitalityOccupancyRate,
+            fbRevenue:        deal.hospitalityFBRevenue,
+            spaRevenue:       deal.hospitalitySpaRevenue,
+            meetingRevenue:   deal.hospitalityMeetingRevenue,
+            otherRevenue:     deal.hospitalityOtherRevenue,
+            opExRatio:        deal.hospitalityOpExRatio,
+            directBookingPct: deal.hospitalityDirectBookingPct,
+            otaBookingPct:    deal.hospitalityOTABookingPct,
+            distributionCost: deal.hospitalityDistributionCost
+        ))
+        let scoreResult = PorteosScoreCalculator.calculate(inputs: .init(
+            capRate:           re.capRate,
+            revPAR:            hosp.revPAR,
+            totalRevenue:      hosp.totalRevenue,
+            weightRealEstate:  deal.weightRealEstate,
+            weightHospitality: deal.weightHospitality,
+            weightDesign:      deal.weightDesign,
+            weightCircular:    deal.weightCircular
+        ))
+        let s = scoreResult.finalScore
+        guard s > 0 else { return nil }
+        let color: Color = s >= 65 ? DesignTokens.statusGo
+                         : s >= 50 ? DesignTokens.statusWarn
+                         : DesignTokens.statusCritical
+        return (s, scoreResult.scoreGrade, color)
+    }
+
     // MARK: Body
 
     var body: some View {
@@ -128,7 +180,28 @@ struct FullDealEditSheet: View {
                 .porteosModuleCmd()
                 .foregroundStyle(accentRust)
                 .lineLimit(1)
-            Spacer()
+                .truncationMode(.tail)
+
+            Spacer(minLength: 8)
+
+            // Live score chip — updates as fields change
+            if let live = liveScore {
+                HStack(spacing: 4) {
+                    Text("\(Int(live.score.rounded()))")
+                        .porteosMeta()
+                        .foregroundStyle(live.color)
+                        .monospacedDigit()
+                    Text(live.grade)
+                        .porteosMeta()
+                        .foregroundStyle(live.color)
+                }
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(live.color.opacity(0.1))
+                .overlay { Rectangle().strokeBorder(live.color.opacity(0.4), lineWidth: 1) }
+                .padding(.trailing, 8)
+            }
+
             Button { dismiss() } label: {
                 Text("[ × ]")
                     .porteosModuleCmd()
@@ -388,18 +461,94 @@ struct FullDealEditSheet: View {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: RE ↔ Hospitality helpers
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// Total from individual OPEX line items (when any are non-zero)
+    private var opexLineItemsTotal: Double {
+        deal.opexPropertyManagement + deal.opexPropertyTax + deal.opexInsurance +
+        deal.opexUtilities + deal.opexMaintenance + deal.opexCapitalReserves
+    }
+
+    /// Effective OpEx used by calculators: line items total when present, else aggregate field
+    private var effectiveOpEx: Double {
+        opexLineItemsTotal > 0 ? opexLineItemsTotal : deal.operatingExpenses
+    }
+
+    /// GPI implied by hospitality metrics (room revenue + ancillary)
+    private var hospImpliedGPI: Double? {
+        guard deal.hospitalityRoomCount > 0,
+              deal.hospitalityADR > 0,
+              deal.hospitalityOccupancyRate > 0 else { return nil }
+        let roomRev = Double(deal.hospitalityRoomCount)
+            * deal.hospitalityADR
+            * (deal.hospitalityOccupancyRate / 100)
+            * 365
+        let ancillary = deal.hospitalityFBRevenue + deal.hospitalitySpaRevenue
+            + deal.hospitalityMeetingRevenue + deal.hospitalityOtherRevenue
+        return roomRev + ancillary
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // MARK: Tab 2 — REAL ESTATE
     // ─────────────────────────────────────────────────────────────────────────
 
     private var realEstateContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             sectionLabel("INCOME", color: accentRust)
+
+            // GPI — show hospitality-implied suggestion when available
             TerminalInputField(label: "Gross Potential Income", placeholder: "0.00", prefix: "€",  suffix: nil, value: $deal.grossPotentialIncome, formatter: currencyFormatter).focused($focusedField, equals: .grossPotentialIncome)
+            if let implied = hospImpliedGPI, abs(implied - deal.grossPotentialIncome) > 100 {
+                HStack(spacing: 8) {
+                    Text("// HOSP. CALC → €\(Int(implied.rounded())) (room rev + ancillary)")
+                        .porteosMeta()
+                        .foregroundStyle(textTertiary)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Button("[ SYNC GPI ]") {
+                        deal.grossPotentialIncome = implied
+                    }
+                    .porteosMeta()
+                    .foregroundStyle(accentRust)
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(accentRust.opacity(0.06))
+                .overlay(Rectangle().strokeBorder(accentRust.opacity(0.25), lineWidth: 1))
+                .clipShape(Rectangle())
+            }
+
             TerminalInputField(label: "Vacancy Rate",           placeholder: "0.00", prefix: nil,  suffix: "%", value: $deal.vacancyRate, formatter: Self.percentFormatter).focused($focusedField, equals: .vacancyRate)
             TerminalInputField(label: "Other Income",           placeholder: "0.00", prefix: "€",  suffix: nil, value: $deal.otherIncome, formatter: currencyFormatter).focused($focusedField, equals: .otherIncome)
 
             sectionLabel("EXPENSES", color: accentRust)
-            TerminalInputField(label: "Operating Expenses",    placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.operatingExpenses,       formatter: currencyFormatter).focused($focusedField, equals: .operatingExpenses)
+
+            // OpEx aggregate — warn when out of sync with line items
+            TerminalInputField(label: "Operating Expenses", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.operatingExpenses, formatter: currencyFormatter).focused($focusedField, equals: .operatingExpenses)
+            if opexLineItemsTotal > 0 && abs(opexLineItemsTotal - deal.operatingExpenses) > 1 {
+                HStack(spacing: 8) {
+                    Text("// LINE ITEMS TOTAL: €\(Int(opexLineItemsTotal.rounded())) — aggregate differs")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.statusWarn)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Button("[ SYNC ]") {
+                        deal.operatingExpenses = opexLineItemsTotal
+                    }
+                    .porteosMeta()
+                    .foregroundStyle(accentRust)
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(DesignTokens.statusWarn.opacity(0.06))
+                .overlay(Rectangle().strokeBorder(DesignTokens.statusWarn.opacity(0.25), lineWidth: 1))
+                .clipShape(Rectangle())
+            }
+
             TerminalInputField(label: "Property Management",   placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexPropertyManagement,  formatter: currencyFormatter)
             TerminalInputField(label: "Property Tax",          placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexPropertyTax,          formatter: currencyFormatter)
             TerminalInputField(label: "Insurance",             placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexInsurance,            formatter: currencyFormatter)
@@ -430,6 +579,17 @@ struct FullDealEditSheet: View {
             TerminalInputField(label: "ADR",            placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityADR, formatter: currencyFormatter).focused($focusedField, equals: .adr)
             TerminalInputField(label: "Occupancy Rate", placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.hospitalityOccupancyRate, formatter: Self.percentFormatter).focused($focusedField, equals: .occupancyRate)
             TerminalInputField(label: "OpEx Ratio",     placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.hospitalityOpExRatio, formatter: Self.percentFormatter).focused($focusedField, equals: .opexRatio)
+            if deal.hospitalityOpExRatio > 0 && deal.hospitalityOpExRatio < 20 {
+                Text("// WARNING: OpEx ratio \(String(format: "%.1f", deal.hospitalityOpExRatio))% is unusually low — typical hospitality is 30–45%")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.statusWarn)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                    .background(DesignTokens.statusWarn.opacity(0.06))
+                    .overlay(Rectangle().strokeBorder(DesignTokens.statusWarn.opacity(0.25), lineWidth: 1))
+                    .clipShape(Rectangle())
+            }
 
             sectionLabel("REVENUE STREAMS", color: accentTeal)
             TerminalInputField(label: "F&B Revenue",     placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityFBRevenue,      formatter: currencyFormatter).focused($focusedField, equals: .fAndBRevenue)
