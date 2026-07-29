@@ -14,7 +14,8 @@ struct AIVibePanel: View {
     @State private var result:          AnalysisResult? = nil
     @State private var phase:           AnalysisPhase?  = nil
     @State private var analyzedID:      UUID?           = nil
-    @State private var benchmarkApplied: String?        = nil   // summary shown after bulk apply
+    @State private var benchmarkApplied: String?        = nil
+    @State private var analysisTask:    Task<Void, Never>? = nil  // cancels in-flight on regenerate
 
     private var isRunning: Bool {
         phase == .analyzingRules || phase == .generatingNarrative
@@ -583,8 +584,11 @@ struct AIVibePanel: View {
     }
 
     private func runAnalysis() {
+        // Cancel any in-flight analysis before starting a new one
+        analysisTask?.cancel()
         phase = .analyzingRules
-        Task {
+
+        analysisTask = Task {
             let r = await AIAnalysisService.shared.analyze(
                 deal,
                 context: modelContext,
@@ -592,6 +596,7 @@ struct AIVibePanel: View {
                     self.phase = newPhase
                 }
             )
+            guard !Task.isCancelled else { return }
             await MainActor.run {
                 result     = r
                 analyzedID = deal.id

@@ -76,56 +76,15 @@ struct FullDealEditSheet: View {
     // MARK: Cancel revert — snapshot captured before any edits
     @State private var openSnapshot: DealSnapshot? = nil
 
-    // MARK: Live score (computed from current deal fields — no save needed)
+    // MARK: Live score — single source of truth via PropertyDealViewModel (includes Design score)
     private var liveScore: (score: Double, grade: String, color: Color)? {
-        let reInputs = RealEstateCalculator.FullInputs(
-            grossPotentialIncome:   deal.grossPotentialIncome,
-            vacancyRate:            deal.vacancyRate,
-            otherIncome:            deal.otherIncome,
-            operatingExpenses:      effectiveOpEx,
-            opexPropertyManagement: deal.opexPropertyManagement,
-            opexPropertyTax:        deal.opexPropertyTax,
-            opexInsurance:          deal.opexInsurance,
-            opexUtilities:          deal.opexUtilities,
-            opexMaintenance:        deal.opexMaintenance,
-            opexCapitalReserves:    deal.opexCapitalReserves,
-            purchasePrice:          deal.purchasePrice,
-            closingCosts:           deal.closingCosts,
-            renovationBudget:       deal.renovationBudget,
-            loanAmount:             deal.loanAmount,
-            interestRate:           deal.interestRate,
-            amortizationMonths:     deal.amortizationMonths,
-            exitCapRate:            deal.exitCapRate
-        )
-        let re   = RealEstateCalculator.calculateFull(inputs: reInputs)
-        let hosp = HospitalityCalculator.calculateFull(inputs: .init(
-            roomCount:        deal.hospitalityRoomCount,
-            adr:              deal.hospitalityADR,
-            occupancyRate:    deal.hospitalityOccupancyRate,
-            fbRevenue:        deal.hospitalityFBRevenue,
-            spaRevenue:       deal.hospitalitySpaRevenue,
-            meetingRevenue:   deal.hospitalityMeetingRevenue,
-            otherRevenue:     deal.hospitalityOtherRevenue,
-            opExRatio:        deal.hospitalityOpExRatio,
-            directBookingPct: deal.hospitalityDirectBookingPct,
-            otaBookingPct:    deal.hospitalityOTABookingPct,
-            distributionCost: deal.hospitalityDistributionCost
-        ))
-        let scoreResult = PorteosScoreCalculator.calculate(inputs: .init(
-            capRate:           re.capRate,
-            revPAR:            hosp.revPAR,
-            totalRevenue:      hosp.totalRevenue,
-            weightRealEstate:  deal.weightRealEstate,
-            weightHospitality: deal.weightHospitality,
-            weightDesign:      deal.weightDesign,
-            weightCircular:    deal.weightCircular
-        ))
-        let s = scoreResult.finalScore
+        let result = PropertyDealViewModel(deal: deal).porteosScore
+        let s = result.finalScore
         guard s > 0 else { return nil }
         let color: Color = s >= 65 ? DesignTokens.statusGo
                          : s >= 50 ? DesignTokens.statusWarn
                          : DesignTokens.statusCritical
-        return (s, scoreResult.scoreGrade, color)
+        return (s, result.scoreGrade, color)
     }
 
     // MARK: Body

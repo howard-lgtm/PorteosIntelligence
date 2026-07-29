@@ -18,6 +18,7 @@ struct DealSnapshot {
     let address:         String
     let propertyType:    String
     let totalArea:       Double
+    let landArea:        Double
     let locationCity:    String
 
     // MARK: Real Estate
@@ -110,6 +111,7 @@ struct DealSnapshot {
         self.address         = deal.address
         self.propertyType    = deal.propertyType
         self.totalArea       = deal.totalArea
+        self.landArea        = deal.landArea
         self.locationCity    = deal.locationCity
 
         self.purchasePrice        = deal.purchasePrice
@@ -253,6 +255,7 @@ final class DealHistoryManager {
         deal.address         = snap.address
         deal.propertyType    = snap.propertyType
         deal.totalArea       = snap.totalArea
+        deal.landArea        = snap.landArea
         deal.locationCity    = snap.locationCity
 
         deal.purchasePrice        = snap.purchasePrice

@@ -355,25 +355,6 @@ final class AIAnalysisService {
             ))
         }
 
-        // ── Portfolio fit ──────────────────────────────────────────────────────
-        let userFit = PortfolioLearningEngine.calculateDealFitScore(deal: d, context: context)
-        if userFit >= 80 {
-            s.append(.init(
-                "Strong fit for your portfolio strategy — fit score \(Int(userFit)) / 100",
-                sentiment: .positive
-            ))
-        } else if userFit >= 60 {
-            s.append(.init(
-                "Moderate fit for your typical strategy — fit score \(Int(userFit)) / 100",
-                sentiment: .neutral
-            ))
-        } else if userFit < 40 {
-            s.append(.init(
-                "Low fit for your typical strategy — fit score \(Int(userFit)) / 100; review against acquisition criteria",
-                sentiment: .warning
-            ))
-        }
-
         return s
     }
 
