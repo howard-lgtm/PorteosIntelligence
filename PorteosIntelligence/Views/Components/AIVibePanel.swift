@@ -758,13 +758,15 @@ struct AIVibePanel: View {
             applied.append("occupancy \(Int(bm.avgOccupancyRate))%")
         }
 
+        // Re-compute and persist score so dashboard reflects the new assumptions immediately
+        deal.porteosScore = PropertyDealViewModel(deal: deal).porteosScore.finalScore
         deal.updatedAt = Date()
         try? modelContext.save()
 
         if applied.isEmpty {
             benchmarkApplied = "// All fields already populated — no changes made."
         } else {
-            benchmarkApplied = "// Applied: \(applied.joined(separator: " · "))\n// Run analysis to re-score."
+            benchmarkApplied = "// Applied: \(applied.joined(separator: " · "))\n// Score updated."
             // Reset prior result so next run reflects updated data
             result     = nil
             analyzedID = nil

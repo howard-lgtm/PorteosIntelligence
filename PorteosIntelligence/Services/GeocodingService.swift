@@ -74,8 +74,12 @@ final class GeocodingService {
     /// Geocode every deal that has address/city but no valid pin (Frame 4 — geocode empty).
     func geocodeAllPending(deals: [PropertyDeal], context: ModelContext) async {
         let pending = deals.filter { $0.needsGeocode }
-        for deal in pending {
+        for (index, deal) in pending.enumerated() {
             await geocode(deal: deal, context: context)
+            // Apple rate-limits CLGeocoder — pause between requests to avoid silent failures
+            if index < pending.count - 1 {
+                try? await Task.sleep(nanoseconds: 1_200_000_000)  // 1.2s between calls
+            }
         }
     }
 

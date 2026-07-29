@@ -73,6 +73,9 @@ struct FullDealEditSheet: View {
     @State private var showPreloadReview: Bool             = false
     @State private var preloadEstimate: DealPreloader.PreloadEstimate? = nil
 
+    // MARK: Cancel revert — snapshot captured before any edits
+    @State private var openSnapshot: DealSnapshot? = nil
+
     // MARK: Live score (computed from current deal fields — no save needed)
     private var liveScore: (score: Double, grade: String, color: Color)? {
         let reInputs = RealEstateCalculator.FullInputs(
@@ -162,13 +165,23 @@ struct FullDealEditSheet: View {
         .background(shellBg)
         .clipShape(Rectangle())
         .frame(width: 520)
+        .alert("Validation Errors", isPresented: $showValidationAlert) {
+            Button("Save Anyway", role: .destructive) { persistAndDismiss() }
+            Button("Fix Issues", role: .cancel) {}
+        } message: {
+            Text(validationErrors.map { "• \($0.field): \($0.message)" }.joined(separator: "\n"))
+        }
         .onAppear {
-            // Capture state before the user makes any edits.
-            // Because FullDealEditSheet uses @Bindable, fields update the deal
-            // in real-time; we must snapshot here, not at commit time.
+            // Capture a full snapshot before any edits for Cancel revert.
+            // @Bindable writes immediately to SwiftData; snapshot is the only way to undo.
+            let snap = DealSnapshot(
+                deal: deal,
+                label: "Edit: \(deal.propertyName.isEmpty ? "Untitled" : deal.propertyName)"
+            )
+            openSnapshot = snap
             DealHistoryManager.shared.push(
                 deal:  deal,
-                label: "Edit: \(deal.propertyName.isEmpty ? "Untitled" : deal.propertyName)"
+                label: snap.label
             )
         }
     }
@@ -709,7 +722,7 @@ struct FullDealEditSheet: View {
 
     private var footer: some View {
         HStack(spacing: 12) {
-            Button { dismiss() } label: {
+            Button { revertAndDismiss() } label: {
                 Text("[ CANCEL ]")
             }
             .buttonStyle(TerminalButtonStyle(outlined: .muted))
@@ -731,18 +744,46 @@ struct FullDealEditSheet: View {
     // MARK: Commit
     // ─────────────────────────────────────────────────────────────────────────
 
+    private func revertAndDismiss() {
+        // Restore every field to the pre-edit snapshot so Cancel truly cancels.
+        if let snap = openSnapshot {
+            DealHistoryManager.shared.apply(snap, to: deal)
+            deal.updatedAt = snap.timestamp
+            try? modelContext.save()
+        }
+        dismiss()
+    }
+
+    @State private var validationErrors: [ValidationMessage] = []
+    @State private var showValidationAlert: Bool = false
+
     private func commitChanges() {
-        let viewModel = PropertyDealViewModel(deal: deal)
-        deal.porteosScore = viewModel.porteosScore.finalScore
+        // Run validation — block on critical errors, warn on others
+        let messages = DataValidator.validate(deal: deal)
+        let criticals = messages.filter { $0.severity == .critical }
+        if !criticals.isEmpty {
+            validationErrors = criticals
+            showValidationAlert = true
+            return   // don't save yet — user must resolve or force-save
+        }
+
+        persistAndDismiss()
+    }
+
+    private func persistAndDismiss() {
+        // Sync OpEx aggregate from line items if any are non-zero
+        if opexLineItemsTotal > 0 {
+            deal.operatingExpenses = opexLineItemsTotal
+        }
+        // Compute and persist the Porteos Score
+        deal.porteosScore = PropertyDealViewModel(deal: deal).porteosScore.finalScore
         deal.updatedAt    = Date()
         do {
             try modelContext.save()
-            print("[SUCCESS] Deal saved: \(deal.propertyName)")
             GeocodingService.shared.scheduleGeocode(deal: deal, context: modelContext)
         } catch {
             print("[ERROR] Failed to save: \(error)")
         }
-        // Record metrics into the trend time-series for this city
         TrendRecorder.record(deal, context: modelContext, source: "portfolio")
         dismiss()
     }

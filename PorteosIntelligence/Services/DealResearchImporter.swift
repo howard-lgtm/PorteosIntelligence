@@ -176,6 +176,7 @@ struct DealResearchImporter {
             }
         }
 
+        deal.porteosScore = PropertyDealViewModel(deal: deal).porteosScore.finalScore
         deal.updatedAt = Date()
         try? context.save()
 

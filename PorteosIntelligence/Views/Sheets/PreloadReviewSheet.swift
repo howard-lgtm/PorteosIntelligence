@@ -376,6 +376,7 @@ struct PreloadReviewSheet: View {
             }
         }
 
+        deal.porteosScore = PropertyDealViewModel(deal: deal).porteosScore.finalScore
         deal.updatedAt = Date()
         try? modelContext.save()
     }

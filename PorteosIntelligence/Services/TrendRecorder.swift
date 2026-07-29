@@ -22,6 +22,16 @@ enum TrendRecorder {
     static func record(_ deal: PropertyDeal, context: ModelContext, source: String = "portfolio") {
         guard !deal.locationCity.trimmingCharacters(in: .whitespaces).isEmpty else { return }
 
+        // Prune rows older than 90 days to prevent unbounded growth
+        let cutoff = Calendar.current.date(byAdding: .day, value: -90, to: Date()) ?? .distantPast
+        if let stale = try? context.fetch(
+            FetchDescriptor<MarketTrend>(
+                predicate: #Predicate { $0.recordedAt < cutoff }
+            )
+        ) {
+            stale.forEach { context.delete($0) }
+        }
+
         let city    = deal.locationCity
         let country = "unknown"   // PropertyDeal has no locationCountry field
 
