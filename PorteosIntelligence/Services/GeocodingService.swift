@@ -100,8 +100,12 @@ final class GeocodingService {
         return query
     }
 
-    /// Derives a country name from marketId prefix or benchmark lookup.
+    /// Derives a country name from stored field, marketId prefix, or benchmark lookup.
     private func inferCountry(for deal: PropertyDeal) -> String? {
+        // 0. Stored locationCountry — most reliable, user-entered
+        let stored = deal.locationCountry.trimmingCharacters(in: .whitespaces)
+        if !stored.isEmpty { return stored }
+
         // 1. marketId prefix (most reliable when set post-geocode)
         let idPrefix = String(deal.marketId.prefix(2))
         let countryByCode: [String: String] = [

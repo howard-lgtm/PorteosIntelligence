@@ -76,6 +76,9 @@ struct FullDealEditSheet: View {
     // MARK: Cancel revert — snapshot captured before any edits
     @State private var openSnapshot: DealSnapshot? = nil
 
+    // MARK: GPS manual entry
+    @State private var gpsEntry: String = ""
+
     // MARK: Live score — single source of truth via PropertyDealViewModel (includes Design score)
     private var liveScore: (score: Double, grade: String, color: Color)? {
         let result = PropertyDealViewModel(deal: deal).porteosScore
@@ -260,6 +263,15 @@ struct FullDealEditSheet: View {
                 equals: .location
             )
             .onChange(of: deal.locationCity) { _, _ in checkForBenchmark() }
+
+            TerminalComboboxField(
+                label: "Country",
+                placeholder: "e.g. Portugal, Spain",
+                text: $deal.locationCountry,
+                suggestions: { query in Self.countrySuggestions(for: query) }
+            )
+
+            gpsCoordinatesField
 
             // Preload button — appears when city + area are set
             if !deal.locationCity.isEmpty && deal.totalArea > 0 {
@@ -772,9 +784,84 @@ struct FullDealEditSheet: View {
     static func citySuggestions(for query: String) -> [String] {
         guard query.count >= 2 else { return [] }
         let q = query.lowercased()
-        let prefix  = allCityNames.filter { $0.lowercased().hasPrefix(q) }
+        let prefix   = allCityNames.filter { $0.lowercased().hasPrefix(q) }
         let contains = allCityNames.filter { !$0.lowercased().hasPrefix(q) && $0.lowercased().contains(q) }
         return Array((prefix + contains).prefix(8))
+    }
+
+    private static let allCountryNames: [String] = {
+        Array(Set(MarketBenchmarks.benchmarks.map(\.country))).sorted()
+    }()
+
+    static func countrySuggestions(for query: String) -> [String] {
+        guard query.count >= 1 else { return [] }
+        let q = query.lowercased()
+        return allCountryNames.filter { $0.lowercased().hasPrefix(q) }.prefix(8).map { $0 }
+    }
+
+    // MARK: GPS coordinates field
+
+    @ViewBuilder
+    private var gpsCoordinatesField: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("GPS COORDINATES")
+                .porteosMeta()
+                .foregroundStyle(textTertiary)
+            HStack(spacing: 8) {
+                if let lat = deal.latitude, let lon = deal.longitude {
+                    Text(String(format: "%.5f, %.5f", lat, lon))
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.statusGo)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Button("[ CLEAR ]") {
+                        deal.latitude = nil
+                        deal.longitude = nil
+                        deal.geocodeStatus = .none
+                    }
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.statusCritical)
+                    .buttonStyle(.plain)
+                } else {
+                    TextField("lat, lon — e.g. 37.24355, -8.26125", text: $gpsEntry)
+                        .textFieldStyle(.plain)
+                        .porteosMeta()
+                        .foregroundStyle(textPrimary)
+                        .onSubmit { applyGPSEntry() }
+                    if !gpsEntry.isEmpty {
+                        Button("[ SET ]") { applyGPSEntry() }
+                            .porteosMeta()
+                            .foregroundStyle(accentRust)
+                            .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(.horizontal, 8)
+            .frame(minHeight: DesignTokens.rowHeightData)
+            .background(shellBg)
+            .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
+            .clipShape(Rectangle())
+
+            if deal.geocodeStatus == .failed || deal.geocodeStatus == .none {
+                Text("// Paste coordinates from Google Maps or import research JSON to pin correctly")
+                    .porteosMeta()
+                    .foregroundStyle(textTertiary)
+            }
+        }
+    }
+
+    private func applyGPSEntry() {
+        let parts = gpsEntry
+            .replacingOccurrences(of: " ", with: "")
+            .components(separatedBy: ",")
+        guard parts.count == 2,
+              let lat = Double(parts[0]),
+              let lon = Double(parts[1]),
+              lat >= -90, lat <= 90,
+              lon >= -180, lon <= 180 else { return }
+        deal.latitude = lat
+        deal.longitude = lon
+        deal.geocodeStatus = .ok
+        gpsEntry = ""
     }
 
     private static let percentFormatter: NumberFormatter = {

@@ -166,6 +166,14 @@ struct DealResearchImporter {
             deal.notes = deal.notes + researchBlock
         }
 
+        // ── Country ───────────────────────────────────────────────────────────
+        if deal.locationCountry.isEmpty,
+           let country = string(flat, keys: ["country", "location_country", "locationCountry"]),
+           !country.isEmpty {
+            deal.locationCountry = country
+            applied.append("country \(country)")
+        }
+
         // ── Market resolution ─────────────────────────────────────────────────
         if deal.marketId.isEmpty, !deal.locationCity.isEmpty {
             if let resolved = MarketFeedRegistry.resolveMarketId(

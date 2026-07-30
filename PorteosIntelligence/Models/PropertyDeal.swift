@@ -36,6 +36,7 @@ final class PropertyDeal {
     var totalArea:       Double   // built / floor area (m²)
     var landArea:        Double   // rustic / plot area (m²) — quintas, rural
     var locationCity:    String
+    var locationCountry: String   // e.g. "Portugal", "Spain" — used for geocoding context
 
     // MARK: Global Intelligence / Geo
     var latitude:         Double?
@@ -171,6 +172,7 @@ final class PropertyDeal {
         totalArea:                   Double  = 0,
         landArea:                    Double  = 0,
         locationCity:                String  = "",
+        locationCountry:             String  = "",
         latitude:                    Double? = nil,
         longitude:                   Double? = nil,
         geocodeStatusRaw:            String  = GeocodeStatus.none.rawValue,
@@ -251,6 +253,7 @@ final class PropertyDeal {
         self.totalArea                      = totalArea
         self.landArea                       = landArea
         self.locationCity                   = locationCity
+        self.locationCountry               = locationCountry
         self.latitude                       = latitude
         self.longitude                      = longitude
         self.geocodeStatusRaw               = geocodeStatusRaw

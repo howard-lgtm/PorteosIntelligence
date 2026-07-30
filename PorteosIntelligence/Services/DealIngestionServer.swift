@@ -501,6 +501,7 @@ final class DealIngestionServer {
             propertyType:         "Apartment",
             totalArea:            area,
             locationCity:         city,
+            locationCountry:      payload.locationCountry ?? "",
             purchasePrice:        price,
             grossPotentialIncome: gpi,
             vacancyRate:          vacancyRate,
