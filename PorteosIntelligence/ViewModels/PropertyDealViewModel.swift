@@ -117,12 +117,16 @@ final class PropertyDealViewModel {
     }
 
     var porteosScore: PorteosScoreCalculator.PorteosMetrics {
-        PorteosScoreCalculator.calculate(inputs: PorteosScoreCalculator.PorteosInputs(
-            capRate:           realEstateFullMetrics.capRate,
+        let re = realEstateFullMetrics
+        return PorteosScoreCalculator.calculate(inputs: PorteosScoreCalculator.PorteosInputs(
+            capRate:           re.capRate,
             revPAR:            hospitalityMetrics.revPAR,
             designScore:       designScore,
             circularScore:     circularMetrics.overallCEScore,
             totalRevenue:      hospitalityMetrics.totalRevenue,
+            dscr:              re.debtServiceCoverageRatio,
+            ltv:               re.loanToValue,
+            cashOnCash:        re.cashOnCashReturn,
             weightRealEstate:  deal.weightRealEstate,
             weightHospitality: deal.weightHospitality,
             weightDesign:      deal.weightDesign,

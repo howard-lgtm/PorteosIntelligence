@@ -512,6 +512,9 @@ final class DealIngestionServer {
         )
         ctx.insert(deal)
 
+        // Auto-fill remaining zero fields from benchmark + compute initial score
+        DealPreloader.applyToNewDeal(deal)
+
         if let url = payload.url, !url.isEmpty {
             let record = EmailImportRecord(
                 listingURL: ListingURLHelpers.normalize(url),

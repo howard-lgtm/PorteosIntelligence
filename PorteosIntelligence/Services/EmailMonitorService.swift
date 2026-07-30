@@ -331,6 +331,9 @@ final class EmailMonitorService {
             )
             ctx.insert(deal)
 
+            // Auto-fill remaining zero fields from market benchmark + compute initial score
+            DealPreloader.applyToNewDeal(deal)
+
             // Step 6: Record the import for future dedup
             let dedupeURL = normalizedURL.isEmpty ? "noop://\(UUID().uuidString)" : normalizedURL
             let record = EmailImportRecord(

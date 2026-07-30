@@ -89,6 +89,7 @@ Files are named deals-\(stamp).store — contact support to recover them.
         WindowGroup {
             AppShell()
                 .modelContainer(sharedModelContainer)
+                .onAppear { backfillMissingScores() }
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
                     DealIngestionServer.shared.stop()
                     EmailMonitorService.shared.stopMonitoring()
@@ -96,6 +97,24 @@ Files are named deals-\(stamp).store — contact support to recover them.
         }
         .commands {
             AppCommandsProvider()
+        }
+    }
+
+    /// Background pass: score any deal that still has nil porteosScore.
+    /// Runs once on launch — non-blocking, detached, no UI impact.
+    private func backfillMissingScores() {
+        Task.detached(priority: .background) {
+            let ctx = ModelContext(sharedModelContainer)
+            guard let deals = try? ctx.fetch(
+                FetchDescriptor<PropertyDeal>(
+                    predicate: #Predicate { $0.porteosScore == nil }
+                )
+            ), !deals.isEmpty else { return }
+            for deal in deals {
+                deal.porteosScore = PropertyDealViewModel(deal: deal).porteosScore.finalScore
+            }
+            try? ctx.save()
+            print("[PorteosApp] Backfilled score for \(deals.count) deal(s)")
         }
     }
 }

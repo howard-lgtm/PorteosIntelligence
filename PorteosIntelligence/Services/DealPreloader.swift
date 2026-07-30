@@ -82,6 +82,46 @@ struct DealPreloader {
         let fieldNotes:       [String: String]   // field → rationale
     }
 
+    // MARK: - Auto-apply on ingestion
+
+    /// Called immediately after a new deal is created by any import path.
+    /// Fills all-zero fields from market benchmarks and computes the initial score.
+    /// Non-destructive: never overwrites fields that already have values.
+    static func applyToNewDeal(_ deal: PropertyDeal) {
+        guard let est = estimate(
+            city:          deal.locationCity,
+            country:       deal.locationCountry,
+            area:          deal.totalArea,
+            landArea:      deal.landArea,
+            purchasePrice: deal.purchasePrice,
+            propertyType:  deal.propertyType,
+            propertyName:  deal.propertyName
+        ) else {
+            // Still score even if no benchmark found
+            deal.porteosScore = PropertyDealViewModel(deal: deal).porteosScore.finalScore
+            return
+        }
+
+        if deal.grossPotentialIncome == 0  { deal.grossPotentialIncome  = est.grossPotentialIncome }
+        if deal.vacancyRate == 0           { deal.vacancyRate           = est.vacancyRate }
+        if deal.operatingExpenses == 0     { deal.operatingExpenses     = est.operatingExpenses }
+        if deal.opexPropertyManagement == 0 { deal.opexPropertyManagement = est.opexPropertyManagement }
+        if deal.opexPropertyTax == 0       { deal.opexPropertyTax       = est.opexPropertyTax }
+        if deal.opexInsurance == 0         { deal.opexInsurance         = est.opexInsurance }
+        if deal.opexUtilities == 0         { deal.opexUtilities         = est.opexUtilities }
+        if deal.opexMaintenance == 0       { deal.opexMaintenance       = est.opexMaintenance }
+        if deal.opexCapitalReserves == 0   { deal.opexCapitalReserves   = est.opexCapitalReserves }
+        if deal.loanAmount == 0 && deal.purchasePrice > 0 { deal.loanAmount = est.loanAmount }
+        if deal.interestRate == 0          { deal.interestRate          = est.interestRate }
+        if deal.renovationBudget == 0      { deal.renovationBudget      = (est.renovationLow + est.renovationHigh) / 2 }
+        if let rooms = est.hospitalityRoomCount,    deal.hospitalityRoomCount    == 0 { deal.hospitalityRoomCount    = rooms }
+        if let adr   = est.hospitalityADR,           deal.hospitalityADR          == 0 { deal.hospitalityADR          = adr }
+        if let occ   = est.hospitalityOccupancyRate, deal.hospitalityOccupancyRate == 0 { deal.hospitalityOccupancyRate = occ }
+        if let opex  = est.hospitalityOpExRatio,     deal.hospitalityOpExRatio    == 0 { deal.hospitalityOpExRatio    = opex }
+
+        deal.porteosScore = PropertyDealViewModel(deal: deal).porteosScore.finalScore
+    }
+
     // MARK: - Main entry point
 
     /// Computes a `PreloadEstimate` from available deal data and city benchmarks.
