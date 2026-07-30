@@ -776,13 +776,24 @@ struct AIVibePanel: View {
 }
 
 // MARK: - SWOTAccordionView
-// Isolated View struct so @State lives at the correct SwiftUI identity level.
-// Functions inside @ViewBuilder chains lose state linkage on macOS — a struct fixes this.
+// Always-expanded — nested ScrollView on macOS intercepts clicks before any Button/gesture
+// can fire. Showing full text is more reliable and the inspector pane already scrolls.
 
 private struct SWOTAccordionView: View {
 
     let swot: SWOTAnalysis
-    @State private var expanded: String? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            swotRow("S", swot.strength,    color: DesignTokens.statusGo)
+            rowDivider
+            swotRow("W", swot.weakness,    color: DesignTokens.statusCritical)
+            rowDivider
+            swotRow("O", swot.opportunity, color: DesignTokens.statusWarn)
+            rowDivider
+            swotRow("T", swot.threat,      color: DesignTokens.textSecondary)
+        }
+    }
 
     private var rowDivider: some View {
         Rectangle()
@@ -791,51 +802,23 @@ private struct SWOTAccordionView: View {
             .padding(.horizontal, DesignTokens.blockGutter)
     }
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            row("S", swot.strength,    color: DesignTokens.statusGo)
-            rowDivider
-            row("W", swot.weakness,    color: DesignTokens.statusCritical)
-            rowDivider
-            row("O", swot.opportunity, color: DesignTokens.statusWarn)
-            rowDivider
-            row("T", swot.threat,      color: DesignTokens.textSecondary)
+    private func swotRow(_ key: String, _ text: String, color: Color) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(key)
+                .porteosMeta()
+                .foregroundStyle(color)
+                .frame(width: 16, alignment: .leading)
+                .padding(.top, 1)
+            Text(text)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .multilineTextAlignment(.leading)
         }
-    }
-
-    private func row(_ key: String, _ text: String, color: Color) -> some View {
-        let isExpanded  = expanded == key
-        let needsExpand = text.count > 30
-        let preview     = needsExpand ? String(text.prefix(72)) + "…" : text
-
-        return Button {
-            withAnimation(.easeOut(duration: 0.15)) {
-                expanded = isExpanded ? nil : key
-            }
-        } label: {
-            HStack(alignment: .top, spacing: 10) {
-                Text(key)
-                    .porteosMeta()
-                    .foregroundStyle(color)
-                    .frame(width: 16)
-                Text(isExpanded ? text : preview)
-                    .porteosMeta()
-                    .foregroundStyle(DesignTokens.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .multilineTextAlignment(.leading)
-                Spacer(minLength: 0)
-                if needsExpand {
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundStyle(DesignTokens.textDim)
-                }
-            }
-            .padding(.horizontal, DesignTokens.blockGutter)
-            .padding(.vertical, 8)
-            .background(DesignTokens.surfacePanel)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, 8)
+        .background(DesignTokens.surfacePanel)
+        .help(text)   // macOS tooltip shows full text on hover as a backup
     }
 }
 
