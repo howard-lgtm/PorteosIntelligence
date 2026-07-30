@@ -230,54 +230,12 @@ struct AIVibePanel: View {
         .background(DesignTokens.surfaceElevated)
     }
 
-    // MARK: SWOT
-
-    @State private var expandedSWOTKey: String? = nil
+    // MARK: SWOT — delegates to isolated View struct so @State lives at the right level
 
     @ViewBuilder
     private func swotSection(_ swot: SWOTAnalysis) -> some View {
         sectionHeader("SWOT ANALYSIS")
-        VStack(alignment: .leading, spacing: 0) {
-            swotRow("S", swot.strength,    color: DesignTokens.statusGo)
-            insetDivider
-            swotRow("W", swot.weakness,    color: DesignTokens.statusCritical)
-            insetDivider
-            swotRow("O", swot.opportunity, color: DesignTokens.statusWarn)
-            insetDivider
-            swotRow("T", swot.threat,      color: DesignTokens.textSecondary)
-        }
-    }
-
-    private func swotRow(_ label: String, _ text: String, color: Color) -> some View {
-        let isExpanded = expandedSWOTKey == label
-        // Show expand indicator whenever text is longer than ~30 chars (1 line in inspector)
-        let needsExpand = text.count > 30
-        let preview = needsExpand ? String(text.prefix(72)) + "…" : text
-
-        return HStack(alignment: .top, spacing: 10) {
-            Text(label)
-                .porteosMeta()
-                .foregroundStyle(color)
-                .frame(width: 16)
-            Text(isExpanded ? text : preview)
-                .porteosMeta()
-                .foregroundStyle(DesignTokens.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .multilineTextAlignment(.leading)
-            Spacer(minLength: 0)
-            if needsExpand {
-                Text(isExpanded ? "▲" : "▼")
-                    .porteosMeta()
-                    .foregroundStyle(DesignTokens.textDim)
-            }
-        }
-        .padding(.horizontal, DesignTokens.blockGutter)
-        .padding(.vertical, 8)
-        .background(DesignTokens.surfacePanel)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            expandedSWOTKey = isExpanded ? nil : label
-        }
+        SWOTAccordionView(swot: swot)
     }
 
     // MARK: Rows
@@ -814,6 +772,70 @@ struct AIVibePanel: View {
         case .warning:  return DesignTokens.statusWarn
         case .critical: return DesignTokens.statusCritical
         }
+    }
+}
+
+// MARK: - SWOTAccordionView
+// Isolated View struct so @State lives at the correct SwiftUI identity level.
+// Functions inside @ViewBuilder chains lose state linkage on macOS — a struct fixes this.
+
+private struct SWOTAccordionView: View {
+
+    let swot: SWOTAnalysis
+    @State private var expanded: String? = nil
+
+    private var rowDivider: some View {
+        Rectangle()
+            .fill(DesignTokens.dividerStructural)
+            .frame(height: DesignTokens.dividerWidth)
+            .padding(.horizontal, DesignTokens.blockGutter)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            row("S", swot.strength,    color: DesignTokens.statusGo)
+            rowDivider
+            row("W", swot.weakness,    color: DesignTokens.statusCritical)
+            rowDivider
+            row("O", swot.opportunity, color: DesignTokens.statusWarn)
+            rowDivider
+            row("T", swot.threat,      color: DesignTokens.textSecondary)
+        }
+    }
+
+    private func row(_ key: String, _ text: String, color: Color) -> some View {
+        let isExpanded  = expanded == key
+        let needsExpand = text.count > 30
+        let preview     = needsExpand ? String(text.prefix(72)) + "…" : text
+
+        return Button {
+            withAnimation(.easeOut(duration: 0.15)) {
+                expanded = isExpanded ? nil : key
+            }
+        } label: {
+            HStack(alignment: .top, spacing: 10) {
+                Text(key)
+                    .porteosMeta()
+                    .foregroundStyle(color)
+                    .frame(width: 16)
+                Text(isExpanded ? text : preview)
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: 0)
+                if needsExpand {
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(DesignTokens.textDim)
+                }
+            }
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 8)
+            .background(DesignTokens.surfacePanel)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 
