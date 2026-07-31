@@ -16,7 +16,36 @@ struct PreloadReviewSheet: View {
     // Selected fields — all on by default, user can opt out
     @State private var selected: Set<String> = []
 
+    // Phase 3 overrides
+    @State private var conditionOverride: DealPreloader.PropertyCondition? = nil
+    @State private var season: DealPreloader.SeasonProfile = .shoulder
+
     private let accent = DesignTokens.accentRust
+
+    // MARK: - Override computed values
+
+    private var effectiveCondition: DealPreloader.PropertyCondition {
+        conditionOverride ?? estimate.condition
+    }
+
+    /// Recover `area × costPerSqm × heritageMultiplier` from the original estimate so we
+    /// can recompute renovation range for any condition without re-running the full estimator.
+    private var renovBaseProduct: Double {
+        let origLow = estimate.condition.renovationFactorRange.low
+        guard origLow > 0 else { return 0 }
+        return estimate.renovationLow / origLow
+    }
+    private var effectiveRenovLow:  Double { renovBaseProduct * effectiveCondition.renovationFactorRange.low }
+    private var effectiveRenovHigh: Double { renovBaseProduct * effectiveCondition.renovationFactorRange.high }
+
+    private var effectiveADR: Double? {
+        guard let base = estimate.hospitalityADR else { return nil }
+        return DealPreloader.seasonalHospitality(baseADR: base, baseOccupancy: 0, season: season).adr
+    }
+    private var effectiveOccupancy: Double? {
+        guard let base = estimate.hospitalityOccupancyRate else { return nil }
+        return DealPreloader.seasonalHospitality(baseADR: 0, baseOccupancy: base, season: season).occupancy
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -63,42 +92,98 @@ struct PreloadReviewSheet: View {
     // MARK: - Condition banner
 
     private var conditionBanner: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(estimate.condition.icon)
-                        .porteosRowValue()
-                        .foregroundStyle(conditionColor)
-                    Text(estimate.condition.rawValue.uppercased())
-                        .porteosRowValue()
-                        .foregroundStyle(conditionColor)
+        VStack(spacing: 0) {
+            // Info row
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 6) {
+                        Text(effectiveCondition.icon)
+                            .porteosRowValue()
+                            .foregroundStyle(conditionColor)
+                        Text(effectiveCondition.rawValue.uppercased())
+                            .porteosRowValue()
+                            .foregroundStyle(conditionColor)
+                        if conditionOverride != nil {
+                            Text("// manual override")
+                                .porteosMeta()
+                                .foregroundStyle(DesignTokens.textDim)
+                        }
+                    }
+                    Text("€\(Int(estimate.pricePSqm))/m² vs implied market €\(Int(estimate.marketPSqm))/m² — \(Int(estimate.discountRatio * 100))% of market value")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textSecondary)
                 }
-                Text("€\(Int(estimate.pricePSqm))/m² vs implied market €\(Int(estimate.marketPSqm))/m² — \(Int(estimate.discountRatio * 100))% of market value")
-                    .porteosMeta()
-                    .foregroundStyle(DesignTokens.textSecondary)
-            }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 3) {
-                Text("RENOVATION RANGE")
-                    .porteosMeta()
-                    .foregroundStyle(DesignTokens.textDim)
-                Text("€\(compactEur(estimate.renovationLow)) – €\(compactEur(estimate.renovationHigh))")
-                    .porteosRowValue()
-                    .foregroundStyle(conditionColor)
-                if estimate.isHeritage {
-                    Text("// heritage +30%")
+                Spacer()
+                VStack(alignment: .trailing, spacing: 3) {
+                    Text("RENOVATION RANGE")
                         .porteosMeta()
                         .foregroundStyle(DesignTokens.textDim)
+                    Text("€\(compactEur(effectiveRenovLow)) – €\(compactEur(effectiveRenovHigh))")
+                        .porteosRowValue()
+                        .foregroundStyle(conditionColor)
+                    if estimate.isHeritage {
+                        Text("// heritage +30%")
+                            .porteosMeta()
+                            .foregroundStyle(DesignTokens.textDim)
+                    }
                 }
             }
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 10)
+
+            // Condition picker
+            HStack(spacing: 0) {
+                Text("OVERRIDE:")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                    .frame(width: 70, alignment: .leading)
+                    .padding(.leading, DesignTokens.blockGutter)
+
+                HStack(spacing: 1) {
+                    ForEach(DealPreloader.PropertyCondition.allCases, id: \.self) { cond in
+                        let isActive = effectiveCondition == cond
+                        Button {
+                            if conditionOverride == cond {
+                                conditionOverride = nil   // second tap resets to auto
+                            } else {
+                                conditionOverride = cond
+                            }
+                        } label: {
+                            Text("[ \(cond.shortLabel) ]")
+                                .porteosMeta()
+                                .foregroundStyle(isActive ? DesignTokens.canvasBase : DesignTokens.textDim)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(isActive ? conditionColorFor(cond) : Color.clear)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                Spacer()
+                if conditionOverride != nil {
+                    Button("[ RESET AUTO ]") { conditionOverride = nil }
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textDim)
+                        .buttonStyle(.plain)
+                        .padding(.trailing, DesignTokens.blockGutter)
+                }
+            }
+            .padding(.bottom, 8)
         }
-        .padding(.horizontal, DesignTokens.blockGutter)
-        .padding(.vertical, 12)
         .background(conditionColor.opacity(0.06))
     }
 
+    private func conditionColorFor(_ cond: DealPreloader.PropertyCondition) -> Color {
+        switch cond {
+        case .ruin:      return DesignTokens.statusCritical
+        case .needsWork: return DesignTokens.statusWarn
+        case .habitable: return DesignTokens.statusGo
+        case .good:      return DesignTokens.statusGo
+        }
+    }
+
     private var conditionColor: Color {
-        switch estimate.condition {
+        switch effectiveCondition {
         case .ruin:      return DesignTokens.statusCritical
         case .needsWork: return DesignTokens.statusWarn
         case .habitable: return DesignTokens.statusGo
@@ -113,8 +198,8 @@ struct PreloadReviewSheet: View {
             sectionLabel("RENOVATION")
             fieldRow("renovationBudget",
                      label: "Renovation Budget (midpoint)",
-                     value: "€\(compactEur((estimate.renovationLow + estimate.renovationHigh) / 2))",
-                     note:  estimate.fieldNotes["renovationBudget"])
+                     value: "€\(compactEur((effectiveRenovLow + effectiveRenovHigh) / 2))",
+                     note:  "\(effectiveCondition.rawValue) — range €\(compactEur(effectiveRenovLow))–€\(compactEur(effectiveRenovHigh))")
 
             sectionLabel("INCOME")
             fieldRow("grossPotentialIncome",
@@ -171,24 +256,61 @@ struct PreloadReviewSheet: View {
                      note:  "Market prime yield — used for 5-year exit valuation")
 
             if estimate.hospitalityRoomCount != nil {
-                sectionLabel("HOSPITALITY")
+                // Season selector
+                HStack(spacing: 0) {
+                    Text("// HOSPITALITY")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textDim)
+                        .padding(.leading, DesignTokens.blockGutter)
+                        .padding(.top, 14)
+                        .padding(.bottom, 4)
+                    Spacer()
+                    HStack(spacing: 1) {
+                        ForEach(DealPreloader.SeasonProfile.allCases, id: \.self) { s in
+                            let isActive = season == s
+                            Button {
+                                season = s
+                            } label: {
+                                Text("\(s.icon) \(s.rawValue.uppercased())")
+                                    .porteosMeta()
+                                    .foregroundStyle(isActive ? DesignTokens.canvasBase : DesignTokens.textDim)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 3)
+                                    .background(isActive ? accent : Color.clear)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.trailing, DesignTokens.blockGutter)
+                    .padding(.top, 14)
+                    .padding(.bottom, 4)
+                }
+
                 if let rc = estimate.hospitalityRoomCount {
                     fieldRow("hospitalityRoomCount",
                              label: "Room Count",
                              value: "\(rc) rooms",
                              note:  estimate.fieldNotes["hospitalityRoomCount"])
                 }
-                if let adr = estimate.hospitalityADR {
+                if let adr = effectiveADR {
+                    let baseAdr = estimate.hospitalityADR ?? adr
+                    let label = season == .shoulder
+                        ? "ADR (annual avg)"
+                        : "ADR (\(season.rawValue)) — base €\(String(format: "%.0f", baseAdr))"
                     fieldRow("hospitalityADR",
-                             label: "ADR",
+                             label: label,
                              value: "€\(String(format: "%.0f", adr))",
-                             note:  "\(estimate.benchmarkCity) market average")
+                             note:  "\(estimate.benchmarkCity) × \(season.rawValue.lowercased()) multiplier")
                 }
-                if let occ = estimate.hospitalityOccupancyRate {
+                if let occ = effectiveOccupancy {
+                    let baseOcc = estimate.hospitalityOccupancyRate ?? occ
+                    let label = season == .shoulder
+                        ? "Occupancy Rate (annual avg)"
+                        : "Occupancy (\(season.rawValue)) — base \(String(format: "%.0f", baseOcc))%"
                     fieldRow("hospitalityOccupancyRate",
-                             label: "Occupancy Rate",
+                             label: label,
                              value: "\(String(format: "%.0f", occ))%",
-                             note:  "\(estimate.benchmarkCity) market average")
+                             note:  "\(season.rawValue): \(season.occupancyDelta >= 0 ? "+" : "")\(String(format: "%.0f", season.occupancyDelta))pp vs average")
                 }
                 if let opex = estimate.hospitalityOpExRatio {
                     fieldRow("hospitalityOpExRatio",
@@ -358,7 +480,7 @@ struct PreloadReviewSheet: View {
     private func applySelected() {
         DealHistoryManager.shared.push(deal: deal, label: "Apply market preload (\(estimate.benchmarkCity))")
 
-        let midReno = (estimate.renovationLow + estimate.renovationHigh) / 2
+        let midReno = (effectiveRenovLow + effectiveRenovHigh) / 2
 
         for key in selected {
             switch key {
@@ -374,10 +496,10 @@ struct PreloadReviewSheet: View {
             case "opexCapitalReserves":      deal.opexCapitalReserves       = estimate.opexCapitalReserves
             case "loanAmount":               deal.loanAmount                = estimate.loanAmount
             case "interestRate":             deal.interestRate              = estimate.interestRate
-                case "exitCapRate":              deal.exitCapRate               = estimate.exitCapRate
+            case "exitCapRate":              deal.exitCapRate               = estimate.exitCapRate
             case "hospitalityRoomCount":     deal.hospitalityRoomCount      = estimate.hospitalityRoomCount ?? 0
-            case "hospitalityADR":           deal.hospitalityADR            = estimate.hospitalityADR ?? 0
-            case "hospitalityOccupancyRate": deal.hospitalityOccupancyRate  = estimate.hospitalityOccupancyRate ?? 0
+            case "hospitalityADR":           deal.hospitalityADR            = effectiveADR ?? estimate.hospitalityADR ?? 0
+            case "hospitalityOccupancyRate": deal.hospitalityOccupancyRate  = effectiveOccupancy ?? estimate.hospitalityOccupancyRate ?? 0
             case "hospitalityOpExRatio":     deal.hospitalityOpExRatio      = estimate.hospitalityOpExRatio ?? 35
             default: break
             }

@@ -37,6 +37,58 @@ struct DealPreloader {
             case .good:      return "✓"
             }
         }
+        /// Short display label for the picker
+        var shortLabel: String {
+            switch self {
+            case .ruin:      return "RUIN"
+            case .needsWork: return "NEEDS WORK"
+            case .habitable: return "HABITABLE"
+            case .good:      return "GOOD"
+            }
+        }
+    }
+
+    // MARK: - Season profile (hospitality)
+
+    enum SeasonProfile: String, CaseIterable {
+        case peak      = "Peak"
+        case shoulder  = "Shoulder"
+        case offSeason = "Off-Season"
+
+        /// Multiplier applied to benchmark ADR.
+        var adrMultiplier: Double {
+            switch self {
+            case .peak:      return 1.35
+            case .shoulder:  return 1.0
+            case .offSeason: return 0.72
+            }
+        }
+        /// Percentage-point adjustment added to benchmark occupancy rate.
+        var occupancyDelta: Double {
+            switch self {
+            case .peak:      return 14.0
+            case .shoulder:  return 0.0
+            case .offSeason: return -20.0
+            }
+        }
+        var icon: String {
+            switch self {
+            case .peak:      return "▲"
+            case .shoulder:  return "·"
+            case .offSeason: return "▽"
+            }
+        }
+    }
+
+    /// Returns season-adjusted ADR and occupancy, clamped to a sensible range.
+    static func seasonalHospitality(
+        baseADR: Double,
+        baseOccupancy: Double,
+        season: SeasonProfile
+    ) -> (adr: Double, occupancy: Double) {
+        let adr = baseADR * season.adrMultiplier
+        let occ = min(98.0, max(10.0, baseOccupancy + season.occupancyDelta))
+        return (adr, occ)
     }
 
     // MARK: - Output
