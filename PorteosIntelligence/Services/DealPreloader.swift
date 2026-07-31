@@ -69,6 +69,7 @@ struct DealPreloader {
         // Financing
         let loanAmount:    Double   // 65% LTV
         let interestRate:  Double
+        let exitCapRate:   Double   // market prime yield — used for 5-year exit valuation
 
         // Hospitality (nil when not applicable)
         let hospitalityRoomCount:     Int?
@@ -114,6 +115,7 @@ struct DealPreloader {
         if deal.loanAmount == 0 && deal.purchasePrice > 0 { deal.loanAmount = est.loanAmount }
         if deal.interestRate == 0          { deal.interestRate          = est.interestRate }
         if deal.renovationBudget == 0      { deal.renovationBudget      = (est.renovationLow + est.renovationHigh) / 2 }
+        if deal.exitCapRate == 0           { deal.exitCapRate           = est.exitCapRate }
         if let rooms = est.hospitalityRoomCount,    deal.hospitalityRoomCount    == 0 { deal.hospitalityRoomCount    = rooms }
         if let adr   = est.hospitalityADR,           deal.hospitalityADR          == 0 { deal.hospitalityADR          = adr }
         if let occ   = est.hospitalityOccupancyRate, deal.hospitalityOccupancyRate == 0 { deal.hospitalityOccupancyRate = occ }
@@ -198,7 +200,8 @@ struct DealPreloader {
         let hospOpExRatio: Double? = isHospitality ? 35.0 : nil  // industry standard
 
         // ── Financing ─────────────────────────────────────────────────────────
-        let loanAmount = purchasePrice * 0.65
+        let loanAmount  = purchasePrice * 0.65
+        let exitCapRate = bm.avgCapRate   // exit at current market prime yield
 
         // ── Field notes (rationale shown in review UI) ────────────────────────
         var notes: [String: String] = [:]
@@ -232,6 +235,7 @@ struct DealPreloader {
             opexCapitalReserves:   opexCapReserves,
             loanAmount:            loanAmount,
             interestRate:          bm.avgInterestRate,
+            exitCapRate:           exitCapRate,
             hospitalityRoomCount:  roomCount,
             hospitalityADR:        adr,
             hospitalityOccupancyRate: occupancy,

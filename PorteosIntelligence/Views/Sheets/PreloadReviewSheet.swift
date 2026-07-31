@@ -165,6 +165,10 @@ struct PreloadReviewSheet: View {
                      label: "Interest Rate",
                      value: "\(String(format: "%.1f", estimate.interestRate))%",
                      note:  estimate.fieldNotes["interestRate"])
+            fieldRow("exitCapRate",
+                     label: "Exit Cap Rate",
+                     value: "\(String(format: "%.1f", estimate.exitCapRate))%",
+                     note:  "Market prime yield — used for 5-year exit valuation")
 
             if estimate.hospitalityRoomCount != nil {
                 sectionLabel("HOSPITALITY")
@@ -315,6 +319,7 @@ struct PreloadReviewSheet: View {
             .init(key: "opexCapitalReserves"),
             .init(key: "loanAmount"),
             .init(key: "interestRate"),
+            .init(key: "exitCapRate"),
         ]
         if estimate.hospitalityRoomCount != nil {
             f += [
@@ -341,6 +346,7 @@ struct PreloadReviewSheet: View {
         case "opexCapitalReserves":       return deal.opexCapitalReserves > 0
         case "loanAmount":                return deal.loanAmount > 0
         case "interestRate":              return deal.interestRate > 0
+        case "exitCapRate":               return deal.exitCapRate > 0
         case "hospitalityRoomCount":      return deal.hospitalityRoomCount > 0
         case "hospitalityADR":            return deal.hospitalityADR > 0
         case "hospitalityOccupancyRate":  return deal.hospitalityOccupancyRate > 0
@@ -368,6 +374,7 @@ struct PreloadReviewSheet: View {
             case "opexCapitalReserves":      deal.opexCapitalReserves       = estimate.opexCapitalReserves
             case "loanAmount":               deal.loanAmount                = estimate.loanAmount
             case "interestRate":             deal.interestRate              = estimate.interestRate
+                case "exitCapRate":              deal.exitCapRate               = estimate.exitCapRate
             case "hospitalityRoomCount":     deal.hospitalityRoomCount      = estimate.hospitalityRoomCount ?? 0
             case "hospitalityADR":           deal.hospitalityADR            = estimate.hospitalityADR ?? 0
             case "hospitalityOccupancyRate": deal.hospitalityOccupancyRate  = estimate.hospitalityOccupancyRate ?? 0

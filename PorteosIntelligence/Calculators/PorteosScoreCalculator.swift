@@ -81,13 +81,14 @@ struct PorteosScoreCalculator {
     }
 
     // MARK: - Grade
+    // Aligned with VibeGrade thresholds — single scale used everywhere in the app.
 
     private static func grade(for score: Double) -> String {
         switch score {
         case 80...: return "A"
-        case 60...: return "B"
-        case 40...: return "C"
-        case 20...: return "D"
+        case 65...: return "B"   // matches VibeGrade.from() — was 60, now 65
+        case 50...: return "C"   // matches VibeGrade.from() — was 40, now 50
+        case 35...: return "D"   // matches VibeGrade.from() — was 20, now 35
         default:    return "F"
         }
     }

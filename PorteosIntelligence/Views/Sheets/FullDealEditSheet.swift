@@ -464,7 +464,7 @@ struct FullDealEditSheet: View {
     private var notesFieldHeight: CGFloat {
         let lineCount = max(1, deal.notes.components(separatedBy: .newlines).count)
         let wrapped   = max(0, deal.notes.count / 72)
-        return min(320, max(140, CGFloat(lineCount + wrapped + 2) * 18))
+        return min(400, max(220, CGFloat(lineCount + wrapped + 2) * 18))
     }
 
     private var notesField: some View {
