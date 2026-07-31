@@ -33,13 +33,14 @@ struct HospitalitySensitivityBlock: View {
 
     private var rows: [Row] {
         let b = base
-        let adr  = HospitalityCalculator.calculateFull(inputs: inputs(adr: -10))
-        let occ  = HospitalityCalculator.calculateFull(inputs: inputs(occ: -5))
-        let opex = HospitalityCalculator.calculateFull(inputs: inputs(opex: 5))
+        let adrDown = HospitalityCalculator.calculateFull(inputs: inputs(adr: -10))
+        let occ     = HospitalityCalculator.calculateFull(inputs: inputs(occ: -5))
+        let opex    = HospitalityCalculator.calculateFull(inputs: inputs(opex: 5))
         return [
-            Row(label: "ADR ±€10", delta: adr.revPAR - b.revPAR, suffix: "RevPAR"),
-            Row(label: "Occupancy −5%", delta: occ.gop - b.gop, suffix: "GOP"),
-            Row(label: "OpEx Ratio +5pp", delta: opex.gop - b.gop, suffix: "GOP"),
+            // All three rows use GOP so bars are on the same scale and comparable
+            Row(label: "ADR −€10",        delta: adrDown.gop - b.gop, suffix: "GOP"),
+            Row(label: "Occupancy −5%",   delta: occ.gop    - b.gop, suffix: "GOP"),
+            Row(label: "OpEx Ratio +5pp", delta: opex.gop   - b.gop, suffix: "GOP"),
         ]
     }
 
