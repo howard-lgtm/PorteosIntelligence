@@ -209,7 +209,7 @@
 |----|------|--------|
 | P9-01 | AI vibe panel useful on real deals | `[x]` | qwen2.5:0.5b wired; SWOT + DealVerdict added Jul 10 |
 | P9-02 | LLM endpoint config + privacy note | `[x]` | Settings › INTELLIGENCE tab: endpoint, model, ping, privacy Jul 10 |
-| P9-03 | Portfolio learning engine feedback loop | `[ ]` | Scaffold exists |
+| P9-03 | Portfolio learning engine feedback loop | `[—]` | Deleted Jul 28 — 220 lines never called, no UI; removed to reduce dead code |
 
 ---
 
@@ -355,7 +355,7 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 | ID | Task | Status |
 |----|------|--------|
 | P12-01 | **First-launch checklist** — `FirstLaunchSheet` shown once when `deals.isEmpty`. Four setup paths: add deal, browser extension, email, local AI. Key shortcuts. Privacy note. Dismissed to `AppStorage` flag. | `[x]` | Jul 28 |
-| P12-02 | macOS Help menu — wire ⌘? to `ShortcutsLegendView` in-app (deferred from P4-05) | `[ ]` | v1.2 |
+| P12-02 | macOS Help menu — wire ⌘? to `ShortcutsLegendView` in-app (deferred from P4-05) | `[x]` | `CommandGroup(replacing: .help)` shipping Keyboard Shortcuts / Palette / Glossary Jul 28 |
 
 ---
 
@@ -366,8 +366,27 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 | P13-01 | **SwiftData backup before store wipe** — copies `.store` / `.store-shm` / `.store-wal` to `~/Documents/PorteosBackups/` with ISO8601 timestamp before deleting on migration failure. Shows `NSAlert` to user before wiping. | `[x]` | Jul 28 |
 | P13-02 | **HTTP server loopback guard** — `DealIngestionServer` already drops non-loopback connections (lines 213–218); server binds to all interfaces but connection handler rejects LAN/WAN requests. | `[x]` | Pre-existing, documented Jul 28 |
 | P13-03 | **Dead boilerplate removed** — deleted `Item.swift` (orphaned `@Model`), `ContentView.swift` (Xcode template), `QuickAddDealSheet.swift` (unreferenced). | `[x]` | Jul 28 |
-| P13-04 | URL-less deal dedup — deals imported without a URL (manual entry, partial imports) bypass the URL-hash dedup in `DealIngestionServer`. Needs an address/name hash fallback key. | `[ ]` | v1.2 |
-| P13-05 | marketId corruption post-geocode — failed geocode can leave `marketId` set to a wrong metro (e.g. "Atlanta Metro" on a PT property) from a stale resolution. Clear `marketId` when `geocodeStatus` changes to `.failed`. | `[ ]` | |
+| P13-04 | URL-less deal dedup — `findExistingDeal(byName:city:)` fallback added Jul 28. | `[x]` | Exact name+city match for imports without URL |
+| P13-05 | marketId corruption post-geocode — `item.name` fallback removed from `GeocodingService`; only `deal.locationCity` used for marketId resolution. | `[x]` | Jul 28 |
+| P13-06 | **Research JSON import size guard** — `DealResearchImporter.apply()` has no size cap; a crafted large file could spike memory. Add `guard data.count < 10_000_000` before parsing. | `[ ]` | Minor |
+| P13-07 | **HTTP ingestion API key** — port 9000 has no auth token; any local process can POST deals. Acceptable for personal use; needs a nonce/key for multi-user or shared machine. | `[ ]` | Pre-distribution |
+
+---
+
+## P14 — Market intelligence & auto-preload (Jul–Aug 2026)
+
+| ID | Task | Status |
+|----|------|--------|
+| P14-01 | **Country + GPS fields in edit sheet** — `locationCountry` added to `PropertyDeal`; GPS manual entry in BASE tab bypasses CLGeocoder; geocoder uses stored country first. | `[x]` | Jul 31 |
+| P14-02 | **Auto-preload on ingestion** — `DealPreloader.applyToNewDeal()` called after deal creation in `DealIngestionServer` and `EmailMonitorService`; fills all-zero fields (GPI, OpEx breakdown, loan, interest, renovation, hospitality) from benchmarks; computes `porteosScore` immediately. Score backfill on launch for nil-score deals. | `[x]` | Aug 1 |
+| P14-03 | **Score safety floor** — `PorteosScoreCalculator` now takes DSCR, LTV, cash-on-cash. DSCR < 0.8 = −25 pts; LTV > 90% = −20 pts; cash-on-cash ≥ 12% = +5 pts. Grade scale unified with `VibeGrade` (B: ≥65, C: ≥50, D: ≥35). | `[x]` | Aug 1 |
+| P14-04 | **Exit cap rate in preloader** — `DealPreloader` sets `exitCapRate` from benchmark prime yield; 5-year NPV calculation no longer shows "—". Exposed in `PreloadReviewSheet`. | `[x]` | Aug 1 |
+| P14-05 | **Condition selector + seasonal preload (Phase 3)** — `PreloadReviewSheet` has 4-button condition override (Ruin/Needs Work/Habitable/Good) and season toggle (Peak/Shoulder/Off-Season) for hospitality ADR/occupancy. | `[x]` | Aug 1 |
+| P14-06 | **Sensitivity analysis metric alignment** — `HospitalitySensitivityBlock` ADR row now uses GOP delta (not RevPAR) so all three bars share the same scale. | `[x]` | Aug 1 |
+| P14-07 | **Sensitivity rewrite** — hardcoded ±€10/−5%/+5pp deltas should scale to deal values (e.g. ±5% of current ADR); add combined stress scenario; show upside case alongside downside; express result as % of base GOP not absolute. | `[ ]` | Next |
+| P14-08 | **Deal list pagination** — `@Query` fetchLimit requires custom `init()` refactor across `AppShell` + `NavigationPane`; deferred. Not a risk at current portfolio size. | `[ ]` | Future |
+| P14-09 | **BatchTriage benchmark apply** — email-imported deals that go through batch triage don't get market assumptions applied. | `[ ]` | Future |
+| P14-10 | **Hospitality ↔ RE GPI auto-sync** — `[ SYNC GPI ]` button exists but sync is not automatic; a hotel deal still requires a manual step. | `[ ]` | Future |
 
 ---
 
