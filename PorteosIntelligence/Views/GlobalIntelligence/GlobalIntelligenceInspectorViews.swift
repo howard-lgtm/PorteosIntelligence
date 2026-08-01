@@ -281,16 +281,18 @@ struct MarketContextInspector: View {
 
                 if let bm = benchmark {
                     kpiRow("PRIME YIELD",  String(format: "%.2f %%", bm.avgCapRate),
-                           note: "// BENCHMARK")
-                    let spread = bm.avgCapRate - 4.0
+                           note: "// 2024-25 ESTIMATE")
+                    // Spread vs market lending rate (not hardcoded ECB)
+                    let baseRate = bm.avgInterestRate
+                    let spread   = bm.avgCapRate - baseRate
                     kpiRow("YIELD SPREAD", String(format: "%+.0f bps", spread * 100),
-                           note: "// vs ECB 4.0%")
+                           note: "// vs \(String(format: "%.1f", baseRate))% market rate")
                     kpiRow("INT. RATE",    String(format: "%.1f %%", bm.avgInterestRate),
-                           note: "// BENCHMARK")
+                           note: "// 2024-25 ESTIMATE")
                 }
                 if let macro = macroIndicators {
-                    kpiRow("GDP GROWTH",    macro.gdpGrowth,    note: "// BENCHMARK")
-                    kpiRow("TOURISM INDEX", macro.tourismIndex, note: "// BENCHMARK")
+                    kpiRow("GDP GROWTH",    macro.gdpGrowth,    note: "// STATIC 2024-25 ESTIMATE")
+                    kpiRow("TOURISM INDEX", macro.tourismIndex, note: "// STATIC 2024-25 ESTIMATE")
                 }
 
                 if let market = MarketFeedRegistry.market(id: marketId),
@@ -381,9 +383,9 @@ struct MarketContextInspector: View {
         lines.append("TOTAL EXPOSURE: \(formatCurrency(totalExposure))")
         if let avg = avgScore { lines.append(String(format: "AVG SCORE: %.0f / 100", avg)) }
         if let bm = benchmark {
-            lines.append(String(format: "PRIME YIELD: %.2f%%", bm.avgCapRate))
-            let spread = bm.avgCapRate - 4.0
-            lines.append(String(format: "YIELD SPREAD: %+.0f bps vs ECB 4.0%%", spread * 100))
+            lines.append(String(format: "PRIME YIELD: %.2f%% (2024-25 estimate)", bm.avgCapRate))
+            let spread = bm.avgCapRate - bm.avgInterestRate
+            lines.append(String(format: "YIELD SPREAD: %+.0f bps vs %.1f%% market rate", spread * 100, bm.avgInterestRate))
         }
         lines.append("")
         lines.append("DEALS:")

@@ -118,7 +118,7 @@ struct IntelBriefView: View {
                 .porteosMeta().foregroundStyle(DesignTokens.textSecondary)
             HStack(spacing: 8) {
                 regenerateButton
-                Button { briefState = .idle } label: {
+                Button { briefState = .offline } label: {
                     Text("[ DISMISS ]").porteosMeta().foregroundStyle(DesignTokens.textDim)
                 }.buttonStyle(.plain)
             }.padding(.top, 4)
@@ -139,7 +139,7 @@ struct IntelBriefView: View {
     // MARK: - Signals column
 
     private var signalsColumn: some View {
-        TerminalBlock(command: "03 // MARKET_SIGNALS", accentColor: accent) {
+        TerminalBlock(command: "04 // MARKET_SIGNALS", accentColor: accent) {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(marketSignalCards) { card in signalCard(card) }
                 Spacer(minLength: 0)
@@ -156,6 +156,10 @@ struct IntelBriefView: View {
                 .foregroundStyle(card.ratingColor)
             Text(card.label)
                 .porteosMeta().foregroundStyle(DesignTokens.textDim)
+            Text(card.sublabel)
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+                .font(.system(size: 9, design: .monospaced))
         }
         .padding(.horizontal, 10).padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -170,30 +174,44 @@ struct IntelBriefView: View {
     }
 
     private var marketSignalCards: [MarketSignalCard] {
-        let regCount     = articles.filter { $0.topics.contains(IntelSector.energy.rawValue) }.count
+        // Signals are derived from headline counts in the cached news feed.
+        // Ratings reflect news volume, not live data — labelled accordingly.
+        let regCount     = articles.filter {
+            $0.topics.contains(IntelSector.energy.rawValue) ||
+            $0.topics.contains(IntelSector.adjacent.rawValue)
+        }.count
         let rateCount    = articles.filter { $0.topics.contains(IntelSector.capMarkets.rawValue) }.count
         let tourismCount = articles.filter { $0.topics.contains(IntelSector.travel.rawValue) }.count
         let reCount      = articles.filter { $0.topics.contains(IntelSector.realEstate.rawValue) }.count
+
         return [
             MarketSignalCard(
                 label: "REG. PRESSURE",
+                sublabel: "\(regCount) headline\(regCount == 1 ? "" : "s")",
                 rating: regCount >= 2 ? "HIGH" : regCount == 1 ? "MODERATE" : "LOW",
-                ratingColor: regCount >= 2 ? DesignTokens.statusWarn : regCount == 1 ? .yellow : DesignTokens.statusGo
+                ratingColor: regCount >= 2 ? DesignTokens.statusWarn
+                           : regCount == 1 ? DesignTokens.statusWarn.opacity(0.7)
+                           : DesignTokens.statusGo
             ),
             MarketSignalCard(
                 label: "RATE OUTLOOK",
+                sublabel: "\(rateCount) headline\(rateCount == 1 ? "" : "s")",
                 rating: rateCount >= 2 ? "VOLATILE" : "STABLE",
                 ratingColor: rateCount >= 2 ? DesignTokens.statusWarn : DesignTokens.textPrimary
             ),
             MarketSignalCard(
                 label: "TOURISM INDEX",
+                sublabel: "\(tourismCount) headline\(tourismCount == 1 ? "" : "s")",
                 rating: tourismCount >= 1 ? "POSITIVE" : "NEUTRAL",
                 ratingColor: tourismCount >= 1 ? DesignTokens.statusGo : DesignTokens.textDim
             ),
             MarketSignalCard(
                 label: "SUPPLY PIPELINE",
+                sublabel: "\(reCount) headline\(reCount == 1 ? "" : "s")",
                 rating: reCount >= 3 ? "ACTIVE" : reCount >= 1 ? "MODERATE" : "TIGHT",
-                ratingColor: reCount >= 3 ? DesignTokens.statusGo : reCount >= 1 ? .yellow : DesignTokens.statusWarn
+                ratingColor: reCount >= 3 ? DesignTokens.statusGo
+                           : reCount >= 1 ? DesignTokens.statusWarn.opacity(0.7)
+                           : DesignTokens.statusWarn
             ),
         ]
     }
@@ -280,6 +298,7 @@ struct IntelSignal: Identifiable {
 struct MarketSignalCard: Identifiable {
     let id = UUID()
     let label: String
+    let sublabel: String   // e.g. "3 headlines" — makes basis transparent
     let rating: String
     let ratingColor: Color
 }

@@ -104,12 +104,18 @@ struct MarketNewsFeedModule: View {
                 .foregroundStyle(DesignTokens.textDim)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
-                    marketChip(label: "ALL", marketId: nil, isActive: marketFilterId == nil)
+                    marketChip(label: "ALL", marketId: nil, isActive: marketFilterId == nil, hasFeeds: true)
                     ForEach(MarketFeedRegistry.countries) { country in
+                        let hasFeeds = !country.rssFeeds.isEmpty
                         let label = country.id == marketFilterId
                             ? "\(country.displayName) *"
                             : country.id
-                        marketChip(label: label, marketId: country.id, isActive: marketFilterId == country.id)
+                        marketChip(
+                            label: label,
+                            marketId: country.id,
+                            isActive: marketFilterId == country.id,
+                            hasFeeds: hasFeeds
+                        )
                     }
                 }
             }
@@ -166,11 +172,12 @@ struct MarketNewsFeedModule: View {
         .padding(.top, 6)
     }
 
-    private func marketChip(label: String, marketId: String?, isActive: Bool) -> some View {
+    private func marketChip(label: String, marketId: String?, isActive: Bool, hasFeeds: Bool = true) -> some View {
         Button { onMarketFilterChange(marketId) } label: {
-            filterChipLabel(label, isActive: isActive)
+            filterChipLabel(label, isActive: isActive, dimmed: !hasFeeds)
         }
         .buttonStyle(.plain)
+        .help(hasFeeds ? "" : "No RSS feeds configured for this market")
     }
 
     private func windowChip(days: Int) -> some View {
@@ -187,15 +194,18 @@ struct MarketNewsFeedModule: View {
         .buttonStyle(.plain)
     }
 
-    private func filterChipLabel(_ label: String, isActive: Bool) -> some View {
+    private func filterChipLabel(_ label: String, isActive: Bool, dimmed: Bool = false) -> some View {
         Text("[ \(label) ]")
             .porteosMeta()
-            .foregroundStyle(isActive ? accent : DesignTokens.textDim)
+            .foregroundStyle(
+                dimmed    ? DesignTokens.textDim.opacity(0.4) :
+                isActive  ? accent : DesignTokens.textDim
+            )
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
-            .background(isActive ? accent.opacity(0.12) : Color.clear)
+            .background(isActive && !dimmed ? accent.opacity(0.12) : Color.clear)
             .overlay {
-                if isActive {
+                if isActive && !dimmed {
                     Rectangle().strokeBorder(accent.opacity(0.5), lineWidth: 1)
                 }
             }

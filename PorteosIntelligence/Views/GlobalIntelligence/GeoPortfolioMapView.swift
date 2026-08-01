@@ -145,7 +145,10 @@ struct GeoPortfolioMapView: View {
     }
 
     private var showGeocodeOverlay: Bool {
-        !pendingGeocodeDeals.isEmpty && selectedDealID == nil
+        // Only overlay the map when it is literally empty — if any pins are already
+        // plotted, let the geocode status inspector (right pane) handle communication
+        // without blocking an otherwise usable map.
+        !pendingGeocodeDeals.isEmpty && mappableDeals.isEmpty && selectedDealID == nil
     }
 
     private var selectedDeal: PropertyDeal? {

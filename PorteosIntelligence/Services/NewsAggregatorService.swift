@@ -311,7 +311,9 @@ private final class RSSParserDelegate: NSObject, XMLParserDelegate {
                 return
             }
             let summary = RSSHTMLStripper.plainText(from: currentSummary)
-            let pub = RSSDateParser.parse(currentPubDate) ?? Date()
+            // Undated articles get .distantPast — they sort to the bottom and
+            // fail the 30/60d window rather than falsely appearing as "just now".
+            let pub = RSSDateParser.parse(currentPubDate) ?? .distantPast
             let sectors = MarketFeedRegistry.sectors(in: "\(title) \(summary)")
             let topics = sectors.isEmpty
                 ? [IntelSector.adjacent.rawValue]
