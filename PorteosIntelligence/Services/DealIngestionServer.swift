@@ -632,7 +632,9 @@ extension DealIngestionServer {
                    let m  = re.firstMatch(in: source, range: NSRange(source.startIndex..., in: source)),
                    let r  = Range(m.range(at: 1), in: source) {
                     let city = String(source[r]).trimmingCharacters(in: .whitespaces)
+                    // Accept if city is in benchmark database OR in registry aliases
                     if MarketBenchmarks.benchmark(for: city) != nil { return city }
+                    if MarketFeedRegistry.resolveMarketId(city: city) != nil { return city }
                 }
             }
         }

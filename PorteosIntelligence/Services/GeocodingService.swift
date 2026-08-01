@@ -33,14 +33,32 @@ final class GeocodingService {
                 return
             }
 
+            // ── Country consistency check ──────────────────────────────────────
+            // If we have an expected country and the geocoder returned a different
+            // one, reject the result. This is the primary defence against
+            // mis-geocoding (e.g. "Messines" → Morocco instead of Portugal).
+            let expectedCountry = inferCountry(for: deal)
+            if let expected = expectedCountry,
+               let geocodedCountry = item.placemark.country {
+                let expNorm = expected.lowercased()
+                let geoNorm = geocodedCountry.lowercased()
+                let consistent = geoNorm.contains(expNorm) || expNorm.contains(geoNorm)
+                if !consistent {
+                    deal.geocodeStatus = .failed
+                    deal.updatedAt = Date()
+                    try? context.save()
+                    print("[GeocodingService] Country mismatch — expected '\(expected)', got '\(geocodedCountry)' for query: '\(query)'")
+                    return
+                }
+            }
+
             let location = item.location
             deal.latitude  = location.coordinate.latitude
             deal.longitude = location.coordinate.longitude
             deal.geocodeStatus = .ok
 
             // Only resolve marketId from the deal's own city — never from item.name,
-            // which can be any place name from a wrong geocode result (was causing
-            // "Atlanta Metro" to appear on PT properties when CLGeocoder mis-geocoded).
+            // which can be any place name from a wrong geocode result.
             let countryHint = addressContext(from: item)
             if let resolved = MarketFeedRegistry.resolveMarketId(
                 city: deal.locationCity,
@@ -55,7 +73,7 @@ final class GeocodingService {
             deal.geocodeStatus = .failed
             deal.updatedAt = Date()
             try? context.save()
-            print("[GeocodingService] failed for \(query): \(error.localizedDescription)")
+            print("[GeocodingService] failed for '\(query)': \(error.localizedDescription)")
         }
     }
 
@@ -71,14 +89,14 @@ final class GeocodingService {
         try? context.save()
     }
 
-    /// Geocode every deal that has address/city but no valid pin (Frame 4 — geocode empty).
+    /// Geocode every deal that has address/city but no valid pin.
     func geocodeAllPending(deals: [PropertyDeal], context: ModelContext) async {
         let pending = deals.filter { $0.needsGeocode }
         for (index, deal) in pending.enumerated() {
             await geocode(deal: deal, context: context)
-            // Apple rate-limits CLGeocoder — pause between requests to avoid silent failures
+            // Apple rate-limits CLGeocoder — pause to avoid silent failures
             if index < pending.count - 1 {
-                try? await Task.sleep(nanoseconds: 1_200_000_000)  // 1.2s between calls
+                try? await Task.sleep(nanoseconds: 1_200_000_000)  // 1.2s
             }
         }
     }
@@ -87,51 +105,95 @@ final class GeocodingService {
         Task { await geocodeAllPending(deals: deals, context: context) }
     }
 
+    // MARK: - Query builder
+
     private func geocodeQuery(for deal: PropertyDeal) -> String {
         let parts = [deal.address, deal.locationCity]
             .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
         var query = parts.joined(separator: ", ")
         guard !query.isEmpty else { return "" }
 
-        // Append country context to prevent mis-geocoding ambiguous place names
-        if let country = inferCountry(for: deal), !query.lowercased().contains(country.lowercased()) {
+        if let country = inferCountry(for: deal),
+           !query.lowercased().contains(country.lowercased()) {
             query += ", \(country)"
         }
         return query
     }
 
-    /// Derives a country name from stored field, marketId prefix, or benchmark lookup.
-    private func inferCountry(for deal: PropertyDeal) -> String? {
-        // 0. Stored locationCountry — most reliable, user-entered
+    // MARK: - Country inference (ordered by reliability)
+
+    /// Returns the country name to append to the geocode query and validate results against.
+    /// Four levels of fallback — stops at first confident match.
+    func inferCountry(for deal: PropertyDeal) -> String? {
+        // 0. Stored locationCountry — user-entered, always trusted
         let stored = deal.locationCountry.trimmingCharacters(in: .whitespaces)
         if !stored.isEmpty { return stored }
 
-        // 1. marketId prefix (most reliable when set post-geocode)
+        // 1. marketId ISO prefix (set post-geocode or on import)
         let idPrefix = String(deal.marketId.prefix(2))
-        let countryByCode: [String: String] = [
-            "PT": "Portugal", "ES": "Spain", "IT": "Italy", "FR": "France",
-            "UK": "United Kingdom", "DE": "Germany", "HR": "Croatia",
-            "GR": "Greece", "SE": "Sweden", "DK": "Denmark",
-            "NO": "Norway", "FI": "Finland", "US": "United States",
-            "JP": "Japan",
-        ]
-        if let country = countryByCode[idPrefix] { return country }
+        if let country = Self.iso2ToCountry[idPrefix] { return country }
 
-        // 2. Benchmark lookup on city
+        // 2. MarketFeedRegistry city alias lookup
+        // Covers all thesis-market cities including aliases: Cascais, Sintra, Tavira, etc.
+        let cityLower = deal.locationCity.lowercased()
+        if !cityLower.isEmpty {
+            let allMarkets = MarketFeedRegistry.countries + MarketFeedRegistry.metros
+            for market in allMarkets {
+                let matched = market.cityAliases.contains { alias in
+                    let al = alias.lowercased()
+                    return cityLower == al || cityLower.hasPrefix(al) || al.hasPrefix(cityLower)
+                }
+                if matched {
+                    let rootId = market.parentId ?? market.id
+                    let root   = MarketFeedRegistry.market(id: rootId)
+                    let cc     = root?.countryCode ?? market.countryCode
+                    if let name = Self.iso2ToCountry[cc] { return name }
+                }
+            }
+        }
+
+        // 3. MarketBenchmarks city lookup
         if let bm = MarketBenchmarks.benchmark(for: deal.locationCity) {
             return bm.country
         }
 
-        // 3. Portuguese place-name heuristic (São, da, do, de + no Latin-Am marker)
-        let city = deal.locationCity + " " + deal.propertyName
-        let ptMarkers = ["são", "lourinhã", "alcobaca", "setúbal", "algarve",
-                         "évora", "alentejo", "ribatejo", "minho", "douro"]
-        if ptMarkers.contains(where: { city.lowercased().contains($0) }) {
-            return "Portugal"
-        }
+        // 4. Text heuristic — Portuguese place-name markers (expanded)
+        let text = (deal.locationCity + " " + deal.propertyName).lowercased()
+        let ptMarkers = [
+            // geographic terms
+            "algarve", "alentejo", "ribatejo", "minho", "douro", "beira", "estremadura",
+            // diacritics common in PT
+            "são", "évora", "setúbal", "lourinhã", "guimarães", "viana",
+            // municipalities
+            "odemira", "silves", "lagoa", "loulé", "monchique", "portimão",
+            "olhão", "tavira", "alcoutim", "aljezur", "castro marim",
+            "conceição", "mértola", "beja", "serpa", "moura",
+            "grândola", "sines", "santiago do cacém", "alcácer",
+            // quinta / rural markers
+            "quinta", "herdade", "monte", "casal",
+        ]
+        if ptMarkers.contains(where: { text.contains($0) }) { return "Portugal" }
 
         return nil
     }
+
+    // MARK: - ISO-2 → Country name
+
+    private static let iso2ToCountry: [String: String] = [
+        "PT": "Portugal",        "ES": "Spain",          "IT": "Italy",
+        "FR": "France",          "GB": "United Kingdom", "UK": "United Kingdom",
+        "DE": "Germany",         "HR": "Croatia",        "GR": "Greece",
+        "SE": "Sweden",          "DK": "Denmark",        "NO": "Norway",
+        "FI": "Finland",         "US": "United States",  "JP": "Japan",
+        "AU": "Australia",       "NL": "Netherlands",    "AT": "Austria",
+        "CH": "Switzerland",     "BE": "Belgium",        "IE": "Ireland",
+        "PL": "Poland",          "CZ": "Czech Republic", "HU": "Hungary",
+        "RO": "Romania",         "AE": "UAE",            "SA": "Saudi Arabia",
+        "MA": "Morocco",         "SG": "Singapore",      "HK": "Hong Kong",
+        "BR": "Brazil",
+    ]
+
+    // MARK: - Helpers
 
     private func addressContext(from item: MKMapItem) -> String {
         [item.address?.fullAddress, item.address?.shortAddress, item.name]
