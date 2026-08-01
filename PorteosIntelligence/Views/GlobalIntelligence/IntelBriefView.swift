@@ -2,9 +2,7 @@ import Foundation
 import SwiftUI
 
 // MARK: - IntelBriefView
-// Figma frame 6, Variant A — 03 // DAILY_INTEL_BRIEF + 03 // MARKET_SIGNALS.
-// Left column: 5-signal brief via LLMAnalysisService (shared Ollama gateway).
-// Right column: 4 status cards derived from news keyword counts.
+// Figma frame 6, Variant A — 03 // DAILY_INTEL_BRIEF + 04 // MARKET_SIGNALS.
 
 struct IntelBriefView: View {
 
@@ -94,20 +92,75 @@ struct IntelBriefView: View {
     }
 
     private var briefSignalList: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(Array(signals.enumerated()), id: \.offset) { idx, signal in
-                HStack(alignment: .top, spacing: 8) {
-                    Text(">").porteosMeta().foregroundStyle(accent)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("SIGNAL \(String(format: "%02d", idx + 1))")
-                            .porteosMeta().foregroundStyle(accent)
-                        Text(signal.text)
-                            .porteosMeta().foregroundStyle(DesignTokens.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 0) {
+                // Context header — shows data basis
+                let mktName = marketId.flatMap { MarketFeedRegistry.market(id: $0)?.displayName } ?? "Global"
+                Text("// \(articles.count) articles · \(mktName) · last 60d")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                    .padding(.bottom, 10)
+
+                ForEach(Array(signals.enumerated()), id: \.offset) { idx, signal in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(alignment: .top, spacing: 8) {
+                            Text(">")
+                                .porteosMeta()
+                                .foregroundStyle(accent)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("SIGNAL \(String(format: "%02d", idx + 1))")
+                                    .porteosMeta()
+                                    .foregroundStyle(accent)
+                                Text(signal.text)
+                                    .porteosMeta()
+                                    .foregroundStyle(DesignTokens.textSecondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .multilineTextAlignment(.leading)
+                            }
+                        }
+
+                        // Source attribution — matched post-hoc by word overlap
+                        if let article = signal.sourceArticle {
+                            HStack(spacing: 6) {
+                                Rectangle()
+                                    .fill(accent.opacity(0.3))
+                                    .frame(width: 2)
+                                    .frame(height: 12)
+                                Text("\(article.sourceDisplayName) · \(article.marketId) · \(pubDateStr(article.pubDate))")
+                                    .porteosMeta()
+                                    .foregroundStyle(DesignTokens.textDim)
+                                    .font(.system(size: 9, design: .monospaced))
+                                if let url = URL(string: article.link), !article.link.isEmpty {
+                                    Link("[ ↗ ]", destination: url)
+                                        .porteosMeta()
+                                        .foregroundStyle(accent)
+                                        .font(.system(size: 9, design: .monospaced))
+                                }
+                            }
+                            .padding(.leading, 20)
+                        } else {
+                            Text("// general market inference")
+                                .porteosMeta()
+                                .foregroundStyle(DesignTokens.textDim)
+                                .font(.system(size: 9, design: .monospaced))
+                                .padding(.leading, 20)
+                        }
                     }
+                    .padding(.bottom, 12)
                 }
             }
         }
+    }
+
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_GB")
+        return f
+    }()
+
+    private func pubDateStr(_ date: Date) -> String {
+        Self.dateFormatter.string(from: date)
     }
 
     private var offlineFallback: some View {
@@ -174,8 +227,6 @@ struct IntelBriefView: View {
     }
 
     private var marketSignalCards: [MarketSignalCard] {
-        // Signals are derived from headline counts in the cached news feed.
-        // Ratings reflect news volume, not live data — labelled accordingly.
         let regCount     = articles.filter {
             $0.topics.contains(IntelSector.energy.rawValue) ||
             $0.topics.contains(IntelSector.adjacent.rawValue)
@@ -233,13 +284,16 @@ struct IntelBriefView: View {
 
         let currentArticles = articles
         if currentArticles.isEmpty {
-            signals = [IntelSignal(text: "No headlines cached — refresh news on the MAP tab first, then regenerate.")]
+            signals = [IntelSignal(text: "No headlines cached — refresh news on the MAP tab first, then regenerate.", sourceArticle: nil)]
             briefState = .ready
             return
         }
 
-        let marketName = marketId.flatMap { MarketFeedRegistry.market(id: $0)?.displayName } ?? "all markets"
-        let articleTitles = currentArticles.prefix(12).map(\.title)
+        let marketName = marketId.flatMap { MarketFeedRegistry.market(id: $0)?.displayName } ?? "global markets"
+        // Pass article title + source so LLM can focus on market-relevant signals
+        let articleLines = currentArticles.prefix(12).map { a in
+            "\(a.title) [\(a.sourceDisplayName), \(a.marketId)]"
+        }
         let dealNames = deals
             .filter { deal in
                 guard let mid = marketId else { return true }
@@ -251,17 +305,19 @@ struct IntelBriefView: View {
         do {
             let raw = try await LLMAnalysisService.shared.generateMarketBrief(
                 market: marketName,
-                articles: Array(articleTitles),
+                articles: Array(articleLines),
                 dealNames: Array(dealNames)
             )
-            signals = parseSignals(from: raw)
-            if signals.isEmpty {
-                signals = raw.components(separatedBy: "\n")
+            var parsed = parseSignals(from: raw)
+            if parsed.isEmpty {
+                parsed = raw.components(separatedBy: "\n")
                     .map { $0.trimmingCharacters(in: .whitespaces) }
                     .filter { !$0.isEmpty }
                     .prefix(5)
-                    .map { IntelSignal(text: $0) }
+                    .map { IntelSignal(text: $0, sourceArticle: nil) }
             }
+            // Match each signal to its most likely source article by word overlap
+            signals = matchSources(signals: parsed, articles: Array(currentArticles))
             UserDefaults.standard.set(Date(), forKey: staleKey)
             briefState = .ready
         } catch LLMError.offline {
@@ -269,6 +325,36 @@ struct IntelBriefView: View {
         } catch {
             briefState = .error
             errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Post-hoc source matching: for each signal, find the article whose title
+    /// shares the most meaningful words with the signal text (>4 chars, ≥2 overlap).
+    private func matchSources(signals: [IntelSignal], articles: [IntelNewsArticle]) -> [IntelSignal] {
+        signals.map { signal in
+            let signalWords = Set(
+                signal.text.lowercased()
+                    .components(separatedBy: .init(charactersIn: " ,.;:!?()\"'"))
+                    .filter { $0.count > 4 }
+            )
+            guard !signalWords.isEmpty else { return signal }
+
+            var bestArticle: IntelNewsArticle? = nil
+            var bestOverlap = 1  // require at least 2 overlapping words
+
+            for article in articles {
+                let articleWords = Set(
+                    article.title.lowercased()
+                        .components(separatedBy: .init(charactersIn: " ,.;:!?()\"'"))
+                        .filter { $0.count > 4 }
+                )
+                let overlap = signalWords.intersection(articleWords).count
+                if overlap > bestOverlap {
+                    bestOverlap = overlap
+                    bestArticle = article
+                }
+            }
+            return IntelSignal(text: signal.text, sourceArticle: bestArticle)
         }
     }
 
@@ -281,7 +367,7 @@ struct IntelBriefView: View {
                 .replacingOccurrences(of: #"^[\d]+[.)]\s*"#, with: "", options: .regularExpression)
                 .replacingOccurrences(of: #"^>\s*"#, with: "", options: .regularExpression)
                 .trimmingCharacters(in: .whitespaces)
-            if !cleaned.isEmpty { results.append(IntelSignal(text: cleaned)) }
+            if !cleaned.isEmpty { results.append(IntelSignal(text: cleaned, sourceArticle: nil)) }
             if results.count == 5 { break }
         }
         return results
@@ -293,12 +379,13 @@ struct IntelBriefView: View {
 struct IntelSignal: Identifiable {
     let id = UUID()
     let text: String
+    var sourceArticle: IntelNewsArticle?
 }
 
 struct MarketSignalCard: Identifiable {
     let id = UUID()
     let label: String
-    let sublabel: String   // e.g. "3 headlines" — makes basis transparent
+    let sublabel: String
     let rating: String
     let ratingColor: Color
 }

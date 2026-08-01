@@ -175,14 +175,19 @@ Signals:
         let dealList = dealNames.isEmpty ? "None" : dealNames.joined(separator: ", ")
 
         return """
-You are a real estate portfolio intelligence assistant. Based on the news headlines and portfolio assets below, generate exactly 5 brief one-sentence market signal observations for a property investor.
+You are a real estate portfolio intelligence assistant. Generate exactly 5 one-sentence market signal observations relevant to property investment in \(market).
 
-Respond with exactly 5 lines numbered 1 through 5, no other text.
+Rules:
+- Only include signals relevant to \(market) real estate, yields, tourism, or regulation.
+- If a headline is not relevant to \(market), ignore it.
+- Each signal must reference a specific headline or fact, not generic global commentary.
+- Be specific: mention yields, rates, locations, or policy names where possible.
+- Respond with exactly 5 lines numbered 1 through 5, no other text.
 
-Market: \(market)
+Market focus: \(market)
 Portfolio assets: \(dealList)
 
-Recent headlines:
+Headlines (source in brackets):
 \(headlineList.isEmpty ? "No headlines available." : headlineList)
 """
     }
