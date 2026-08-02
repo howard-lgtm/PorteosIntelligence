@@ -38,6 +38,18 @@ final class PropertyDeal {
     var locationCity:    String
     var locationCountry: String   // e.g. "Portugal", "Spain" — used for geocoding context
 
+    // MARK: Regulatory (user-entered advisory — not legal advice)
+    var zoningClass: String = ""              // e.g. "T1 Tourism", "Mixed Use", "R1 Residential"
+    var floorAreaRatio: Double = 0            // FAR e.g. 0.5 means 0.5× land area is max buildable
+    var maxBuildingHeight: Double = 0         // metres
+    var maxBedroomsOrUnits: Int = 0           // 0 = unknown
+    var planningStatus: String = "unknown"    // "unknown" | "none" | "applied" | "approved"
+    var heritageOrListed: Bool = false
+    var strLicenceStatus: String = "unknown"  // "unknown" | "none" | "applied" | "approved"
+
+    // MARK: Media
+    @Relationship(deleteRule: .cascade) var images: [DealImage] = []
+
     // MARK: Global Intelligence / Geo
     var latitude:         Double?
     var longitude:        Double?
@@ -132,6 +144,18 @@ final class PropertyDeal {
 
     // MARK: - Computed helpers
 
+    /// FAR × land area = advisory max buildable m². Zero if either input is zero.
+    var advisoryMaxBuildableArea: Double {
+        guard floorAreaRatio > 0, landArea > 0 else { return 0 }
+        return floorAreaRatio * landArea
+    }
+
+    /// How much FAR headroom remains vs current total area (negative = over-built).
+    var farHeadroom: Double {
+        guard advisoryMaxBuildableArea > 0 else { return 0 }
+        return advisoryMaxBuildableArea - totalArea
+    }
+
     /// Returns the sum of individual OpEx line items if any have been entered;
     /// otherwise falls back to the `operatingExpenses` summary field.
     var effectiveOpEx: Double {
@@ -177,6 +201,13 @@ final class PropertyDeal {
         longitude:                   Double? = nil,
         geocodeStatusRaw:            String  = GeocodeStatus.none.rawValue,
         marketId:                    String  = "",
+        zoningClass:                 String  = "",
+        floorAreaRatio:              Double  = 0,
+        maxBuildingHeight:           Double  = 0,
+        maxBedroomsOrUnits:          Int     = 0,
+        planningStatus:              String  = "unknown",
+        heritageOrListed:            Bool    = false,
+        strLicenceStatus:            String  = "unknown",
         purchasePrice:               Double  = 0,
         closingCosts:                Double  = 0,
         renovationBudget:            Double  = 0,
@@ -258,6 +289,13 @@ final class PropertyDeal {
         self.longitude                      = longitude
         self.geocodeStatusRaw               = geocodeStatusRaw
         self.marketId                       = marketId
+        self.zoningClass                    = zoningClass
+        self.floorAreaRatio                 = floorAreaRatio
+        self.maxBuildingHeight              = maxBuildingHeight
+        self.maxBedroomsOrUnits             = maxBedroomsOrUnits
+        self.planningStatus                 = planningStatus
+        self.heritageOrListed               = heritageOrListed
+        self.strLicenceStatus               = strLicenceStatus
         self.purchasePrice                  = purchasePrice
         self.closingCosts                   = closingCosts
         self.renovationBudget               = renovationBudget

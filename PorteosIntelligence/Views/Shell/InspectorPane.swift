@@ -42,6 +42,7 @@ struct InspectorPane: View {
 
             switch selectedTab {
             case "weights": weightsContent
+            case "media":   mediaContent
             default:        aiVibeContent
             }
 
@@ -191,12 +192,13 @@ struct InspectorPane: View {
         try? modelContext.save()
     }
 
-    // MARK: Tab Bar — [WEIGHTS] 2px rust underline | [AI VIBE]
+    // MARK: Tab Bar — [WEIGHTS] 2px rust underline | [AI VIBE] | [MEDIA]
 
     private var tabBar: some View {
         HStack(spacing: 0) {
             tabButton(title: "WEIGHTS", id: "weights")
             tabButton(title: "AI VIBE", id: "ai_vibe")
+            tabButton(title: "MEDIA",   id: "media")
             Spacer()
         }
         .padding(.horizontal, DesignTokens.blockGutter)
@@ -397,6 +399,14 @@ struct InspectorPane: View {
 
     private var aiVibeContent: some View {
         AIVibePanel(deal: deal, refreshID: vibeRefreshID)
+    }
+
+    // MARK: Media Content
+
+    private var mediaContent: some View {
+        ScrollView {
+            DealMediaGalleryView(deal: deal)
+        }
     }
 
     // MARK: Rebalance Logic

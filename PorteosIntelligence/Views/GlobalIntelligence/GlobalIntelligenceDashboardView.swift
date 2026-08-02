@@ -45,7 +45,9 @@ struct GlobalIntelligenceDashboardView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(DesignTokens.canvasBase)
         .task { await refreshNews() }
+        // Refresh news whenever market chip OR selected deal changes
         .onChange(of: wm.geoMarketFilterId) { _, _ in Task { await refreshNews() } }
+        .onChange(of: wm.selectedDealID)    { _, _ in Task { await refreshNews() } }
     }
 
     // MARK: - Tab Bar

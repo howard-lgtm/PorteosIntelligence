@@ -49,10 +49,14 @@ final class LLMAnalysisService {
         grade: String,
         score: Double?,
         signals: [String],
-        benchmark: CityMetrics? = nil
+        benchmark: CityMetrics? = nil,
+        analystNotes: String? = nil,
+        regulatoryContext: String? = nil
     ) async throws -> String {
         let prompt = buildSWOTPrompt(dealName: dealName, grade: grade, score: score,
-                                     signals: signals, benchmark: benchmark)
+                                     signals: signals, benchmark: benchmark,
+                                     analystNotes: analystNotes,
+                                     regulatoryContext: regulatoryContext)
         return try await call(prompt: prompt)
     }
 
@@ -119,7 +123,9 @@ final class LLMAnalysisService {
         grade: String,
         score: Double?,
         signals: [String],
-        benchmark: CityMetrics? = nil
+        benchmark: CityMetrics? = nil,
+        analystNotes: String? = nil,
+        regulatoryContext: String? = nil
     ) -> String {
         let scoreStr = score.map { "Score: \(Int($0.rounded()))/100" } ?? "Score: N/A"
         let signalList = signals.prefix(12).enumerated()
@@ -147,6 +153,25 @@ Use these benchmarks when assessing the deal. Flag explicitly when deal metrics 
             benchmarkBlock = ""
         }
 
+        let regulatoryBlock: String
+        if let reg = regulatoryContext, !reg.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            regulatoryBlock = """
+
+Regulatory advisory (user-entered, not verified):
+  \(reg.trimmingCharacters(in: .whitespacesAndNewlines))
+Factor these into SWOT — flag FAR violations as Weaknesses, STR/planning issues as Threats, headroom as Opportunities.
+"""
+        } else {
+            regulatoryBlock = ""
+        }
+
+        let notesBlock: String
+        if let notes = analystNotes, !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            notesBlock = "\nAnalyst field notes (treat as first-hand observations — factor into SWOT):\n  \(notes.trimmingCharacters(in: .whitespacesAndNewlines))\n"
+        } else {
+            notesBlock = ""
+        }
+
         return """
 You are a professional real estate investment analyst. Analyse the following deal and produce a structured response in exactly this format with no other text:
 
@@ -158,7 +183,7 @@ T: [one sentence — biggest external risk for this market and deal type]
 
 Deal: \(dealName)
 Grade: \(grade) | \(scoreStr)
-\(benchmarkBlock)
+\(benchmarkBlock)\(regulatoryBlock)\(notesBlock)
 Signals:
 \(signalList.isEmpty ? "  No signals available." : signalList)
 """

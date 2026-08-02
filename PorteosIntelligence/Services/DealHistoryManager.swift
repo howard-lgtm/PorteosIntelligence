@@ -22,6 +22,15 @@ struct DealSnapshot {
     let locationCity:    String
     let locationCountry: String
 
+    // MARK: Regulatory
+    let zoningClass:        String
+    let floorAreaRatio:     Double
+    let maxBuildingHeight:  Double
+    let maxBedroomsOrUnits: Int
+    let planningStatus:     String
+    let heritageOrListed:   Bool
+    let strLicenceStatus:   String
+
     // MARK: Real Estate
     let purchasePrice:        Double
     let closingCosts:         Double
@@ -100,6 +109,7 @@ struct DealSnapshot {
     let tags:       [String]
     let isFavorite: Bool
     let status:     DealStatus
+    // images: managed by SwiftData cascade, not snapshotted
 
     // MARK: Init from PropertyDeal
 
@@ -115,6 +125,14 @@ struct DealSnapshot {
         self.landArea        = deal.landArea
         self.locationCity    = deal.locationCity
         self.locationCountry = deal.locationCountry
+
+        self.zoningClass        = deal.zoningClass
+        self.floorAreaRatio     = deal.floorAreaRatio
+        self.maxBuildingHeight  = deal.maxBuildingHeight
+        self.maxBedroomsOrUnits = deal.maxBedroomsOrUnits
+        self.planningStatus     = deal.planningStatus
+        self.heritageOrListed   = deal.heritageOrListed
+        self.strLicenceStatus   = deal.strLicenceStatus
 
         self.purchasePrice        = deal.purchasePrice
         self.closingCosts         = deal.closingCosts
@@ -260,6 +278,14 @@ final class DealHistoryManager {
         deal.landArea        = snap.landArea
         deal.locationCity    = snap.locationCity
         deal.locationCountry = snap.locationCountry
+
+        deal.zoningClass        = snap.zoningClass
+        deal.floorAreaRatio     = snap.floorAreaRatio
+        deal.maxBuildingHeight  = snap.maxBuildingHeight
+        deal.maxBedroomsOrUnits = snap.maxBedroomsOrUnits
+        deal.planningStatus     = snap.planningStatus
+        deal.heritageOrListed   = snap.heritageOrListed
+        deal.strLicenceStatus   = snap.strLicenceStatus
 
         deal.purchasePrice        = snap.purchasePrice
         deal.closingCosts         = snap.closingCosts

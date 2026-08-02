@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AppKit
 import UniformTypeIdentifiers
 
 // MARK: - FullDealEditSheet
@@ -76,6 +77,9 @@ struct FullDealEditSheet: View {
     // MARK: Cancel revert — snapshot captured before any edits
     @State private var openSnapshot: DealSnapshot? = nil
 
+    // MARK: Media
+    @State private var showMediaGallery: Bool = false
+
     // MARK: GPS manual entry
     @State private var gpsEntry: String = ""
 
@@ -122,6 +126,8 @@ struct FullDealEditSheet: View {
             }
 
             Rectangle().fill(shellBorder).frame(height: 1)
+            mediaStrip
+            Rectangle().fill(shellBorder).frame(height: 1)
             footer
         }
         .background(shellBg)
@@ -132,6 +138,10 @@ struct FullDealEditSheet: View {
             Button("Fix Issues", role: .cancel) {}
         } message: {
             Text(validationErrors.map { "• \($0.field): \($0.message)" }.joined(separator: "\n"))
+        }
+        .sheet(isPresented: $showMediaGallery) {
+            DealMediaGalleryView(deal: deal)
+                .frame(width: 480, height: 700)
         }
         .onAppear {
             // Capture a full snapshot before any edits for Cancel revert.
@@ -367,6 +377,8 @@ struct FullDealEditSheet: View {
 
             sectionLabel("NOTES")
             notesField
+
+            regulatorySection
         }
     }
 
@@ -461,24 +473,28 @@ struct FullDealEditSheet: View {
         }
     }
 
-    private var notesFieldHeight: CGFloat {
-        let lineCount = max(1, deal.notes.components(separatedBy: .newlines).count)
-        let wrapped   = max(0, deal.notes.count / 72)
-        return min(400, max(220, CGFloat(lineCount + wrapped + 2) * 18))
-    }
-
     private var notesField: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("NOTES")
-                .porteosMeta()
-                .foregroundStyle(textTertiary)
+            HStack {
+                Text("// NOTES")
+                    .porteosMeta()
+                    .foregroundStyle(textTertiary)
+                Spacer()
+                if !deal.notes.isEmpty {
+                    Text("\(deal.notes.count) chars")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textDim)
+                }
+            }
 
             TextEditor(text: $deal.notes)
                 .porteosRowValue()
                 .foregroundStyle(textPrimary)
                 .scrollContentBackground(.hidden)
                 .padding(8)
-                .frame(minHeight: notesFieldHeight, maxHeight: 320)
+                // Fixed tall frame — sheet is in a ScrollView so height is unconstrained.
+                // TextEditor scrolls internally beyond this height.
+                .frame(minHeight: 260)
                 .background(shellBg)
                 .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
                 .clipShape(Rectangle())
@@ -685,6 +701,66 @@ struct FullDealEditSheet: View {
             TerminalInputField(label: "Building Area",        placeholder: "0",   prefix: nil, suffix: "m²",        text: numStr($deal.circularBuildingAreaM2)).focused($focusedField, equals: .buildingArea)
             TerminalInputField(label: "Water Recycling Rate", placeholder: "0.0", prefix: nil, suffix: "%",         value: $deal.circularWaterRecyclingRate, formatter: Self.percentFormatter).focused($focusedField, equals: .waterRecyclingRate)
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: Media Strip
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var mediaStrip: some View {
+        let hero = deal.images.first(where: { $0.isHero })
+        return HStack(spacing: DesignTokens.blockGutter) {
+            // Hero thumbnail or dashed placeholder
+            if let h = hero, let img = NSImage(data: h.thumbnailData) {
+                Image(nsImage: img)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 40, height: 40)
+                    .clipped()
+                    .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
+                    .clipShape(Rectangle())
+            } else {
+                ZStack {
+                    shellBg
+                    Text("+")
+                        .porteosMeta()
+                        .foregroundStyle(textTertiary)
+                }
+                .frame(width: 40, height: 40)
+                .overlay(
+                    Rectangle()
+                        .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [4]))
+                        .foregroundStyle(shellBorder)
+                )
+                .clipShape(Rectangle())
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("// MEDIA")
+                    .porteosMeta()
+                    .foregroundStyle(textTertiary)
+                Text("\(deal.images.count) IMAGES")
+                    .porteosMeta()
+                    .foregroundStyle(deal.images.isEmpty ? textTertiary : textSecondary)
+            }
+
+            Spacer()
+
+            Button { showMediaGallery = true } label: {
+                Text("[ MANAGE ]")
+                    .porteosButtonPrimary()
+                    .foregroundStyle(accentRust)
+                    .padding(.horizontal, 10)
+                    .frame(height: DesignTokens.rowHeightData)
+                    .background(accentRust.opacity(0.08))
+                    .overlay(Rectangle().strokeBorder(accentRust.opacity(0.45), lineWidth: DesignTokens.dividerWidth))
+                    .clipShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: 56)
+        .background(shellSurface)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -1010,6 +1086,148 @@ struct FullDealEditSheet: View {
             .porteosMeta()
             .foregroundStyle(color)
             .padding(.top, 4)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: Regulatory Section
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var regulatorySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionLabel("REGULATORY — advisory only, verify with local consultant")
+
+            TerminalInputField(
+                label: "Zoning Class",
+                placeholder: "e.g. T1 Tourism, Mixed Use, R1 Residential",
+                prefix: nil,
+                suffix: nil,
+                text: $deal.zoningClass
+            )
+
+            VStack(alignment: .leading, spacing: 4) {
+                TerminalInputField(
+                    label: "Floor Area Ratio (FAR)",
+                    placeholder: "0.00",
+                    prefix: nil,
+                    suffix: "×",
+                    text: numStr($deal.floorAreaRatio, decimals: 2)
+                )
+                if deal.advisoryMaxBuildableArea > 0 {
+                    HStack(spacing: 8) {
+                        Text("Max buildable: ~\(Int(deal.advisoryMaxBuildableArea))m²")
+                            .porteosMeta()
+                            .foregroundStyle(textSecondary)
+                        if deal.farHeadroom > 0 {
+                            Text("↑ \(Int(deal.farHeadroom))m² headroom")
+                                .porteosMeta()
+                                .foregroundStyle(DesignTokens.statusGo)
+                        } else if deal.farHeadroom < 0 {
+                            Text("↓ \(Int(abs(deal.farHeadroom)))m² over FAR")
+                                .porteosMeta()
+                                .foregroundStyle(DesignTokens.statusCritical)
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                }
+            }
+
+            TerminalInputField(
+                label: "Max Height (m)",
+                placeholder: "0",
+                prefix: nil,
+                suffix: "m",
+                text: numStr($deal.maxBuildingHeight, decimals: 1)
+            )
+
+            TerminalInputField(
+                label: "Max Bedrooms / Units",
+                placeholder: "unknown",
+                prefix: nil,
+                suffix: nil,
+                text: intStr($deal.maxBedroomsOrUnits)
+            )
+
+            regulatoryChipRow(
+                label: "PLANNING STATUS",
+                options: ["unknown", "none", "applied", "approved"],
+                selection: $deal.planningStatus
+            )
+
+            heritageToggleRow
+
+            regulatoryChipRow(
+                label: "SHORT-TERM RENTAL LICENCE",
+                options: ["unknown", "none", "applied", "approved"],
+                selection: $deal.strLicenceStatus
+            )
+
+            Text("// ADVISORY — not legal advice. Verify all regulatory data with a qualified local consultant.")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 4)
+        }
+    }
+
+    private func regulatoryChipRow(label: String, options: [String], selection: Binding<String>) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label.uppercased())
+                .porteosMeta()
+                .foregroundStyle(textTertiary)
+
+            HStack(spacing: 0) {
+                ForEach(options, id: \.self) { option in
+                    let isActive = selection.wrappedValue == option
+                    Button {
+                        selection.wrappedValue = option
+                    } label: {
+                        Text(option.uppercased())
+                            .porteosMeta()
+                            .foregroundStyle(isActive ? DesignTokens.statusGo : textTertiary)
+                            .padding(.horizontal, 10)
+                            .frame(height: DesignTokens.rowHeightData)
+                            .background(isActive ? DesignTokens.statusGo.opacity(0.1) : shellBg)
+                            .overlay(
+                                Rectangle().strokeBorder(
+                                    isActive ? DesignTokens.statusGo.opacity(0.5) : shellBorder,
+                                    lineWidth: DesignTokens.dividerWidth
+                                )
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .clipShape(Rectangle())
+        }
+    }
+
+    private var heritageToggleRow: some View {
+        HStack(spacing: 8) {
+            Text("HERITAGE / LISTED BUILDING")
+                .porteosMeta()
+                .foregroundStyle(textTertiary)
+            Spacer()
+            if deal.heritageOrListed {
+                Text("score penalty applied")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.statusWarn)
+            }
+            Toggle("", isOn: $deal.heritageOrListed)
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .scaleEffect(0.75)
+        }
+        .padding(.horizontal, 8)
+        .frame(minHeight: DesignTokens.rowHeightData)
+        .background(deal.heritageOrListed ? DesignTokens.statusWarn.opacity(0.05) : shellBg)
+        .overlay(
+            Rectangle().strokeBorder(
+                deal.heritageOrListed ? DesignTokens.statusWarn.opacity(0.3) : shellBorder,
+                lineWidth: DesignTokens.dividerWidth
+            )
+        )
+        .clipShape(Rectangle())
     }
 
     private func pickerField<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {

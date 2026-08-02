@@ -14,6 +14,7 @@ struct PorteosIntelligenceApp: App {
             DealScenario.self,
             EmailImportRecord.self,
             MarketTrend.self,
+            DealImage.self,
         ])
 
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)

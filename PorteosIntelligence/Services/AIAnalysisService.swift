@@ -228,13 +228,46 @@ final class AIAnalysisService {
         }
         let enrichedSignals = allSignalMessages + dealMetricLines
 
+        // Build regulatory context string from user-entered fields
+        var regParts: [String] = []
+        if !deal.zoningClass.isEmpty {
+            regParts.append("Zoning: \(deal.zoningClass)")
+        }
+        if deal.floorAreaRatio > 0 {
+            let maxBuild = deal.advisoryMaxBuildableArea
+            let headroom = deal.farHeadroom
+            let headroomNote = headroom < 0
+                ? ", OVER FAR by \(Int(abs(headroom)))m²"
+                : ", \(Int(headroom))m² headroom"
+            regParts.append("FAR: \(deal.floorAreaRatio) (max buildable ~\(Int(maxBuild))m²\(headroomNote))")
+        }
+        if deal.maxBuildingHeight > 0 {
+            regParts.append("Max height: \(deal.maxBuildingHeight)m")
+        }
+        if deal.maxBedroomsOrUnits > 0 {
+            regParts.append("Max bedrooms/units: \(deal.maxBedroomsOrUnits)")
+        }
+        if deal.heritageOrListed {
+            regParts.append("Heritage/listed building: YES — renovation constraints likely")
+        }
+        if deal.planningStatus != "unknown" {
+            regParts.append("Planning permission: \(deal.planningStatus)")
+        }
+        if deal.strLicenceStatus != "unknown" {
+            regParts.append("STR licence: \(deal.strLicenceStatus)")
+        }
+        let regulatoryContext: String? = regParts.isEmpty ? nil : regParts.joined(separator: "\n  ")
+
         do {
             let raw = try await LLMAnalysisService.shared.generateSWOT(
-                dealName:  deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName,
-                grade:     "\(grade.rawValue) — \(grade.label)",
-                score:     deal.porteosScore,
-                signals:   enrichedSignals,
-                benchmark: cityBenchmark
+                dealName:          deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName,
+                grade:             "\(grade.rawValue) — \(grade.label)",
+                score:             deal.porteosScore,
+                signals:           enrichedSignals,
+                benchmark:         cityBenchmark,
+                analystNotes:      deal.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                                       ? nil : deal.notes,
+                regulatoryContext: regulatoryContext
             )
             swot = parseSWOT(from: raw, fallbackGrade: grade)
             if let s = swot {

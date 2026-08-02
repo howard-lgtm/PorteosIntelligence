@@ -17,6 +17,10 @@ struct PorteosScoreCalculator {
         var weightHospitality: Double       // 0–100
         var weightDesign:      Double = 0   // 0–100
         var weightCircular:    Double = 0   // 0–100
+        // Regulatory advisory inputs
+        var heritageOrListed:  Bool   = false
+        var planningStatus:    String = "unknown"
+        var strLicenceStatus:  String = "unknown"
     }
 
     // MARK: - Outputs
@@ -74,6 +78,15 @@ struct PorteosScoreCalculator {
             default: break
             }
         }
+
+        // ── Regulatory advisory adjustments ───────────────────────────────────
+        if inputs.heritageOrListed {
+            finalScore -= 5   // unknown renovation constraints
+            if inputs.planningStatus == "none" { finalScore -= 3 }  // stacked risk
+        }
+        if inputs.strLicenceStatus == "none" { finalScore -= 4 }
+        if inputs.planningStatus == "approved" { finalScore += 4 }
+        if inputs.strLicenceStatus == "approved" { finalScore += 5 }
 
         finalScore = min(max(finalScore, 0), 100)
 

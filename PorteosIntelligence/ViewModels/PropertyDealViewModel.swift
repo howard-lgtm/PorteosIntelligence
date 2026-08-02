@@ -130,7 +130,10 @@ final class PropertyDealViewModel {
             weightRealEstate:  deal.weightRealEstate,
             weightHospitality: deal.weightHospitality,
             weightDesign:      deal.weightDesign,
-            weightCircular:    deal.weightCircular
+            weightCircular:    deal.weightCircular,
+            heritageOrListed:  deal.heritageOrListed,
+            planningStatus:    deal.planningStatus,
+            strLicenceStatus:  deal.strLicenceStatus
         ))
     }
 
