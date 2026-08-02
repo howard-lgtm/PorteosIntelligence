@@ -87,7 +87,7 @@ Files are named deals-\(stamp).store — contact support to recover them.
 
     var body: some Scene {
         WindowGroup {
-            AppShell()
+            RootView()
                 .modelContainer(sharedModelContainer)
                 .onAppear { backfillMissingScores() }
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
