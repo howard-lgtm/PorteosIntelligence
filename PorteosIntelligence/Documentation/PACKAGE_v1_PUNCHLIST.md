@@ -383,10 +383,16 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 | P14-04 | **Exit cap rate in preloader** — `DealPreloader` sets `exitCapRate` from benchmark prime yield; 5-year NPV calculation no longer shows "—". Exposed in `PreloadReviewSheet`. | `[x]` | Aug 1 |
 | P14-05 | **Condition selector + seasonal preload (Phase 3)** — `PreloadReviewSheet` has 4-button condition override (Ruin/Needs Work/Habitable/Good) and season toggle (Peak/Shoulder/Off-Season) for hospitality ADR/occupancy. | `[x]` | Aug 1 |
 | P14-06 | **Sensitivity analysis metric alignment** — `HospitalitySensitivityBlock` ADR row now uses GOP delta (not RevPAR) so all three bars share the same scale. | `[x]` | Aug 1 |
-| P14-07 | **Sensitivity rewrite** — hardcoded ±€10/−5%/+5pp deltas should scale to deal values (e.g. ±5% of current ADR); add combined stress scenario; show upside case alongside downside; express result as % of base GOP not absolute. | `[ ]` | Next |
-| P14-08 | **Deal list pagination** — `@Query` fetchLimit requires custom `init()` refactor across `AppShell` + `NavigationPane`; deferred. Not a risk at current portfolio size. | `[ ]` | Future |
-| P14-09 | **BatchTriage benchmark apply** — email-imported deals that go through batch triage don't get market assumptions applied. | `[ ]` | Future |
-| P14-10 | **Hospitality ↔ RE GPI auto-sync** — `[ SYNC GPI ]` button exists but sync is not automatic; a hotel deal still requires a manual step. | `[ ]` | Future |
+| P14-07 | **Sensitivity rewrite** — hardcoded ±€10/−5%/+5pp deltas should scale to deal values; add combined stress scenario; show upside alongside downside; express as % of base GOP. | `[ ]` | Next |
+| P14-08 | **Deal list pagination** — `@Query` fetchLimit requires custom `init()` refactor; deferred. Not a risk at current scale. | `[ ]` | Future |
+| P14-09 | **BatchTriage benchmark apply** — email-imported deals through batch triage don't get auto-preloaded. | `[ ]` | Future |
+| P14-10 | **Hospitality ↔ RE GPI auto-sync** — `[ SYNC GPI ]` button exists; sync still requires manual step. | `[ ]` | Future |
+| P14-11 | **GI geocode overlay** — only blocks map when zero deals are plotted (fixed Aug 1); also fixed: market macros labelled as static estimates, ECB hardcode replaced, signal cards show headline count, undated RSS → `.distantPast`, empty-feed market chips dimmed. | `[x]` | Aug 1 |
+| P14-12 | **Geocoding consistency** — country consistency check post-geocode (rejects Morocco for PT deal), MarketFeedRegistry alias lookup in `inferCountry()`, extended PT heuristic (Odemira, Silves, Portimão etc.), `inferCity()` accepts registry aliases. | `[x]` | Aug 2 |
+| P14-13 | **Intel brief: scrollable, source attribution, market-focused prompt** — ScrollView + context header (N articles · market · 60d), post-hoc article matching shows source/date/link per signal, prompt enforces market relevance and passes article source names. | `[x]` | Aug 2 |
+| P14-14 | **Grade/score discrepancy** — `PorteosScoreCalculator.grade()` aligned to `VibeGrade` thresholds (B:≥65); was B:≥60 causing dashboard B vs AI Vibe C for same score. | `[x]` | Aug 2 |
+| P14-15 | **Research JSON size guard** — `guard data.count < 10_000_000` before parsing to prevent memory spike from crafted large files. | `[ ]` | Minor |
+| P14-16 | **HTTP ingestion API key** — port 9000 unauthenticated. Acceptable personal use; add nonce before multi-user distribution. | `[ ]` | Pre-distribution |
 
 ---
 
