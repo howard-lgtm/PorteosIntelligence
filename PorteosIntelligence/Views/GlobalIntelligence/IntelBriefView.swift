@@ -94,11 +94,13 @@ struct IntelBriefView: View {
     private var briefSignalList: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
-                // Context header — shows data basis
-                let mktName = marketId.flatMap { MarketFeedRegistry.market(id: $0)?.displayName } ?? "Global"
-                Text("// \(articles.count) articles · \(mktName) · last 60d")
+                // Context header — shows data basis and effective market
+                let mktName = marketId.flatMap { MarketFeedRegistry.market(id: $0)?.displayName } ?? "— no market selected"
+                let relevant = relevantArticles.count
+                let total    = articles.count
+                Text("// \(relevant) relevant · \(total) total · \(mktName) · last 60d")
                     .porteosMeta()
-                    .foregroundStyle(DesignTokens.textDim)
+                    .foregroundStyle(relevant == 0 ? DesignTokens.statusWarn : DesignTokens.textDim)
                     .padding(.bottom, 10)
 
                 ForEach(Array(signals.enumerated()), id: \.offset) { idx, signal in
@@ -226,14 +228,26 @@ struct IntelBriefView: View {
         news.articles(marketId: marketId, dealMarketId: nil, withinDays: 60)
     }
 
+    /// Subset of articles actually relevant to real estate investment intelligence.
+    /// Excludes ADJACENT (too generic) to avoid signal dilution.
+    private var relevantArticles: [IntelNewsArticle] {
+        let relevant: Set<String> = [
+            IntelSector.realEstate.rawValue, IntelSector.capMarkets.rawValue,
+            IntelSector.hospitality.rawValue, IntelSector.travel.rawValue,
+            IntelSector.energy.rawValue, IntelSector.trends.rawValue,
+            IntelSector.research.rawValue,
+        ]
+        let filtered = articles.filter { $0.topics.contains { relevant.contains($0) } }
+        return filtered.isEmpty ? articles : filtered  // fall back to all if none pass
+    }
+
     private var marketSignalCards: [MarketSignalCard] {
-        let regCount     = articles.filter {
-            $0.topics.contains(IntelSector.energy.rawValue) ||
-            $0.topics.contains(IntelSector.adjacent.rawValue)
-        }.count
-        let rateCount    = articles.filter { $0.topics.contains(IntelSector.capMarkets.rawValue) }.count
-        let tourismCount = articles.filter { $0.topics.contains(IntelSector.travel.rawValue) }.count
-        let reCount      = articles.filter { $0.topics.contains(IntelSector.realEstate.rawValue) }.count
+        // Use relevantArticles so counts reflect market-filtered real estate headlines
+        let pool = relevantArticles
+        let regCount     = pool.filter { $0.topics.contains(IntelSector.energy.rawValue) }.count
+        let rateCount    = pool.filter { $0.topics.contains(IntelSector.capMarkets.rawValue) }.count
+        let tourismCount = pool.filter { $0.topics.contains(IntelSector.travel.rawValue) }.count
+        let reCount      = pool.filter { $0.topics.contains(IntelSector.realEstate.rawValue) }.count
 
         return [
             MarketSignalCard(
@@ -282,15 +296,15 @@ struct IntelBriefView: View {
         briefState = .generating
         signals = []
 
-        let currentArticles = articles
+        let currentArticles = relevantArticles   // filtered to real-estate-relevant sectors
         if currentArticles.isEmpty {
-            signals = [IntelSignal(text: "No headlines cached — refresh news on the MAP tab first, then regenerate.", sourceArticle: nil)]
+            signals = [IntelSignal(text: "No relevant headlines cached — refresh news on the MAP tab first, then regenerate.", sourceArticle: nil)]
             briefState = .ready
             return
         }
 
-        let marketName = marketId.flatMap { MarketFeedRegistry.market(id: $0)?.displayName } ?? "global markets"
-        // Pass article title + source so LLM can focus on market-relevant signals
+        let marketName = marketId.flatMap { MarketFeedRegistry.market(id: $0)?.displayName } ?? "the portfolio markets"
+        // Pass article title + source — LLM sees provenance, not just raw text
         let articleLines = currentArticles.prefix(12).map { a in
             "\(a.title) [\(a.sourceDisplayName), \(a.marketId)]"
         }

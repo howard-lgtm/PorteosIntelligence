@@ -39,7 +39,7 @@ struct GlobalIntelligenceDashboardView: View {
             if wm.geoActiveTab == "map" {
                 mapTabContent
             } else {
-                IntelBriefView(deals: deals, marketId: wm.geoMarketFilterId)
+                IntelBriefView(deals: deals, marketId: effectiveIntelMarketId)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -144,6 +144,19 @@ struct GlobalIntelligenceDashboardView: View {
     }
 
     // MARK: - Header
+
+    /// Effective market for the INTEL tab.
+    /// Priority: explicit chip selection → selected deal's country → portfolio majority country.
+    private var effectiveIntelMarketId: String? {
+        if let chip = wm.geoMarketFilterId { return chip }
+        if let deal = selectedDeal, !deal.marketId.isEmpty {
+            return MarketFeedRegistry.countryId(for: deal.marketId)
+        }
+        // Fall back to the most common portfolio country
+        let countries = deals.compactMap { MarketFeedRegistry.countryId(for: $0.marketId) }
+        return Dictionary(grouping: countries, by: { $0 })
+            .max(by: { $0.value.count < $1.value.count })?.key
+    }
 
     private var giModeLabel: String {
         if selectedDeal != nil { return "// PIN" }
