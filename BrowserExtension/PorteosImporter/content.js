@@ -1,6 +1,6 @@
 /**
- * Porteos Importer — content.js (v4.1)
- * Supports Idealista (PT), Zillow (US), Hemnet (SE), RE/MAX Portugal.
+ * Porteos Importer — content.js (v4.2)
+ * Supports Idealista (PT), Zillow (US), Hemnet (SE), RE/MAX Portugal, Casa SAPO (PT).
  * Each site has its own init function; shared utilities live at the top.
  */
 
@@ -178,6 +178,8 @@
     initHemnet();
   } else if (hostname.includes("remax.pt")) {
     initRemax();
+  } else if (hostname.includes("casa.sapo.pt")) {
+    initCasaSapo();
   }
 
   // ── TASK 1 / 2: Idealista ──────────────────────────────────────────────────
@@ -723,6 +725,245 @@
     });
 
     console.log("[Porteos Importer v4.1] RE/MAX Portugal button injected");
+  }
+
+  // ── Casa SAPO Portugal ─────────────────────────────────────────────────────
+  // URL pattern: /imovel/{id}/ or /comprar|arrendar/{type}/{location}/{id}/
+  // SAPO group Next.js app — coordinates and structured data in __NEXT_DATA__.
+
+  function initCasaSapo() {
+    const path = window.location.pathname;
+    // Only fire on individual listing pages
+    if (!path.includes("/imovel/") &&
+        !path.includes("/comprar/") &&
+        !path.includes("/arrendar/") &&
+        !path.includes("/venda/")) return;
+    // Skip index/search pages (no numeric/alpha ID segment at end)
+    if (path.split("/").filter(Boolean).length < 2) return;
+
+    // ── __NEXT_DATA__ extraction (most reliable on SAPO) ─────────────────
+    function getNextData() {
+      const el = document.getElementById("__NEXT_DATA__");
+      if (!el) return null;
+      try { return JSON.parse(el.textContent); } catch { return null; }
+    }
+
+    function getListing() {
+      const nd = getNextData();
+      if (!nd) return null;
+      const props = nd?.props?.pageProps;
+      // SAPO nests listing data under various keys depending on page type
+      return props?.listing
+          || props?.property
+          || props?.data?.listing
+          || props?.data?.property
+          || props?.pageData?.listing
+          || null;
+    }
+
+    // ── Price ─────────────────────────────────────────────────────────────
+    function price() {
+      const listing = getListing();
+      if (listing?.price || listing?.Price) {
+        const n = parsePrice(String(listing.price || listing.Price));
+        if (n >= 1000) return n;
+      }
+      // DOM selectors — SAPO uses dynamic class names so cast a wide net
+      const raw = trySelect(
+        "[class*='listing-price']",
+        "[class*='price-value']",
+        "[class*='PropertyPrice']",
+        "[data-testid='listing-price']",
+        "[class*='asking-price']",
+        "h2 span",
+        "[class*='price']"
+      );
+      const fromDom = parsePrice(raw);
+      if (fromDom >= 1000) return fromDom;
+
+      // JSON-LD
+      const fromLd = priceFromJsonLd();
+      if (fromLd >= 1000) return fromLd;
+
+      // Body text regex: "250 000 €" or "€ 250.000"
+      const m = document.body.innerText.match(/([\d][\d\s.]*\d)\s*€/)
+             || document.body.innerText.match(/€\s*([\d][\d\s.]*\d)/);
+      return m ? parsePrice(m[1]) : 0;
+    }
+
+    // ── Area ──────────────────────────────────────────────────────────────
+    function area() {
+      const listing = getListing();
+      const fromData = listing?.grossArea || listing?.usableArea || listing?.area
+                    || listing?.GrossArea || listing?.UsableArea;
+      if (fromData > 0) return parseFloat(fromData);
+
+      // Prefer "Área Bruta" from page text
+      const bodyText = document.body.innerText;
+      const brutaMatch = bodyText.match(/[Áá]rea\s+[Bb]ruta[^0-9]*(\d+)/);
+      if (brutaMatch) return parseFloat(brutaMatch[1]) || 0;
+      const mMatch = bodyText.match(/(\d+(?:[,.]\d+)?)\s*m[²2]/);
+      return mMatch ? parseFloat(mMatch[1].replace(",", ".")) || 0 : 0;
+    }
+
+    // ── Land area ─────────────────────────────────────────────────────────
+    function landArea() {
+      const listing = getListing();
+      const fromData = listing?.landArea || listing?.plotArea || listing?.LandArea;
+      if (fromData > 0) return parseFloat(fromData);
+      const m = document.body.innerText.match(/[Áá]rea\s+(?:de\s+)?[Tt]erreno[^0-9]*(\d+)/);
+      return m ? parseFloat(m[1]) || 0 : 0;
+    }
+
+    // ── Bedrooms ──────────────────────────────────────────────────────────
+    function bedrooms() {
+      const listing = getListing();
+      const fromData = listing?.bedrooms || listing?.rooms || listing?.Bedrooms || listing?.Rooms;
+      if (fromData > 0) return parseInt(fromData, 10);
+
+      // Portuguese Tx convention
+      const bodyText = document.body.innerText;
+      const tMatch = bodyText.match(/\bT(\d)\b/);
+      if (tMatch) return parseInt(tMatch[1], 10);
+      const quartosMatch = bodyText.match(/[Qq]uartos?\s*[:\-]?\s*(\d+)/);
+      return quartosMatch ? parseInt(quartosMatch[1], 10) : 0;
+    }
+
+    // ── Bathrooms ─────────────────────────────────────────────────────────
+    function bathrooms() {
+      const listing = getListing();
+      const fromData = listing?.bathrooms || listing?.Bathrooms;
+      if (fromData > 0) return parseInt(fromData, 10);
+      const m = document.body.innerText.match(/(?:WC|casas?\s+de\s+banho)[^0-9]*(\d+)/i);
+      return m ? parseInt(m[1], 10) : 0;
+    }
+
+    // ── Property type ─────────────────────────────────────────────────────
+    function propertyType() {
+      const listing = getListing();
+      const raw = listing?.type || listing?.typology || listing?.Type || "";
+      const map = {
+        "Apartamento": "Apartment", "T0": "Studio", "T1": "Apartment",
+        "T2": "Apartment", "T3": "Apartment", "T4": "Apartment",
+        "Moradia": "House", "Vivenda": "House", "Villa": "House",
+        "Quinta": "Farm/Rural", "Herdade": "Farm/Rural",
+        "Terreno": "Land", "Lote": "Land",
+        "Escritório": "Office", "Loja": "Retail",
+        "Hotel": "Hotel", "Hostel": "Hotel",
+        "Armazém": "Warehouse", "Indústria": "Industrial",
+        "Prédio": "Building", "Edifício": "Building",
+      };
+      for (const [pt, en] of Object.entries(map)) {
+        if (raw.includes(pt)) return en;
+      }
+      // Infer from URL path
+      const pathParts = path.split("/").map((p) => p.toLowerCase());
+      if (pathParts.some((p) => p.includes("moradia") || p.includes("vivenda"))) return "House";
+      if (pathParts.some((p) => p.includes("quinta") || p.includes("herdade"))) return "Farm/Rural";
+      if (pathParts.some((p) => p.includes("terreno"))) return "Land";
+      if (pathParts.some((p) => p.includes("hotel"))) return "Hotel";
+      if (pathParts.some((p) => p.includes("apartamento"))) return "Apartment";
+      return raw || "Property";
+    }
+
+    // ── Location ──────────────────────────────────────────────────────────
+    function city() {
+      const listing = getListing();
+      // SAPO often has district/county/parish hierarchy
+      const fromData = listing?.county || listing?.location?.county
+                    || listing?.district || listing?.location?.district
+                    || listing?.parish || listing?.location?.parish;
+      if (fromData) return fromData;
+
+      return trySelect(
+        "[class*='location']",
+        "[class*='address']",
+        ".breadcrumb li:last-child a",
+        "[class*='breadcrumb'] li:last-child",
+        "[data-testid='listing-location']"
+      ) || "";
+    }
+
+    function address() {
+      const ld = extractJsonLd();
+      const ldArr = Array.isArray(ld) ? ld : ld ? [ld] : [];
+      for (const item of ldArr) {
+        const addr = item?.address;
+        if (addr?.streetAddress) return addr.streetAddress;
+        if (typeof addr === "string" && addr.length > 3) return addr;
+      }
+      const listing = getListing();
+      return listing?.address?.street || listing?.street || listing?.fullAddress || "";
+    }
+
+    // ── Coordinates ───────────────────────────────────────────────────────
+    function coordinates() {
+      // __NEXT_DATA__ (most reliable for SAPO)
+      const listing = getListing();
+      if (listing?.latitude && listing?.longitude)
+        return { lat: parseFloat(listing.latitude), lng: parseFloat(listing.longitude) };
+      if (listing?.location?.latitude && listing?.location?.longitude)
+        return { lat: parseFloat(listing.location.latitude), lng: parseFloat(listing.location.longitude) };
+      if (listing?.coordinates?.lat)
+        return { lat: parseFloat(listing.coordinates.lat), lng: parseFloat(listing.coordinates.lng) };
+
+      // JSON-LD geo
+      const ld = extractJsonLd();
+      const ldArr = Array.isArray(ld) ? ld : ld ? [ld] : [];
+      for (const item of ldArr) {
+        if (item?.geo?.latitude)
+          return { lat: parseFloat(item.geo.latitude), lng: parseFloat(item.geo.longitude) };
+      }
+
+      // Meta tags
+      const latMeta = document.querySelector('meta[property="place:location:latitude"]');
+      const lngMeta = document.querySelector('meta[property="place:location:longitude"]');
+      if (latMeta && lngMeta)
+        return { lat: parseFloat(latMeta.content), lng: parseFloat(lngMeta.content) };
+
+      // Map container data attributes
+      const mapEl = document.querySelector("[data-lat][data-lng],[data-latitude][data-longitude]");
+      if (mapEl) {
+        const lat = mapEl.dataset.lat || mapEl.dataset.latitude;
+        const lng = mapEl.dataset.lng || mapEl.dataset.longitude;
+        if (lat && lng) return { lat: parseFloat(lat), lng: parseFloat(lng) };
+      }
+
+      return null;
+    }
+
+    // ── Title ─────────────────────────────────────────────────────────────
+    function title() {
+      const h1 = trySelect("h1", "[class*='listing-title']", "[class*='property-title']");
+      if (h1 && h1.length > 3) return h1.replace(/\s+/g, " ").trim();
+      const t = propertyType();
+      const c = city();
+      return c ? `${t} em ${c}` : t || document.title.split("|")[0].trim();
+    }
+
+    injectButton(() => {
+      const coords = coordinates();
+      return {
+        source:              "casa_sapo",
+        url:                 window.location.href,
+        propertyName:        title(),
+        locationFullAddress: address(),
+        locationCity:        city(),
+        locationCountry:     "Portugal",
+        currency:            "EUR",
+        latitude:            coords?.lat || null,
+        longitude:           coords?.lng || null,
+        purchasePrice:       price(),
+        totalArea:           area(),
+        landArea:            landArea(),
+        propertyType:        propertyType(),
+        bedrooms:            bedrooms(),
+        bathrooms:           bathrooms(),
+        description:         document.querySelector("meta[name='description']")?.content || "",
+      };
+    });
+
+    console.log("[Porteos Importer v4.2] Casa SAPO button injected");
   }
 
 })();

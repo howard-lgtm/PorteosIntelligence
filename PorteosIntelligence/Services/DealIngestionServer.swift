@@ -112,6 +112,8 @@ struct DealIngestionPayload: Decodable {
     var locationCountry:    String?
     var purchasePrice:      Double?
     var totalArea:          Double?
+    var landArea:           Double?
+    var propertyType:       String?
     var bedrooms:           Int?
     var bathrooms:          Int?
     var listingDescription: String?
@@ -120,7 +122,8 @@ struct DealIngestionPayload: Decodable {
 
     enum CodingKeys: String, CodingKey {
         case source, url, propertyName, locationCity, locationCountry,
-             purchasePrice, totalArea, bedrooms, bathrooms,
+             purchasePrice, totalArea, landArea, propertyType,
+             bedrooms, bathrooms,
              listingDescription = "description",
              images, listingDate
     }
@@ -498,8 +501,9 @@ final class DealIngestionServer {
         // ── Create PropertyDeal ────────────────────────────────────────────────
         let deal = PropertyDeal(
             propertyName:         payload.propertyName  ?? "Browser Import",
-            propertyType:         "Apartment",
+            propertyType:         payload.propertyType  ?? "Apartment",
             totalArea:            area,
+            landArea:             payload.landArea       ?? 0,
             locationCity:         city,
             locationCountry:      payload.locationCountry ?? "",
             purchasePrice:        price,
