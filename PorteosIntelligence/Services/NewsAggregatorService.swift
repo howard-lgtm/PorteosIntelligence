@@ -34,8 +34,15 @@ struct IntelNewsArticle: Identifiable, Codable, Hashable, Sendable {
             return "RSS"
         }
         let known: [String: String] = [
+            // Portugal
+            "eco.sapo.pt": "ECO",
+            "observador.pt": "Observador",
+            "dinheirovivo.pt": "Dinheiro Vivo",
             "jornaldenegocios.pt": "Jornal de Negócios",
             "publico.pt": "Público",
+            // Hospitality
+            "hosteltur.com": "Hosteltur",
+            // Europe / Global
             "feeds.elpais.com": "El País",
             "elpais.com": "El País",
             "feeds.bbci.co.uk": "BBC",

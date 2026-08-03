@@ -169,13 +169,18 @@ struct MarketFeedRegistry {
               mapCenter: .init(latitude: 39.4, longitude: -8.2), mapSpanDelta: 6.0,
               investmentThesis: "Quintas, relic farmhouses, ecotourism conversions, below-market rural stock.",
               rssFeeds: [
-                  // PT-specific business/economy — market-relevant, not global noise
-                  "https://www.jornaldenegocios.pt/rss",
+                  // Primary PT business/economics — digital-native, less paywalled than JN
+                  "https://eco.sapo.pt/feed/",
+                  // Quality independent PT news — strong finance/investment angle
+                  "https://observador.pt/feed/",
+                  // Dinheiro Vivo — Público business/money supplement, RE & investment focus
+                  "https://www.dinheirovivo.pt/feed/",
+                  // Público economia — quality broadsheet baseline
                   "https://www.publico.pt/rss/economia",
-                  // ECB press for EU monetary policy (interest rate signals)
+                  // Hosteltur — Iberian hospitality trade (hotel transactions, STR, demand)
+                  "https://www.hosteltur.com/feed/",
+                  // ECB press — EU monetary policy / interest rate signals
                   "https://www.ecb.europa.eu/rss/press.html",
-                  // Euronews removed — too global, contaminates PT market with
-                  // unrelated content (OPEC, Tesla, global politics) tagged as PT
               ],
               cityAliases: ["portugal"]),
         .init(id: "ES", displayName: "Spain", countryCode: "ES", parentId: nil,
