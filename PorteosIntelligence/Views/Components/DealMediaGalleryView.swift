@@ -14,6 +14,7 @@ struct DealMediaGalleryView: View {
     @Environment(\.modelContext) private var ctx
 
     @State private var selectedLabel:      DealImageLabel?    = nil
+    @State private var selectedImageIDs:   Set<UUID>          = []
     @State private var showFileImporter:   Bool               = false
     @State private var photosPickerItems:  [PhotosPickerItem] = []
     @State private var editingImage:       DealImage?         = nil
@@ -32,6 +33,8 @@ struct DealMediaGalleryView: View {
             labelFilterChips
             fullWidthDivider
             thumbnailGrid
+            fullWidthDivider
+            if !selectedImageIDs.isEmpty { batchActionBar }
             fullWidthDivider
             addButtonsBar
         }
@@ -129,10 +132,12 @@ struct DealMediaGalleryView: View {
             HStack(spacing: 4) {
                 filterChip(title: "ALL", isActive: selectedLabel == nil) {
                     selectedLabel = nil
+                    selectedImageIDs = []
                 }
                 ForEach(DealImageLabel.allCases, id: \.self) { lbl in
                     filterChip(title: lbl.rawValue, isActive: selectedLabel == lbl) {
                         selectedLabel = (selectedLabel == lbl) ? nil : lbl
+                        selectedImageIDs = []
                     }
                 }
             }
@@ -228,11 +233,20 @@ struct DealMediaGalleryView: View {
         .frame(width: 80, height: 80)
         .overlay(
             Rectangle().strokeBorder(
-                img.isHero ? DesignTokens.accentRust.opacity(0.7) : DesignTokens.dividerStructural,
-                lineWidth: DesignTokens.dividerWidth
+                selectedImageIDs.contains(img.id) ? DesignTokens.accentRust
+                    : img.isHero                  ? DesignTokens.accentRust.opacity(0.5)
+                    :                               DesignTokens.dividerStructural,
+                lineWidth: selectedImageIDs.contains(img.id) ? 2 : DesignTokens.dividerWidth
             )
         )
         .clipShape(Rectangle())
+        .onTapGesture {
+            if selectedImageIDs.contains(img.id) {
+                selectedImageIDs.remove(img.id)
+            } else {
+                selectedImageIDs.insert(img.id)
+            }
+        }
         .contextMenu {
             Button("Set as Hero")  { setHero(img) }
             Divider()
@@ -374,6 +388,64 @@ struct DealMediaGalleryView: View {
         photosPickerItems = []
     }
 
+    // MARK: Batch Action Bar
+
+    private var batchActionBar: some View {
+        HStack(spacing: 8) {
+            Text("\(selectedImageIDs.count) SELECTED")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.accentRust)
+
+            Spacer()
+
+            Menu {
+                ForEach(DealImageLabel.allCases, id: \.self) { lbl in
+                    Button(lbl.rawValue) { batchChangeLabel(to: lbl) }
+                }
+            } label: {
+                Text("[ LABEL ]")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textPrimary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .overlay(Rectangle().strokeBorder(DesignTokens.dividerStructural,
+                                                      lineWidth: DesignTokens.dividerWidth))
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+
+            Button {
+                batchDelete()
+            } label: {
+                Text("[ DELETE ]")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.statusCritical)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .overlay(Rectangle().strokeBorder(DesignTokens.statusCritical.opacity(0.4),
+                                                      lineWidth: DesignTokens.dividerWidth))
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                selectedImageIDs = []
+            } label: {
+                Text("[ ✕ ]")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 4)
+                    .overlay(Rectangle().strokeBorder(DesignTokens.dividerStructural,
+                                                      lineWidth: DesignTokens.dividerWidth))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, 6)
+        .background(DesignTokens.accentRust.opacity(0.06))
+        .animation(.easeInOut(duration: 0.15), value: selectedImageIDs.isEmpty)
+    }
+
     // MARK: Actions
 
     private func setHero(_ img: DealImage) {
@@ -394,6 +466,28 @@ struct DealMediaGalleryView: View {
         deal.images.removeAll { $0.id == img.id }
         ctx.delete(img)
         try? ctx.save()
+    }
+
+    private func batchChangeLabel(to lbl: DealImageLabel) {
+        deal.images
+            .filter { selectedImageIDs.contains($0.id) }
+            .forEach { $0.label = lbl.rawValue }
+        try? ctx.save()
+        selectedImageIDs = []
+    }
+
+    private func batchDelete() {
+        let targets = deal.images.filter { selectedImageIDs.contains($0.id) }
+        let wasHeroDeleted = targets.contains { $0.isHero }
+        targets.forEach { img in
+            deal.images.removeAll { $0.id == img.id }
+            ctx.delete(img)
+        }
+        if wasHeroDeleted {
+            deal.images.first?.isHero = true
+        }
+        try? ctx.save()
+        selectedImageIDs = []
     }
 
     // MARK: Helpers

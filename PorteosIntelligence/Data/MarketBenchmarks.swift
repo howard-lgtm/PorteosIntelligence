@@ -191,6 +191,35 @@ struct MarketBenchmarks {
             avgInterestRate: 4.0, avgPropertyTaxRate: 0.35,
             avgConstructionCostPerSqm: 1220.0, avgInsuranceRatePerSqm: 9.0
         ),
+        // PT — Alentejo Litoral coastal
+        CityMetrics(
+            cityName: "Odemira", country: "Portugal", region: "Europe",
+            avgCapRate: 6.8, avgVacancyRate: 28.0,
+            avgOpExPerSqm: 26.0, avgGPIPerSqm: 88.0,
+            avgADR: 85.0, avgOccupancyRate: 62.0, avgRevPAR: 52.7,
+            typicalDaylighting: 73.0, typicalCoolingDegreeDays: 580,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.30,
+            avgConstructionCostPerSqm: 980.0, avgInsuranceRatePerSqm: 7.5
+        ),
+        CityMetrics(
+            cityName: "Comporta", country: "Portugal", region: "Europe",
+            avgCapRate: 5.5, avgVacancyRate: 20.0,
+            avgOpExPerSqm: 30.0, avgGPIPerSqm: 115.0,
+            avgADR: 140.0, avgOccupancyRate: 68.0, avgRevPAR: 95.2,
+            typicalDaylighting: 73.0, typicalCoolingDegreeDays: 560,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.30,
+            avgConstructionCostPerSqm: 1100.0, avgInsuranceRatePerSqm: 8.0
+        ),
+        CityMetrics(
+            cityName: "Sines", country: "Portugal", region: "Europe",
+            avgCapRate: 7.0, avgVacancyRate: 30.0,
+            avgOpExPerSqm: 24.0, avgGPIPerSqm: 80.0,
+            avgADR: 75.0, avgOccupancyRate: 58.0, avgRevPAR: 43.5,
+            typicalDaylighting: 72.0, typicalCoolingDegreeDays: 540,
+            avgInterestRate: 4.0, avgPropertyTaxRate: 0.30,
+            avgConstructionCostPerSqm: 950.0, avgInsuranceRatePerSqm: 7.0
+        ),
+
         // PT islands
         CityMetrics(
             cityName: "Funchal", country: "Portugal", region: "Europe",

@@ -12,6 +12,7 @@ struct IntelBriefView: View {
     @State private var briefState: BriefState = .idle
     @State private var signals: [IntelSignal] = []
     @State private var errorMessage: String = ""
+    @State private var selectedSignalTopic: String? = nil   // topicKey of tapped signal card
 
     private let accent = ProfileType.globalIntelligence.accentColor
     private let news   = NewsAggregatorService.shared
@@ -197,6 +198,53 @@ struct IntelBriefView: View {
         TerminalBlock(command: "04 // MARKET_SIGNALS", accentColor: accent) {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(marketSignalCards) { card in signalCard(card) }
+
+                // Drill-down: articles for the tapped signal category
+                if let topic = selectedSignalTopic {
+                    let filtered = relevantArticles.filter { $0.topics.contains(topic) }
+                    if filtered.isEmpty {
+                        Text("// NO HEADLINES FOR THIS SIGNAL")
+                            .porteosMeta()
+                            .foregroundStyle(DesignTokens.textDim)
+                            .padding(.top, 4)
+                    } else {
+                        let capped = Array(filtered.prefix(6))
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("// HEADLINES (\(filtered.count))")
+                                .porteosMeta()
+                                .foregroundStyle(DesignTokens.accentRust)
+                            ForEach(Array(capped.enumerated()), id: \.offset) { idx, article in
+                                VStack(alignment: .leading, spacing: 3) {
+                                    if let url = URL(string: article.link), !article.link.isEmpty {
+                                        Link(destination: url) {
+                                            Text(article.title)
+                                                .porteosMeta()
+                                                .foregroundStyle(DesignTokens.accentRust)
+                                                .lineLimit(2)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                                .multilineTextAlignment(.leading)
+                                        }
+                                    } else {
+                                        Text(article.title)
+                                            .porteosMeta()
+                                            .foregroundStyle(DesignTokens.textPrimary)
+                                            .lineLimit(2)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                    Text("\(article.sourceDisplayName) · \(article.marketId.uppercased())")
+                                        .porteosMeta()
+                                        .foregroundStyle(DesignTokens.textDim)
+                                }
+                                .padding(.vertical, 3)
+                                if idx < capped.count - 1 {
+                                    Rectangle().fill(DesignTokens.dividerStructural).frame(height: 1)
+                                }
+                            }
+                        }
+                        .padding(.top, 4)
+                    }
+                }
+
                 Spacer(minLength: 0)
             }
         }
@@ -205,10 +253,17 @@ struct IntelBriefView: View {
     }
 
     private func signalCard(_ card: MarketSignalCard) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(card.rating)
-                .font(.system(size: 14, weight: .bold, design: .monospaced))
-                .foregroundStyle(card.ratingColor)
+        let isSelected = selectedSignalTopic == card.topicKey
+        return VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text(card.rating)
+                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .foregroundStyle(card.ratingColor)
+                Spacer()
+                Image(systemName: isSelected ? "chevron.up" : "chevron.down")
+                    .font(.system(size: 8, weight: .medium))
+                    .foregroundStyle(DesignTokens.textDim)
+            }
             Text(card.label)
                 .porteosMeta().foregroundStyle(DesignTokens.textDim)
             Text(card.sublabel)
@@ -218,8 +273,19 @@ struct IntelBriefView: View {
         }
         .padding(.horizontal, 10).padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(DesignTokens.surfacePanel)
-        .overlay { Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: 1) }
+        .background(isSelected ? DesignTokens.accentRust.opacity(0.08) : DesignTokens.surfacePanel)
+        .overlay {
+            Rectangle().strokeBorder(
+                isSelected ? DesignTokens.accentRust : DesignTokens.dividerStructural,
+                lineWidth: isSelected ? 1.5 : 1
+            )
+        }
+        .onTapGesture {
+            withAnimation(.easeInOut(duration: 0.15)) {
+                selectedSignalTopic = isSelected ? nil : card.topicKey
+            }
+        }
+        .contentShape(Rectangle())
     }
 
     // MARK: - Signal derivation from cached news
@@ -256,19 +322,22 @@ struct IntelBriefView: View {
                 rating: regCount >= 2 ? "HIGH" : regCount == 1 ? "MODERATE" : "LOW",
                 ratingColor: regCount >= 2 ? DesignTokens.statusWarn
                            : regCount == 1 ? DesignTokens.statusWarn.opacity(0.7)
-                           : DesignTokens.statusGo
+                           : DesignTokens.statusGo,
+                topicKey: IntelSector.energy.rawValue
             ),
             MarketSignalCard(
                 label: "RATE OUTLOOK",
                 sublabel: "\(rateCount) headline\(rateCount == 1 ? "" : "s")",
                 rating: rateCount >= 2 ? "VOLATILE" : "STABLE",
-                ratingColor: rateCount >= 2 ? DesignTokens.statusWarn : DesignTokens.textPrimary
+                ratingColor: rateCount >= 2 ? DesignTokens.statusWarn : DesignTokens.textPrimary,
+                topicKey: IntelSector.capMarkets.rawValue
             ),
             MarketSignalCard(
                 label: "TOURISM INDEX",
                 sublabel: "\(tourismCount) headline\(tourismCount == 1 ? "" : "s")",
                 rating: tourismCount >= 1 ? "POSITIVE" : "NEUTRAL",
-                ratingColor: tourismCount >= 1 ? DesignTokens.statusGo : DesignTokens.textDim
+                ratingColor: tourismCount >= 1 ? DesignTokens.statusGo : DesignTokens.textDim,
+                topicKey: IntelSector.travel.rawValue
             ),
             MarketSignalCard(
                 label: "SUPPLY PIPELINE",
@@ -276,7 +345,8 @@ struct IntelBriefView: View {
                 rating: reCount >= 3 ? "ACTIVE" : reCount >= 1 ? "MODERATE" : "TIGHT",
                 ratingColor: reCount >= 3 ? DesignTokens.statusGo
                            : reCount >= 1 ? DesignTokens.statusWarn.opacity(0.7)
-                           : DesignTokens.statusWarn
+                           : DesignTokens.statusWarn,
+                topicKey: IntelSector.realEstate.rawValue
             ),
         ]
     }
@@ -402,6 +472,7 @@ struct MarketSignalCard: Identifiable {
     let sublabel: String
     let rating: String
     let ratingColor: Color
+    let topicKey: String   // IntelSector rawValue used to filter articles on tap
 }
 
 enum BriefState { case idle, generating, ready, offline, error }

@@ -220,10 +220,21 @@ struct MarketNewsFeedModule: View {
                     Text(metadataLine(article, topic: topicLabel))
                         .porteosMeta()
                         .foregroundStyle(DesignTokens.textDim)
-                    Text(article.title)
-                        .porteosRowValue()
-                        .foregroundStyle(DesignTokens.textPrimary)
-                        .multilineTextAlignment(.leading)
+                    if let url = URL(string: article.link), !article.link.isEmpty {
+                        Link(destination: url) {
+                            Text(article.title)
+                                .porteosMeta()
+                                .foregroundStyle(DesignTokens.textPrimary)
+                                .multilineTextAlignment(.leading)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    } else {
+                        Text(article.title)
+                            .porteosMeta()
+                            .foregroundStyle(DesignTokens.textPrimary)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
                 Spacer(minLength: 0)
                 Button {
@@ -258,7 +269,7 @@ struct MarketNewsFeedModule: View {
 
         if let url = URL(string: article.link), !article.link.isEmpty {
             Link(destination: url) {
-                Text("open \(truncatedLink(article.link))")
+                Text("[ ↗ OPEN — \(article.sourceDisplayName) ]")
                     .porteosMeta()
                     .foregroundStyle(accent)
                     .lineLimit(1)

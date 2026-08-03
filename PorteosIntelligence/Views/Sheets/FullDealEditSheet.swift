@@ -488,13 +488,13 @@ struct FullDealEditSheet: View {
             }
 
             TextEditor(text: $deal.notes)
-                .porteosRowValue()
+                // porteosRowValue() forces frame(height: lineHeight) — single line only.
+                // Apply font directly; let the explicit frame below control height.
+                .font(DesignTokens.TypeScale.rowValue)
                 .foregroundStyle(textPrimary)
                 .scrollContentBackground(.hidden)
                 .padding(8)
-                // Fixed tall frame — sheet is in a ScrollView so height is unconstrained.
-                // TextEditor scrolls internally beyond this height.
-                .frame(minHeight: 260)
+                .frame(height: 260)
                 .background(shellBg)
                 .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
                 .clipShape(Rectangle())

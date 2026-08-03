@@ -86,15 +86,25 @@ Files are named deals-\(stamp).store — contact support to recover them.
         }
     }()
 
+    @State private var showSplash = true
+
     var body: some Scene {
         WindowGroup {
-            AppShell()
-                .modelContainer(sharedModelContainer)
-                .onAppear { backfillMissingScores() }
-                .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
-                    DealIngestionServer.shared.stop()
-                    EmailMonitorService.shared.stopMonitoring()
+            ZStack {
+                AppShell()
+                    .modelContainer(sharedModelContainer)
+                    .onAppear { backfillMissingScores() }
+                    .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
+                        DealIngestionServer.shared.stop()
+                        EmailMonitorService.shared.stopMonitoring()
+                    }
+
+                if showSplash {
+                    BootSplashView { showSplash = false }
+                        .zIndex(100)
+                        .transition(.opacity)
                 }
+            }
         }
         .commands {
             AppCommandsProvider()
