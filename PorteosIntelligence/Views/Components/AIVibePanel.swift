@@ -437,7 +437,12 @@ struct AIVibePanel: View {
             insetDivider
         }
         if pricePerSqm > 0 {
-            metricsRow("PRICE/m²", "€\(Int(pricePerSqm))", benchmark: nil, good: true)
+            let unitSvc = UnitSystemService.shared
+            metricsRow(
+                "PRICE / \(unitSvc.areaUnitLabel(for: deal.locationCountry))",
+                unitSvc.formatPricePerArea(pricePerSqm, currency: "", country: deal.locationCountry),
+                benchmark: nil, good: true
+            )
             insetDivider
         }
         if deal.vacancyRate > 0 {
@@ -569,7 +574,12 @@ struct AIVibePanel: View {
             insetDivider
         }
         if pricePerSqm > 0 {
-            metricsRow("PRICE/m²", "€\(Int(pricePerSqm))", benchmark: nil, good: true)
+            let unitSvc = UnitSystemService.shared
+            metricsRow(
+                "PRICE / \(unitSvc.areaUnitLabel(for: deal.locationCountry))",
+                unitSvc.formatPricePerArea(pricePerSqm, currency: "", country: deal.locationCountry),
+                benchmark: nil, good: true
+            )
             insetDivider
         }
         if metrics.netOperatingIncome > 0 {
@@ -599,21 +609,32 @@ struct AIVibePanel: View {
                         ? (deal.grossPotentialIncome / deal.purchasePrice) * 100 : 0.0
 
         if pricePerSqm > 0 {
-            metricsRow("PRICE/m² (LAND)", "€\(Int(pricePerSqm))", benchmark: nil, good: true)
+            let unitSvc = UnitSystemService.shared
+            metricsRow(
+                "PRICE / \(unitSvc.areaUnitLabel(for: deal.locationCountry)) (LAND)",
+                unitSvc.formatPricePerArea(pricePerSqm, currency: "", country: deal.locationCountry),
+                benchmark: nil, good: true
+            )
             insetDivider
         }
         if deal.advisoryMaxBuildableArea > 0 {
             let headroom = deal.farHeadroom
+            let unitSvc  = UnitSystemService.shared
             metricsRow("FAR MAX BUILDABLE",
-                       "\(Int(deal.advisoryMaxBuildableArea))m²",
+                       unitSvc.formatArea(deal.advisoryMaxBuildableArea, country: deal.locationCountry),
                        benchmark: headroom >= 0
-                           ? "+\(Int(headroom))m² hdroom"
-                           : "\(Int(headroom))m² over FAR",
+                           ? "+\(unitSvc.formatArea(headroom,           country: deal.locationCountry)) hdroom"
+                           : "\(unitSvc.formatArea(abs(headroom),       country: deal.locationCountry)) over FAR",
                        good: headroom >= 0)
             insetDivider
         }
         if renoPerSqm > 0 {
-            metricsRow("RENO COST/m²", "€\(Int(renoPerSqm))", benchmark: nil, good: true)
+            let unitSvc = UnitSystemService.shared
+            metricsRow(
+                "RENO COST / \(unitSvc.areaUnitLabel(for: deal.locationCountry))",
+                unitSvc.formatPricePerArea(renoPerSqm, currency: "", country: deal.locationCountry),
+                benchmark: nil, good: true
+            )
             insetDivider
         }
         if grossYield > 0 {

@@ -363,9 +363,9 @@ struct FullDealEditSheet: View {
             TerminalInputField(label: "Purchase Price", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.purchasePrice, formatter: currencyFormatter)
                 .focused($focusedField, equals: .purchasePrice)
             statusPickerField
-            TerminalInputField(label: "Area m²", placeholder: "0", prefix: nil, suffix: "m²", text: numStr($deal.totalArea))
+            TerminalInputField(label: "Area \(UnitSystemService.shared.areaUnitLabel(for: deal.locationCountry))", placeholder: "0", prefix: nil, suffix: UnitSystemService.shared.areaUnitLabel(for: deal.locationCountry), text: numStr($deal.totalArea))
                 .focused($focusedField, equals: .totalArea)
-            TerminalInputField(label: "Land m²", placeholder: "0", prefix: nil, suffix: "m²", text: numStr($deal.landArea))
+            TerminalInputField(label: "Land \(UnitSystemService.shared.areaUnitLabel(for: deal.locationCountry))", placeholder: "0", prefix: nil, suffix: UnitSystemService.shared.areaUnitLabel(for: deal.locationCountry), text: numStr($deal.landArea))
             TerminalComboboxField(
                 label: "Property Type",
                 placeholder: "e.g. Hotel, Office A-Class",
@@ -1133,10 +1133,10 @@ struct FullDealEditSheet: View {
             }
 
             TerminalInputField(
-                label: "Max Height (m)",
+                label: "Max Height (\(UnitSystemService.shared.heightUnitLabel(for: deal.locationCountry)))",
                 placeholder: "0",
                 prefix: nil,
-                suffix: "m",
+                suffix: UnitSystemService.shared.heightUnitLabel(for: deal.locationCountry),
                 text: numStr($deal.maxBuildingHeight, decimals: 1)
             )
 

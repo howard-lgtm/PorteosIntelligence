@@ -36,6 +36,7 @@ struct SettingsView: View {
     @State private var llmModel: String = UserDefaults.standard.string(forKey: LLMAnalysisService.Keys.modelName) ?? LLMAnalysisService.defaultModelName
     @State private var llmPingResult: String? = nil
     @State private var llmPinging = false
+    @State private var unitOverride: String = UnitSystemService.shared.manualOverride
 
     // MARK: Body
 
@@ -353,7 +354,13 @@ struct SettingsView: View {
 
             divider
 
-            sectionHeader("02 // BUILD_INFO", subtitle: "")
+            sectionHeader("02 // UNITS", subtitle: "Display unit system for area and height fields.")
+
+            unitsRow
+
+            divider
+
+            sectionHeader("03 // BUILD_INFO", subtitle: "")
 
             infoRow("ARCHITECTURE",  "Email Monitor (curl/IMAP) + HTTP Ingestion Server + Browser Extension")
             infoRow("PERSISTENCE",   "SwiftData (on-device, encrypted)")
@@ -445,5 +452,44 @@ struct SettingsView: View {
 
     private var divider: some View {
         Rectangle().fill(shellBorder).frame(height: 1)
+    }
+
+    // MARK: – Units row
+
+    private var unitsRow: some View {
+        HStack(spacing: 0) {
+            Text("UNIT_SYSTEM")
+                .porteosButtonPrimary()
+                .foregroundStyle(tp2)
+
+            Spacer()
+
+            HStack(spacing: 0) {
+                ForEach([("AUTO", "auto"), ("METRIC", "metric"), ("IMPERIAL", "imperial")], id: \.1) { label, value in
+                    let isActive = unitOverride == value
+                    Button {
+                        unitOverride = value
+                        UnitSystemService.shared.manualOverride = value
+                    } label: {
+                        Text(label)
+                            .porteosMeta()
+                            .foregroundStyle(isActive ? accentRust : tp3)
+                            .padding(.horizontal, 10)
+                            .frame(height: 26)
+                            .background(isActive ? accentRust.opacity(0.1) : Color.clear)
+                            .overlay(
+                                Rectangle().strokeBorder(
+                                    isActive ? accentRust.opacity(0.5) : shellBorder,
+                                    lineWidth: 1
+                                )
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .clipShape(Rectangle())
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
     }
 }
