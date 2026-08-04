@@ -228,6 +228,12 @@ final class AIAnalysisService {
         }
         let enrichedSignals = allSignalMessages + dealMetricLines
 
+        // Prepend asset class so the LLM calibrates SWOT bullets to the correct property type
+        var finalEnrichedSignals = enrichedSignals
+        if !deal.propertyType.isEmpty {
+            finalEnrichedSignals.insert("Asset class: \(deal.propertyType)", at: 0)
+        }
+
         // Build regulatory context string from user-entered fields
         var regParts: [String] = []
         if !deal.zoningClass.isEmpty {
@@ -263,7 +269,7 @@ final class AIAnalysisService {
                 dealName:          deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName,
                 grade:             "\(grade.rawValue) — \(grade.label)",
                 score:             deal.porteosScore,
-                signals:           enrichedSignals,
+                signals:           finalEnrichedSignals,
                 benchmark:         cityBenchmark,
                 analystNotes:      deal.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                                        ? nil : deal.notes,

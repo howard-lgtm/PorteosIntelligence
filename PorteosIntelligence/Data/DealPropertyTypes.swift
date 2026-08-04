@@ -8,10 +8,11 @@ struct DealPropertyTypes {
 
     static let defaults: [String] = [
         "Apartment",
+        "Multi-Dwelling",
+        "Commercial",
         "Hotel",
         "Office",
         "Residential",
-        "Commercial",
         "Mixed-Use",
         "Hospitality",
         "Industrial",

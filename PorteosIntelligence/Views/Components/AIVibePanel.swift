@@ -360,58 +360,266 @@ struct AIVibePanel: View {
 
     // MARK: Deal Metrics section
 
+    /// Classifies the deal's property type into one of five metric groups.
+    private var propertyTypeCategory: String {
+        let t = deal.propertyType.lowercased()
+        if t.contains("hotel") || t.contains("hostel") || t.contains("hospitality")
+            || t.contains("str") || t.contains("accommodation") {
+            return "hospitality"
+        } else if t.contains("multi") || t.contains("dwelling") || t.contains("multifamily")
+            || t.contains("building") || t.contains("predio") || t.contains("prédio") {
+            return "multi-dwelling"
+        } else if t.contains("commercial") || t.contains("office") || t.contains("retail")
+            || t.contains("industrial") || t.contains("warehouse")
+            || t.contains("loja") || t.contains("escritorio") {
+            return "commercial"
+        } else if t.contains("farm") || t.contains("rural") || t.contains("quinta")
+            || t.contains("herdade") || t.contains("land") || t.contains("terreno")
+            || t.contains("agricultural") {
+            return "farm"
+        } else {
+            return "residential"
+        }
+    }
+
     @ViewBuilder
     private var dealMetricsSection: some View {
-        let bm = cityBenchmark
+        let bm      = cityBenchmark
         let metrics = computedMetrics
-        if metrics.capRate > 0 || metrics.loanToValue > 0 || metrics.debtServiceCoverageRatio > 0 {
+        let cat     = propertyTypeCategory
+
+        let hasHospMetrics = deal.hospitalityADR > 0 || deal.hospitalityOccupancyRate > 0
+        let hasREMetrics   = metrics.capRate > 0 || metrics.loanToValue > 0
+                          || metrics.debtServiceCoverageRatio > 0
+                          || (deal.purchasePrice > 0 && deal.grossPotentialIncome > 0)
+
+        if (cat == "hospitality" && hasHospMetrics) || (cat != "hospitality" && hasREMetrics) {
             sectionHeader("DEAL METRICS")
             VStack(spacing: 0) {
-                if metrics.capRate > 0 {
-                    metricsRow(
-                        "CAP RATE",
-                        String(format: "%.2f%%", metrics.capRate),
-                        benchmark: bm.map { String(format: "%.1f%%", $0.avgCapRate) },
-                        good: bm.map { metrics.capRate >= $0.avgCapRate } ?? true
-                    )
-                    insetDivider
-                }
-                if metrics.loanToValue > 0 {
-                    metricsRow(
-                        "LTV",
-                        String(format: "%.1f%%", metrics.loanToValue),
-                        benchmark: "≤65% safe",
-                        good: metrics.loanToValue <= 65
-                    )
-                    insetDivider
-                }
-                if metrics.debtServiceCoverageRatio > 0 {
-                    metricsRow(
-                        "DSCR",
-                        String(format: "%.2fx", metrics.debtServiceCoverageRatio),
-                        benchmark: "≥1.25 safe",
-                        good: metrics.debtServiceCoverageRatio >= 1.25
-                    )
-                    insetDivider
-                }
-                if metrics.netOperatingIncome > 0 {
-                    metricsRow(
-                        "NOI",
-                        "€\(Int(metrics.netOperatingIncome))",
-                        benchmark: nil,
-                        good: true
-                    )
-                    insetDivider
-                }
-                if metrics.cashOnCashReturn > 0 {
-                    metricsRow(
-                        "CASH-ON-CASH",
-                        String(format: "%.1f%%", metrics.cashOnCashReturn),
-                        benchmark: "≥8% target",
-                        good: metrics.cashOnCashReturn >= 8
-                    )
+                if cat == "hospitality" {
+                    hospitalityMetricsRows(bm: bm)
+                } else if cat == "multi-dwelling" {
+                    multiDwellingMetricsRows(metrics: metrics, bm: bm)
+                } else if cat == "commercial" {
+                    commercialMetricsRows(metrics: metrics, bm: bm)
+                } else if cat == "farm" {
+                    farmMetricsRows(metrics: metrics, bm: bm)
+                } else {
+                    residentialMetricsRows(metrics: metrics, bm: bm)
                 }
             }
+        }
+    }
+
+    // MARK: Per-type metric rows
+
+    @ViewBuilder
+    private func residentialMetricsRows(
+        metrics: RealEstateCalculator.FullMetrics,
+        bm: CityMetrics?
+    ) -> some View {
+        let grossYield  = deal.purchasePrice > 0
+                        ? (deal.grossPotentialIncome / deal.purchasePrice) * 100 : 0.0
+        let netYield    = deal.purchasePrice > 0
+                        ? (metrics.netOperatingIncome  / deal.purchasePrice) * 100 : 0.0
+        let pricePerSqm = deal.totalArea > 0 ? deal.purchasePrice / deal.totalArea : 0.0
+
+        if grossYield > 0 {
+            metricsRow("GROSS YIELD", String(format: "%.2f%%", grossYield),
+                       benchmark: "≥5% target", good: grossYield >= 5)
+            insetDivider
+        }
+        if netYield > 0 {
+            metricsRow("NET YIELD",
+                       String(format: "%.2f%%", netYield),
+                       benchmark: bm.map { String(format: "%.1f%%", $0.avgCapRate) },
+                       good: bm.map { netYield >= $0.avgCapRate } ?? (netYield >= 4))
+            insetDivider
+        }
+        if pricePerSqm > 0 {
+            metricsRow("PRICE/m²", "€\(Int(pricePerSqm))", benchmark: nil, good: true)
+            insetDivider
+        }
+        if deal.vacancyRate > 0 {
+            metricsRow("VACANCY", String(format: "%.1f%%", deal.vacancyRate),
+                       benchmark: "≤5% target", good: deal.vacancyRate <= 5)
+            insetDivider
+        }
+        if metrics.debtServiceCoverageRatio > 0 {
+            metricsRow("DSCR", String(format: "%.2fx", metrics.debtServiceCoverageRatio),
+                       benchmark: "≥1.25 safe", good: metrics.debtServiceCoverageRatio >= 1.25)
+            insetDivider
+        }
+        if metrics.loanToValue > 0 {
+            metricsRow("LTV", String(format: "%.1f%%", metrics.loanToValue),
+                       benchmark: "≤65% safe", good: metrics.loanToValue <= 65)
+        }
+    }
+
+    @ViewBuilder
+    private func multiDwellingMetricsRows(
+        metrics: RealEstateCalculator.FullMetrics,
+        bm: CityMetrics?
+    ) -> some View {
+        let grossYield  = deal.purchasePrice > 0
+                        ? (deal.grossPotentialIncome / deal.purchasePrice) * 100 : 0.0
+        let unitCount   = max(Double(deal.maxBedroomsOrUnits), 1.0)
+        let perUnitNOI  = metrics.netOperatingIncome > 0 ? metrics.netOperatingIncome / unitCount : 0.0
+        let grm         = deal.grossPotentialIncome > 0
+                        ? deal.purchasePrice / deal.grossPotentialIncome : 0.0
+
+        if grossYield > 0 {
+            metricsRow("BLENDED GROSS YIELD",
+                       String(format: "%.2f%%", grossYield),
+                       benchmark: bm.map { String(format: "%.1f%%", $0.avgCapRate) },
+                       good: bm.map { grossYield >= $0.avgCapRate } ?? (grossYield >= 5))
+            insetDivider
+        }
+        if perUnitNOI > 0 {
+            metricsRow("PER-UNIT NOI", "€\(Int(perUnitNOI))", benchmark: nil, good: true)
+            insetDivider
+        }
+        if grm > 0 {
+            metricsRow("GROSS RENT MULT.",
+                       String(format: "%.1fx", grm),
+                       benchmark: "≤15× target", good: grm <= 15)
+            insetDivider
+        }
+        if metrics.capRate > 0 {
+            metricsRow("CAP RATE",
+                       String(format: "%.2f%%", metrics.capRate),
+                       benchmark: bm.map { String(format: "%.1f%%", $0.avgCapRate) },
+                       good: bm.map { metrics.capRate >= $0.avgCapRate } ?? true)
+            insetDivider
+        }
+        if metrics.debtServiceCoverageRatio > 0 {
+            metricsRow("DSCR", String(format: "%.2fx", metrics.debtServiceCoverageRatio),
+                       benchmark: "≥1.25 safe", good: metrics.debtServiceCoverageRatio >= 1.25)
+            insetDivider
+        }
+        if metrics.loanToValue > 0 {
+            metricsRow("LTV", String(format: "%.1f%%", metrics.loanToValue),
+                       benchmark: "≤65% safe", good: metrics.loanToValue <= 65)
+        }
+    }
+
+    @ViewBuilder
+    private func hospitalityMetricsRows(bm: CityMetrics?) -> some View {
+        let hm = computedHospitalityMetrics
+        let reMetrics = computedMetrics
+
+        if hm.adr > 0 {
+            metricsRow("ADR", "€\(Int(hm.adr))",
+                       benchmark: bm.map { "mkt €\(Int($0.avgADR))" },
+                       good: bm.map { hm.adr >= $0.avgADR } ?? true)
+            insetDivider
+        }
+        if hm.revPAR > 0 {
+            metricsRow("RevPAR", "€\(Int(hm.revPAR))", benchmark: nil, good: true)
+            insetDivider
+        }
+        if hm.occupancyRate > 0 {
+            metricsRow("OCCUPANCY",
+                       String(format: "%.1f%%", hm.occupancyRate),
+                       benchmark: bm.map { String(format: "%.0f%%", $0.avgOccupancyRate) },
+                       good: bm.map { hm.occupancyRate >= $0.avgOccupancyRate } ?? (hm.occupancyRate >= 70))
+            insetDivider
+        }
+        if hm.gop > 0 {
+            metricsRow("GOP", "€\(Int(hm.gop))", benchmark: nil, good: true)
+            insetDivider
+        }
+        if hm.gopMargin > 0 {
+            metricsRow("GOP MARGIN",
+                       String(format: "%.1f%%", hm.gopMargin),
+                       benchmark: "≥35% target", good: hm.gopMargin >= 35)
+            insetDivider
+        }
+        if hm.trevPAR > 0 {
+            metricsRow("TRevPAR", "€\(Int(hm.trevPAR))", benchmark: nil, good: true)
+            insetDivider
+        }
+        if reMetrics.debtServiceCoverageRatio > 0 {
+            metricsRow("DSCR", String(format: "%.2fx", reMetrics.debtServiceCoverageRatio),
+                       benchmark: "≥1.25 safe", good: reMetrics.debtServiceCoverageRatio >= 1.25)
+        }
+    }
+
+    @ViewBuilder
+    private func commercialMetricsRows(
+        metrics: RealEstateCalculator.FullMetrics,
+        bm: CityMetrics?
+    ) -> some View {
+        let netYield    = deal.purchasePrice > 0
+                        ? (metrics.netOperatingIncome / deal.purchasePrice) * 100 : 0.0
+        let pricePerSqm = deal.totalArea > 0 ? deal.purchasePrice / deal.totalArea : 0.0
+
+        if netYield > 0 {
+            metricsRow("NET YIELD",
+                       String(format: "%.2f%%", netYield),
+                       benchmark: bm.map { String(format: "%.1f%%", $0.avgCapRate) },
+                       good: bm.map { netYield >= $0.avgCapRate } ?? (netYield >= 5))
+            insetDivider
+        }
+        if metrics.capRate > 0 {
+            metricsRow("CAP RATE",
+                       String(format: "%.2f%%", metrics.capRate),
+                       benchmark: bm.map { String(format: "%.1f%%", $0.avgCapRate) },
+                       good: bm.map { metrics.capRate >= $0.avgCapRate } ?? true)
+            insetDivider
+        }
+        if pricePerSqm > 0 {
+            metricsRow("PRICE/m²", "€\(Int(pricePerSqm))", benchmark: nil, good: true)
+            insetDivider
+        }
+        if metrics.netOperatingIncome > 0 {
+            metricsRow("NOI", "€\(Int(metrics.netOperatingIncome))", benchmark: nil, good: true)
+            insetDivider
+        }
+        if metrics.debtServiceCoverageRatio > 0 {
+            metricsRow("DSCR", String(format: "%.2fx", metrics.debtServiceCoverageRatio),
+                       benchmark: "≥1.25 safe", good: metrics.debtServiceCoverageRatio >= 1.25)
+            insetDivider
+        }
+        if metrics.loanToValue > 0 {
+            metricsRow("LTV", String(format: "%.1f%%", metrics.loanToValue),
+                       benchmark: "≤65% safe", good: metrics.loanToValue <= 65)
+        }
+    }
+
+    @ViewBuilder
+    private func farmMetricsRows(
+        metrics: RealEstateCalculator.FullMetrics,
+        bm: CityMetrics?
+    ) -> some View {
+        let pricePerSqm = deal.totalArea > 0 ? deal.purchasePrice / deal.totalArea : 0.0
+        let renoPerSqm  = (deal.totalArea > 0 && deal.renovationBudget > 0)
+                        ? deal.renovationBudget / deal.totalArea : 0.0
+        let grossYield  = (deal.purchasePrice > 0 && deal.grossPotentialIncome > 0)
+                        ? (deal.grossPotentialIncome / deal.purchasePrice) * 100 : 0.0
+
+        if pricePerSqm > 0 {
+            metricsRow("PRICE/m² (LAND)", "€\(Int(pricePerSqm))", benchmark: nil, good: true)
+            insetDivider
+        }
+        if deal.advisoryMaxBuildableArea > 0 {
+            let headroom = deal.farHeadroom
+            metricsRow("FAR MAX BUILDABLE",
+                       "\(Int(deal.advisoryMaxBuildableArea))m²",
+                       benchmark: headroom >= 0
+                           ? "+\(Int(headroom))m² hdroom"
+                           : "\(Int(headroom))m² over FAR",
+                       good: headroom >= 0)
+            insetDivider
+        }
+        if renoPerSqm > 0 {
+            metricsRow("RENO COST/m²", "€\(Int(renoPerSqm))", benchmark: nil, good: true)
+            insetDivider
+        }
+        if grossYield > 0 {
+            metricsRow("GROSS YIELD",
+                       String(format: "%.2f%%", grossYield),
+                       benchmark: "≥5% target", good: grossYield >= 5)
         }
     }
 
@@ -434,6 +642,22 @@ struct AIVibePanel: View {
             interestRate:           deal.interestRate,
             amortizationMonths:     deal.amortizationMonths,
             exitCapRate:            deal.exitCapRate
+        ))
+    }
+
+    private var computedHospitalityMetrics: HospitalityCalculator.FullMetrics {
+        HospitalityCalculator.calculateFull(inputs: .init(
+            roomCount:        deal.hospitalityRoomCount,
+            adr:              deal.hospitalityADR,
+            occupancyRate:    deal.hospitalityOccupancyRate,
+            fbRevenue:        deal.hospitalityFBRevenue,
+            spaRevenue:       deal.hospitalitySpaRevenue,
+            meetingRevenue:   deal.hospitalityMeetingRevenue,
+            otherRevenue:     deal.hospitalityOtherRevenue,
+            opExRatio:        deal.hospitalityOpExRatio,
+            directBookingPct: deal.hospitalityDirectBookingPct,
+            otaBookingPct:    deal.hospitalityOTABookingPct,
+            distributionCost: deal.hospitalityDistributionCost
         ))
     }
 
