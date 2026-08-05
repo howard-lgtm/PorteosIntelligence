@@ -33,14 +33,32 @@ struct PorteosScoreCalculator {
     // MARK: - Calculate
 
     static func calculate(inputs: PorteosInputs) -> PorteosMetrics {
-        // ── Base score from yield + hospitality efficiency ────────────────────
+        // ── Detect which profiles are actually populated ───────────────────────
+        // An unfilled profile (all metrics at zero/default) should not penalise
+        // the score. Its weight is redistributed to the real estate component
+        // so the deal is judged only on what data exists.
+        let hospPopulated    = inputs.revPAR > 0
+        let designPopulated  = inputs.designScore > 0
+        let circularPopulated = inputs.circularScore > 0
+
+        let hospWeight    = hospPopulated     ? inputs.weightHospitality : 0
+        let designWeight  = designPopulated   ? inputs.weightDesign      : 0
+        let circularWeight = circularPopulated ? inputs.weightCircular    : 0
+
+        // Redistribute unused weights back to real estate so total always = 100
+        let unusedWeight  = (inputs.weightHospitality - hospWeight)
+                          + (inputs.weightDesign      - designWeight)
+                          + (inputs.weightCircular    - circularWeight)
+        let reWeight      = inputs.weightRealEstate + unusedWeight
+
+        // ── Base score from yield + active profile dimensions ─────────────────
         let normalizedCapRate = min(max((inputs.capRate / 10.0) * 100, 0), 100)
         let normalizedRevPAR  = min(max((inputs.revPAR  / 200.0) * 100, 0), 100)
 
-        var finalScore = (normalizedCapRate * (inputs.weightRealEstate  / 100))
-                       + (normalizedRevPAR  * (inputs.weightHospitality / 100))
-                       + (inputs.designScore   * (inputs.weightDesign    / 100))
-                       + (inputs.circularScore * (inputs.weightCircular  / 100))
+        var finalScore = (normalizedCapRate       * (reWeight       / 100))
+                       + (normalizedRevPAR        * (hospWeight     / 100))
+                       + (inputs.designScore      * (designWeight   / 100))
+                       + (inputs.circularScore    * (circularWeight / 100))
 
         // ── Revenue scale bonus ───────────────────────────────────────────────
         if inputs.totalRevenue > 5_000_000 { finalScore += 10 }
