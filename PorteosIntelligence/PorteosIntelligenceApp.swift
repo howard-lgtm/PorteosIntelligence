@@ -98,6 +98,8 @@ Files are named deals-\(stamp).store — contact support to recover them.
                         DealIngestionServer.shared.stop()
                         EmailMonitorService.shared.stopMonitoring()
                     }
+                    // Surfaces the NSWindow so WindowStateManager can configure it.
+                    .background(WindowAccessor())
 
                 if showSplash {
                     BootSplashView { showSplash = false }
@@ -106,6 +108,7 @@ Files are named deals-\(stamp).store — contact support to recover them.
                 }
             }
         }
+        .defaultSize(width: 1440, height: 900)
         .commands {
             AppCommandsProvider()
         }
