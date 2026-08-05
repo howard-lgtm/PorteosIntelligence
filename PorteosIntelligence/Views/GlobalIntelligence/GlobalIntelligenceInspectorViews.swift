@@ -84,7 +84,7 @@ struct GeoAssetInspectorPanel: View {
                         kpiRow("PRICE",   formatCurrency(deal.purchasePrice))
                     }
                     if deal.totalArea > 0 {
-                        kpiRow("AREA",    "\(Int(deal.totalArea)) m²")
+                        kpiRow("AREA",    UnitSystemService.shared.formatArea(deal.totalArea, country: deal.locationCountry))
                     }
                     kpiRow("GEOCODE", geocodeLabel, color: geocodeColor)
 

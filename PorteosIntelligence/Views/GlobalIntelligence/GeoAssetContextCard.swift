@@ -89,7 +89,7 @@ struct GeoAssetContextCard: View {
             parts.append(GeoPinHoverBanner.formatEUR(deal.purchasePrice))
         }
         if deal.totalArea > 0 {
-            parts.append("\(Int(deal.totalArea)) m²")
+            parts.append(UnitSystemService.shared.formatArea(deal.totalArea, country: deal.locationCountry))
         }
         parts.append("Geocode \(geocodeStatusLabel)")
         return parts.joined(separator: " · ")

@@ -38,6 +38,14 @@ struct PreloadReviewSheet: View {
     private var effectiveRenovLow:  Double { renovBaseProduct * effectiveCondition.renovationFactorRange.low }
     private var effectiveRenovHigh: Double { renovBaseProduct * effectiveCondition.renovationFactorRange.high }
 
+    private var pricePSqmLine: String {
+        let svc = UnitSystemService.shared
+        let country = deal.locationCountry
+        let p = svc.formatPricePerArea(estimate.pricePSqm, currency: "", country: country)
+        let m = svc.formatPricePerArea(estimate.marketPSqm, currency: "", country: country)
+        return "\(p) vs implied market \(m) — \(Int(estimate.discountRatio * 100))% of market value"
+    }
+
     private var effectiveADR: Double? {
         guard let base = estimate.hospitalityADR else { return nil }
         return DealPreloader.seasonalHospitality(baseADR: base, baseOccupancy: 0, season: season).adr
@@ -109,7 +117,7 @@ struct PreloadReviewSheet: View {
                                 .foregroundStyle(DesignTokens.textDim)
                         }
                     }
-                    Text("€\(Int(estimate.pricePSqm))/m² vs implied market €\(Int(estimate.marketPSqm))/m² — \(Int(estimate.discountRatio * 100))% of market value")
+                        Text(pricePSqmLine)
                         .porteosMeta()
                         .foregroundStyle(DesignTokens.textSecondary)
                 }
@@ -227,7 +235,7 @@ struct PreloadReviewSheet: View {
             fieldRow("opexInsurance",
                      label: "  ↳ Insurance",
                      value: "€\(compactEur(estimate.opexInsurance))/yr",
-                     note:  "\(estimate.benchmarkCity) rate/m²")
+                     note:  "\(estimate.benchmarkCity) rate/\(UnitSystemService.shared.areaUnitLabel(for: deal.locationCountry))")
             fieldRow("opexUtilities",
                      label: "  ↳ Utilities",
                      value: "€\(compactEur(estimate.opexUtilities))/yr",

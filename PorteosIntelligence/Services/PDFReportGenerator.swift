@@ -254,7 +254,7 @@ final class PDFReportGenerator {
 
         stat("PURCHASE PRICE", currency(deal.purchasePrice), col: 0)
         stat("LOAN AMOUNT",    currency(deal.loanAmount),    col: 1)
-        stat("TOTAL AREA",     "\(Int(deal.totalArea)) m²",  col: 2)
+        stat("TOTAL AREA",     UnitSystemService.shared.formatArea(deal.totalArea, country: deal.locationCountry),  col: 2)
 
         hline(ctx, x: M, y: statsY - 14, width: cW, color: border)
 
@@ -408,9 +408,9 @@ final class PDFReportGenerator {
 
         // GFA/NIA: use designGFA if populated, fall back to totalArea for the PDF.
         // Guard against 0 (unfilled) to avoid showing "0 m²" or misleading values.
-        let gfaDisplay = des.gfa > 0 ? "\(f0(des.gfa)) m²"
-                       : deal.totalArea > 0 ? "\(f0(deal.totalArea)) m² (built area)" : "—"
-        let niaDisplay = des.nia > 0 ? "\(f0(des.nia)) m²" : "—"
+        let gfaDisplay = des.gfa > 0 ? UnitSystemService.shared.formatArea(des.gfa, country: deal.locationCountry)
+                       : deal.totalArea > 0 ? "\(UnitSystemService.shared.formatArea(deal.totalArea, country: deal.locationCountry)) (built area)" : "—"
+        let niaDisplay = des.nia > 0 ? UnitSystemService.shared.formatArea(des.nia, country: deal.locationCountry) : "—"
         y = metricRow(ctx, "GFA",                  gfaDisplay,                      y: y, alt: true)
         y = metricRow(ctx, "NIA",                  niaDisplay,                      y: y)
         y = metricRow(ctx, "NET-TO-GROSS RATIO",   des.netToGrossRatio > 0 ? pct(des.netToGrossRatio) : "—",  y: y, alt: true, valueColor: purple)

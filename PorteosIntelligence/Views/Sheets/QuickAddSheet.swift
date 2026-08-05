@@ -161,7 +161,7 @@ struct QuickAddSheet: View {
             result.append(.init(label: "PRICE", value: compactPrice(p)))
         }
         if p.totalArea > 0 {
-            result.append(.init(label: "AREA", value: "\(Int(p.totalArea))m²"))
+            result.append(.init(label: "AREA", value: UnitSystemService.shared.formatArea(p.totalArea, country: "")))
         }
         if let beds = p.bedrooms {
             result.append(.init(label: "TYPE", value: "T\(beds)"))
@@ -196,7 +196,7 @@ struct QuickAddSheet: View {
                 previewDivider
                 previewRow(
                     "AREA",
-                    p.totalArea > 0 ? "\(Int(p.totalArea)) m²" : "—",
+                    p.totalArea > 0 ? UnitSystemService.shared.formatArea(p.totalArea, country: "") : "—",
                     isKnown: p.totalArea > 0
                 )
                 previewDivider
@@ -270,7 +270,8 @@ struct QuickAddSheet: View {
             derivedChip("VAC", "5%")
             derivedChip("EST_OPEX", formatCurrency(p.opex, p.currency))
             if p.totalArea > 0 && p.purchasePrice > 0 {
-                derivedChip("€/M²", String(format: "%.0f", p.purchasePrice / p.totalArea))
+                derivedChip("€/\(UnitSystemService.shared.areaUnitLabel(for: "").uppercased())",
+                             String(format: "%.0f", p.purchasePrice / p.totalArea))
             }
             Spacer(minLength: 0)
         }
