@@ -228,10 +228,45 @@ final class AIAnalysisService {
         }
         let enrichedSignals = allSignalMessages + dealMetricLines
 
-        // Prepend asset class so the LLM calibrates SWOT bullets to the correct property type
+        // Determine property type for prompt calibration and signal filtering
+        let typeLC        = deal.propertyType.lowercased()
+        let isHotel       = typeLC.contains("hotel") || typeLC.contains("hostel") || typeLC.contains("str") || typeLC.contains("accommodation")
+        let isFarmRural   = typeLC.contains("farm") || typeLC.contains("rural") || typeLC.contains("quinta") || typeLC.contains("herdade") || typeLC.contains("agri")
+        let isMulti       = typeLC.contains("multi") || typeLC.contains("dwelling") || typeLC.contains("multifamily") || typeLC.contains("building") || typeLC.contains("predio")
+        let isCommercial  = typeLC.contains("commercial") || typeLC.contains("office") || typeLC.contains("retail") || typeLC.contains("industrial") || typeLC.contains("warehouse")
+
+        // Prepend calibrated asset class line so the LLM scores against the right metrics
         var finalEnrichedSignals = enrichedSignals
         if !deal.propertyType.isEmpty {
-            finalEnrichedSignals.insert("Asset class: \(deal.propertyType)", at: 0)
+            let assetClassSignal: String
+            if isHotel {
+                assetClassSignal = "Asset class: Hotel (urban hospitality) — primary metrics: ADR, RevPAR, GOP margin, STR licence status."
+            } else if isFarmRural {
+                assetClassSignal = "Asset class: Farm/Rural (hospitality conversion) — evaluate conversion potential vs local benchmarks. Pre-operational zeros are not failures."
+            } else if isMulti {
+                assetClassSignal = "Asset class: Multi-Dwelling — score on blended yield, per-unit NOI, GRM, DSCR."
+            } else if isCommercial {
+                assetClassSignal = "Asset class: Commercial — score on net yield, WAULT proxy, cap rate, DSCR."
+            } else {
+                assetClassSignal = "Asset class: Residential — score on yield, DSCR, price/m². STR income is supplemental only, not a primary venture driver."
+            }
+            finalEnrichedSignals.insert(assetClassSignal, at: 0)
+        }
+
+        // Filter hospitality signals for non-hotel, non-farm deals to avoid polluting SWOT
+        let hospitalityKeywords = ["ADR", "RevPAR", "GOP", "TRevPAR", "occupancy rate", "hospitality"]
+        if !isHotel && !isFarmRural {
+            finalEnrichedSignals = finalEnrichedSignals.filter { signal in
+                !hospitalityKeywords.contains { keyword in
+                    signal.lowercased().contains(keyword.lowercased())
+                }
+            }
+            // Add STR nudge for larger residential properties
+            if deal.hospitalityRoomCount >= 3 {
+                finalEnrichedSignals.append("STR income potential: note as Opportunity only — not a primary venture driver.")
+            }
+        } else if isFarmRural {
+            finalEnrichedSignals.append("Pre-operational hospitality conversion — assess against local market benchmarks. Do not penalise zero ADR/RevPAR.")
         }
 
         // Build regulatory context string from user-entered fields
