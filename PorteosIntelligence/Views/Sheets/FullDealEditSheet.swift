@@ -360,7 +360,7 @@ struct FullDealEditSheet: View {
             researchImportRow
 
             sectionLabel("FINANCIAL DETAILS")
-            TerminalInputField(label: "Purchase Price", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.purchasePrice, formatter: currencyFormatter)
+            TerminalInputField(label: "Purchase Price", placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.purchasePrice, formatter: currencyFormatter)
                 .focused($focusedField, equals: .purchasePrice)
             statusPickerField
             TerminalInputField(label: "Area \(UnitSystemService.shared.areaUnitLabel(for: deal.locationCountry))", placeholder: "0", prefix: nil, suffix: UnitSystemService.shared.areaUnitLabel(for: deal.locationCountry), text: numStr($deal.totalArea))
@@ -541,7 +541,7 @@ struct FullDealEditSheet: View {
             sectionLabel("INCOME", color: accentRust)
 
             // GPI — show hospitality-implied suggestion when available
-            TerminalInputField(label: "Gross Potential Income", placeholder: "0.00", prefix: "€",  suffix: nil, value: $deal.grossPotentialIncome, formatter: currencyFormatter).focused($focusedField, equals: .grossPotentialIncome)
+            TerminalInputField(label: "Gross Potential Income", placeholder: "0.00", prefix: deal.currencySymbol,  suffix: nil, value: $deal.grossPotentialIncome, formatter: currencyFormatter).focused($focusedField, equals: .grossPotentialIncome)
             if let implied = hospImpliedGPI, abs(implied - deal.grossPotentialIncome) > 100 {
                 HStack(spacing: 8) {
                     Text("// HOSP. CALC → €\(Int(implied.rounded())) (room rev + ancillary)")
@@ -564,12 +564,12 @@ struct FullDealEditSheet: View {
             }
 
             TerminalInputField(label: "Vacancy Rate",           placeholder: "0.00", prefix: nil,  suffix: "%", value: $deal.vacancyRate, formatter: Self.percentFormatter).focused($focusedField, equals: .vacancyRate)
-            TerminalInputField(label: "Other Income",           placeholder: "0.00", prefix: "€",  suffix: nil, value: $deal.otherIncome, formatter: currencyFormatter).focused($focusedField, equals: .otherIncome)
+            TerminalInputField(label: "Other Income",           placeholder: "0.00", prefix: deal.currencySymbol,  suffix: nil, value: $deal.otherIncome, formatter: currencyFormatter).focused($focusedField, equals: .otherIncome)
 
             sectionLabel("EXPENSES", color: accentRust)
 
             // OpEx aggregate — warn when out of sync with line items
-            TerminalInputField(label: "Operating Expenses", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.operatingExpenses, formatter: currencyFormatter).focused($focusedField, equals: .operatingExpenses)
+            TerminalInputField(label: "Operating Expenses", placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.operatingExpenses, formatter: currencyFormatter).focused($focusedField, equals: .operatingExpenses)
             if opexLineItemsTotal > 0 && abs(opexLineItemsTotal - deal.operatingExpenses) > 1 {
                 HStack(spacing: 8) {
                     Text("// LINE ITEMS TOTAL: €\(Int(opexLineItemsTotal.rounded())) — aggregate differs")
@@ -591,19 +591,19 @@ struct FullDealEditSheet: View {
                 .clipShape(Rectangle())
             }
 
-            TerminalInputField(label: "Property Management",   placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexPropertyManagement,  formatter: currencyFormatter)
-            TerminalInputField(label: "Property Tax",          placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexPropertyTax,          formatter: currencyFormatter)
-            TerminalInputField(label: "Insurance",             placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexInsurance,            formatter: currencyFormatter)
-            TerminalInputField(label: "Utilities",             placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexUtilities,            formatter: currencyFormatter)
-            TerminalInputField(label: "Maintenance & Repairs", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexMaintenance,          formatter: currencyFormatter)
-            TerminalInputField(label: "Capital Reserves",      placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexCapitalReserves,      formatter: currencyFormatter)
+            TerminalInputField(label: "Property Management",   placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.opexPropertyManagement,  formatter: currencyFormatter)
+            TerminalInputField(label: "Property Tax",          placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.opexPropertyTax,          formatter: currencyFormatter)
+            TerminalInputField(label: "Insurance",             placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.opexInsurance,            formatter: currencyFormatter)
+            TerminalInputField(label: "Utilities",             placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.opexUtilities,            formatter: currencyFormatter)
+            TerminalInputField(label: "Maintenance & Repairs", placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.opexMaintenance,          formatter: currencyFormatter)
+            TerminalInputField(label: "Capital Reserves",      placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.opexCapitalReserves,      formatter: currencyFormatter)
 
             sectionLabel("ACQUISITION", color: accentRust)
-            TerminalInputField(label: "Closing Costs",     placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.closingCosts,     formatter: currencyFormatter).focused($focusedField, equals: .closingCosts)
-            TerminalInputField(label: "Renovation Budget", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.renovationBudget, formatter: currencyFormatter).focused($focusedField, equals: .renovationBudget)
+            TerminalInputField(label: "Closing Costs",     placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.closingCosts,     formatter: currencyFormatter).focused($focusedField, equals: .closingCosts)
+            TerminalInputField(label: "Renovation Budget", placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.renovationBudget, formatter: currencyFormatter).focused($focusedField, equals: .renovationBudget)
 
             sectionLabel("LEVERAGE", color: accentRust)
-            TerminalInputField(label: "Loan Amount",         placeholder: "0.00", prefix: "€",  suffix: nil,  value: $deal.loanAmount, formatter: currencyFormatter).focused($focusedField, equals: .loanAmount)
+            TerminalInputField(label: "Loan Amount",         placeholder: "0.00", prefix: deal.currencySymbol,  suffix: nil,  value: $deal.loanAmount, formatter: currencyFormatter).focused($focusedField, equals: .loanAmount)
             TerminalInputField(label: "Interest Rate",       placeholder: "0.0", prefix: nil,  suffix: "%",  value: $deal.interestRate, formatter: Self.percentFormatter).focused($focusedField, equals: .interestRate)
             TerminalInputField(label: "Amortization Months", placeholder: "360", prefix: nil,  suffix: "mo", text: intStr($deal.amortizationMonths)).focused($focusedField, equals: .amortizationMonths)
             TerminalInputField(label: "Exit Cap Rate",       placeholder: "0.0", prefix: nil,  suffix: "%",  value: $deal.exitCapRate, formatter: Self.percentFormatter)
@@ -618,7 +618,7 @@ struct FullDealEditSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionLabel("OPERATIONAL", color: accentTeal)
             TerminalInputField(label: "Room Count",     placeholder: "0",   prefix: nil, suffix: nil, text: intStr($deal.hospitalityRoomCount)).focused($focusedField, equals: .roomCount)
-            TerminalInputField(label: "ADR",            placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityADR, formatter: currencyFormatter).focused($focusedField, equals: .adr)
+            TerminalInputField(label: "ADR",            placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.hospitalityADR, formatter: currencyFormatter).focused($focusedField, equals: .adr)
             TerminalInputField(label: "Occupancy Rate", placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.hospitalityOccupancyRate, formatter: Self.percentFormatter).focused($focusedField, equals: .occupancyRate)
             TerminalInputField(label: "OpEx Ratio",     placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.hospitalityOpExRatio, formatter: Self.percentFormatter).focused($focusedField, equals: .opexRatio)
             if deal.hospitalityOpExRatio > 0 && deal.hospitalityOpExRatio < 20 {
@@ -634,15 +634,15 @@ struct FullDealEditSheet: View {
             }
 
             sectionLabel("REVENUE STREAMS", color: accentTeal)
-            TerminalInputField(label: "F&B Revenue",     placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityFBRevenue,      formatter: currencyFormatter).focused($focusedField, equals: .fAndBRevenue)
-            TerminalInputField(label: "Spa Revenue",     placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalitySpaRevenue,     formatter: currencyFormatter).focused($focusedField, equals: .spaRevenue)
-            TerminalInputField(label: "Meeting Revenue", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityMeetingRevenue,  formatter: currencyFormatter).focused($focusedField, equals: .meetingRevenue)
-            TerminalInputField(label: "Other Revenue",   placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityOtherRevenue,    formatter: currencyFormatter).focused($focusedField, equals: .otherRevenue)
+            TerminalInputField(label: "F&B Revenue",     placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.hospitalityFBRevenue,      formatter: currencyFormatter).focused($focusedField, equals: .fAndBRevenue)
+            TerminalInputField(label: "Spa Revenue",     placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.hospitalitySpaRevenue,     formatter: currencyFormatter).focused($focusedField, equals: .spaRevenue)
+            TerminalInputField(label: "Meeting Revenue", placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.hospitalityMeetingRevenue,  formatter: currencyFormatter).focused($focusedField, equals: .meetingRevenue)
+            TerminalInputField(label: "Other Revenue",   placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.hospitalityOtherRevenue,    formatter: currencyFormatter).focused($focusedField, equals: .otherRevenue)
 
             sectionLabel("DISTRIBUTION", color: accentTeal)
             TerminalInputField(label: "Direct Booking",    placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.hospitalityDirectBookingPct, formatter: Self.percentFormatter).focused($focusedField, equals: .directBooking)
             TerminalInputField(label: "OTA Booking",       placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.hospitalityOTABookingPct, formatter: Self.percentFormatter).focused($focusedField, equals: .otaBooking)
-            TerminalInputField(label: "Distribution Cost", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityDistributionCost, formatter: currencyFormatter).focused($focusedField, equals: .distributionCost)
+            TerminalInputField(label: "Distribution Cost", placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.hospitalityDistributionCost, formatter: currencyFormatter).focused($focusedField, equals: .distributionCost)
         }
     }
 
@@ -686,8 +686,8 @@ struct FullDealEditSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionLabel("MATERIAL FLOW", color: accentBlue)
             designCircularSyncBar
-            TerminalInputField(label: "Total Construction Cost",  placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.circularTotalConstructionCost,  formatter: currencyFormatter).focused($focusedField, equals: .totalConstructionCost)
-            TerminalInputField(label: "Repurposed Material Cost", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.circularRepurposedMaterialCost, formatter: currencyFormatter).focused($focusedField, equals: .repurposedMaterialCost)
+            TerminalInputField(label: "Total Construction Cost",  placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.circularTotalConstructionCost,  formatter: currencyFormatter).focused($focusedField, equals: .totalConstructionCost)
+            TerminalInputField(label: "Repurposed Material Cost", placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.circularRepurposedMaterialCost, formatter: currencyFormatter).focused($focusedField, equals: .repurposedMaterialCost)
             TerminalInputField(label: "Kg Materials Used",        placeholder: "0", prefix: nil,  suffix: "kg", text: numStr($deal.circularKgMaterialsUsed)).focused($focusedField, equals: .kgMaterialsUsed)
             TerminalInputField(label: "Kg Materials Returned",    placeholder: "0", prefix: nil,  suffix: "kg", text: numStr($deal.circularKgMaterialsReturned)).focused($focusedField, equals: .kgMaterialsReturned)
             TerminalInputField(label: "Kg Materials Disposed",    placeholder: "0", prefix: nil,  suffix: "kg", text: numStr($deal.circularKgMaterialsDisposed)).focused($focusedField, equals: .kgMaterialsDisposed)
@@ -1023,10 +1023,11 @@ struct FullDealEditSheet: View {
 
     private let currencyFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
+        // Use decimal style — currency symbol comes from deal.currencySymbol prefix
+        // so the formatter only handles number layout (separators, decimals).
+        formatter.numberStyle = .decimal
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
-        formatter.currencyCode = "EUR"
         return formatter
     }()
 

@@ -38,6 +38,23 @@ final class PropertyDeal {
     var locationCity:    String
     var locationCountry: String   // e.g. "Portugal", "Spain" — used for geocoding context
 
+    /// Currency symbol inferred from deal country. No stored field needed —
+    /// derived at display time so there is zero risk of stale data.
+    var currencySymbol: String {
+        let c = locationCountry.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        if c.contains("united states") || c == "usa" || c == "us" { return "$" }
+        if c.contains("united kingdom") || c == "uk" || c == "gb" { return "£" }
+        if c.contains("sweden")                                    { return "kr" }
+        if c.contains("norway") || c.contains("norge")            { return "kr" }
+        if c.contains("denmark")                                   { return "kr" }
+        if c.contains("switzerland")                               { return "Fr" }
+        if c.contains("japan")                                     { return "¥" }
+        if c.contains("brazil")                                    { return "R$" }
+        if c.contains("australia")                                 { return "A$" }
+        if c.contains("canada")                                    { return "C$" }
+        return "€"  // EU / unknown → Euro
+    }
+
     // MARK: Regulatory (user-entered advisory — not legal advice)
     var zoningClass: String = ""              // e.g. "T1 Tourism", "Mixed Use", "R1 Residential"
     var floorAreaRatio: Double = 0            // FAR e.g. 0.5 means 0.5× land area is max buildable
