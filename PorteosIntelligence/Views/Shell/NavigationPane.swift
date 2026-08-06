@@ -17,6 +17,7 @@ struct NavigationPane: View {
     @Query(sort: \PropertyDeal.createdAt, order: .reverse) var deals: [PropertyDeal]
 
     @State private var dealToEdit:        PropertyDeal? = nil
+    @State private var dealToDelete:      PropertyDeal? = nil   // single-deal delete target
     @State private var showImportSheet:   Bool          = false
     @State private var showExportSheet:   Bool          = false
     @State private var statusFilter:      DealStatus?   = nil   // nil = ALL
@@ -310,11 +311,34 @@ struct NavigationPane: View {
             titleVisibility: .visible
         ) {
             Button("Delete", role: .destructive) {
-                for deal in filteredDeals { modelContext.delete(deal) }
+                for deal in filteredDeals { deleteDeal(deal) }
                 selectedDeal = nil
             }
         } message: {
             Text("This cannot be undone.")
+        }
+        // Single-deal delete confirmation (right-click or ⌘⌫)
+        .confirmationDialog(
+            "Delete \"\(dealToDelete?.propertyName.isEmpty == false ? dealToDelete!.propertyName : "Untitled Deal")\"?",
+            isPresented: Binding(
+                get: { dealToDelete != nil },
+                set: { if !$0 { dealToDelete = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Delete Deal", role: .destructive) {
+                if let deal = dealToDelete {
+                    deleteDeal(deal)
+                    if selectedDeal?.id == deal.id { selectedDeal = nil }
+                    dealToDelete = nil
+                }
+            }
+            Button("Cancel", role: .cancel) { dealToDelete = nil }
+        } message: {
+            Text("This cannot be undone.")
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .deleteSelectedDeal)) { _ in
+            if let deal = selectedDeal { dealToDelete = deal }
         }
     }
 
@@ -473,7 +497,43 @@ struct NavigationPane: View {
             Button { dealToEdit = deal } label: {
                 Label("Edit Deal", systemImage: "pencil")
             }
+            Divider()
+            Button(role: .destructive) {
+                dealToDelete = deal
+            } label: {
+                Label("Delete Deal", systemImage: "trash")
+            }
         }
+    }
+
+    // MARK: Delete — with orphan cleanup
+
+    /// Deletes a deal and sweeps orphaned EmailImportRecord + DealScenario rows.
+    /// MarketTrend rows are market-level aggregates and do not reference individual deals.
+    private func deleteDeal(_ deal: PropertyDeal) {
+        let dealID = deal.id
+
+        // Sweep EmailImportRecord orphans
+        if let records = try? modelContext.fetch(
+            FetchDescriptor<EmailImportRecord>(
+                predicate: #Predicate { $0.dealID == dealID }
+            )
+        ) {
+            records.forEach { modelContext.delete($0) }
+        }
+
+        // Sweep DealScenario orphans
+        if let scenarios = try? modelContext.fetch(
+            FetchDescriptor<DealScenario>(
+                predicate: #Predicate { $0.dealID == dealID }
+            )
+        ) {
+            scenarios.forEach { modelContext.delete($0) }
+        }
+
+        // DealImage rows cascade automatically via @Relationship(deleteRule: .cascade)
+        modelContext.delete(deal)
+        try? modelContext.save()
     }
 
     // MARK: Footer — Figma img_00_21: ./IMPORT_DEALS + [ ./NEW_DEAL ] + CLI prompt

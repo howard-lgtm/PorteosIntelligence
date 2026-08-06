@@ -19,6 +19,7 @@ extension Notification.Name {
     static let showServerConfig     = Notification.Name("porteos.showServerConfig")
     static let showSettings         = Notification.Name("porteos.showSettings")
     static let showGlossary         = Notification.Name("porteos.showGlossary")
+    static let deleteSelectedDeal   = Notification.Name("porteos.deleteSelectedDeal")
 }
 
 // MARK: - FocusedValue: hasDealSelected
@@ -59,6 +60,16 @@ struct AppCommandsProvider: Commands {
 
         // ── Edit menu: Undo / Redo ─────────────────────────────────────────────
         // Replaces the system undo slot so ⌘Z / ⌘⇧Z route through our stack.
+        // ── Edit menu: Delete selected deal ───────────────────────────────────
+        CommandGroup(after: .undoRedo) {
+            Divider()
+            Button("Delete Deal…") {
+                post(.deleteSelectedDeal)
+            }
+            .keyboardShortcut(.delete, modifiers: .command)
+            .disabled(!(hasDealSelected ?? false))
+        }
+
         CommandGroup(replacing: .undoRedo) {
             Button("Undo \(DealHistoryManager.shared.undoLabel)") {
                 post(.undoDealEdit)
