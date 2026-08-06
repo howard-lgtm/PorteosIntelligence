@@ -13,6 +13,7 @@ struct NavigationPane: View {
     @Binding var compareDeals: [PropertyDeal]
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.openWindow)   private var openWindow
     @Query(sort: \PropertyDeal.createdAt, order: .reverse) var deals: [PropertyDeal]
 
     @State private var dealToEdit:        PropertyDeal? = nil
@@ -154,27 +155,60 @@ struct NavigationPane: View {
 
     private func navLinkRow(_ profile: ProfileType) -> some View {
         let isActive = profile == activeProfile
+        let profileKey = profileWindowKey(profile)
 
-        return Button {
-            activeProfile = profile
-        } label: {
-            HStack(spacing: 0) {
-                Rectangle()
-                    .fill(isActive ? textPrimary : Color.clear)
-                    .frame(width: DesignTokens.navSelectionBorder)
+        return ZStack(alignment: .trailing) {
+            Button {
+                activeProfile = profile
+            } label: {
+                HStack(spacing: 0) {
+                    Rectangle()
+                        .fill(isActive ? textPrimary : Color.clear)
+                        .frame(width: DesignTokens.navSelectionBorder)
 
-                Text(profile.shellNavLabel)
-                    .porteosTextStyle(.shellNav(isActive: isActive))
-                    .foregroundStyle(isActive ? textPrimary : textTertiary)
-                    .padding(.leading, 12)
+                    Text(profile.shellNavLabel)
+                        .porteosTextStyle(.shellNav(isActive: isActive))
+                        .foregroundStyle(isActive ? textPrimary : textTertiary)
+                        .padding(.leading, 12)
 
-                Spacer()
+                    Spacer()
+                }
+                .frame(height: DesignTokens.rowHeightNavLink)
+                .background(isActive ? shellElevated : Color.clear)
+                .clipShape(Rectangle())
             }
-            .frame(height: DesignTokens.rowHeightNavLink)
-            .background(isActive ? shellElevated : Color.clear)
-            .clipShape(Rectangle())
+            .buttonStyle(.plain)
+
+            // [ ↗ ] — only for the four profile dashboard types
+            if let key = profileKey {
+                Button {
+                    let dealID = selectedDeal?.id ?? deals.first?.id
+                    if let id = dealID {
+                        openWindow(value: ProfileWindowValue(dealID: id, profile: key))
+                    }
+                } label: {
+                    Text("[ ↗ ]")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textDim)
+                }
+                .buttonStyle(.plain)
+                .help("Open \(profile.shellNavLabel) in new window")
+                .disabled(selectedDeal == nil && deals.isEmpty)
+                .padding(.trailing, 6)
+            }
         }
-        .buttonStyle(.plain)
+    }
+
+    /// Returns the ProfileWindowValue profile key for profiles that support windowing,
+    /// or nil for profiles that don't (cmdCenter, globalIntelligence).
+    private func profileWindowKey(_ profile: ProfileType) -> String? {
+        switch profile {
+        case .realEstate:  return "realEstate"
+        case .hospitality: return "hospitality"
+        case .design:      return "design"
+        case .circular:    return "circular"
+        default:           return nil
+        }
     }
 
     // MARK: Deals Section

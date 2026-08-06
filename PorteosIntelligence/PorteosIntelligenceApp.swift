@@ -112,6 +112,17 @@ Files are named deals-\(stamp).store — contact support to recover them.
         .commands {
             AppCommandsProvider()
         }
+
+        // Independent profile windows — opened via [ ↗ ] buttons in NavigationPane.
+        // Each window is fully self-contained with its own deal selection.
+        WindowGroup("Profile", id: "profile", for: ProfileWindowValue.self) { $value in
+            ProfileWindowView(windowValue: $value)
+                .modelContainer(sharedModelContainer)
+                .frame(minWidth: 900, minHeight: 600)
+        }
+        .defaultSize(width: 1200, height: 800)
+        .windowStyle(.titleBar)
+        .windowToolbarStyle(.unified)
     }
 
     /// Background pass: score any deal that still has nil porteosScore.
