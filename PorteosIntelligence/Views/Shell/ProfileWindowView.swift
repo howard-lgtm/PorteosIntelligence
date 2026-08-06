@@ -3,8 +3,8 @@ import SwiftData
 
 // MARK: - ProfileWindowView
 // Root view for all independent profile windows. Receives a ProfileWindowValue
-// binding from the scene, queries SwiftData directly, and manages its own
-// selected deal — completely decoupled from WindowManager.shared.
+// binding from the scene, queries SwiftData directly, and syncs deal selection
+// via WindowManager.shared so all windows always show the same deal.
 
 struct ProfileWindowView: View {
 
@@ -13,13 +13,16 @@ struct ProfileWindowView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \PropertyDeal.createdAt, order: .reverse) private var deals: [PropertyDeal]
 
-    @State private var selectedDealID: UUID? = nil
+    // Single source of truth — shared with main window via WindowManager.
+    private let wm = WindowManager.shared
 
     // MARK: Derived
 
     private var selectedDeal: PropertyDeal? {
-        guard let id = selectedDealID else { return deals.first }
-        return deals.first { $0.id == id } ?? deals.first
+        if let id = wm.selectedDealID, let match = deals.first(where: { $0.id == id }) {
+            return match
+        }
+        return deals.first
     }
 
     private var profileLabel: String {
@@ -97,7 +100,7 @@ struct ProfileWindowView: View {
         Menu {
             ForEach(deals) { deal in
                 Button(deal.propertyName.isEmpty ? "Untitled" : deal.propertyName) {
-                    selectedDealID = deal.id
+                    wm.selectedDealID = deal.id   // broadcasts to main window and all profile windows
                 }
             }
         } label: {
@@ -148,12 +151,16 @@ struct ProfileWindowView: View {
 
     // MARK: Helpers
 
+    /// On first open, seed the global selection from the window value (the deal
+    /// that was active in the main window when [ ↗ ] was tapped). After that,
+    /// WindowManager.shared.selectedDealID is the single source of truth.
     private func resolveSelectedDeal() {
+        guard wm.selectedDealID == nil else { return }   // already set — don't override
         let targetID = windowValue?.dealID
         if let id = targetID, deals.contains(where: { $0.id == id }) {
-            selectedDealID = id
-        } else {
-            selectedDealID = deals.first?.id
+            wm.selectedDealID = id
+        } else if let first = deals.first {
+            wm.selectedDealID = first.id
         }
     }
 }
