@@ -331,11 +331,21 @@ struct AIVibePanel: View {
     }
 
     private var llmOfflineBanner: some View {
-        HStack(spacing: 6) {
+        let message: String
+        switch LLMAnalysisService.shared.currentProvider {
+        case .ollama:
+            message = "Local LLM offline. Using rule-based analysis only."
+        case .openai:
+            message = "OpenAI API key not set. Add your key in Settings → AI Provider."
+        case .gemini:
+            message = "Gemini API key not set. Add your key in Settings → AI Provider."
+        }
+
+        return HStack(spacing: 6) {
             Text("~")
                 .porteosButtonPrimary()
                 .foregroundStyle(DesignTokens.statusWarn)
-            Text("Local LLM offline. Using rule-based analysis only.")
+            Text(message)
                 .porteosRowLabel()
                 .foregroundStyle(DesignTokens.textSecondary)
         }

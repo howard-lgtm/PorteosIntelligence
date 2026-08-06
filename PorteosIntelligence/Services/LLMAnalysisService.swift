@@ -1,17 +1,33 @@
 import Foundation
 
+// MARK: - AIProvider
+
+enum AIProvider: String, CaseIterable {
+    case ollama = "ollama"
+    case openai = "openai"
+    case gemini = "gemini"
+
+    var displayName: String {
+        switch self {
+        case .ollama: return "Local (Ollama)"
+        case .openai: return "OpenAI (ChatGPT)"
+        case .gemini: return "Google Gemini"
+        }
+    }
+}
+
 // MARK: - LLMAnalysisService
 //
-// Single Ollama gateway for the entire app.
+// Multi-provider LLM gateway for the entire app.
 // - AI Vibe (deal-level): generateSWOT()
 // - Global Intelligence INTEL tab: generateMarketBrief()
 //
 // Configuration is read from UserDefaults so the user can override in Settings.
-// If Ollama is unreachable or times out, throws LLMError.offline so callers
-// degrade gracefully to rule-based analysis.
+// If the configured provider is unreachable or has no key set, throws LLMError.offline
+// so callers degrade gracefully to rule-based analysis.
 
 enum LLMError: Error {
-    case offline        // Ollama not running or unreachable
+    case offline        // provider not running, unreachable, or API key missing
     case badResponse    // HTTP non-200 or undecodable JSON
     case emptyContent   // 200 OK but empty text returned
 }
@@ -25,19 +41,35 @@ final class LLMAnalysisService {
 
     /// UserDefaults keys — written by SettingsView, read here.
     enum Keys {
-        static let baseURL   = "porteos.llm.baseURL"
-        static let modelName = "porteos.llm.modelName"
+        static let baseURL    = "porteos.llm.baseURL"
+        static let modelName  = "porteos.llm.modelName"
+        static let aiProvider = "porteos.aiProvider"
+        static let openAIKey  = "porteos.openaiApiKey"
+        static let geminiKey  = "porteos.geminiApiKey"
     }
 
     static let defaultBaseURL   = "http://localhost:11434"
     static let defaultModelName = "qwen2.5:0.5b"
-    static let timeoutSeconds: Double = 45  // qwen2.5:0.5b is fast; 45s is generous headroom
+    static let ollamaTimeoutSeconds: Double = 45
+    static let cloudTimeoutSeconds:  Double = 60
 
     var baseURL: String {
         UserDefaults.standard.string(forKey: Keys.baseURL) ?? Self.defaultBaseURL
     }
     var modelName: String {
         UserDefaults.standard.string(forKey: Keys.modelName) ?? Self.defaultModelName
+    }
+
+    var currentProvider: AIProvider {
+        AIProvider(rawValue: UserDefaults.standard.string(forKey: Keys.aiProvider) ?? "ollama") ?? .ollama
+    }
+
+    var openAIKey: String {
+        UserDefaults.standard.string(forKey: Keys.openAIKey) ?? ""
+    }
+
+    var geminiKey: String {
+        UserDefaults.standard.string(forKey: Keys.geminiKey) ?? ""
     }
 
     // MARK: Public API — Deal Analysis (AI Vibe)
@@ -75,24 +107,44 @@ final class LLMAnalysisService {
 
     // MARK: Ping
 
-    /// Returns true if Ollama's API responds within a 5s quick check.
+    /// Returns true if the configured provider is ready to accept requests.
     func isAvailable() async -> Bool {
-        guard let url = URL(string: "\(baseURL)/api/tags") else { return false }
-        var request = URLRequest(url: url, timeoutInterval: 5)
-        request.httpMethod = "GET"
-        do {
-            let (_, response) = try await URLSession.shared.data(for: request)
-            return (response as? HTTPURLResponse)?.statusCode == 200
-        } catch {
-            return false
+        switch currentProvider {
+        case .ollama:
+            guard let url = URL(string: "\(baseURL)/api/tags") else { return false }
+            var request = URLRequest(url: url, timeoutInterval: 5)
+            request.httpMethod = "GET"
+            do {
+                let (_, response) = try await URLSession.shared.data(for: request)
+                return (response as? HTTPURLResponse)?.statusCode == 200
+            } catch {
+                return false
+            }
+        case .openai:
+            return !openAIKey.isEmpty
+        case .gemini:
+            return !geminiKey.isEmpty
         }
     }
 
-    // MARK: Private — HTTP call
+    // MARK: Private — HTTP call (provider-routed)
 
     private func call(prompt: String) async throws -> String {
+        switch currentProvider {
+        case .ollama:
+            return try await callOllama(prompt: prompt)
+        case .openai:
+            return try await callOpenAI(prompt: prompt)
+        case .gemini:
+            return try await callGemini(prompt: prompt)
+        }
+    }
+
+    // MARK: Private — Ollama
+
+    private func callOllama(prompt: String) async throws -> String {
         guard let url = URL(string: "\(baseURL)/api/generate") else { throw LLMError.offline }
-        var request = URLRequest(url: url, timeoutInterval: Self.timeoutSeconds)
+        var request = URLRequest(url: url, timeoutInterval: Self.ollamaTimeoutSeconds)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let body: [String: Any] = ["model": modelName, "prompt": prompt, "stream": false]
@@ -110,6 +162,88 @@ final class LLMAnalysisService {
         }
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let text = json["response"] as? String,
+              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw LLMError.emptyContent
+        }
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    // MARK: Private — OpenAI
+
+    private func callOpenAI(prompt: String) async throws -> String {
+        let key = openAIKey
+        guard !key.isEmpty else { throw LLMError.offline }
+        guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else {
+            throw LLMError.offline
+        }
+
+        var request = URLRequest(url: url, timeoutInterval: Self.cloudTimeoutSeconds)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+
+        let body: [String: Any] = [
+            "model": "gpt-4o-mini",
+            "messages": [["role": "user", "content": prompt]],
+            "max_tokens": 800
+        ]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch {
+            throw LLMError.offline
+        }
+
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw LLMError.badResponse
+        }
+        guard let json    = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices  = json["choices"] as? [[String: Any]],
+              let first    = choices.first,
+              let message  = first["message"] as? [String: Any],
+              let text     = message["content"] as? String,
+              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw LLMError.emptyContent
+        }
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    // MARK: Private — Google Gemini
+
+    private func callGemini(prompt: String) async throws -> String {
+        let key = geminiKey
+        guard !key.isEmpty else { throw LLMError.offline }
+        let urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\(key)"
+        guard let url = URL(string: urlString) else { throw LLMError.offline }
+
+        var request = URLRequest(url: url, timeoutInterval: Self.cloudTimeoutSeconds)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+            "contents": [["parts": [["text": prompt]]]],
+            "generationConfig": ["maxOutputTokens": 800]
+        ]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch {
+            throw LLMError.offline
+        }
+
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw LLMError.badResponse
+        }
+        guard let json        = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let candidates   = json["candidates"] as? [[String: Any]],
+              let first        = candidates.first,
+              let content      = first["content"] as? [String: Any],
+              let parts        = content["parts"] as? [[String: Any]],
+              let text         = parts.first?["text"] as? String,
               !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw LLMError.emptyContent
         }

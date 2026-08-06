@@ -37,6 +37,9 @@ struct SettingsView: View {
     @State private var llmPingResult: String? = nil
     @State private var llmPinging = false
     @State private var unitOverride: String = UnitSystemService.shared.manualOverride
+    @State private var aiProvider: AIProvider = AIProvider(rawValue: UserDefaults.standard.string(forKey: LLMAnalysisService.Keys.aiProvider) ?? "ollama") ?? .ollama
+    @State private var openAIKey: String = UserDefaults.standard.string(forKey: LLMAnalysisService.Keys.openAIKey) ?? ""
+    @State private var geminiKey: String = UserDefaults.standard.string(forKey: LLMAnalysisService.Keys.geminiKey) ?? ""
 
     // MARK: Body
 
@@ -207,86 +210,135 @@ struct SettingsView: View {
     private var intelligenceTab: some View {
         VStack(alignment: .leading, spacing: 0) {
             sectionHeader(
-                "01 // LOCAL_LLM",
-                subtitle: "Ollama endpoint for AI Vibe analysis and Global Intelligence market briefs."
+                "01 // AI_PROVIDER",
+                subtitle: "Select the AI engine used for Vibe analysis and market briefs."
             )
 
-            VStack(alignment: .leading, spacing: 0) {
-                // Endpoint
-                HStack(spacing: 12) {
-                    Text("ENDPOINT")
-                        .porteosMeta()
-                        .foregroundStyle(tp3)
-                        .frame(width: 100, alignment: .leading)
-                    TextField("http://localhost:11434", text: $llmEndpoint)
-                        .textFieldStyle(.plain)
-                        .porteosMeta()
-                        .foregroundStyle(tp1)
-                        .onSubmit { saveLLMConfig() }
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-
-                divider
-
-                // Model
-                HStack(spacing: 12) {
-                    Text("MODEL")
-                        .porteosMeta()
-                        .foregroundStyle(tp3)
-                        .frame(width: 100, alignment: .leading)
-                    TextField("qwen2.5:0.5b", text: $llmModel)
-                        .textFieldStyle(.plain)
-                        .porteosMeta()
-                        .foregroundStyle(tp1)
-                        .onSubmit { saveLLMConfig() }
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-
-                divider
-
-                // Ping
-                HStack(spacing: 12) {
+            // Provider chip selector
+            HStack(spacing: 0) {
+                ForEach(AIProvider.allCases, id: \.self) { provider in
+                    let isActive = aiProvider == provider
                     Button {
-                        saveLLMConfig()
-                        llmPinging = true
-                        llmPingResult = nil
-                        Task {
-                            let ok = await LLMAnalysisService.shared.isAvailable()
-                            llmPingResult = ok ? "// ONLINE" : "// OFFLINE"
-                            llmPinging = false
-                        }
+                        aiProvider = provider
+                        saveProviderConfig()
                     } label: {
-                        Text(llmPinging ? "[ TESTING … ]" : "[ TEST CONNECTION ]")
-                    }
-                    .buttonStyle(TerminalButtonStyle(color: .muted, fontSize: 10, height: 26))
-                    .disabled(llmPinging)
-
-                    if let result = llmPingResult {
-                        Text(result)
+                        Text(provider == .ollama ? "LOCAL" : provider == .openai ? "OPENAI" : "GEMINI")
                             .porteosMeta()
-                            .foregroundStyle(result.contains("ONLINE") ? accentGreen : DesignTokens.statusWarn)
+                            .foregroundStyle(isActive ? accentRust : tp3)
+                            .padding(.horizontal, 14)
+                            .frame(height: 28)
+                            .background(isActive ? accentRust.opacity(0.1) : Color.clear)
+                            .overlay(
+                                Rectangle().strokeBorder(
+                                    isActive ? accentRust.opacity(0.5) : shellBorder,
+                                    lineWidth: 1
+                                )
+                            )
                     }
-                    Spacer()
+                    .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
+                Spacer()
             }
-            .background(shellSurface)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+
+            divider
+
+            // Per-provider config
+            switch aiProvider {
+            case .ollama:
+                ollamaConfig
+            case .openai:
+                openAIConfig
+            case .gemini:
+                geminiConfig
+            }
 
             divider.padding(.top, 8)
 
             sectionHeader("02 // PRIVACY", subtitle: "")
-            infoRow("DATA POLICY",  "// LOCAL LLM · NO DATA LEAVES DEVICE")
-            infoRow("STORAGE",      "Signals cached in UserDefaults; deal data stays in SwiftData on-device")
-            infoRow("NETWORK",      "Ollama runs on this machine at the configured endpoint only")
 
-            divider.padding(.top, 8)
+            switch aiProvider {
+            case .ollama:
+                infoRow("DATA POLICY", "// LOCAL LLM · NO DATA LEAVES DEVICE")
+                infoRow("STORAGE",     "Signals cached in UserDefaults; deal data stays in SwiftData on-device")
+                infoRow("NETWORK",     "Ollama runs on this machine at the configured endpoint only")
+            case .openai:
+                infoRow("DATA POLICY", "Prompts sent to OpenAI API servers. Subject to OpenAI privacy policy.")
+                infoRow("KEY STORAGE", "API key stored in UserDefaults (Keychain migration planned)")
+                infoRow("NETWORK",     "api.openai.com — your key, your cost, your data")
+            case .gemini:
+                infoRow("DATA POLICY", "Prompts sent to Google Generative Language API servers.")
+                infoRow("KEY STORAGE", "API key stored in UserDefaults (Keychain migration planned)")
+                infoRow("NETWORK",     "generativelanguage.googleapis.com — free tier available")
+            }
 
-            sectionHeader("03 // DEFAULTS", subtitle: "")
-            infoRow("DEFAULT ENDPOINT",  LLMAnalysisService.defaultBaseURL)
-            infoRow("DEFAULT MODEL",     LLMAnalysisService.defaultModelName)
+            Spacer(minLength: 20)
+        }
+    }
+
+    @ViewBuilder
+    private var ollamaConfig: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 12) {
+                Text("LLM SERVER URL")
+                    .porteosMeta()
+                    .foregroundStyle(tp3)
+                    .frame(width: 130, alignment: .leading)
+                TextField("http://localhost:11434", text: $llmEndpoint)
+                    .textFieldStyle(.plain)
+                    .porteosMeta()
+                    .foregroundStyle(tp1)
+                    .onSubmit { saveLLMConfig() }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+
+            divider
+
+            HStack(spacing: 12) {
+                Text("LLM MODEL NAME")
+                    .porteosMeta()
+                    .foregroundStyle(tp3)
+                    .frame(width: 130, alignment: .leading)
+                TextField("qwen2.5:0.5b", text: $llmModel)
+                    .textFieldStyle(.plain)
+                    .porteosMeta()
+                    .foregroundStyle(tp1)
+                    .onSubmit { saveLLMConfig() }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+
+            divider
+
+            HStack(spacing: 12) {
+                Button {
+                    saveLLMConfig()
+                    llmPinging = true
+                    llmPingResult = nil
+                    Task {
+                        let ok = await LLMAnalysisService.shared.isAvailable()
+                        llmPingResult = ok ? "// ONLINE" : "// OFFLINE"
+                        llmPinging = false
+                    }
+                } label: {
+                    Text(llmPinging ? "[ TESTING … ]" : "[ TEST CONNECTION ]")
+                }
+                .buttonStyle(TerminalButtonStyle(color: .muted, fontSize: 10, height: 26))
+                .disabled(llmPinging)
+
+                if let result = llmPingResult {
+                    Text(result)
+                        .porteosMeta()
+                        .foregroundStyle(result.contains("ONLINE") ? accentGreen : DesignTokens.statusWarn)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+
+            divider
 
             HStack {
                 Button("[ RESET TO DEFAULTS ]") {
@@ -299,14 +351,87 @@ struct SettingsView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-
-            Spacer(minLength: 20)
         }
+        .background(shellSurface)
+    }
+
+    @ViewBuilder
+    private var openAIConfig: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 12) {
+                Text("OPENAI API KEY")
+                    .porteosMeta()
+                    .foregroundStyle(tp3)
+                    .frame(width: 130, alignment: .leading)
+                SecureField("sk-...", text: $openAIKey)
+                    .textFieldStyle(.plain)
+                    .porteosMeta()
+                    .foregroundStyle(tp1)
+                    .onSubmit { saveProviderConfig() }
+                    .onChange(of: openAIKey) { _, _ in saveProviderConfig() }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+
+            divider
+
+            Text("// gpt-4o-mini — ~$0.01 per analysis. Your key, your cost.")
+                .porteosMeta()
+                .foregroundStyle(tp3)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+
+            divider
+
+            infoRow("MODEL",   "gpt-4o-mini (auto)")
+            infoRow("GET KEY", "platform.openai.com/api-keys")
+        }
+        .background(shellSurface)
+    }
+
+    @ViewBuilder
+    private var geminiConfig: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 12) {
+                Text("GEMINI API KEY")
+                    .porteosMeta()
+                    .foregroundStyle(tp3)
+                    .frame(width: 130, alignment: .leading)
+                SecureField("AIza...", text: $geminiKey)
+                    .textFieldStyle(.plain)
+                    .porteosMeta()
+                    .foregroundStyle(tp1)
+                    .onSubmit { saveProviderConfig() }
+                    .onChange(of: geminiKey) { _, _ in saveProviderConfig() }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+
+            divider
+
+            Text("// gemini-1.5-flash — free tier: 15 req/min, 1M tokens/day")
+                .porteosMeta()
+                .foregroundStyle(tp3)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+
+            divider
+
+            infoRow("MODEL",   "gemini-1.5-flash (auto, free tier available)")
+            infoRow("GET KEY", "aistudio.google.com/app/apikey")
+        }
+        .background(shellSurface)
     }
 
     private func saveLLMConfig() {
         UserDefaults.standard.set(llmEndpoint, forKey: LLMAnalysisService.Keys.baseURL)
         UserDefaults.standard.set(llmModel,    forKey: LLMAnalysisService.Keys.modelName)
+    }
+
+    private func saveProviderConfig() {
+        UserDefaults.standard.set(aiProvider.rawValue, forKey: LLMAnalysisService.Keys.aiProvider)
+        UserDefaults.standard.set(openAIKey,           forKey: LLMAnalysisService.Keys.openAIKey)
+        UserDefaults.standard.set(geminiKey,           forKey: LLMAnalysisService.Keys.geminiKey)
     }
 
     // MARK: – General tab
