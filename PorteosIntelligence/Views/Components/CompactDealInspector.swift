@@ -29,17 +29,22 @@ struct CompactDealInspector: View {
     private var statusLabel: String { deal.status.rawValue.uppercased() }
     private var statusColor: Color  { deal.status.tokenColor }
 
-    // Property type detection for metric routing
+    // Property type detection for metric routing — uses type keyword first, data as fallback
     private var isHospitality: Bool {
-        deal.hospitalityRoomCount > 0 || deal.hospitalityADR > 0
+        let t = deal.propertyType.lowercased()
+        if t.contains("hotel") || t.contains("hostel") || t.contains("str") || t.contains("accommodation") { return true }
+        // Data fallback: both ADR AND room count must be non-zero (avoids partial data false positives)
+        return deal.hospitalityRoomCount > 0 && deal.hospitalityADR > 0
     }
     private var isRural: Bool {
         let t = deal.propertyType.lowercased()
-        return t.contains("farm") || t.contains("rural") || t.contains("quinta") || t.contains("agri")
+        return t.contains("farm") || t.contains("rural") || t.contains("quinta") ||
+               t.contains("herdade") || t.contains("agri")
     }
     private var isMultiDwelling: Bool {
         let t = deal.propertyType.lowercased()
-        return t.contains("multi") || t.contains("apartment block") || t.contains("residential block")
+        return t.contains("multi") || t.contains("dwelling") || t.contains("multifamily") ||
+               t.contains("building") || t.contains("predio")
     }
 
     // MARK: Tokens
@@ -56,8 +61,7 @@ struct CompactDealInspector: View {
         VStack(alignment: .leading, spacing: 0) {
             inspectorHeader
             divider
-            PorteosScoreBlock(metrics: score)
-                .padding(.bottom, DesignTokens.blockGutter)
+            scoreRow          // compact single-line score — avoids porteosScoreHero frame collapse
             divider
             metricsBlock
             divider
@@ -71,6 +75,54 @@ struct CompactDealInspector: View {
         .sheet(isPresented: $showEditSheet) {
             FullDealEditSheet(deal: deal)
         }
+    }
+
+    // MARK: Score Row (compact — avoids porteosScoreHero single-line frame collapse)
+
+    private var scoreRow: some View {
+        HStack(alignment: .center, spacing: 0) {
+            Rectangle()
+                .fill(accentRust)
+                .frame(width: 4)
+
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("PORTEOS SCORE")
+                        .porteosMeta()
+                        .foregroundStyle(textDim)
+                    Text("// \(profileLabel)")
+                        .porteosMeta()
+                        .foregroundStyle(textDim)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(String(format: "%.0f", score.finalScore))
+                        .font(.system(size: 36, weight: .black, design: .monospaced))
+                        .monospacedDigit()
+                        .foregroundStyle(gradeColor)
+                    Text(score.scoreGrade)
+                        .font(.system(size: 18, weight: .bold, design: .monospaced))
+                        .foregroundStyle(gradeColor)
+                }
+            }
+            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.vertical, 12)
+        }
+        .background(DesignTokens.surfacePanel)
+    }
+
+    private var gradeColor: Color {
+        switch score.scoreGrade {
+        case "A": return DesignTokens.statusGo
+        case "B": return DesignTokens.statusWarn
+        case "C": return textPrimary
+        case "D": return DesignTokens.statusWarn
+        default:  return DesignTokens.statusCritical
+        }
+    }
+
+    private var profileLabel: String {
+        deal.propertyType.isEmpty ? "ASSET" : deal.propertyType.uppercased()
     }
 
     // MARK: Header
@@ -98,13 +150,20 @@ struct CompactDealInspector: View {
                         .foregroundStyle(textDim)
                 }
 
-                HStack(spacing: 4) {
-                    Text("STATUS:")
-                        .porteosMeta()
-                        .foregroundStyle(textDim)
-                    Text(statusLabel)
-                        .porteosMeta()
-                        .foregroundStyle(statusColor)
+                HStack(spacing: 12) {
+                    HStack(spacing: 4) {
+                        Text("STATUS")
+                            .porteosMeta()
+                            .foregroundStyle(textDim)
+                        Text(statusLabel)
+                            .porteosMeta()
+                            .foregroundStyle(statusColor)
+                    }
+                    if deal.purchasePrice > 0 {
+                        Text("\(deal.currencySymbol) \(Int(deal.purchasePrice).formatted())")
+                            .porteosMeta()
+                            .foregroundStyle(textPrimary)
+                    }
                 }
             }
             .padding(.horizontal, DesignTokens.blockGutter)
