@@ -35,6 +35,17 @@ struct ProfileWindowView: View {
         }
     }
 
+    /// Human-readable title shown in the macOS Window menu and title bar.
+    private var windowTitle: String {
+        switch windowValue?.profile {
+        case "realEstate":  return "Real Estate"
+        case "hospitality": return "Hospitality"
+        case "design":      return "Design"
+        case "circular":    return "Circular Economy"
+        default:            return "Profile"
+        }
+    }
+
     // MARK: Tokens
 
     private var shellBg:    Color { DesignTokens.canvasBase }
@@ -62,6 +73,7 @@ struct ProfileWindowView: View {
             }
         }
         .background(shellBg)
+        .navigationTitle(windowTitle)   // sets NSWindow.title → Window menu entry
         .onAppear { resolveSelectedDeal() }
         .onChange(of: deals) { _, _ in resolveSelectedDeal() }
     }
