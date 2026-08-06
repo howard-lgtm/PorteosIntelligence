@@ -13,6 +13,7 @@ struct IntelBriefView: View {
     @State private var signals: [IntelSignal] = []
     @State private var errorMessage: String = ""
     @State private var selectedSignalTopic: String? = nil   // topicKey of tapped signal card
+    @State private var expandedArticleID: String? = nil     // article ID showing inline preview
 
     private let accent = ProfileType.globalIntelligence.accentColor
     private let news   = NewsAggregatorService.shared
@@ -68,6 +69,11 @@ struct IntelBriefView: View {
                             .fixedSize(horizontal: false, vertical: true)
                         regenerateButton
                     }
+                }
+
+                // Contributing headlines — fills empty space, tappable for inline preview
+                if !relevantArticles.isEmpty {
+                    contributingHeadlines
                 }
 
                 Spacer(minLength: 0)
@@ -150,6 +156,78 @@ struct IntelBriefView: View {
                         }
                     }
                     .padding(.bottom, 12)
+                }
+            }
+        }
+    }
+
+    // MARK: - Contributing Headlines
+
+    private var contributingHeadlines: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            TerminalStructuralDivider().padding(.vertical, 10)
+
+            Text("// CONTRIBUTING HEADLINES")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+                .padding(.bottom, 8)
+
+            ForEach(Array(relevantArticles.prefix(8).enumerated()), id: \.offset) { idx, article in
+                VStack(alignment: .leading, spacing: 0) {
+                    // Tappable headline row
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            expandedArticleID = expandedArticleID == article.id ? nil : article.id
+                        }
+                    } label: {
+                        HStack(alignment: .top, spacing: 6) {
+                            Text(expandedArticleID == article.id ? "▾" : "▸")
+                                .porteosMeta()
+                                .foregroundStyle(accent)
+                                .frame(width: 10)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(article.title)
+                                    .porteosMeta()
+                                    .foregroundStyle(DesignTokens.textPrimary)
+                                    .multilineTextAlignment(.leading)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Text("\(article.sourceDisplayName) · \(pubDateStr(article.pubDate))")
+                                    .porteosMeta()
+                                    .foregroundStyle(DesignTokens.textDim)
+                                    .font(.system(size: 9, design: .monospaced))
+                            }
+                        }
+                        .padding(.vertical, 6)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+
+                    // Inline preview — expands on tap
+                    if expandedArticleID == article.id {
+                        VStack(alignment: .leading, spacing: 6) {
+                            if !article.summary.isEmpty {
+                                Text(article.summary)
+                                    .porteosMeta()
+                                    .foregroundStyle(DesignTokens.textSecondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .padding(.leading, 16)
+                            }
+                            if let url = URL(string: article.link), !article.link.isEmpty {
+                                Link(destination: url) {
+                                    Text("[ ↗ OPEN — \(article.sourceDisplayName) ]")
+                                        .porteosMeta()
+                                        .foregroundStyle(accent)
+                                }
+                                .padding(.leading, 16)
+                            }
+                        }
+                        .padding(.bottom, 6)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+
+                    if idx < min(8, relevantArticles.count) - 1 {
+                        Rectangle().fill(DesignTokens.dividerStructural).frame(height: 1)
+                    }
                 }
             }
         }
