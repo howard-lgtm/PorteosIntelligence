@@ -14,7 +14,7 @@ A terminal-style investment intelligence platform for real estate and hospitalit
 ## Before You Start
 
 ### 1. System Requirements
-- macOS 13 Ventura or later
+- macOS 14 Sonoma or later (required for data layer)
 - Intel Macs: works via Rosetta 2 (automatic, no action needed)
 - Internet connection for news feeds and cloud AI (optional)
 
@@ -52,7 +52,7 @@ The Porteos Importer lets you send listings from Zillow, Idealista, Casa SAPO, R
 **Does not work on:** Safari, Firefox (coming later)
 
 ### Install from Chrome Web Store (easiest)
-[Porteos Importer — Chrome Web Store](https://chromewebstore.google.com/detail/dkgbibkdnoadaedfajhnjhnmopckgoll)
+[Porteos Importer](https://chrome.google.com/webstore/detail/dkgbibkdnoadaedfajhnjhnmopckgoll)
 
 ### Manual install
 1. Download and unzip `PorteosImporter.zip` (shared separately)
