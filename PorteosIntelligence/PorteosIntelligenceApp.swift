@@ -128,7 +128,9 @@ Files are named deals-\(stamp).store — contact support to recover them.
     /// Background pass: score any deal that still has nil porteosScore.
     /// Runs once on launch — non-blocking, detached, no UI impact.
     private func backfillMissingScores() {
-        Task.detached(priority: .background) {
+        // Run on MainActor — SwiftData models and @Observable ViewModels require it.
+        // Async so it yields to the UI and doesn't block launch.
+        Task { @MainActor in
             let ctx = ModelContext(sharedModelContainer)
             guard let deals = try? ctx.fetch(
                 FetchDescriptor<PropertyDeal>(

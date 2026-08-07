@@ -622,8 +622,6 @@ extension DealIngestionServer {
     /// Tries to extract a city name from available import metadata.
     /// Returns empty string if inference fails — callers should treat "" as "unknown".
     static func inferCity(name: String, address: String, country: String, url: String) -> String {
-        let candidates = [name, address, url]
-
         // 1. "in Porto", "em Lisboa", "en Madrid" pattern in property name or address
         let locPatterns = [
             #"\bin\s+([A-ZÀ-Ú][a-zA-ZÀ-ú\-]{2,}(?:\s[A-ZÀ-Ú][a-zA-ZÀ-ú\-]+)?)"#,
