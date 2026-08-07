@@ -1,5 +1,6 @@
 import Foundation
 import MapKit
+import CoreLocation
 import SwiftData
 
 // MARK: - GeocodingService
@@ -20,14 +21,11 @@ final class GeocodingService {
         try? context.save()
 
         do {
-            guard let request = MKGeocodingRequest(addressString: query) else {
-                deal.geocodeStatus = .failed
-                try? context.save()
-                return
-            }
+            // CLGeocoder — available macOS 10.8+, identical accuracy to MKGeocodingRequest
+            let placemarks = try await CLGeocoder().geocodeAddressString(query)
 
-            let mapItems = try await request.mapItems
-            guard let item = mapItems.first else {
+            guard let placemark = placemarks.first,
+                  let location = placemark.location else {
                 deal.geocodeStatus = .failed
                 try? context.save()
                 return
@@ -35,11 +33,11 @@ final class GeocodingService {
 
             // ── Country consistency check ──────────────────────────────────────
             // If we have an expected country and the geocoder returned a different
-            // one, reject the result. This is the primary defence against
-            // mis-geocoding (e.g. "Messines" → Morocco instead of Portugal).
+            // one, reject the result. Primary defence against mis-geocoding
+            // (e.g. "Messines" → Morocco instead of Portugal).
             let expectedCountry = inferCountry(for: deal)
             if let expected = expectedCountry,
-               let geocodedCountry = item.placemark.country {
+               let geocodedCountry = placemark.country {
                 let expNorm = expected.lowercased()
                 let geoNorm = geocodedCountry.lowercased()
                 let consistent = geoNorm.contains(expNorm) || expNorm.contains(geoNorm)
@@ -52,14 +50,14 @@ final class GeocodingService {
                 }
             }
 
-            let location = item.location
             deal.latitude  = location.coordinate.latitude
             deal.longitude = location.coordinate.longitude
             deal.geocodeStatus = .ok
 
-            // Only resolve marketId from the deal's own city — never from item.name,
-            // which can be any place name from a wrong geocode result.
-            let countryHint = addressContext(from: item)
+            // Resolve marketId using placemark locality/country as context hint
+            let countryHint = [placemark.locality, placemark.administrativeArea, placemark.country]
+                .compactMap { $0 }
+                .joined(separator: " ")
             if let resolved = MarketFeedRegistry.resolveMarketId(
                 city: deal.locationCity,
                 countryHint: countryHint
@@ -193,12 +191,4 @@ final class GeocodingService {
         "BR": "Brazil",
     ]
 
-    // MARK: - Helpers
-
-    private func addressContext(from item: MKMapItem) -> String {
-        [item.address?.fullAddress, item.address?.shortAddress, item.name]
-            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-            .joined(separator: " ")
-    }
 }
