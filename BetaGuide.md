@@ -52,7 +52,7 @@ The Porteos Importer lets you send listings from Zillow, Idealista, Casa SAPO, R
 **Does not work on:** Safari, Firefox (coming later)
 
 ### Install from Chrome Web Store (easiest)
-[Link to be added — share separately]
+[Porteos Importer — Chrome Web Store](https://chromewebstore.google.com/detail/dkgbibkdnoadaedfajhnjhnmopckgoll)
 
 ### Manual install
 1. Download and unzip `PorteosImporter.zip` (shared separately)
