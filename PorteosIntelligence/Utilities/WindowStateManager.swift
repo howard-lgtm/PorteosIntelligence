@@ -39,8 +39,15 @@ final class WindowStateManager: NSObject, NSWindowDelegate {
         // Set a sensible minimum size so the layout never collapses.
         window.minSize = CGSize(width: 960, height: 640)
 
-        // Restore full-screen state from previous session.
-        if UserDefaults.standard.bool(forKey: fullScreenKey) {
+        // Full-screen logic:
+        // - First ever launch (key absent) → go full screen for maximum impact
+        // - Subsequent launches → restore whatever the user last set
+        let hasSavedFullScreenPref = UserDefaults.standard.object(forKey: fullScreenKey) != nil
+        let shouldGoFullScreen = hasSavedFullScreenPref
+            ? UserDefaults.standard.bool(forKey: fullScreenKey)
+            : true   // default to full screen on first launch
+
+        if shouldGoFullScreen {
             // Small delay — the window must be fully on screen before toggling.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                 window.toggleFullScreen(nil)
