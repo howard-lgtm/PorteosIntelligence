@@ -22,6 +22,9 @@ struct DealResearchImporter {
     // MARK: Public API
 
     static func apply(json: Data, to deal: PropertyDeal, context: ModelContext) -> ImportResult {
+        guard json.count < 10_000_000 else {   // P13-06: 10MB cap
+            return ImportResult(applied: ["// File too large (>10MB)"], notes: "", hadGPS: false)
+        }
         guard let raw = try? JSONSerialization.jsonObject(with: json) as? [String: Any] else {
             return ImportResult(applied: [], notes: "", hadGPS: false)
         }
@@ -57,32 +60,191 @@ struct DealResearchImporter {
             hadGPS = true
         }
 
+        // ── Guard: 10MB cap ───────────────────────────────────────────────────
+        // (P13-06: prevent memory spike on crafted large files)
+
         // ── Price ──────────────────────────────────────────────────────────────
         if deal.purchasePrice == 0,
-           let price = double(flat, keys: ["listing_price_eur", "purchasePrice",
-                                           "purchase_price", "price_eur", "price"]),
-           price > 0 {
+           let price = double(flat, keys: [
+               "listing_price_eur", "purchasePrice", "purchase_price",
+               "price_eur", "price", "land_acquisition_eur",
+               "acquisition_price_eur", "asking_price_eur"
+           ]), price > 0 {
             deal.purchasePrice = price
             applied.append("price €\(Int(price))")
         }
 
+        // ── Total capital outlay (development projects) → notes ───────────────
+        if let outlay = double(flat, keys: [
+            "total_initial_capital_outlay_eur", "total_investment_eur",
+            "total_capex_eur", "total_project_cost_eur"
+        ]), outlay > 0 {
+            noteLines.append(String(format: "Total capital outlay: €%.0f", outlay))
+        }
+
         // ── Built area ────────────────────────────────────────────────────────
         if deal.totalArea == 0,
-           let area = double(flat, keys: ["gross_built_area_sqm", "totalArea", "total_area",
-                                          "area_sqm", "floor_area_sqm", "built_area_sqm",
-                                          "footprint_sqm"]),
-           area > 0 {
+           let area = double(flat, keys: [
+               "gross_built_area_sqm", "totalArea", "total_area",
+               "max_buildable_gba_sqm", "gba_sqm", "area_sqm",
+               "floor_area_sqm", "built_area_sqm", "gfa_sqm"
+           ]), area > 0 {
             deal.totalArea = area
             applied.append("area \(Int(area))m²")
         }
 
         // ── Land / rustic area ────────────────────────────────────────────────
         if deal.landArea == 0,
-           let land = double(flat, keys: ["rustic_land_area_sqm", "landArea", "land_area",
-                                          "plot_area_sqm", "site_area_sqm"]),
-           land > 0 {
-            deal.landArea = land
-            applied.append("land \(Int(land))m²")
+           let land = double(flat, keys: [
+               "rustic_land_area_sqm", "landArea", "land_area",
+               "plot_area_sqm", "site_area_sqm", "plot_area_hectares"
+           ]), land > 0 {
+            // Convert hectares → m² if value looks like hectares (< 500)
+            let landM2 = land < 500 ? land * 10_000 : land
+            deal.landArea = landM2
+            applied.append("land \(Int(landM2))m²")
+        }
+
+        // ── Renovation / construction budget ──────────────────────────────────
+        if deal.renovationBudget == 0,
+           let reno = double(flat, keys: [
+               "total_construction_capex_eur", "construction_cost_eur",
+               "renovationBudget", "renovation_budget_eur",
+               "hard_soft_costs_eur", "capex_eur"
+           ]), reno > 0 {
+            deal.renovationBudget = reno
+            applied.append("reno €\(Int(reno))")
+        }
+
+        // ── Hospitality: room count ───────────────────────────────────────────
+        if deal.hospitalityRoomCount == 0,
+           let rooms = int(flat, keys: [
+               "target_keys_count", "total_keys", "room_count", "rooms",
+               "keys_count", "no_of_rooms", "key_count", "total_rooms"
+           ]), rooms > 0 {
+            deal.hospitalityRoomCount = rooms
+            applied.append("rooms \(rooms)")
+        }
+
+        // ── Hospitality: ADR ──────────────────────────────────────────────────
+        if deal.hospitalityADR == 0,
+           let adr = double(flat, keys: [
+               "adr_eur", "adr", "average_daily_rate",
+               "average_daily_rate_eur", "avg_room_rate_eur"
+           ]), adr > 0 {
+            deal.hospitalityADR = adr
+            applied.append("ADR €\(Int(adr))")
+        }
+
+        // ── Hospitality: occupancy rate ───────────────────────────────────────
+        if deal.hospitalityOccupancyRate == 0,
+           let occ = double(flat, keys: [
+               "occupancy_rate_pct", "occupancy_pct", "occupancy_rate",
+               "target_occupancy_pct", "stabilised_occupancy_pct"
+           ]), occ > 0, occ <= 100 {
+            deal.hospitalityOccupancyRate = occ
+            applied.append("occupancy \(Int(occ))%")
+        }
+
+        // ── Gross potential income (total revenue) ────────────────────────────
+        if deal.grossPotentialIncome == 0,
+           let gpi = double(flat, keys: [
+               "total_gross_revenue_eur", "gross_revenue_eur", "grossPotentialIncome",
+               "gross_potential_income_eur", "total_revenue_eur", "annual_revenue_eur"
+           ]), gpi > 0 {
+            deal.grossPotentialIncome = gpi
+            applied.append("GPI €\(Int(gpi))")
+        }
+
+        // ── Operating expenses ────────────────────────────────────────────────
+        if deal.operatingExpenses == 0,
+           let opex = double(flat, keys: [
+               "total_annual_opex_eur", "total_opex_eur", "operatingExpenses",
+               "operating_expenses_eur", "annual_opex_eur", "opex_eur"
+           ]), opex > 0 {
+            deal.operatingExpenses = opex
+            applied.append("OpEx €\(Int(opex))")
+        }
+
+        // ── Hospitality OpEx ratio ────────────────────────────────────────────
+        if deal.hospitalityOpExRatio == 0,
+           let ratio = double(flat, keys: [
+               "opex_ratio_pct", "opex_ratio", "hospitalityOpExRatio",
+               "operating_cost_ratio_pct", "expense_ratio_pct"
+           ]), ratio > 0, ratio <= 100 {
+            deal.hospitalityOpExRatio = ratio
+            applied.append("OpEx ratio \(Int(ratio))%")
+        }
+
+        // ── Ancillary / F&B revenue ───────────────────────────────────────────
+        if deal.hospitalityFBRevenue == 0,
+           let fnb = double(flat, keys: [
+               "ancillary_revenue_eur", "fb_revenue_eur", "food_beverage_revenue_eur",
+               "hospitalityFBRevenue", "fnb_revenue_eur"
+           ]), fnb > 0 {
+            deal.hospitalityFBRevenue = fnb
+            applied.append("F&B €\(Int(fnb))")
+        }
+
+        // ── Loan / financing ──────────────────────────────────────────────────
+        if deal.interestRate == 0,
+           let rate = double(flat, keys: [
+               "interest_rate_pct", "interestRate", "loan_rate_pct",
+               "mortgage_rate_pct", "financing_rate_pct"
+           ]), rate > 0, rate < 30 {
+            deal.interestRate = rate
+            applied.append("rate \(rate)%")
+        }
+
+        if deal.amortizationMonths == 0,
+           let amYears = double(flat, keys: [
+               "amortization_years", "loan_term_years", "mortgage_term_years",
+               "repayment_period_years"
+           ]), amYears > 0 {
+            deal.amortizationMonths = Int(amYears * 12)
+            applied.append("amort \(Int(amYears))yr")
+        }
+
+        // Compute loan amount from LTV if both LTV and purchase price are known
+        if deal.loanAmount == 0,
+           let ltv = double(flat, keys: [
+               "ltv_pct", "ltv", "loan_to_value_pct", "loan_to_value"
+           ]), ltv > 0, ltv <= 100, deal.purchasePrice > 0 {
+            // Use total outlay if available, otherwise purchase price
+            let basis = double(flat, keys: [
+                "total_initial_capital_outlay_eur", "total_investment_eur"
+            ]) ?? deal.purchasePrice
+            let loan = basis * (ltv / 100)
+            deal.loanAmount = loan
+            applied.append("loan €\(Int(loan)) (\(Int(ltv))% LTV)")
+        }
+
+        // ── Exit cap rate ─────────────────────────────────────────────────────
+        if deal.exitCapRate == 0,
+           let exitCap = double(flat, keys: [
+               "target_exit_cap_rate_pct", "exit_cap_rate_pct", "exitCapRate",
+               "exit_yield_pct", "terminal_cap_rate_pct"
+           ]), exitCap > 0, exitCap < 30 {
+            deal.exitCapRate = exitCap
+            applied.append("exit cap \(exitCap)%")
+        }
+
+        // ── Financial metrics → notes (informational) ─────────────────────────
+        let financialNoteKeys: [(String, String, String)] = [
+            ("unlevered_yield_on_cost_pct",  "Yield on cost",    "%.2f%%"),
+            ("unlevered_10yr_irr_pct",       "Unlevered IRR",    "%.2f%%"),
+            ("levered_10yr_irr_pct",         "Levered IRR",      "%.2f%%"),
+            ("debt_service_coverage_ratio",  "DSCR",             "%.2fx"),
+            ("equity_payback_period_years",  "Equity payback",   "%.1f yr"),
+            ("terminal_asset_value_eur",     "Terminal value",   "€%.0f"),
+            ("revpar_eur",                   "RevPAR",           "€%.0f"),
+            ("trevpar_eur",                  "TRevPAR",          "€%.0f"),
+            ("noi_margin_pct",               "NOI margin",       "%.1f%%"),
+        ]
+        for (key, label, fmt) in financialNoteKeys {
+            if let val = double(flat, keys: [key]) {
+                noteLines.append(String(format: "\(label): \(fmt)", val))
+            }
         }
 
         // ── Bedrooms from typology string ─────────────────────────────────────
