@@ -42,16 +42,27 @@ final class PropertyDeal {
     /// derived at display time so there is zero risk of stale data.
     var currencySymbol: String {
         let c = locationCountry.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        // US
         if c.contains("united states") || c == "usa" || c == "us" { return "$" }
+        // UK
         if c.contains("united kingdom") || c == "uk" || c == "gb" { return "£" }
-        if c.contains("sweden")                                    { return "kr" }
-        if c.contains("norway") || c.contains("norge")            { return "kr" }
-        if c.contains("denmark")                                   { return "kr" }
-        if c.contains("switzerland")                               { return "Fr" }
-        if c.contains("japan")                                     { return "¥" }
-        if c.contains("brazil")                                    { return "R$" }
-        if c.contains("australia")                                 { return "A$" }
-        if c.contains("canada")                                    { return "C$" }
+        // Scandinavia — match full name, ISO code, and native name
+        if c.contains("sweden") || c == "se" || c.contains("sverige")  { return "kr" }
+        if c.contains("norway") || c == "no" || c.contains("norge")    { return "kr" }
+        if c.contains("denmark") || c == "dk" || c.contains("danmark") { return "kr" }
+        // Other
+        if c.contains("switzerland") || c == "ch"                       { return "Fr" }
+        if c.contains("japan") || c == "jp"                             { return "¥" }
+        if c.contains("brazil") || c == "br"                            { return "R$" }
+        if c.contains("australia") || c == "au"                         { return "A$" }
+        if c.contains("canada") || c == "ca"                            { return "C$" }
+        // Fallback: infer from marketId prefix if country is blank
+        let mPrefix = marketId.prefix(2).lowercased()
+        if mPrefix == "se" { return "kr" }
+        if mPrefix == "no" { return "kr" }
+        if mPrefix == "dk" { return "kr" }
+        if mPrefix == "gb" { return "£" }
+        if mPrefix == "us" { return "$" }
         return "€"  // EU / unknown → Euro
     }
 

@@ -369,17 +369,42 @@ struct SettingsView: View {
                     .foregroundStyle(tp1)
                     .onSubmit { saveProviderConfig() }
                     .onChange(of: openAIKey) { _, _ in saveProviderConfig() }
+                if !openAIKey.isEmpty {
+                    Text("KEY SET ✓")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.statusGo)
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
 
             divider
 
-            Text("// gpt-4o-mini — ~$0.01 per analysis. Your key, your cost.")
-                .porteosMeta()
-                .foregroundStyle(tp3)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+            HStack {
+                Text("// gpt-4o-mini — ~$0.01 per analysis. Your key, your cost.")
+                    .porteosMeta()
+                    .foregroundStyle(tp3)
+                Spacer()
+                Button {
+                    Task { await testCloudConnection() }
+                } label: {
+                    Text(llmPinging ? "[ TESTING… ]" : "[ TEST CONNECTION ]")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.accentRust)
+                }
+                .buttonStyle(.plain)
+                .disabled(openAIKey.isEmpty || llmPinging)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+
+            if let result = llmPingResult {
+                Text(result)
+                    .porteosMeta()
+                    .foregroundStyle(result.hasPrefix("✓") ? DesignTokens.statusGo : DesignTokens.statusCritical)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
+            }
 
             divider
 
@@ -403,17 +428,44 @@ struct SettingsView: View {
                     .foregroundStyle(tp1)
                     .onSubmit { saveProviderConfig() }
                     .onChange(of: geminiKey) { _, _ in saveProviderConfig() }
+                if !geminiKey.isEmpty {
+                    Text("KEY SET ✓")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.statusGo)
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
 
             divider
 
-            Text("// gemini-1.5-flash — free tier: 15 req/min, 1M tokens/day")
-                .porteosMeta()
-                .foregroundStyle(tp3)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+            HStack {
+                Text("// gemini-1.5-flash — free tier: 15 req/min, 1M tokens/day")
+                    .porteosMeta()
+                    .foregroundStyle(tp3)
+                Spacer()
+                Button {
+                    Task { await testCloudConnection() }
+                } label: {
+                    Text(llmPinging ? "[ TESTING… ]" : "[ TEST CONNECTION ]")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.accentRust)
+                }
+                .buttonStyle(.plain)
+                .disabled(geminiKey.isEmpty || llmPinging)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+
+            if let result = llmPingResult {
+                Text(result)
+                    .porteosMeta()
+                    .foregroundStyle(result.hasPrefix("✓") ? DesignTokens.statusGo : DesignTokens.statusCritical)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
+            }
+
+            divider
 
             divider
 
@@ -432,6 +484,26 @@ struct SettingsView: View {
         UserDefaults.standard.set(aiProvider.rawValue, forKey: LLMAnalysisService.Keys.aiProvider)
         UserDefaults.standard.set(openAIKey,           forKey: LLMAnalysisService.Keys.openAIKey)
         UserDefaults.standard.set(geminiKey,           forKey: LLMAnalysisService.Keys.geminiKey)
+        llmPingResult = nil   // clear stale test result when key changes
+    }
+
+    /// Test cloud API key by sending a minimal prompt and checking for a valid response.
+    private func testCloudConnection() async {
+        llmPinging = true
+        llmPingResult = nil
+        saveProviderConfig()
+        do {
+            let response = try await LLMAnalysisService.shared.generateSWOT(
+                dealName: "Connection Test",
+                grade: "B",
+                score: 70,
+                signals: ["Test signal"]
+            )
+            llmPingResult = response.isEmpty ? "✗ No response received" : "✓ Connected — API key is valid"
+        } catch {
+            llmPingResult = "✗ \(error.localizedDescription)"
+        }
+        llmPinging = false
     }
 
     // MARK: – General tab

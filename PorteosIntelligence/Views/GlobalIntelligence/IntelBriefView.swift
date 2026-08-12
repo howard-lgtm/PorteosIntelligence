@@ -18,6 +18,18 @@ struct IntelBriefView: View {
     private let accent = ProfileType.globalIntelligence.accentColor
     private let news   = NewsAggregatorService.shared
 
+    private var friendlyErrorMessage: String {
+        let provider = LLMAnalysisService.shared.currentProvider
+        switch provider {
+        case .ollama:
+            return "Local LLM not responding. Make sure Ollama is running (ollama serve) and a model is pulled."
+        case .openai:
+            return "OpenAI API error. Check your API key is valid in Settings → Intelligence."
+        case .gemini:
+            return "Gemini API error. Check your API key is valid in Settings → Intelligence → Gemini."
+        }
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             briefColumn
@@ -63,9 +75,13 @@ struct IntelBriefView: View {
                         Text("// BRIEF_ERROR")
                             .porteosMeta()
                             .foregroundStyle(DesignTokens.statusWarn)
-                        Text(errorMessage)
+                        Text(friendlyErrorMessage)
                             .porteosMeta()
                             .foregroundStyle(DesignTokens.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("// Check Settings → Intelligence to configure your AI provider or API key.")
+                            .porteosMeta()
+                            .foregroundStyle(DesignTokens.textDim)
                             .fixedSize(horizontal: false, vertical: true)
                         regenerateButton
                     }

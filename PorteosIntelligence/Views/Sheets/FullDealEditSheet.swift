@@ -1039,7 +1039,12 @@ struct FullDealEditSheet: View {
                 return decimals == 0 ? "\(Int(v))" : String(format: "%.\(decimals)f", v)
             },
             set: { str in
-                if let d = Double(str.filter { $0.isNumber || $0 == "." }) {
+                // Normalise European comma decimal separator → period before parsing.
+                // Handles en-US locale with European keyboard (e.g. "0,02" → "0.02").
+                let normalised = str
+                    .filter { $0.isNumber || $0 == "." || $0 == "," }
+                    .replacingOccurrences(of: ",", with: ".")
+                if let d = Double(normalised) {
                     value.wrappedValue = d
                 } else if str.isEmpty {
                     value.wrappedValue = 0
