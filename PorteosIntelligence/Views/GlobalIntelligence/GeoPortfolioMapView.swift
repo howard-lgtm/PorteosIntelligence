@@ -98,20 +98,22 @@ struct GeoPinHoverBanner: View {
     }
 
     private func formatPrice(_ value: Double) -> String {
-        Self.formatEUR(value, prefix: "PRICE ")
+        Self.formatCurrency(value, symbol: deal.currencySymbol, prefix: "PRICE ")
     }
 
-    static func formatEUR(_ value: Double, prefix: String = "") -> String {
+    /// Currency-aware formatter — uses the deal's symbol, not hardcoded €.
+    static func formatCurrency(_ value: Double, symbol: String = "€", prefix: String = "") -> String {
         guard value > 0 else { return "\(prefix)—" }
         if value >= 1_000_000 {
-            return "\(prefix)\(String(format: "€%.2fM", value / 1_000_000))"
+            return "\(prefix)\(symbol)\(String(format: "%.2fM", value / 1_000_000))"
         }
-        let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.currencyCode = "EUR"
-        f.maximumFractionDigits = 0
-        let amount = f.string(from: NSNumber(value: value)) ?? "€\(Int(value))"
-        return "\(prefix)\(amount)"
+        let formatted = value.formatted(.number.precision(.fractionLength(0)))
+        return "\(prefix)\(symbol) \(formatted)"
+    }
+
+    /// Legacy alias kept for callers that don't have a deal reference.
+    static func formatEUR(_ value: Double, prefix: String = "") -> String {
+        formatCurrency(value, symbol: "€", prefix: prefix)
     }
 }
 

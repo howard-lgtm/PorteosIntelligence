@@ -85,7 +85,7 @@ struct GeoAssetContextCard: View {
         parts.append("Score \(String(format: "%.0f", liveScore)) / 100")
         parts.append("Grade \(grade.rawValue)")
         if deal.purchasePrice > 0 {
-            parts.append(GeoPinHoverBanner.formatEUR(deal.purchasePrice))
+            parts.append(GeoPinHoverBanner.formatCurrency(deal.purchasePrice, symbol: deal.currencySymbol))
         }
         if deal.totalArea > 0 {
             parts.append(UnitSystemService.shared.formatArea(deal.totalArea, country: deal.locationCountry))

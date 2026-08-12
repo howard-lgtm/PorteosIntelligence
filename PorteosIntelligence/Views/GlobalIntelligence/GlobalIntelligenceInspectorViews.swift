@@ -164,15 +164,7 @@ struct GeoAssetInspectorPanel: View {
     }
 
     private func formatCurrency(_ value: Double) -> String {
-        guard value > 0 else { return "—" }
-        if value >= 1_000_000 {
-            return String(format: "€%.2fM", value / 1_000_000)
-        }
-        let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.currencyCode = "EUR"
-        f.maximumFractionDigits = 0
-        return f.string(from: NSNumber(value: value)) ?? "€\(Int(value))"
+        GeoPinHoverBanner.formatCurrency(value, symbol: deal.currencySymbol)
     }
 }
 
