@@ -282,6 +282,8 @@ struct InspectorPane: View {
             deal.weightDesign      = 20
             deal.weightCircular    = 15
         }
+        // Immediately persist the recalculated score so GI Inspector stays in sync
+        deal.porteosScore = PropertyDealViewModel(deal: deal).porteosScore.finalScore
         deal.updatedAt = Date()
         try? modelContext.save()
     }

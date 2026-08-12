@@ -33,7 +33,12 @@ struct GeoAssetInspectorPanel: View {
     let deal: PropertyDeal
 
     private let accent = ProfileType.globalIntelligence.accentColor
-    private var grade: VibeGrade { VibeGrade.from(score: deal.porteosScore) }
+
+    // Always compute live so GI Inspector stays in sync with weight changes
+    private var liveScore: PorteosScoreCalculator.PorteosMetrics {
+        PropertyDealViewModel(deal: deal).porteosScore
+    }
+    private var grade: VibeGrade { VibeGrade.from(score: liveScore.finalScore) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -76,10 +81,8 @@ struct GeoAssetInspectorPanel: View {
                     panelHeader
                     TerminalStructuralDivider()
                     kpiRow("STATUS",  deal.status.rawValue.uppercased(), color: deal.status.tokenColor)
-                    if let score = deal.porteosScore {
-                        kpiRow("SCORE",   String(format: "%.0f / 100", score))
-                        kpiRow("GRADE",   grade.rawValue, color: Color(hex: grade.hexColor))
-                    }
+                    kpiRow("SCORE",   String(format: "%.0f / 100", liveScore.finalScore))
+                    kpiRow("GRADE",   grade.rawValue, color: Color(hex: grade.hexColor))
                     if deal.purchasePrice > 0 {
                         kpiRow("PRICE",   formatCurrency(deal.purchasePrice))
                     }

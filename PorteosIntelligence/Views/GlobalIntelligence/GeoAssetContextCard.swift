@@ -13,7 +13,8 @@ struct GeoAssetContextCard: View {
 
     private let accent = ProfileType.globalIntelligence.accentColor
 
-    private var grade: VibeGrade { VibeGrade.from(score: deal.porteosScore) }
+    private var liveScore: Double { PropertyDealViewModel(deal: deal).porteosScore.finalScore }
+    private var grade: VibeGrade { VibeGrade.from(score: liveScore) }
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
@@ -81,10 +82,8 @@ struct GeoAssetContextCard: View {
 
     private var statsLine: String {
         var parts: [String] = []
-        if let score = deal.porteosScore {
-            parts.append("Score \(String(format: "%.0f", score)) / 100")
-            parts.append("Grade \(grade.rawValue)")
-        }
+        parts.append("Score \(String(format: "%.0f", liveScore)) / 100")
+        parts.append("Grade \(grade.rawValue)")
         if deal.purchasePrice > 0 {
             parts.append(GeoPinHoverBanner.formatEUR(deal.purchasePrice))
         }

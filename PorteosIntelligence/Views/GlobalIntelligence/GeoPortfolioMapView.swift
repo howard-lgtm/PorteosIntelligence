@@ -30,7 +30,8 @@ struct GeoPinHoverBanner: View {
     let deal: PropertyDeal
     let accent: Color
 
-    private var grade: VibeGrade { VibeGrade.from(score: deal.porteosScore) }
+    private var liveScore: Double { PropertyDealViewModel(deal: deal).porteosScore.finalScore }
+    private var grade: VibeGrade { VibeGrade.from(score: liveScore) }
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
@@ -75,22 +76,16 @@ struct GeoPinHoverBanner: View {
 
     @ViewBuilder
     private var scoreLine: some View {
-        if let score = deal.porteosScore {
-            HStack(spacing: 4) {
-                Text(grade.rawValue)
-                    .porteosScoreGrade()
-                    .foregroundStyle(Color(hex: grade.hexColor))
-                Text("·")
-                    .porteosMeta()
-                    .foregroundStyle(DesignTokens.textDim)
-                Text(String(format: "%.1f", score))
-                    .porteosMeta()
-                    .foregroundStyle(DesignTokens.textSecondary)
-            }
-        } else {
-            Text("SCORE —")
+        HStack(spacing: 4) {
+            Text(grade.rawValue)
+                .porteosScoreGrade()
+                .foregroundStyle(Color(hex: grade.hexColor))
+            Text("·")
                 .porteosMeta()
                 .foregroundStyle(DesignTokens.textDim)
+            Text(String(format: "%.1f", liveScore))
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textSecondary)
         }
     }
 
