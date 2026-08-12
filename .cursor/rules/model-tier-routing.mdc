@@ -1,0 +1,78 @@
+---
+description: Model tier routing — which AI model to use for each task type to minimise cost
+alwaysApply: true
+---
+
+# Model Tier Routing — Porteos Intelligence
+
+Before starting any task, select the appropriate model tier. The goal is to use the cheapest model that can reliably complete the task without mistakes.
+
+## Tier 1 — claude-3-5-haiku (fast, cheap, use by default)
+
+Use for anything touching only ONE of these files in isolation:
+- `MarketBenchmarks.swift` — adding cities, adjusting rates
+- `MarketFeedRegistry.swift` — adding feeds, aliases
+- `DealPropertyTypes.swift` — adding property types
+- `DealTemplates.swift` — adding/editing templates
+- `PorteosGlossary.swift` — glossary entries
+- `LLMAnalysisService.swift` — prompt text edits only (not routing logic)
+- `UnitSystemService.swift` — adding currency/country mappings
+- `PorteosScoreCalculator.swift` — weight/threshold adjustments only
+- `BrowserExtension/**` — JavaScript scraper updates
+- `BetaGuide.md` or any `.md` file — documentation
+- Any single-view label, color token, or copy change
+
+## Tier 2 — claude-sonnet-4-5 (balanced, use for most feature work)
+
+Use when the task touches 2–5 files OR involves logic changes:
+- Dashboard views (`RealEstateDashboardView`, `HospitalityDashboardView`, etc.)
+- `NewsAggregatorService.swift` + `MarketFeedRegistry.swift` together
+- `SensitivityAnalysisBlock.swift` — calculation changes
+- `PreloadReviewSheet.swift`, `BatchTriageView.swift`
+- `PDFReportGenerator.swift` — layout changes
+- `MarketTrendGrid.swift` — metric changes
+- `GeocodingService.swift` — query or fallback logic
+- `NavigationPane.swift` — UI additions
+- `SettingsView.swift` — new settings sections
+- `CompactDealInspector.swift`, `DealMediaGalleryView.swift`
+- Bug fixes in files under 600 lines with clear scope
+- Browser extension: adding a new portal scraper
+
+## Tier 3 — claude-sonnet-4-6 (frontier, use sparingly)
+
+ONLY use for tasks involving these files or categories:
+
+**High-risk files (never touch with Tier 1/2):**
+- `FullDealEditSheet.swift` (1,274 lines — complex state, all model fields)
+- `AIVibePanel.swift` (1,149 lines — SwiftUI identity, @Observable, scoring)
+- `AIAnalysisService.swift` (989 lines — signal pipeline, LLM routing)
+- `AppShell.swift` — core layout and window management
+- `PropertyDeal.swift` — SwiftData schema changes (data loss risk)
+- `DealHistoryManager.swift` — snapshot/undo system
+- `EmailMonitorService.swift` — IMAP + async + Keychain
+- `DealIngestionServer.swift` — HTTP server protocol changes
+
+**High-risk categories:**
+- Any SwiftData `@Relationship` or `@Model` change
+- Security: Keychain storage, API key handling, network auth
+- Concurrency: `async`/`await`, `@MainActor`, actor isolation
+- Multi-window: `WindowManager`, `ProfileWindowView`, `WindowGroup` scenes
+- Onboarding flow (new screens touching AppShell)
+- Swift 6 concurrency compliance fixes
+- Anything that cascades across 5+ files
+
+## Decision rule
+
+```
+Single file, data/config/copy only?  → Tier 1 (Haiku)
+2-5 files, logic changes, clear scope? → Tier 2 (Sonnet 4.5)
+High-risk file OR schema/security/concurrency? → Tier 3 (Sonnet 4.6)
+```
+
+## Cost context
+
+- Tier 1: ~$0.05/session
+- Tier 2: ~$0.50/session  
+- Tier 3: ~$3–5/session
+
+Target: 60% Tier 1 · 30% Tier 2 · 10% Tier 3 = ~$5–15/month
