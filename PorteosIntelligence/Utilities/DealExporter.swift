@@ -63,14 +63,15 @@ struct DealExporter {
 
     private static func csvHeader(depth: ExportDepth) -> String {
         var cols = baseHeaders
-        if depth != .base   { cols += financialHeaders }
+        if depth != .base       { cols += financialHeaders }
         if depth == .allMetrics { cols += metricsHeaders }
+        cols += ["Notes"]   // always last — easier to read/scroll past in Excel
         return cols.map { csvEscape($0) }.joined(separator: ",")
     }
 
     private static var baseHeaders: [String] {
         ["Property Name", "Location City", "Address", "Type", "Status",
-         "Purchase Price", "Total Area (m2)", "Notes", "Created At"]
+         "Purchase Price", "Total Area (m2)", "Created At"]
     }
 
     private static var financialHeaders: [String] {
@@ -98,6 +99,7 @@ struct DealExporter {
         var fields = baseFields(deal)
         if depth != .base        { fields += financialFields(deal) }
         if depth == .allMetrics  { fields += allMetricFields(deal) }
+        fields += [deal.notes]   // always last column — matches csvHeader order
         return fields.map { csvEscape($0) }.joined(separator: ",")
     }
 
@@ -111,7 +113,6 @@ struct DealExporter {
             d.status.rawValue,
             fmt(d.purchasePrice),
             fmt(d.totalArea),
-            d.notes,
             iso.string(from: d.createdAt)
         ]
     }
