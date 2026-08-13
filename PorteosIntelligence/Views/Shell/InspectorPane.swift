@@ -488,6 +488,7 @@ struct InspectorPane: View {
     private var mediaContent: some View {
         ScrollView {
             DealMediaGalleryView(deal: deal)
+                .frame(maxWidth: .infinity)
         }
     }
 
