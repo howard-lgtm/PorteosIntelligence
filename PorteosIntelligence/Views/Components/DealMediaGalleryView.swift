@@ -135,15 +135,17 @@ struct DealMediaGalleryView: View {
                     selectedImageIDs = []
                 }
                 ForEach(DealImageLabel.allCases, id: \.self) { lbl in
-                    filterChip(title: lbl.rawValue, isActive: selectedLabel == lbl) {
+                    filterChip(title: lbl.rawValue.uppercased(), isActive: selectedLabel == lbl) {
                         selectedLabel = (selectedLabel == lbl) ? nil : lbl
                         selectedImageIDs = []
                     }
                 }
+                Spacer(minLength: 0)
             }
-            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.horizontal, 8)
             .padding(.vertical, 6)
         }
+        .frame(maxWidth: .infinity)
         .background(DesignTokens.surfacePanel)
     }
 
@@ -265,28 +267,19 @@ struct DealMediaGalleryView: View {
     // MARK: Add Buttons Bar
 
     private var addButtonsBar: some View {
-        VStack(spacing: 4) {
-            // First button with image count
-            HStack(spacing: 6) {
-                Button { showFileImporter = true } label: {
-                    Text("[ + FROM FILES ]")
-                        .porteosButtonPrimary()
-                        .foregroundStyle(DesignTokens.textSecondary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: DesignTokens.rowHeightButton)
-                        .background(DesignTokens.surfaceElevated)
-                        .overlay(Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth))
-                        .clipShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                
-                Text("\(deal.images.count)")
-                    .porteosMeta()
-                    .foregroundStyle(DesignTokens.textDim)
-                    .frame(width: 32, alignment: .trailing)
+        VStack(alignment: .center, spacing: 4) {
+            Button { showFileImporter = true } label: {
+                Text("[ + FROM FILES ]")
+                    .porteosButtonPrimary()
+                    .foregroundStyle(DesignTokens.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: DesignTokens.rowHeightButton)
+                    .background(DesignTokens.surfaceElevated)
+                    .overlay(Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth))
+                    .clipShape(Rectangle())
             }
-            
-            // Second button
+            .buttonStyle(.plain)
+
             PhotosPicker(selection: $photosPickerItems, matching: .images) {
                 Text("[ + FROM PHOTOS ]")
                     .porteosButtonPrimary()
@@ -298,8 +291,7 @@ struct DealMediaGalleryView: View {
                     .clipShape(Rectangle())
             }
             .buttonStyle(.plain)
-            
-            // Third button
+
             Button { captureAerial() } label: {
                 let capturing = isCapturingAerial
                 Text(capturing ? "[ ↗ ... ]" : "[ ↗ AERIAL ]")
@@ -316,9 +308,15 @@ struct DealMediaGalleryView: View {
             }
             .buttonStyle(.plain)
             .disabled(isCapturingAerial || !deal.hasPlottableCoordinates)
+
+            Text("\(deal.images.count) IMAGES")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 8)
+        .frame(maxWidth: .infinity)
         .background(DesignTokens.canvasBase)
     }
 
