@@ -20,7 +20,7 @@ struct DealMediaGalleryView: View {
     @State private var editingImage:       DealImage?         = nil
     @State private var isCapturingAerial:  Bool               = false
 
-    private let gridColumns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 2)
+    private let gridColumns = Array(repeating: GridItem(.fixed(80), spacing: 4), count: 3)
 
     // MARK: Body
 
@@ -190,7 +190,7 @@ struct DealMediaGalleryView: View {
                 }
                 .padding(.vertical, DesignTokens.blockGutter)
             }
-            .padding(.horizontal, DesignTokens.blockGutter)
+            .padding(.horizontal, 8)
             .frame(minHeight: 80, maxHeight: 300)
         }
     }
