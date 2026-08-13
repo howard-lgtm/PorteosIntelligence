@@ -40,6 +40,8 @@ struct SettingsView: View {
     @State private var aiProvider: AIProvider = AIProvider(rawValue: UserDefaults.standard.string(forKey: LLMAnalysisService.Keys.aiProvider) ?? "ollama") ?? .ollama
     @State private var openAIKey: String = UserDefaults.standard.string(forKey: LLMAnalysisService.Keys.openAIKey) ?? ""
     @State private var geminiKey: String = UserDefaults.standard.string(forKey: LLMAnalysisService.Keys.geminiKey) ?? ""
+    @State private var showOpenAIKey: Bool = false
+    @State private var showGeminiKey: Bool = false
 
     // MARK: Body
 
@@ -363,12 +365,33 @@ struct SettingsView: View {
                     .porteosMeta()
                     .foregroundStyle(tp3)
                     .frame(width: 130, alignment: .leading)
-                SecureField("sk-...", text: $openAIKey)
-                    .textFieldStyle(.plain)
-                    .porteosMeta()
-                    .foregroundStyle(tp1)
-                    .onSubmit { saveProviderConfig() }
-                    .onChange(of: openAIKey) { _, _ in saveProviderConfig() }
+                
+                if showOpenAIKey {
+                    TextField("sk-...", text: $openAIKey)
+                        .textFieldStyle(.plain)
+                        .porteosMeta()
+                        .foregroundStyle(tp1)
+                        .onSubmit { saveProviderConfig() }
+                        .onChange(of: openAIKey) { _, _ in saveProviderConfig() }
+                } else {
+                    SecureField("sk-...", text: $openAIKey)
+                        .textFieldStyle(.plain)
+                        .porteosMeta()
+                        .foregroundStyle(tp1)
+                        .onSubmit { saveProviderConfig() }
+                        .onChange(of: openAIKey) { _, _ in saveProviderConfig() }
+                }
+                
+                Button {
+                    showOpenAIKey.toggle()
+                } label: {
+                    Image(systemName: showOpenAIKey ? "eye.slash" : "eye")
+                        .foregroundStyle(tp3)
+                        .font(.system(size: 12))
+                }
+                .buttonStyle(.plain)
+                .help(showOpenAIKey ? "Hide key" : "Show key")
+                
                 if !openAIKey.isEmpty {
                     Text("KEY SET ✓")
                         .porteosMeta()
@@ -422,12 +445,33 @@ struct SettingsView: View {
                     .porteosMeta()
                     .foregroundStyle(tp3)
                     .frame(width: 130, alignment: .leading)
-                SecureField("AIza...", text: $geminiKey)
-                    .textFieldStyle(.plain)
-                    .porteosMeta()
-                    .foregroundStyle(tp1)
-                    .onSubmit { saveProviderConfig() }
-                    .onChange(of: geminiKey) { _, _ in saveProviderConfig() }
+                
+                if showGeminiKey {
+                    TextField("AIza...", text: $geminiKey)
+                        .textFieldStyle(.plain)
+                        .porteosMeta()
+                        .foregroundStyle(tp1)
+                        .onSubmit { saveProviderConfig() }
+                        .onChange(of: geminiKey) { _, _ in saveProviderConfig() }
+                } else {
+                    SecureField("AIza...", text: $geminiKey)
+                        .textFieldStyle(.plain)
+                        .porteosMeta()
+                        .foregroundStyle(tp1)
+                        .onSubmit { saveProviderConfig() }
+                        .onChange(of: geminiKey) { _, _ in saveProviderConfig() }
+                }
+                
+                Button {
+                    showGeminiKey.toggle()
+                } label: {
+                    Image(systemName: showGeminiKey ? "eye.slash" : "eye")
+                        .foregroundStyle(tp3)
+                        .font(.system(size: 12))
+                }
+                .buttonStyle(.plain)
+                .help(showGeminiKey ? "Hide key" : "Show key")
+                
                 if !geminiKey.isEmpty {
                     Text("KEY SET ✓")
                         .porteosMeta()
@@ -440,7 +484,7 @@ struct SettingsView: View {
             divider
 
             HStack {
-                Text("// gemini-1.5-flash — free tier: 15 req/min, 1M tokens/day")
+                Text("// gemini-3.5-flash — free tier: 15 req/min, 1M tokens/day")
                     .porteosMeta()
                     .foregroundStyle(tp3)
                 Spacer()
@@ -469,7 +513,7 @@ struct SettingsView: View {
 
             divider
 
-            infoRow("MODEL",   "gemini-1.5-flash (auto, free tier available)")
+            infoRow("MODEL",   "gemini-3.5-flash (auto, free tier available)")
             infoRow("GET KEY", "aistudio.google.com/app/apikey")
         }
         .background(shellSurface)

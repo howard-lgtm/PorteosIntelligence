@@ -21,7 +21,7 @@ struct AIVibePanel: View {
         phase == .analyzingRules || phase == .generatingNarrative
     }
 
-    private var activeModelName: String { LLMAnalysisService.shared.modelName }
+    private var activeModelName: String { LLMAnalysisService.shared.activeModelDisplayName }
     private static let signalLabels = [
         "LOCATION SCORE", "MARKET TIMING", "CASH FLOW", "RISK PROFILE", "ESG COMPLIANCE"
     ]
@@ -822,9 +822,11 @@ struct AIVibePanel: View {
     private func quickResult(from text: String) -> AnalysisResult {
         let grade = VibeGrade.from(score: deal.porteosScore)
         let name  = deal.propertyName.isEmpty ? "This asset" : deal.propertyName
+        // Restore SWOT from cached text so it survives panel reopen / provider switch
+        let restoredSWOT = AIAnalysisService.shared.parseSWOT(from: text, fallbackGrade: grade)
         return AnalysisResult(
             grade:                     grade,
-            verdict:                   DealVerdict.from(grade: grade),
+            verdict:                   restoredSWOT?.verdict ?? DealVerdict.from(grade: grade),
             headline:                  "\(name) — previously analysed. Tap regenerate to refresh.",
             realEstateSignals:         [],
             hospitalitySignals:        [],
@@ -833,7 +835,7 @@ struct AIVibePanel: View {
             marketIntelligenceSignals: [],
             summary:                   text,
             formattedText:             text,
-            swot:                      nil
+            swot:                      restoredSWOT
         )
     }
 

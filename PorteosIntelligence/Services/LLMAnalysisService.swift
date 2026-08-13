@@ -30,6 +30,25 @@ enum LLMError: Error {
     case offline        // provider not running, unreachable, or API key missing
     case badResponse    // HTTP non-200 or undecodable JSON
     case emptyContent   // 200 OK but empty text returned
+    case invalidKey(provider: String, message: String?)  // API key rejected
+}
+
+extension LLMError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .offline:
+            return "Provider offline or API key missing"
+        case .badResponse:
+            return "Invalid response from API"
+        case .emptyContent:
+            return "API returned empty response"
+        case .invalidKey(let provider, let message):
+            if let msg = message {
+                return "\(provider) API error: \(msg)"
+            }
+            return "\(provider) API key is invalid or quota exceeded"
+        }
+    }
 }
 
 final class LLMAnalysisService {
@@ -50,6 +69,8 @@ final class LLMAnalysisService {
 
     static let defaultBaseURL   = "http://localhost:11434"
     static let defaultModelName = "qwen2.5:0.5b"
+    static let openAIModelName  = "gpt-4o-mini"
+    static let geminiModelName  = "gemini-3.5-flash"
     static let ollamaTimeoutSeconds: Double = 45
     static let cloudTimeoutSeconds:  Double = 60
 
@@ -70,6 +91,15 @@ final class LLMAnalysisService {
 
     var geminiKey: String {
         UserDefaults.standard.string(forKey: Keys.geminiKey) ?? ""
+    }
+
+    /// Model name shown in UI and used for the currently selected provider.
+    var activeModelDisplayName: String {
+        switch currentProvider {
+        case .ollama: return modelName
+        case .openai: return Self.openAIModelName
+        case .gemini: return Self.geminiModelName
+        }
     }
 
     // MARK: Public API — Deal Analysis (AI Vibe)
@@ -183,7 +213,7 @@ final class LLMAnalysisService {
         request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
 
         let body: [String: Any] = [
-            "model": "gpt-4o-mini",
+            "model": Self.openAIModelName,
             "messages": [["role": "user", "content": prompt]],
             "max_tokens": 800
         ]
@@ -196,9 +226,20 @@ final class LLMAnalysisService {
             throw LLMError.offline
         }
 
-        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+        guard let http = response as? HTTPURLResponse else {
             throw LLMError.badResponse
         }
+        
+        if http.statusCode != 200 {
+            // Try to parse error message from response
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let error = json["error"] as? [String: Any],
+               let message = error["message"] as? String {
+                throw LLMError.invalidKey(provider: "OpenAI", message: message)
+            }
+            throw LLMError.invalidKey(provider: "OpenAI", message: nil)
+        }
+        
         guard let json    = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let choices  = json["choices"] as? [[String: Any]],
               let first    = choices.first,
@@ -215,7 +256,8 @@ final class LLMAnalysisService {
     private func callGemini(prompt: String) async throws -> String {
         let key = geminiKey
         guard !key.isEmpty else { throw LLMError.offline }
-        let urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\(key)"
+        // Use v1 endpoint with gemini-3.5-flash (free tier, current model as of 2026)
+        let urlString = "https://generativelanguage.googleapis.com/v1/models/\(Self.geminiModelName):generateContent?key=\(key)"
         guard let url = URL(string: urlString) else { throw LLMError.offline }
 
         var request = URLRequest(url: url, timeoutInterval: Self.cloudTimeoutSeconds)
@@ -235,9 +277,20 @@ final class LLMAnalysisService {
             throw LLMError.offline
         }
 
-        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+        guard let http = response as? HTTPURLResponse else {
             throw LLMError.badResponse
         }
+        
+        if http.statusCode != 200 {
+            // Try to parse error message from Gemini response
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let error = json["error"] as? [String: Any],
+               let message = error["message"] as? String {
+                throw LLMError.invalidKey(provider: "Gemini", message: message)
+            }
+            throw LLMError.invalidKey(provider: "Gemini", message: "HTTP \(http.statusCode)")
+        }
+        
         guard let json        = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let candidates   = json["candidates"] as? [[String: Any]],
               let first        = candidates.first,

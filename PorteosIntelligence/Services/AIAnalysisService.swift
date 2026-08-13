@@ -869,39 +869,76 @@ final class AIAnalysisService {
     // MARK: SWOT Parsing
 
     /// Parses the structured LLM SWOT output into a typed value.
-    /// Expected format:
-    ///   VERDICT: GO
-    ///   S: ...
-    ///   W: ...
-    ///   O: ...
-    ///   T: ...
-    private func parseSWOT(from raw: String, fallbackGrade: VibeGrade) -> SWOTAnalysis? {
-        // Strip markdown bold/italic so "**S:**" → "S:" and "*VERDICT:*" → "VERDICT:"
+    /// Accepts both strict format (S:, W:, O:, T:) and Gemini variants:
+    ///   - Full words: Strengths:, Weaknesses:, Opportunities:, Threats:
+    ///   - Markdown headers: ## S, **Strengths**, etc.
+    ///   - Bullet prefixes: - S:, • W:
+    ///   - Mixed with preamble prose before the structured section
+    func parseSWOT(from raw: String, fallbackGrade: VibeGrade) -> SWOTAnalysis? {
+        // Strip markdown formatting so "**S:**" → "S:" and "*VERDICT:*" → "VERDICT:"
         let cleaned = raw
             .replacingOccurrences(of: "**", with: "")
             .replacingOccurrences(of: "__", with: "")
             .replacingOccurrences(of: "*",  with: "")
+            .replacingOccurrences(of: "#",  with: "")
 
         var verdictRaw = ""
         var s = ""; var w = ""; var o = ""; var t = ""
 
         for line in cleaned.components(separatedBy: "\n") {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            // Strip leading bullets and dashes
+            var trimmed = line.trimmingCharacters(in: .whitespaces)
+            for prefix in ["- ", "• ", "· ", "* "] {
+                if trimmed.hasPrefix(prefix) { trimmed = String(trimmed.dropFirst(prefix.count)) }
+            }
             let up = trimmed.uppercased()
-            // Case-insensitive prefix matching
-            if up.hasPrefix("VERDICT:") {
-                verdictRaw = trimmed.dropPrefix(trimmed.prefix(8).description)
-                    .trimmingCharacters(in: .whitespaces)
-            } else if up.hasPrefix("S:") && s.isEmpty {
+
+            if verdictRaw.isEmpty {
+                // Match "VERDICT: GO" or "VERDICT: NO GO"
+                if up.hasPrefix("VERDICT:") {
+                    verdictRaw = trimmed.dropFirst(8).trimmingCharacters(in: .whitespaces)
+                } else if up.hasPrefix("VERDICT -") {
+                    verdictRaw = trimmed.dropFirst(9).trimmingCharacters(in: .whitespaces)
+                }
+            }
+
+            // Strict single-letter format: "S:", "W:", "O:", "T:"
+            if s.isEmpty && up.hasPrefix("S:") {
                 s = trimmed.dropFirst(2).trimmingCharacters(in: .whitespaces)
-            } else if up.hasPrefix("W:") && w.isEmpty {
+            } else if w.isEmpty && up.hasPrefix("W:") {
                 w = trimmed.dropFirst(2).trimmingCharacters(in: .whitespaces)
-            } else if up.hasPrefix("O:") && o.isEmpty {
+            } else if o.isEmpty && up.hasPrefix("O:") {
                 o = trimmed.dropFirst(2).trimmingCharacters(in: .whitespaces)
-            } else if up.hasPrefix("T:") && t.isEmpty {
+            } else if t.isEmpty && up.hasPrefix("T:") {
                 t = trimmed.dropFirst(2).trimmingCharacters(in: .whitespaces)
+            // Full-word variants: "Strengths:", "Weakness:", "Opportunities:", "Threats:"
+            } else if s.isEmpty && (up.hasPrefix("STRENGTH:") || up.hasPrefix("STRENGTHS:")) {
+                let idx = up.hasPrefix("STRENGTHS:") ? 10 : 9
+                s = trimmed.dropFirst(idx).trimmingCharacters(in: .whitespaces)
+            } else if w.isEmpty && (up.hasPrefix("WEAKNESS:") || up.hasPrefix("WEAKNESSES:")) {
+                let idx = up.hasPrefix("WEAKNESSES:") ? 11 : 9
+                w = trimmed.dropFirst(idx).trimmingCharacters(in: .whitespaces)
+            } else if o.isEmpty && (up.hasPrefix("OPPORTUNITY:") || up.hasPrefix("OPPORTUNITIES:")) {
+                let idx = up.hasPrefix("OPPORTUNITIES:") ? 14 : 12
+                o = trimmed.dropFirst(idx).trimmingCharacters(in: .whitespaces)
+            } else if t.isEmpty && (up.hasPrefix("THREAT:") || up.hasPrefix("THREATS:")) {
+                let idx = up.hasPrefix("THREATS:") ? 8 : 7
+                t = trimmed.dropFirst(idx).trimmingCharacters(in: .whitespaces)
             }
         }
+
+        // If VERDICT wasn't found on its own line, scan for it anywhere in the text
+        if verdictRaw.isEmpty {
+            let up = cleaned.uppercased()
+            if up.contains("VERDICT: NO GO") || up.contains("VERDICT:NO GO") {
+                verdictRaw = "NO GO"
+            } else if up.contains("VERDICT: REVIEW") {
+                verdictRaw = "REVIEW"
+            } else if up.contains("VERDICT: GO") {
+                verdictRaw = "GO"
+            }
+        }
+
         guard !s.isEmpty, !w.isEmpty, !o.isEmpty, !t.isEmpty else { return nil }
 
         let vUp = verdictRaw.uppercased()
