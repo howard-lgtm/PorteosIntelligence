@@ -20,7 +20,7 @@ struct DealMediaGalleryView: View {
     @State private var editingImage:       DealImage?         = nil
     @State private var isCapturingAerial:  Bool               = false
 
-    private let gridColumns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 3)
+    private let gridColumns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 2)
 
     // MARK: Body
 
