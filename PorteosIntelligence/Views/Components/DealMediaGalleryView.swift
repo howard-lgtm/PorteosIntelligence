@@ -188,8 +188,9 @@ struct DealMediaGalleryView: View {
                         thumbnailCell(img)
                     }
                 }
-                .padding(DesignTokens.blockGutter)
+                .padding(.vertical, DesignTokens.blockGutter)
             }
+            .padding(.horizontal, DesignTokens.blockGutter)
             .frame(minHeight: 80, maxHeight: 300)
         }
     }
