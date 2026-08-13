@@ -265,37 +265,47 @@ struct DealMediaGalleryView: View {
     // MARK: Add Buttons Bar
 
     private var addButtonsBar: some View {
-        HStack(spacing: 6) {
-            Button { showFileImporter = true } label: {
-                Text("[ + FROM FILES ]")
-                    .porteosButtonPrimary()
-                    .foregroundStyle(DesignTokens.textSecondary)
-                    .padding(.horizontal, 8)
-                    .frame(height: DesignTokens.rowHeightButton)
-                    .background(DesignTokens.surfaceElevated)
-                    .overlay(Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth))
-                    .clipShape(Rectangle())
+        VStack(spacing: 4) {
+            // First button with image count
+            HStack(spacing: 6) {
+                Button { showFileImporter = true } label: {
+                    Text("[ + FROM FILES ]")
+                        .porteosButtonPrimary()
+                        .foregroundStyle(DesignTokens.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: DesignTokens.rowHeightButton)
+                        .background(DesignTokens.surfaceElevated)
+                        .overlay(Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth))
+                        .clipShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                
+                Text("\(deal.images.count)")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                    .frame(width: 32, alignment: .trailing)
             }
-            .buttonStyle(.plain)
-
+            
+            // Second button
             PhotosPicker(selection: $photosPickerItems, matching: .images) {
                 Text("[ + FROM PHOTOS ]")
                     .porteosButtonPrimary()
                     .foregroundStyle(DesignTokens.textSecondary)
-                    .padding(.horizontal, 8)
+                    .frame(maxWidth: .infinity)
                     .frame(height: DesignTokens.rowHeightButton)
                     .background(DesignTokens.surfaceElevated)
                     .overlay(Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth))
                     .clipShape(Rectangle())
             }
             .buttonStyle(.plain)
-
+            
+            // Third button
             Button { captureAerial() } label: {
                 let capturing = isCapturingAerial
                 Text(capturing ? "[ ↗ ... ]" : "[ ↗ AERIAL ]")
                     .porteosButtonPrimary()
                     .foregroundStyle(capturing ? DesignTokens.textDim : DesignTokens.accentRust)
-                    .padding(.horizontal, 8)
+                    .frame(maxWidth: .infinity)
                     .frame(height: DesignTokens.rowHeightButton)
                     .background(DesignTokens.surfaceElevated)
                     .overlay(Rectangle().strokeBorder(
@@ -306,15 +316,9 @@ struct DealMediaGalleryView: View {
             }
             .buttonStyle(.plain)
             .disabled(isCapturingAerial || !deal.hasPlottableCoordinates)
-
-            Spacer(minLength: 0)
-
-            Text("\(deal.images.count) IMAGES")
-                .porteosMeta()
-                .foregroundStyle(DesignTokens.textDim)
         }
-        .padding(.horizontal, DesignTokens.blockGutter)
-        .frame(height: DesignTokens.rowHeightPaneBar)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 8)
         .background(DesignTokens.canvasBase)
     }
 
