@@ -100,7 +100,7 @@
 | P3-04 | PDF page 3+ | Field mapping (e.g. GFA `400000 m²`) | `[ ]` | Data vs display |
 | P3-05 | B&W mode | Untested output | `[—]` | Superseded by P3-07 (done) | Superseded by P3-07 build-out |
 | P3-06 | External share | Cover KPI spacing OK for send-out | `[ ]` | Re-verify after wild PDFs |
-| P3-07 | **B&W mode build-out** | Toggle exists in `PDFReportSheet` but output not fully implemented — user note: “Need to build this out”. Wire `blackAndWhite` through `PDFReportGenerator`; verify print-safe contrast. | `[x]` | `c()` greyscale resolver verified in `PDFReportGenerator` Jul 10 |
+| P3-07 | **PDF print-safe B&W mode** | Toggle exists; accent colors convert to grayscale (verified Jul 10). **Print blocker:** Background still renders black — needs inversion (bg → white, text → black) for physical print. | `[ ]` | **Priority for next week** |
 
 ---
 
