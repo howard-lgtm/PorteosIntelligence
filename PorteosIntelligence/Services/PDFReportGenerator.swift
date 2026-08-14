@@ -530,7 +530,7 @@ final class PDFReportGenerator {
             let rowH: CGFloat = 54
             let accent = accentForProfile(sc.profile)
 
-            fill(ctx, CGRect(x: M,     y: y - rowH, width: cW,     height: rowH), i % 2 == 0 ? surf : bg)
+            // No background fill - only accent stripe on left
             fill(ctx, CGRect(x: M,     y: y - rowH, width: 3,      height: rowH), accent)
 
             text(ctx, sc.name.uppercased(),
@@ -554,16 +554,16 @@ final class PDFReportGenerator {
     @discardableResult
     private func sectionHeader(_ ctx: CGContext, _ label: String, at y: CGFloat, accent: CGColor) -> CGFloat {
         let h: CGFloat = 26
-        fill(ctx, CGRect(x: M,     y: y - h, width: 3,      height: h), accent)
-        fill(ctx, CGRect(x: M + 3, y: y - h, width: cW - 3, height: h), surf)
-        text(ctx, label, x: M + 12, y: y - 18, font: jmB(11), color: accent)
+        // Full-width colored band for section headers (Hospitality/Design/Circular)
+        fill(ctx, CGRect(x: M, y: y - h, width: cW, height: h), accent)
+        text(ctx, label, x: M + 12, y: y - 18, font: jmB(11), color: tp1)  // white text on colored background
         return y - h
     }
 
     @discardableResult
     private func subHeader(_ ctx: CGContext, _ label: String, at y: CGFloat) -> CGFloat {
         let h: CGFloat = 16
-        fill(ctx, CGRect(x: M, y: y - h, width: cW, height: h), bg)
+        // No background fill - keep subsection headers clean
         text(ctx, "// \(label)", x: M + 8, y: y - 12, font: jm(8), color: tp3)
         return y - h
     }
@@ -579,7 +579,7 @@ final class PDFReportGenerator {
         bold: Bool = false
     ) -> CGFloat {
         let h: CGFloat = 20
-        fill(ctx, CGRect(x: M, y: y - h, width: cW, height: h), alt ? surf : bg)
+        // No background fill - keep data rows clean (only section headers have colored bands)
         text(ctx, label, x: M + 8, y: y - 14, font: jm(9.5), color: tp2)
         let vFont = bold ? jmB(9.5) : jm(9.5)
         text(ctx, value, x: 0, y: y - 14, font: vFont, color: valueColor ?? tp1, rightAlignTo: M + cW - 8)
