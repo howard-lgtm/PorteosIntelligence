@@ -100,7 +100,7 @@
 | P3-04 | PDF page 3+ | Field mapping (e.g. GFA `400000 m²`) | `[ ]` | Data vs display |
 | P3-05 | B&W mode | Untested output | `[—]` | Superseded by P3-07 (done) | Superseded by P3-07 build-out |
 | P3-06 | External share | Cover KPI spacing OK for send-out | `[ ]` | Re-verify after wild PDFs |
-| P3-07 | **PDF print-safe B&W mode** | Toggle exists; accent colors convert to grayscale (verified Jul 10). **Print blocker:** Background still renders black — needs inversion (bg → white, text → black) for physical print. | `[ ]` | **Priority for next week** |
+| P3-07 | **PDF print-safe light mode** | Default: light theme (white bg, black JetBrains Mono text, grayscale accents). Optional dark mode toggle for visual presentations. | `[x]` | Completed Aug 14 |
 
 ---
 
