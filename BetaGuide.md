@@ -1,5 +1,5 @@
 # Porteos Intelligence — Beta Guide
-**Version 1.0 Beta · August 2026 · macOS only (Apple Silicon + Intel via Rosetta 2)**
+**Version 1.0 (Build 2) · August 14, 2026 · macOS only (Apple Silicon + Intel via Rosetta 2)**
 
 Thank you for being part of this early access group. This guide covers everything you need to get started and give meaningful feedback.
 
@@ -106,6 +106,30 @@ The app automatically switches between metric (m², €) and imperial (ft², $) 
 - **Live market data:** Cap rates, ADR, and benchmark figures are 2024–25 static estimates, not live feeds. Treat as directional guidance, not precision data.
 - **Onboarding:** A guided onboarding experience is coming in the next version. For now, this guide is your reference.
 - **SOC/ISO compliance:** Security hardening is planned post-beta. Do not store sensitive client data in this version.
+
+---
+
+## Recent Updates (Build 2 — Aug 14, 2026)
+
+### Fixed
+- **Inspector MEDIA tab alignment** — All three inspector tabs (WEIGHTS, AI VIBE, MEDIA) now have identical header alignment. Hero images no longer cause pane width overflow.
+- **Gemini SWOT parsing** — AI Vibe panel now correctly parses Gemini API responses with various markdown formats. Cached analyses preserve SWOT data on reload.
+- **Currency display** — Map pins, GI inspector, and price formatting now use deal-specific currency symbols (€, $, £, kr) instead of hardcoded euro.
+- **Media gallery layout** — Thumbnail grid, filter chips, and action buttons now have uniform padding and alignment within the narrow inspector pane.
+- **CSV export** — Notes column moved to the far right for better readability in Excel/Numbers.
+
+### Improved
+- **Cost control** — Added tiered model protocol for Cursor development. Local Ollama models (qwen2.5-coder, deepseek-r1) handle most tasks, reducing cloud API reliance by ~85%.
+- **JSON import security** — Research JSON imports now have a 10MB size guard to prevent memory spikes from large files.
+- **Compatibility** — Geocoding now uses CLGeocoder instead of macOS 15+ API, ensuring compatibility back to macOS 14 Sonoma.
+- **Full-screen launch** — App now opens full-screen on first launch for maximum visual impact.
+
+### What to Test
+1. **Inspector consistency** — Open the same deal in WEIGHTS, AI VIBE, and MEDIA tabs. Headers should be pixel-identical. No blank space to the right of the PDF button.
+2. **AI Vibe with Gemini** — If using Gemini API, verify SWOT sections parse correctly and persist when switching between deals.
+3. **Currency symbols** — Create deals in different countries (US, UK, Sweden, Portugal). Verify prices show $ / £ / kr / € respectively in map pins and inspector.
+4. **Media gallery** — Add multiple images to a deal. Verify thumbnails, filter chips, and buttons are properly aligned in the MEDIA tab.
+5. **Research JSON import** — Import a large AI-generated research JSON (5–10MB). Should complete without freezing.
 
 ---
 
