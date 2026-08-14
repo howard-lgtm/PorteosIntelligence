@@ -84,7 +84,7 @@
 | P2-04 | Template Picker | Reference finish level | `[x]` | Use as sheet gold standard |
 | P2-05 | Footer cancel | `[ CANCEL ]` outlined | `[x]` | |
 | P2-06 | Sheet chrome | macOS rounded sheet corners | `[ ]` | `.presentationBackground` / overlay pattern |
-| P2-07 | Legacy sheets | Deprecate or align `EditDealSheet` / `NewDealSheet` / `QuickAddDealSheet` | `[~]` | `QuickAddDealSheet` deleted Jul 28 (dead). `EditDealSheet` still used in NavigationPane context menu; `NewDealSheet` in DetachedPaneViews. Route both through `FullDealEditSheet` in v1.2. |
+| P2-07 | Legacy sheets | Deprecate or align `EditDealSheet` / `NewDealSheet` / `QuickAddDealSheet` | `[~]` | `QuickAddDealSheet` deleted Jul 28 (P13-03). `NewDealSheet` deleted. `EditDealSheet` still used in NavigationPane context menu — route through `FullDealEditSheet` in v1.2 or keep as quick-edit path. |
 | P2-08 | Full Edit — Base | **Source URL field** — browser/email imports store URL in notes; expose as dedicated row (link or copy) in BASE tab, not buried in NOTES blob | `[x]` | `ListingURLHelpers` + BASE tab link row |
 | P2-09 | **ComparisonView OPEX panel** | `[~]` Fixed layout + editable fields 2026-07-05; **fixed 2-digit input cap** same day (`OpexInlineAmountField`). **Follow-up:** OPEX per deal column; pre-fill from `operatingExpenses` | `[~]` | Wild-use |
 
@@ -368,7 +368,7 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 | P13-03 | **Dead boilerplate removed** — deleted `Item.swift` (orphaned `@Model`), `ContentView.swift` (Xcode template), `QuickAddDealSheet.swift` (unreferenced). | `[x]` | Jul 28 |
 | P13-04 | URL-less deal dedup — `findExistingDeal(byName:city:)` fallback added Jul 28. | `[x]` | Exact name+city match for imports without URL |
 | P13-05 | marketId corruption post-geocode — `item.name` fallback removed from `GeocodingService`; only `deal.locationCity` used for marketId resolution. | `[x]` | Jul 28 |
-| P13-06 | **Research JSON import size guard** — `DealResearchImporter.apply()` has no size cap; a crafted large file could spike memory. Add `guard data.count < 10_000_000` before parsing. | `[ ]` | Minor |
+| P13-06 | **Research JSON import size guard** — `DealResearchImporter.apply()` has no size cap; a crafted large file could spike memory. Add `guard data.count < 10_000_000` before parsing. | `[x]` | Implemented in commit f33f22a Aug 2 |
 | P13-07 | **HTTP ingestion API key** — port 9000 has no auth token; any local process can POST deals. Acceptable for personal use; needs a nonce/key for multi-user or shared machine. | `[ ]` | Pre-distribution |
 
 ---
@@ -391,8 +391,9 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 | P14-12 | **Geocoding consistency** — country consistency check post-geocode (rejects Morocco for PT deal), MarketFeedRegistry alias lookup in `inferCountry()`, extended PT heuristic (Odemira, Silves, Portimão etc.), `inferCity()` accepts registry aliases. | `[x]` | Aug 2 |
 | P14-13 | **Intel brief: scrollable, source attribution, market-focused prompt** — ScrollView + context header (N articles · market · 60d), post-hoc article matching shows source/date/link per signal, prompt enforces market relevance and passes article source names. | `[x]` | Aug 2 |
 | P14-14 | **Grade/score discrepancy** — `PorteosScoreCalculator.grade()` aligned to `VibeGrade` thresholds (B:≥65); was B:≥60 causing dashboard B vs AI Vibe C for same score. | `[x]` | Aug 2 |
-| P14-15 | **Research JSON size guard** — `guard data.count < 10_000_000` before parsing to prevent memory spike from crafted large files. | `[ ]` | Minor |
-| P14-16 | **HTTP ingestion API key** — port 9000 unauthenticated. Acceptable personal use; add nonce before multi-user distribution. | `[ ]` | Pre-distribution |
+| P14-15 | **JSON import expansion** — Add OpEx breakdown (6 fields: property mgmt, tax, insurance, utilities, maintenance, reserves), regulatory fields (7 fields: zoning, FAR, max height, max units, planning status, heritage, STR licence), vacancy rate, closing costs, property type. Enables near-complete ingestion for complex development/hospitality deals from AI research exports. | `[ ]` | v1.1 |
+| P14-16 | **HTTP ingestion API key** — See P13-07 (duplicate). | `[—]` | Duplicate |
+| P14-17 | **Inspector MEDIA tab alignment** — Hero image with `.scaledToFill()` reported aspect-ratio-scaled layout width (~427px for 16:9 @ 240px tall) instead of proposed 280px, making inspector pane wider than WEIGHTS/AI VIBE tabs. Fixed: added `frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)` to Image in `heroSlot` + `.clipped()` backstop in AppShell. All three inspector tabs now pixel-identical in header. | `[x]` | Aug 14 |
 
 ---
 

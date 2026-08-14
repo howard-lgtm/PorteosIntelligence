@@ -26,15 +26,15 @@ struct DealMediaGalleryView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            headerBar
-            fullWidthDivider
             heroSlot
             fullWidthDivider
             labelFilterChips
             fullWidthDivider
             thumbnailGrid
-            fullWidthDivider
-            if !selectedImageIDs.isEmpty { batchActionBar }
+            if !selectedImageIDs.isEmpty {
+                fullWidthDivider
+                batchActionBar
+            }
             fullWidthDivider
             addButtonsBar
         }
@@ -74,7 +74,7 @@ struct DealMediaGalleryView: View {
                 .truncationMode(.tail)
             Spacer(minLength: 8)
         }
-        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.horizontal, 8)
         .frame(height: DesignTokens.rowHeightHeader)
         .background(DesignTokens.canvasBase)
     }
@@ -89,6 +89,7 @@ struct DealMediaGalleryView: View {
                 Image(nsImage: img)
                     .resizable()
                     .scaledToFill()
+                    .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
                     .clipped()
                     .overlay(alignment: .topTrailing) {
                         Text("HERO")
@@ -140,7 +141,6 @@ struct DealMediaGalleryView: View {
                         selectedImageIDs = []
                     }
                 }
-                Spacer(minLength: 0)
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 6)
@@ -443,7 +443,7 @@ struct DealMediaGalleryView: View {
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.horizontal, 8)
         .padding(.vertical, 6)
         .background(DesignTokens.accentRust.opacity(0.06))
         .animation(.easeInOut(duration: 0.15), value: selectedImageIDs.isEmpty)

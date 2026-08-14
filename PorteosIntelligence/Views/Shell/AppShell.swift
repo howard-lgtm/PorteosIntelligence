@@ -445,6 +445,8 @@ struct AppShell: View {
             }
         } else if let deal = selectedDeal {
             InspectorPane(deal: deal)
+                .frame(width: inspectorPaneWidth)
+                .clipped()
         } else {
             VStack {
                 Spacer()
