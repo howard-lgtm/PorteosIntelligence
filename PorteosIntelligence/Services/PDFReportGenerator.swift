@@ -66,15 +66,15 @@ final class PDFReportGenerator {
         let r = comp[0], g = comp[1], b2 = comp[2]
 
         // SHELL COLORS: Invert for print
-        // Background #0A0A0A → White
+        // Background #0A0A0A → Pure White (no banding)
         if near(r, 0.039) && near(g, 0.039) && near(b2, 0.039) {
             return NSColor.white.cgColor }
-        // Surface #111111 → Light Gray
+        // Surface #111111 → Pure White (no gray alternating rows)
         if near(r, 0.067) && near(g, 0.067) && near(b2, 0.067) {
-            return NSColor(white: 0.96, alpha: 1).cgColor }
-        // Border #333333 → Medium Gray
+            return NSColor.white.cgColor }
+        // Border #333333 → Light Gray
         if near(r, 0.200) && near(g, 0.200) && near(b2, 0.200) {
-            return NSColor(white: 0.80, alpha: 1).cgColor }
+            return NSColor(white: 0.85, alpha: 1).cgColor }
         // Text Primary #F8F9FA → Black
         if near(r, 0.973) && near(g, 0.976) && near(b2, 0.980) {
             return NSColor.black.cgColor }
@@ -85,28 +85,15 @@ final class PDFReportGenerator {
         if near(r, 0.400) && near(g, 0.400) && near(b2, 0.400) {
             return NSColor(white: 0.45, alpha: 1).cgColor }
 
-        // ACCENT COLORS: Convert to grayscale for print
-        // Rust    #C25E30 → Dark Gray  (primary accent — headings, section bars)
-        if near(r, 0.761) && near(g, 0.369) && near(b2, 0.188) {
-            return NSColor(white: 0.30, alpha: 1).cgColor }
-        // Red     #EF4444 → Dark Gray  (critical signals)
-        if near(r, 0.937) && near(g, 0.267) && near(b2, 0.267) {
-            return NSColor(white: 0.30, alpha: 1).cgColor }
-        // Green   #10B981 → Medium Gray (positive signals, NOI)
-        if near(r, 0.063) && near(g, 0.725) && near(b2, 0.506) {
-            return NSColor(white: 0.40, alpha: 1).cgColor }
-        // Teal    #14B8A6 → Medium Gray (hospitality accent)
-        if near(r, 0.078) && near(g, 0.722) && near(b2, 0.651) {
-            return NSColor(white: 0.40, alpha: 1).cgColor }
-        // Purple  #A855F7 → Medium Gray (design accent)
-        if near(r, 0.659) && near(g, 0.333) && near(b2, 0.969) {
-            return NSColor(white: 0.40, alpha: 1).cgColor }
-        // Blue    #3B82F6 → Medium Gray (circular accent)
-        if near(r, 0.231) && near(g, 0.510) && near(b2, 0.965) {
-            return NSColor(white: 0.40, alpha: 1).cgColor }
-        // Amber   #F59E0B → Light Gray  (warnings)
-        if near(r, 0.961) && near(g, 0.620) && near(b2, 0.043) {
-            return NSColor(white: 0.50, alpha: 1).cgColor }
+        // ACCENT COLORS: Keep for section headers and key indicators
+        // Rust #C25E30 → Keep (section headers, main accent)
+        // Teal #14B8A6 → Keep (hospitality section headers)
+        // Purple #A855F7 → Keep (design section headers)
+        // Blue #3B82F6 → Keep (circular section headers)
+        // Green/Red/Amber → Keep (score indicators, pos/neg signals)
+        
+        // All accent colors pass through unchanged in light mode
+        // This preserves section header bands and score badges
 
         // Unrecognized colors pass through
         return color
