@@ -20,6 +20,7 @@ extension Notification.Name {
     static let showSettings         = Notification.Name("porteos.showSettings")
     static let showGlossary         = Notification.Name("porteos.showGlossary")
     static let deleteSelectedDeal   = Notification.Name("porteos.deleteSelectedDeal")
+    static let preloadMarketAssumptions = Notification.Name("porteos.preloadMarketAssumptions")
 }
 
 // MARK: - FocusedValue: hasDealSelected
@@ -63,6 +64,12 @@ struct AppCommandsProvider: Commands {
         // ── Edit menu: Delete selected deal ───────────────────────────────────
         CommandGroup(after: .undoRedo) {
             Divider()
+            Button("Preload Market Assumptions…") {
+                post(.preloadMarketAssumptions)
+            }
+            .keyboardShortcut("p", modifiers: [.command, .shift])
+            .disabled(!(hasDealSelected ?? false))
+            
             Button("Delete Deal…") {
                 post(.deleteSelectedDeal)
             }

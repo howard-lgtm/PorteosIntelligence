@@ -394,6 +394,7 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 | P14-15 | **JSON import expansion** — Add OpEx breakdown (6 fields: property mgmt, tax, insurance, utilities, maintenance, reserves), regulatory fields (7 fields: zoning, FAR, max height, max units, planning status, heritage, STR licence), vacancy rate, closing costs, property type. Enables near-complete ingestion for complex development/hospitality deals from AI research exports. | `[ ]` | v1.1 |
 | P14-16 | **HTTP ingestion API key** — See P13-07 (duplicate). | `[—]` | Duplicate |
 | P14-17 | **Inspector MEDIA tab alignment** — Hero image with `.scaledToFill()` reported aspect-ratio-scaled layout width (~427px for 16:9 @ 240px tall) instead of proposed 280px, making inspector pane wider than WEIGHTS/AI VIBE tabs. Fixed: added `frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)` to Image in `heroSlot` + `.clipped()` backstop in AppShell. All three inspector tabs now pixel-identical in header. | `[x]` | Aug 14 |
+| P14-18 | **Preload discoverability** — `[ PRELOAD MARKET ASSUMPTIONS ]` button in `FullDealEditSheet` was conditionally hidden (`if city.isEmpty == false && totalArea > 0`), making it invisible to users creating new deals before filling those fields. Fixed: button now always visible with disabled state + hint text "// requires city + area" when preconditions not met. Added Edit menu command "Preload Market Assumptions…" (⌘⇧P) for keyboard access. | `[x]` | Aug 18 |
 
 ---
 

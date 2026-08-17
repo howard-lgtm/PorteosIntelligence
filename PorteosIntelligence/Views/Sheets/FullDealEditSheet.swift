@@ -94,6 +94,11 @@ struct FullDealEditSheet: View {
         return (s, result.scoreGrade, color)
     }
 
+    // MARK: Preload preconditions
+    private var canPreload: Bool {
+        !deal.locationCity.isEmpty && deal.totalArea > 0
+    }
+
     // MARK: Body
 
     var body: some View {
@@ -155,6 +160,18 @@ struct FullDealEditSheet: View {
                 deal:  deal,
                 label: snap.label
             )
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .preloadMarketAssumptions)) { _ in
+            guard canPreload else { return }
+            preloadEstimate = DealPreloader.estimate(
+                city:          deal.locationCity,
+                area:          deal.totalArea,
+                landArea:      deal.landArea,
+                purchasePrice: deal.purchasePrice,
+                propertyType:  deal.propertyType,
+                propertyName:  deal.propertyName
+            )
+            if preloadEstimate != nil { showPreloadReview = true }
         }
     }
 
@@ -283,40 +300,48 @@ struct FullDealEditSheet: View {
 
             gpsCoordinatesField
 
-            // Preload button — appears when city + area are set
-            if !deal.locationCity.isEmpty && deal.totalArea > 0 {
-                Button {
-                    preloadEstimate = DealPreloader.estimate(
-                        city:          deal.locationCity,
-                        area:          deal.totalArea,
-                        landArea:      deal.landArea,
-                        purchasePrice: deal.purchasePrice,
-                        propertyType:  deal.propertyType,
-                        propertyName:  deal.propertyName
-                    )
-                    if preloadEstimate != nil { showPreloadReview = true }
-                } label: {
-                    HStack(spacing: 8) {
-                        Text("[ PRELOAD MARKET ASSUMPTIONS ]")
-                            .porteosRowLabel()
-                            .foregroundStyle(accentRust)
-                        Spacer()
+            // Preload button — always visible, disabled when preconditions not met
+            Button {
+                preloadEstimate = DealPreloader.estimate(
+                    city:          deal.locationCity,
+                    area:          deal.totalArea,
+                    landArea:      deal.landArea,
+                    purchasePrice: deal.purchasePrice,
+                    propertyType:  deal.propertyType,
+                    propertyName:  deal.propertyName
+                )
+                if preloadEstimate != nil { showPreloadReview = true }
+            } label: {
+                HStack(spacing: 8) {
+                    Text("[ PRELOAD MARKET ASSUMPTIONS ]")
+                        .porteosRowLabel()
+                        .foregroundStyle(canPreload ? accentRust : textTertiary)
+                    Spacer()
+                    if canPreload {
                         Text("// \(deal.locationCity) benchmarks")
                             .porteosMeta()
                             .foregroundStyle(textTertiary)
+                    } else {
+                        Text("// requires city + area")
+                            .porteosMeta()
+                            .foregroundStyle(textTertiary.opacity(0.6))
                     }
-                    .padding(.horizontal, 8)
-                    .frame(height: DesignTokens.rowHeightData)
-                    .background(accentRust.opacity(0.05))
-                    .overlay(Rectangle().strokeBorder(accentRust.opacity(0.3), lineWidth: DesignTokens.dividerWidth))
-                    .clipShape(Rectangle())
                 }
-                .buttonStyle(.plain)
-                .sheet(isPresented: $showPreloadReview) {
-                    if let est = preloadEstimate {
-                        PreloadReviewSheet(deal: deal, estimate: est) {
-                            showPreloadReview = false
-                        }
+                .padding(.horizontal, 8)
+                .frame(height: DesignTokens.rowHeightData)
+                .background(canPreload ? accentRust.opacity(0.05) : shellSurface)
+                .overlay(Rectangle().strokeBorder(
+                    canPreload ? accentRust.opacity(0.3) : shellBorder,
+                    lineWidth: DesignTokens.dividerWidth
+                ))
+                .clipShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!canPreload)
+            .sheet(isPresented: $showPreloadReview) {
+                if let est = preloadEstimate {
+                    PreloadReviewSheet(deal: deal, estimate: est) {
+                        showPreloadReview = false
                     }
                 }
             }
