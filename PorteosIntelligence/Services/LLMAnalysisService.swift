@@ -190,7 +190,12 @@ final class LLMAnalysisService {
         var request = URLRequest(url: url, timeoutInterval: Self.ollamaTimeoutSeconds)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body: [String: Any] = ["model": modelName, "prompt": prompt, "stream": false]
+        let body: [String: Any] = [
+            "model": modelName,
+            "prompt": prompt,
+            "stream": false,
+            "options": ["num_predict": 2048]
+        ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
         let (data, response): (Data, URLResponse)
@@ -228,7 +233,7 @@ final class LLMAnalysisService {
         let body: [String: Any] = [
             "model": Self.openAIModelName,
             "messages": [["role": "user", "content": prompt]],
-            "max_tokens": 800
+            "max_tokens": 1500
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
@@ -279,7 +284,7 @@ final class LLMAnalysisService {
 
         let body: [String: Any] = [
             "contents": [["parts": [["text": prompt]]]],
-            "generationConfig": ["maxOutputTokens": 800]
+            "generationConfig": ["maxOutputTokens": 1500]
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
@@ -445,38 +450,67 @@ Previous conversation:
         let dealContext = """
 Current deal: \(deal.propertyName.isEmpty ? "Unnamed Property" : deal.propertyName)
 Location: \(deal.locationCity), \(deal.locationCountry)
-Type: \(deal.propertyType)
-Area: \(deal.totalArea > 0 ? "\(Int(deal.totalArea))m²" : "N/A")
-Price: \(deal.purchasePrice > 0 ? deal.currencySymbol + "\(Int(deal.purchasePrice))" : "N/A")
-Score: \((deal.porteosScore ?? 0) > 0 ? "\(Int(deal.porteosScore ?? 0))/100" : "N/A")
+Type: \(deal.propertyType.isEmpty ? "Not specified" : deal.propertyType)
+Area: \(deal.totalArea > 0 ? "\(Int(deal.totalArea))m²" : "Not specified")
+Price: \(deal.purchasePrice > 0 ? deal.currencySymbol + "\(Int(deal.purchasePrice))" : "Not specified")
+Score: \((deal.porteosScore ?? 0) > 0 ? "\(Int(deal.porteosScore ?? 0))/100" : "Not evaluated yet")
 """
         
         return """
-You are a professional real estate research assistant helping analyze investment opportunities. The user is asking about a specific property deal.
+You are an expert real estate investment analyst helping a user research property deals. Your role is to provide clear, actionable insights in a conversational tone.
 
 \(dealContext)\(historyContext)
 User question: \(message)
 
-Instructions:
-1. Answer concisely and professionally.
-2. If the user asks for market data, zoning info, comparable properties, or financial analysis, provide detailed information.
-3. If you provide numerical data or metrics, format them as JSON in a code block so they can be imported into the deal.
-4. JSON format example:
-   ```json
-   {
-     "property_type": "Hotel",
-     "total_area": 1200,
-     "purchase_price": 850000,
-     "land_area": 500,
-     "latitude": 41.1579,
-     "longitude": -8.6291,
-     "target_keys_count": 25,
-     "adr_eur": 95,
-     "occupancy_rate_pct": 72
-   }
-   ```
+## Response Guidelines:
 
-Answer the user's question now:
+1. **Start with a direct answer** to the user's question in 1-2 sentences
+2. **Provide context and reasoning** - explain why this matters for the deal
+3. **Include specific data** when relevant (market rates, benchmarks, comparable properties)
+4. **Be conversational but professional** - like a knowledgeable colleague, not a robot
+5. **Use formatting** for readability:
+   - **Bold** for key terms and metrics
+   - Bullet points for lists
+   - Clear section breaks for complex topics
+
+6. **If providing numerical data**, structure it clearly within your explanation, then OPTIONALLY provide a JSON block at the end for import:
+
+```json
+{
+  "field_name": value,
+  "another_field": value
+}
+```
+
+## JSON Format (OPTIONAL - only if you're providing importable data):
+- Use snake_case field names
+- Common fields: `property_type`, `total_area`, `purchase_price`, `land_area`, `latitude`, `longitude`
+- Hospitality: `target_keys_count`, `adr_eur`, `occupancy_rate_pct`, `opex_ratio_pct`
+- Financial: `closing_costs_eur`, `renovation_capex_eur`, `interest_rate_pct`, `ltv_pct`
+- Regulatory: `zoning_class`, `floor_area_ratio`, `max_building_height_m`, `planning_status`
+
+**Example response format:**
+
+"Based on market data for the centro histórico in Porto, average hotel ADR is around **€95-110** per night for boutique properties. This is 15-20% higher than the city average due to tourism demand and UNESCO heritage status.
+
+For a 25-room hotel in this area, you'd typically see:
+- **Occupancy**: 70-75% annually
+- **RevPAR**: €70-80
+- **OpEx ratio**: 25-30% of revenue
+
+This market has strong fundamentals - Porto saw 3.5M tourists in 2025, and boutique hotels under 30 keys perform particularly well in the historic core.
+
+```json
+{
+  "property_type": "Hotel",
+  "target_keys_count": 25,
+  "adr_eur": 102,
+  "occupancy_rate_pct": 72,
+  "opex_ratio_pct": 27
+}
+```"
+
+Now respond to the user's question:
 """
     }
 }

@@ -357,11 +357,7 @@ struct ChatInputBar: View {
     
     var body: some View {
         HStack(spacing: 8) {
-            TextField("Type message...", text: $text, onCommit: {
-                if !text.isEmpty && !isLoading {
-                    onSend()
-                }
-            })
+            TextField("Type message...", text: $text)
             .porteosRowValue()
             .textFieldStyle(.plain)
             .padding(.horizontal, 8)
@@ -372,6 +368,11 @@ struct ChatInputBar: View {
                     .stroke(shellBorder, lineWidth: 1)
             )
             .disabled(isLoading)
+            .onSubmit {
+                if !text.isEmpty && !isLoading {
+                    onSend()
+                }
+            }
             
             Button {
                 onSend()
