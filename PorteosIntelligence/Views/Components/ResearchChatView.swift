@@ -87,9 +87,6 @@ struct ResearchChatView: View {
     private var messageList: some View {
         ScrollViewReader { proxy in
             ScrollView(.vertical) {
-                // VStack (not LazyVStack) so SwiftUI resolves a definite
-                // horizontal width before measuring each row's height —
-                // prevents the "accordion" collapse/expand on scroll.
                 VStack(alignment: .leading, spacing: 0) {
                     if messages.isEmpty && !isLoading {
                         emptyState
@@ -105,18 +102,38 @@ struct ResearchChatView: View {
                                 .id("stream")
                         }
                     }
+                    // Bottom anchor with breathing room so the last message
+                    // is fully visible after the deferred scroll
+                    Color.clear.frame(height: 24).id("bottom")
                 }
+                // Explicit maxWidth: .infinity ensures the VStack — and every
+                // Text inside it — receives a concrete horizontal bound from
+                // the ScrollView, preventing right-edge overflow.
                 .frame(maxWidth: .infinity, alignment: .leading)
-                // Invisible anchor at the very bottom
-                Color.clear.frame(height: 1).id("bottom")
             }
             .background(bg)
+            // Streaming chunks: scroll immediately (no layout ambiguity —
+            // the row already exists and is just growing taller)
             .onChange(of: streamingText) { _, _ in
                 proxy.scrollTo("bottom", anchor: .bottom)
             }
+            // New saved message: defer by one runloop tick so SwiftUI can
+            // complete the layout pass and measure the new row's full height
+            // before we ask ScrollViewReader to position to the bottom.
             .onChange(of: messages.count) { _, _ in
-                withAnimation(.easeOut(duration: 0.15)) {
-                    proxy.scrollTo("bottom", anchor: .bottom)
+                DispatchQueue.main.async {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        proxy.scrollTo("bottom", anchor: .bottom)
+                    }
+                }
+            }
+            // Also scroll when loading state clears (streaming just finished)
+            .onChange(of: isLoading) { _, loading in
+                guard !loading else { return }
+                DispatchQueue.main.async {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        proxy.scrollTo("bottom", anchor: .bottom)
+                    }
                 }
             }
         }
@@ -357,11 +374,15 @@ struct MessageRow: View {
                 }
             }
 
-            // Body — fully wrapping, no line limit
+            // Body — unlimited lines, constrained to parent width.
+            // lineLimit(nil) respects whatever horizontal width the parent
+            // proposes; fixedSize is removed because it can negotiate its own
+            // width independently and cause right-edge overflow in ScrollViews.
             Text(message.content)
                 .porteosRowValue()
                 .foregroundStyle(message.role == "user" ? tp1 : tp2)
-                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(nil)
+                .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .textSelection(.enabled)
 
@@ -388,7 +409,8 @@ struct MessageRow: View {
                 ForEach(auto, id: \.fieldName) { c in
                     Text("  • \(c.fieldName): \(c.newValue)")
                         .porteosMeta().foregroundStyle(tp3)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(nil)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             if !suggested.isEmpty {
@@ -397,7 +419,8 @@ struct MessageRow: View {
                 ForEach(suggested, id: \.fieldName) { c in
                     Text("  • \(c.fieldName): \(c.oldValue ?? "—") → \(c.newValue)")
                         .porteosMeta().foregroundStyle(tp3)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(nil)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 Button { onApply(suggested) } label: {
                     Text("[ APPLY ALL ]")
@@ -448,7 +471,8 @@ struct StreamingRow: View {
                 (Text(text).foregroundStyle(tp2) +
                  Text("▋").foregroundStyle(teal.opacity(0.8)))
                     .porteosRowValue()
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(nil)
+                    .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .textSelection(.enabled)
             }
