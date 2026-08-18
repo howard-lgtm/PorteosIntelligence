@@ -374,12 +374,13 @@ struct MessageRow: View {
                 }
             }
 
-            // Body — unlimited lines, constrained to parent width.
-            // lineLimit(nil) respects whatever horizontal width the parent
-            // proposes; fixedSize is removed because it can negotiate its own
-            // width independently and cause right-edge overflow in ScrollViews.
+            // Chat body text — DO NOT use .porteosRowValue() here.
+            // porteosTextStyle applies .frame(height: lineHeight) + .lineLimit(1)
+            // which is correct for single-line data rows but clamps a chat
+            // response to 16pt tall and overflows text horizontally.
+            // Apply font token only, letting the view grow to its natural height.
             Text(message.content)
-                .porteosRowValue()
+                .font(DesignTokens.TypeScale.rowValue)
                 .foregroundStyle(message.role == "user" ? tp1 : tp2)
                 .lineLimit(nil)
                 .multilineTextAlignment(.leading)
@@ -408,17 +409,20 @@ struct MessageRow: View {
                     .porteosMeta().foregroundStyle(go)
                 ForEach(auto, id: \.fieldName) { c in
                     Text("  • \(c.fieldName): \(c.newValue)")
-                        .porteosMeta().foregroundStyle(tp3)
+                        .font(DesignTokens.TypeScale.meta)
+                        .foregroundStyle(tp3)
                         .lineLimit(nil)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             if !suggested.isEmpty {
                 Text("⚠ review \(suggested.count) suggested change\(suggested.count == 1 ? "" : "s")")
-                    .porteosMeta().foregroundStyle(warn)
+                    .font(DesignTokens.TypeScale.meta)
+                    .foregroundStyle(warn)
                 ForEach(suggested, id: \.fieldName) { c in
                     Text("  • \(c.fieldName): \(c.oldValue ?? "—") → \(c.newValue)")
-                        .porteosMeta().foregroundStyle(tp3)
+                        .font(DesignTokens.TypeScale.meta)
+                        .foregroundStyle(tp3)
                         .lineLimit(nil)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -467,10 +471,11 @@ struct StreamingRow: View {
                     .porteosMeta().foregroundStyle(teal.opacity(0.6))
                     .onReceive(timer) { _ in dotPhase = (dotPhase + 1) % 3 }
             } else {
-                // Live content with a blinking cursor at the end
+                // Live streaming text + blinking cursor.
+                // Font token only — no porteosRowValue() to avoid frame(height:16) clamp.
                 (Text(text).foregroundStyle(tp2) +
                  Text("▋").foregroundStyle(teal.opacity(0.8)))
-                    .porteosRowValue()
+                    .font(DesignTokens.TypeScale.rowValue)
                     .lineLimit(nil)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
