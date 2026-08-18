@@ -87,7 +87,10 @@ struct ResearchChatView: View {
     private var messageList: some View {
         ScrollViewReader { proxy in
             ScrollView(.vertical) {
-                LazyVStack(alignment: .leading, spacing: 0) {
+                // VStack (not LazyVStack) so SwiftUI resolves a definite
+                // horizontal width before measuring each row's height —
+                // prevents the "accordion" collapse/expand on scroll.
+                VStack(alignment: .leading, spacing: 0) {
                     if messages.isEmpty && !isLoading {
                         emptyState
                     } else {
@@ -95,22 +98,19 @@ struct ResearchChatView: View {
                             MessageRow(message: msg, deal: deal,
                                        onApply: applyChanges)
                                 .id(msg.id)
-                            Rectangle().fill(border).frame(height: 1)
                         }
-                        // Live streaming row
                         if isLoading {
                             StreamingRow(text: streamingText,
                                          model: LLMAnalysisService.shared.activeModelDisplayName)
                                 .id("stream")
-                            Rectangle().fill(border).frame(height: 1)
                         }
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 // Invisible anchor at the very bottom
                 Color.clear.frame(height: 1).id("bottom")
             }
             .background(bg)
-            // Scroll down whenever a new chunk arrives or a message is saved
             .onChange(of: streamingText) { _, _ in
                 proxy.scrollTo("bottom", anchor: .bottom)
             }
@@ -372,8 +372,7 @@ struct MessageRow: View {
         }
         .padding(8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(message.role == "user" ? surf : bg)
-    }
+        .background(message.role == "user" ? surf : bg)    }
 
     @ViewBuilder
     private func fieldsSummary(_ fields: [FieldChange]) -> some View {
