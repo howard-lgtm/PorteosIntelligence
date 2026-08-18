@@ -1,398 +1,466 @@
 import SwiftUI
 import SwiftData
+import Combine
 
 // MARK: - ResearchChatView
-// AI research chat with smart auto-apply: empty fields auto-populate,
-// existing fields show as suggestions requiring approval.
+// AI research chat with live streaming output, text wrapping,
+// clear-chat command, and smart auto-apply for importable data.
 
 struct ResearchChatView: View {
-    
+
     @Bindable var deal: PropertyDeal
     @Environment(\.modelContext) private var modelContext
-    
+
     @Query private var allMessages: [ResearchMessage]
-    
-    @State private var inputText: String = ""
-    @State private var isLoading: Bool = false
-    @State private var scrollID: UUID = UUID()
-    
-    init(deal: PropertyDeal) {
-        self.deal = deal
-    }
-    
+
+    @State private var inputText: String      = ""
+    @State private var isLoading: Bool        = false
+    @State private var streamingText: String  = ""   // live chunks accumulate here
+    @State private var streamTask: Task<Void, Never>? = nil
+    @State private var showClearConfirm: Bool = false
+
+    // MARK: Design tokens
+    private let bg      = DesignTokens.canvasBase
+    private let surf    = DesignTokens.surfacePanel
+    private let border  = DesignTokens.dividerStructural
+    private let tp1     = DesignTokens.textPrimary
+    private let tp2     = DesignTokens.textSecondary
+    private let tp3     = DesignTokens.textDim
+    private let teal    = DesignTokens.accentHospitality
+    private let rust    = DesignTokens.accentRust
+
+    init(deal: PropertyDeal) { self.deal = deal }
+
     private var messages: [ResearchMessage] {
         allMessages.filter { $0.dealID == deal.id }.sorted { $0.timestamp < $1.timestamp }
     }
-    
-    private var shellBg = DesignTokens.canvasBase
-    private var shellSurface = DesignTokens.surfacePanel
-    private var shellBorder = DesignTokens.dividerStructural
-    private var textPrimary = DesignTokens.textPrimary
-    private var textSecondary = DesignTokens.textSecondary
-    private var textTertiary = DesignTokens.textDim
-    private var accentTeal = DesignTokens.accentHospitality
-    private var accentRust = DesignTokens.accentRust
-    private var statusGo = DesignTokens.statusGo
-    private var statusWarn = DesignTokens.statusWarn
-    
+
+    // MARK: Body
+
     var body: some View {
         VStack(spacing: 0) {
-            // Message history
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(spacing: 12, pinnedViews: []) {
-                        ForEach(messages) { message in
-                            MessageBubble(
-                                message: message,
-                                deal: deal,
-                                onApply: { changes in
-                                    applyChanges(changes)
-                                }
-                            )
-                            .id(message.id)
+            chatHeader
+            Divider().background(border)
+            messageList
+            Divider().background(border)
+            inputBar
+        }
+        .confirmationDialog("Clear research history?",
+                            isPresented: $showClearConfirm,
+                            titleVisibility: .visible) {
+            Button("Clear", role: .destructive) { clearChat() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("All messages for this deal will be deleted.")
+        }
+    }
+
+    // MARK: Header
+
+    private var chatHeader: some View {
+        HStack(spacing: 0) {
+            Text("porteos@research ~ %")
+                .porteosMeta()
+                .foregroundStyle(tp3)
+            Spacer()
+            if !messages.isEmpty || isLoading {
+                Button {
+                    showClearConfirm = true
+                } label: {
+                    Text("[ CLEAR ]")
+                        .porteosMeta()
+                        .foregroundStyle(tp3)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .overlay(Rectangle().stroke(border, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 8)
+        .frame(height: DesignTokens.rowHeightHeader)
+        .background(surf)
+    }
+
+    // MARK: Message list
+
+    private var messageList: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.vertical) {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    if messages.isEmpty && !isLoading {
+                        emptyState
+                    } else {
+                        ForEach(messages) { msg in
+                            MessageRow(message: msg, deal: deal,
+                                       onApply: applyChanges)
+                                .id(msg.id)
+                            Rectangle().fill(border).frame(height: 1)
+                        }
+                        // Live streaming row
+                        if isLoading {
+                            StreamingRow(text: streamingText,
+                                         model: LLMAnalysisService.shared.activeModelDisplayName)
+                                .id("stream")
+                            Rectangle().fill(border).frame(height: 1)
                         }
                     }
-                    .padding(12)
-                    
-                    // Spacer to push content up
-                    Color.clear.frame(height: 1).id(scrollID)
                 }
-                .background(shellBg)
-                .onChange(of: messages.count) { _, _ in
-                    withAnimation {
-                        proxy.scrollTo(scrollID, anchor: .bottom)
-                    }
+                // Invisible anchor at the very bottom
+                Color.clear.frame(height: 1).id("bottom")
+            }
+            .background(bg)
+            // Scroll down whenever a new chunk arrives or a message is saved
+            .onChange(of: streamingText) { _, _ in
+                proxy.scrollTo("bottom", anchor: .bottom)
+            }
+            .onChange(of: messages.count) { _, _ in
+                withAnimation(.easeOut(duration: 0.15)) {
+                    proxy.scrollTo("bottom", anchor: .bottom)
                 }
             }
-            
-            Rectangle().fill(shellBorder).frame(height: 1)
-            
-            // Chat input
-            ChatInputBar(
-                text: $inputText,
-                isLoading: isLoading,
-                onSend: { sendMessage() }
-            )
         }
     }
-    
+
+    // MARK: Empty state
+
+    private var emptyState: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("// research mode")
+                .porteosMeta()
+                .foregroundStyle(teal)
+            Text("Ask anything about this deal —\nmarket comps, zoning, ADR benchmarks,\nfinancial feasibility, risk factors.")
+                .porteosRowLabel()
+                .foregroundStyle(tp3)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: Input bar
+
+    private var inputBar: some View {
+        HStack(spacing: 6) {
+            TextField("Type message...", text: $inputText)
+                .textFieldStyle(.plain)
+                .porteosRowValue()
+                .foregroundStyle(tp1)
+                .padding(.horizontal, 8)
+                .frame(height: 30)
+                .background(bg)
+                .overlay(Rectangle().stroke(border, lineWidth: 1))
+                .disabled(isLoading)
+                .onSubmit { sendMessage() }
+
+            Button {
+                if isLoading {
+                    cancelStream()
+                } else {
+                    sendMessage()
+                }
+            } label: {
+                Text(isLoading ? "[ ✕ ]" : "[ ↵ ]")
+                    .porteosMeta()
+                    .foregroundStyle(isLoading ? rust : (inputText.isEmpty ? tp3 : teal))
+                    .frame(width: 40, height: 30)
+                    .background(surf)
+                    .overlay(Rectangle().stroke(border, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .disabled(!isLoading && inputText.trimmingCharacters(in: .whitespaces).isEmpty)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(surf)
+    }
+
+    // MARK: Actions
+
     private func sendMessage() {
-        guard !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        
-        let userMessage = ResearchMessage(
-            dealID: deal.id,
-            role: "user",
-            content: inputText
-        )
-        modelContext.insert(userMessage)
-        
-        let userText = inputText
-        inputText = ""
-        isLoading = true
-        
-        Task {
+        let text = inputText.trimmingCharacters(in: .whitespaces)
+        guard !text.isEmpty, !isLoading else { return }
+
+        // Save user message immediately
+        let userMsg = ResearchMessage(dealID: deal.id, role: "user", content: text)
+        modelContext.insert(userMsg)
+        try? modelContext.save()
+
+        inputText    = ""
+        isLoading    = true
+        streamingText = ""
+
+        let historySnapshot = messages.map { ($0.role, $0.content) }
+
+        streamTask = Task { @MainActor in
             do {
-                // Call LLM
-                let response = try await LLMAnalysisService.shared.chatResearch(
-                    message: userText,
+                let stream = LLMAnalysisService.shared.streamResearch(
+                    message: text,
                     deal: deal,
-                    history: messages.map { ($0.role, $0.content) }
+                    history: historySnapshot
                 )
-                
-                // Create AI message
-                let aiMessage = ResearchMessage(
+                for try await chunk in stream {
+                    streamingText += chunk
+                }
+                // Stream finished — persist full response
+                let aiMsg = ResearchMessage(
                     dealID: deal.id,
                     role: "assistant",
-                    content: response,
+                    content: streamingText,
                     modelName: LLMAnalysisService.shared.activeModelDisplayName
                 )
-                
-                // Check for JSON in response and auto-apply if found
-                if let extractedData = extractJSON(from: response) {
-                    let changes = processResearchData(extractedData)
-                    aiMessage.extractedFields = changes
-                    aiMessage.hasExtractedData = true
+                // Check for importable JSON
+                if let json = extractJSON(from: streamingText) {
+                    let changes = processResearchData(json)
+                    aiMsg.extractedFields    = changes
+                    aiMsg.hasExtractedData   = !changes.isEmpty
                 }
-                
-                await MainActor.run {
-                    modelContext.insert(aiMessage)
-                    isLoading = false
-                    try? modelContext.save()
-                }
+                modelContext.insert(aiMsg)
+                try? modelContext.save()
+                streamingText = ""
+                isLoading = false
             } catch {
-                let errorMessage = ResearchMessage(
+                // Show error as a message
+                let errMsg = ResearchMessage(
                     dealID: deal.id,
                     role: "assistant",
-                    content: "Error: \(error.localizedDescription)"
+                    content: "⚠ \(error.localizedDescription)"
                 )
-                await MainActor.run {
-                    modelContext.insert(errorMessage)
-                    isLoading = false
-                }
+                modelContext.insert(errMsg)
+                try? modelContext.save()
+                streamingText = ""
+                isLoading = false
             }
         }
     }
-    
+
+    private func cancelStream() {
+        streamTask?.cancel()
+        streamTask    = nil
+        streamingText = ""
+        isLoading     = false
+    }
+
+    private func clearChat() {
+        for msg in messages { modelContext.delete(msg) }
+        try? modelContext.save()
+    }
+
+    // MARK: JSON extraction + smart apply
+
     private func extractJSON(from text: String) -> [String: Any]? {
-        // Find JSON in response (between ```json and ``` or just {...})
-        let patterns = [
-            #"```json\s*([\s\S]*?)\s*```"#,
-            #"\{[\s\S]*\}"#
-        ]
-        
-        for pattern in patterns {
-            if let range = text.range(of: pattern, options: .regularExpression),
-               let data = String(text[range]).data(using: .utf8),
+        // Look for ```json ... ``` block first, then bare { ... }
+        if let range = text.range(of: #"```json\s*([\s\S]*?)\s*```"#, options: .regularExpression) {
+            let raw = String(text[range])
+                .replacingOccurrences(of: "```json", with: "")
+                .replacingOccurrences(of: "```", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if let data = raw.data(using: .utf8),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                return json
+            }
+        }
+        // Bare object fallback
+        if let range = text.range(of: #"\{[\s\S]+\}"#, options: .regularExpression) {
+            let raw = String(text[range])
+            if let data = raw.data(using: .utf8),
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
                 return json
             }
         }
         return nil
     }
-    
+
     private func processResearchData(_ json: [String: Any]) -> [FieldChange] {
         var changes: [FieldChange] = []
-        
-        // Helper to create change entry
-        func addChange(_ name: String, old: String?, new: String, autoApplied: Bool) {
-            changes.append(FieldChange(
-                fieldName: name,
-                oldValue: old,
-                newValue: new,
-                autoApplied: autoApplied
-            ))
+
+        func add(_ name: String, old: String?, new: String, auto: Bool) {
+            changes.append(FieldChange(fieldName: name, oldValue: old, newValue: new, autoApplied: auto))
         }
-        
-        // Property Type
-        if let newType = json["property_type"] as? String {
-            if deal.propertyType.isEmpty {
-                deal.propertyType = newType
-                addChange("Property Type", old: nil, new: newType, autoApplied: true)
-            } else if deal.propertyType != newType {
-                addChange("Property Type", old: deal.propertyType, new: newType, autoApplied: false)
-            }
+
+        if let t = json["property_type"] as? String {
+            if deal.propertyType.isEmpty { deal.propertyType = t; add("Property Type", old: nil, new: t, auto: true) }
+            else if deal.propertyType != t { add("Property Type", old: deal.propertyType, new: t, auto: false) }
         }
-        
-        // Purchase Price
-        if let price = DealResearchImporter.double(json, keys: ["purchase_price", "price"]), price > 0 {
-            if deal.purchasePrice == 0 {
-                deal.purchasePrice = price
-                addChange("Purchase Price", old: nil, new: "€\(Int(price))", autoApplied: true)
-            } else if abs(deal.purchasePrice - price) > 1 {
-                addChange("Purchase Price", old: "€\(Int(deal.purchasePrice))", new: "€\(Int(price))", autoApplied: false)
-            }
+        if let p = DealResearchImporter.double(json, keys: ["purchase_price", "price"]), p > 0 {
+            if deal.purchasePrice == 0 { deal.purchasePrice = p; add("Purchase Price", old: nil, new: "€\(Int(p))", auto: true) }
+            else if abs(deal.purchasePrice - p) > 1 { add("Purchase Price", old: "€\(Int(deal.purchasePrice))", new: "€\(Int(p))", auto: false) }
         }
-        
-        // Total Area
-        if let area = DealResearchImporter.double(json, keys: ["total_area", "area_sqm"]), area > 0 {
-            if deal.totalArea == 0 {
-                deal.totalArea = area
-                addChange("Total Area", old: nil, new: "\(Int(area))m²", autoApplied: true)
-            } else if abs(deal.totalArea - area) > 1 {
-                addChange("Total Area", old: "\(Int(deal.totalArea))m²", new: "\(Int(area))m²", autoApplied: false)
-            }
+        if let a = DealResearchImporter.double(json, keys: ["total_area", "area_sqm"]), a > 0 {
+            if deal.totalArea == 0 { deal.totalArea = a; add("Total Area", old: nil, new: "\(Int(a))m²", auto: true) }
+            else if abs(deal.totalArea - a) > 1 { add("Total Area", old: "\(Int(deal.totalArea))m²", new: "\(Int(a))m²", auto: false) }
         }
-        
-        // GPS Coordinates
         if let lat = DealResearchImporter.double(json, keys: ["latitude", "lat"]),
            let lon = DealResearchImporter.double(json, keys: ["longitude", "lon"]),
            lat != 0, lon != 0 {
-            deal.latitude = lat
-            deal.longitude = lon
-            deal.geocodeStatus = .ok
-            addChange("GPS", old: nil, new: "\(String(format: "%.5f", lat)), \(String(format: "%.5f", lon))", autoApplied: true)
+            deal.latitude = lat; deal.longitude = lon; deal.geocodeStatus = .ok
+            add("GPS", old: nil, new: "\(String(format: "%.5f", lat)), \(String(format: "%.5f", lon))", auto: true)
         }
-        
-        // Apply full import using existing DealResearchImporter if comprehensive JSON
-        if json.keys.count > 5 {
-            let data = try? JSONSerialization.data(withJSONObject: json)
-            if let data = data {
-                let result = DealResearchImporter.apply(json: data, to: deal, context: modelContext)
-                for applied in result.applied {
-                    addChange("Imported", old: nil, new: applied, autoApplied: true)
+        // Full import pipeline for richer JSON
+        if json.keys.count > 3, let data = try? JSONSerialization.data(withJSONObject: json) {
+            let result = DealResearchImporter.apply(json: data, to: deal, context: modelContext)
+            for label in result.applied {
+                if !changes.contains(where: { $0.newValue == label }) {
+                    add("Imported", old: nil, new: label, auto: true)
                 }
             }
         }
-        
-        // Save and update score
         deal.porteosScore = PropertyDealViewModel(deal: deal).porteosScore.finalScore
-        deal.updatedAt = Date()
+        deal.updatedAt    = Date()
         try? modelContext.save()
-        
         return changes
     }
-    
+
     private func applyChanges(_ changes: [FieldChange]) {
-        // Apply suggested changes that user approved
-        // (Implementation depends on FieldChange structure)
         deal.updatedAt = Date()
         try? modelContext.save()
     }
 }
 
-// MARK: - Message Bubble
+// MARK: - MessageRow
+// Displays a saved (completed) message. Text wraps correctly at any width.
 
-struct MessageBubble: View {
+struct MessageRow: View {
     let message: ResearchMessage
     let deal: PropertyDeal
     let onApply: ([FieldChange]) -> Void
-    
-    private var shellSurface = DesignTokens.surfacePanel
-    private var shellBg = DesignTokens.canvasBase
-    private var textPrimary = DesignTokens.textPrimary
-    private var textSecondary = DesignTokens.textSecondary
-    private var textTertiary = DesignTokens.textDim
-    private var accentTeal = DesignTokens.accentHospitality
-    private var accentRust = DesignTokens.accentRust
-    private var statusGo = DesignTokens.statusGo
-    private var statusWarn = DesignTokens.statusWarn
-    
-    init(message: ResearchMessage, deal: PropertyDeal, onApply: @escaping ([FieldChange]) -> Void) {
+
+    private let bg      = DesignTokens.canvasBase
+    private let surf    = DesignTokens.surfacePanel
+    private let tp1     = DesignTokens.textPrimary
+    private let tp2     = DesignTokens.textSecondary
+    private let tp3     = DesignTokens.textDim
+    private let teal    = DesignTokens.accentHospitality
+    private let rust    = DesignTokens.accentRust
+    private let go      = DesignTokens.statusGo
+    private let warn    = DesignTokens.statusWarn
+
+    init(message: ResearchMessage, deal: PropertyDeal,
+         onApply: @escaping ([FieldChange]) -> Void) {
         self.message = message
-        self.deal = deal
+        self.deal    = deal
         self.onApply = onApply
     }
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            // Meta line (user/AI indicator)
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
+            // Role header
+            HStack(spacing: 6) {
                 Text(message.role == "user" ? "porteos@user ~ %" : "porteos@ai ~ %")
                     .porteosMeta()
-                    .foregroundStyle(textTertiary)
-                
-                if message.role == "assistant", let model = message.modelName {
-                    Text("[\(model)]")
+                    .foregroundStyle(message.role == "user" ? tp3 : teal)
+                if message.role == "assistant", let m = message.modelName {
+                    Text("[\(m)]")
                         .porteosMeta()
-                        .foregroundStyle(textTertiary.opacity(0.6))
+                        .foregroundStyle(tp3.opacity(0.6))
                 }
-                
-                Spacer()
             }
-            
-            // Message content
+
+            // Body — fully wrapping, no line limit
             Text(message.content)
                 .porteosRowValue()
-                .foregroundStyle(message.role == "user" ? textPrimary : accentTeal)
+                .foregroundStyle(message.role == "user" ? tp1 : tp2)
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            
-            // Extracted fields summary (if any)
-            if message.hasExtractedData, let fields = message.extractedFields {
-                VStack(alignment: .leading, spacing: 8) {
-                    Rectangle().fill(accentRust.opacity(0.3)).frame(height: 1)
-                    
-                    let autoApplied = fields.filter { $0.autoApplied }
-                    let suggested = fields.filter { !$0.autoApplied }
-                    
-                    if !autoApplied.isEmpty {
-                        Text("✓ Auto-applied (\(autoApplied.count) fields)")
-                            .porteosMeta()
-                            .foregroundStyle(statusGo)
-                        
-                        ForEach(autoApplied, id: \.fieldName) { change in
-                            HStack {
-                                Text("• \(change.fieldName):")
-                                    .porteosMeta()
-                                    .foregroundStyle(textTertiary)
-                                Text("\(String(describing: change.newValue))")
-                                    .porteosMeta()
-                                    .foregroundStyle(textSecondary)
-                            }
-                        }
-                    }
-                    
-                    if !suggested.isEmpty {
-                        Text("⚠ Review suggested (\(suggested.count) fields)")
-                            .porteosMeta()
-                            .foregroundStyle(statusWarn)
-                        
-                        ForEach(suggested, id: \.fieldName) { change in
-                            HStack {
-                                Text("• \(change.fieldName):")
-                                    .porteosMeta()
-                                    .foregroundStyle(textTertiary)
-                                Text("\(String(describing: change.oldValue ?? "")) → \(String(describing: change.newValue))")
-                                    .porteosMeta()
-                                    .foregroundStyle(textSecondary)
-                            }
-                        }
-                        
-                        Button {
-                            onApply(suggested)
-                        } label: {
-                            Text("[ APPLY ALL ]")
-                                .porteosButtonPrimary()
-                                .foregroundStyle(accentRust)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(.top, 4)
+                .textSelection(.enabled)
+
+            // Applied / suggested fields summary
+            if message.hasExtractedData, let fields = message.extractedFields, !fields.isEmpty {
+                fieldsSummary(fields)
             }
         }
         .padding(8)
-        .background(message.role == "user" ? shellSurface : shellBg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(message.role == "user" ? surf : bg)
     }
-}
 
-// MARK: - Chat Input Bar
+    @ViewBuilder
+    private func fieldsSummary(_ fields: [FieldChange]) -> some View {
+        let auto      = fields.filter { $0.autoApplied }
+        let suggested = fields.filter { !$0.autoApplied }
 
-struct ChatInputBar: View {
-    @Binding var text: String
-    let isLoading: Bool
-    let onSend: () -> Void
-    
-    private var shellBg = DesignTokens.canvasBase
-    private var shellSurface = DesignTokens.surfacePanel
-    private var shellBorder = DesignTokens.dividerStructural
-    private var textPrimary = DesignTokens.textPrimary
-    private var textTertiary = DesignTokens.textDim
-    private var accentRust = DesignTokens.accentRust
-    
-    init(text: Binding<String>, isLoading: Bool, onSend: @escaping () -> Void) {
-        self._text = text
-        self.isLoading = isLoading
-        self.onSend = onSend
-    }
-    
-    var body: some View {
-        HStack(spacing: 8) {
-            TextField("Type message...", text: $text)
-            .porteosRowValue()
-            .textFieldStyle(.plain)
-            .padding(.horizontal, 8)
-            .frame(height: 32)
-            .background(shellBg)
-            .overlay(
-                Rectangle()
-                    .stroke(shellBorder, lineWidth: 1)
-            )
-            .disabled(isLoading)
-            .onSubmit {
-                if !text.isEmpty && !isLoading {
-                    onSend()
+        VStack(alignment: .leading, spacing: 4) {
+            Rectangle().fill(rust.opacity(0.3)).frame(height: 1)
+
+            if !auto.isEmpty {
+                Text("✓ auto-applied \(auto.count) field\(auto.count == 1 ? "" : "s")")
+                    .porteosMeta().foregroundStyle(go)
+                ForEach(auto, id: \.fieldName) { c in
+                    Text("  • \(c.fieldName): \(c.newValue)")
+                        .porteosMeta().foregroundStyle(tp3)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            
-            Button {
-                onSend()
-            } label: {
-                Text(isLoading ? "[...]" : "[SEND]")
-                    .porteosButtonPrimary()
-                    .foregroundStyle(text.isEmpty || isLoading ? textTertiary : accentRust)
-                    .frame(width: 60, height: 32)
-                    .background(shellSurface)
+            if !suggested.isEmpty {
+                Text("⚠ review \(suggested.count) suggested change\(suggested.count == 1 ? "" : "s")")
+                    .porteosMeta().foregroundStyle(warn)
+                ForEach(suggested, id: \.fieldName) { c in
+                    Text("  • \(c.fieldName): \(c.oldValue ?? "—") → \(c.newValue)")
+                        .porteosMeta().foregroundStyle(tp3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Button { onApply(suggested) } label: {
+                    Text("[ APPLY ALL ]")
+                        .porteosMeta()
+                        .foregroundStyle(rust)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .overlay(Rectangle().stroke(rust.opacity(0.4), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
             }
-            .disabled(text.isEmpty || isLoading)
-            .buttonStyle(.plain)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .background(shellSurface)
     }
 }
 
-// MARK: - Field Change Model
+// MARK: - StreamingRow
+// Live row shown while LLM is generating. Updates on every chunk.
+
+struct StreamingRow: View {
+    let text: String
+    let model: String
+
+    @State private var dotPhase: Int = 0
+    private let timer = Timer.publish(every: 0.4, on: .main, in: .common).autoconnect()
+
+    private let bg   = DesignTokens.canvasBase
+    private let tp2  = DesignTokens.textSecondary
+    private let tp3  = DesignTokens.textDim
+    private let teal = DesignTokens.accentHospitality
+
+    init(text: String, model: String) { self.text = text; self.model = model }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Text("porteos@ai ~ %")
+                    .porteosMeta().foregroundStyle(teal)
+                Text("[\(model)]")
+                    .porteosMeta().foregroundStyle(tp3.opacity(0.6))
+            }
+
+            if text.isEmpty {
+                // Waiting for first chunk — animated dots
+                Text(String(repeating: ".", count: dotPhase + 1))
+                    .porteosMeta().foregroundStyle(teal.opacity(0.6))
+                    .onReceive(timer) { _ in dotPhase = (dotPhase + 1) % 3 }
+            } else {
+                // Live content with a blinking cursor at the end
+                (Text(text).foregroundStyle(tp2) +
+                 Text("▋").foregroundStyle(teal.opacity(0.8)))
+                    .porteosRowValue()
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
+            }
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(bg)
+    }
+}
+
+// MARK: - FieldChange model
 
 struct FieldChange: Codable {
     let fieldName: String

@@ -135,14 +135,49 @@ final class LLMAnalysisService {
         return try await call(prompt: prompt)
     }
 
-    // MARK: Public API — Research Chat
+    // MARK: Public API — Research Chat (streaming)
+
+    /// Returns a chunk-by-chunk stream for live display in ResearchChatView.
+    /// Captures all actor-isolated values on @MainActor before launching
+    /// the background networking Task, which is fully actor-safe.
+    func streamResearch(
+        message: String,
+        deal: PropertyDeal,
+        history: [(String, String)]
+    ) -> AsyncThrowingStream<String, Error> {
+        // Capture actor-isolated state synchronously (we're on @MainActor here)
+        let provider = currentProvider
+        let prompt   = buildResearchPrompt(message: message, deal: deal, history: history)
+        let base     = baseURL
+        let model    = modelName
+        let oaiKey   = openAIKey
+        let gemKey   = geminiKey
+
+        return AsyncThrowingStream { continuation in
+            // Task inherits no actor isolation — pure background work
+            Task.detached {
+                do {
+                    switch provider {
+                    case .ollama: try await Self.streamOllamaChunks(prompt: prompt, baseURL: base, model: model, continuation: continuation)
+                    case .openai: try await Self.streamOpenAIChunks(prompt: prompt, key: oaiKey, continuation: continuation)
+                    case .gemini: try await Self.streamGeminiChunks(prompt: prompt, key: gemKey, continuation: continuation)
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+        }
+    }
+
+    // MARK: Public API — Research Chat (non-streaming fallback)
 
     /// Generates a conversational response for property research questions.
-    /// Used by `ResearchChatView` in the RESEARCH tab.
+    /// Used as fallback when streaming is unavailable.
     func chatResearch(
         message: String,
         deal: PropertyDeal,
-        history: [(String, String)]  // (role, content)
+        history: [(String, String)]
     ) async throws -> String {
         let prompt = buildResearchPrompt(message: message, deal: deal, history: history)
         return try await call(prompt: prompt)
@@ -319,6 +354,122 @@ final class LLMAnalysisService {
             throw LLMError.emptyContent
         }
         return text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    // MARK: Private — Streaming helpers (static so nonisolated callers can reach them)
+
+    private static func streamOllamaChunks(
+        prompt: String,
+        baseURL: String,
+        model: String,
+        continuation: AsyncThrowingStream<String, Error>.Continuation
+    ) async throws {
+        guard let url = URL(string: "\(baseURL)/api/generate") else { throw LLMError.offline }
+        var req = URLRequest(url: url, timeoutInterval: LLMAnalysisService.ollamaTimeoutSeconds)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let body: [String: Any] = ["model": model, "prompt": prompt, "stream": true]
+        req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        let (bytes, response): (URLSession.AsyncBytes, URLResponse)
+        do { (bytes, response) = try await URLSession.shared.bytes(for: req) }
+        catch { throw LLMError.offline }
+
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw LLMError.badResponse }
+
+        for try await line in bytes.lines {
+            guard !line.isEmpty else { continue }
+            if let data = line.data(using: .utf8),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                if let text = json["response"] as? String, !text.isEmpty {
+                    continuation.yield(text)
+                }
+                if json["done"] as? Bool == true { break }
+            }
+        }
+    }
+
+    private static func streamOpenAIChunks(
+        prompt: String,
+        key: String,
+        continuation: AsyncThrowingStream<String, Error>.Continuation
+    ) async throws {
+        guard !key.isEmpty else { throw LLMError.offline }
+        guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else { throw LLMError.offline }
+
+        var req = URLRequest(url: url, timeoutInterval: LLMAnalysisService.cloudTimeoutSeconds)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        let body: [String: Any] = [
+            "model": LLMAnalysisService.openAIModelName,
+            "messages": [["role": "user", "content": prompt]],
+            "max_tokens": 1500,
+            "stream": true
+        ]
+        req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        let (bytes, response): (URLSession.AsyncBytes, URLResponse)
+        do { (bytes, response) = try await URLSession.shared.bytes(for: req) }
+        catch { throw LLMError.offline }
+
+        if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+            throw LLMError.invalidKey(provider: "OpenAI", message: "HTTP \(http.statusCode)")
+        }
+
+        for try await line in bytes.lines {
+            guard line.hasPrefix("data: ") else { continue }
+            let payload = String(line.dropFirst(6))
+            if payload == "[DONE]" { break }
+            if let data = payload.data(using: .utf8),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let choices = json["choices"] as? [[String: Any]],
+               let delta = choices.first?["delta"] as? [String: Any],
+               let text = delta["content"] as? String {
+                continuation.yield(text)
+            }
+        }
+    }
+
+    private static func streamGeminiChunks(
+        prompt: String,
+        key: String,
+        continuation: AsyncThrowingStream<String, Error>.Continuation
+    ) async throws {
+        guard !key.isEmpty else { throw LLMError.offline }
+        let urlStr = "https://generativelanguage.googleapis.com/v1/models/\(LLMAnalysisService.geminiModelName):streamGenerateContent?alt=sse&key=\(key)"
+        guard let url = URL(string: urlStr) else { throw LLMError.offline }
+
+        var req = URLRequest(url: url, timeoutInterval: LLMAnalysisService.cloudTimeoutSeconds)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let body: [String: Any] = [
+            "contents": [["parts": [["text": prompt]]]],
+            "generationConfig": ["maxOutputTokens": 1500]
+        ]
+        req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        let (bytes, response): (URLSession.AsyncBytes, URLResponse)
+        do { (bytes, response) = try await URLSession.shared.bytes(for: req) }
+        catch { throw LLMError.offline }
+
+        if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+            throw LLMError.invalidKey(provider: "Gemini", message: "HTTP \(http.statusCode)")
+        }
+
+        for try await line in bytes.lines {
+            guard line.hasPrefix("data: ") else { continue }
+            let payload = String(line.dropFirst(6))
+            guard !payload.isEmpty else { continue }
+            if let data = payload.data(using: .utf8),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let candidates = json["candidates"] as? [[String: Any]],
+               let content = candidates.first?["content"] as? [String: Any],
+               let parts = content["parts"] as? [[String: Any]],
+               let text = parts.first?["text"] as? String {
+                continuation.yield(text)
+            }
+        }
     }
 
     // MARK: Private — Prompt builders
