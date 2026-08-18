@@ -156,6 +156,26 @@ struct DealResearchImporter {
             applied.append("GPI €\(Int(gpi))")
         }
 
+        // ── Vacancy rate ──────────────────────────────────────────────────────
+        if deal.vacancyRate == 0,
+           let vacancy = double(flat, keys: [
+               "vacancy_rate_pct", "vacancy_pct", "vacancyRate",
+               "vacancy_rate", "vacancy_percentage"
+           ]), vacancy > 0, vacancy <= 100 {
+            deal.vacancyRate = vacancy
+            applied.append("vacancy \(Int(vacancy))%")
+        }
+
+        // ── Closing costs ─────────────────────────────────────────────────────
+        if deal.closingCosts == 0,
+           let closing = double(flat, keys: [
+               "closing_costs_eur", "closingCosts", "acquisition_costs_eur",
+               "transaction_costs_eur", "closing_fees_eur"
+           ]), closing > 0 {
+            deal.closingCosts = closing
+            applied.append("closing €\(Int(closing))")
+        }
+
         // ── Operating expenses ────────────────────────────────────────────────
         if deal.operatingExpenses == 0,
            let opex = double(flat, keys: [
@@ -164,6 +184,61 @@ struct DealResearchImporter {
            ]), opex > 0 {
             deal.operatingExpenses = opex
             applied.append("OpEx €\(Int(opex))")
+        }
+
+        // ── OpEx Breakdown (6 fields) ─────────────────────────────────────────
+        if deal.opexPropertyManagement == 0,
+           let mgmt = double(flat, keys: [
+               "opex_property_management_eur", "property_management_eur",
+               "management_fees_eur", "property_mgmt_eur"
+           ]), mgmt > 0 {
+            deal.opexPropertyManagement = mgmt
+            applied.append("OpEx mgmt €\(Int(mgmt))")
+        }
+
+        if deal.opexPropertyTax == 0,
+           let tax = double(flat, keys: [
+               "opex_property_tax_eur", "property_tax_eur",
+               "annual_property_tax_eur", "real_estate_tax_eur"
+           ]), tax > 0 {
+            deal.opexPropertyTax = tax
+            applied.append("OpEx tax €\(Int(tax))")
+        }
+
+        if deal.opexInsurance == 0,
+           let ins = double(flat, keys: [
+               "opex_insurance_eur", "insurance_eur",
+               "annual_insurance_eur", "property_insurance_eur"
+           ]), ins > 0 {
+            deal.opexInsurance = ins
+            applied.append("OpEx insurance €\(Int(ins))")
+        }
+
+        if deal.opexUtilities == 0,
+           let util = double(flat, keys: [
+               "opex_utilities_eur", "utilities_eur",
+               "annual_utilities_eur", "utility_costs_eur"
+           ]), util > 0 {
+            deal.opexUtilities = util
+            applied.append("OpEx utilities €\(Int(util))")
+        }
+
+        if deal.opexMaintenance == 0,
+           let maint = double(flat, keys: [
+               "opex_maintenance_eur", "maintenance_eur",
+               "annual_maintenance_eur", "repairs_maintenance_eur"
+           ]), maint > 0 {
+            deal.opexMaintenance = maint
+            applied.append("OpEx maintenance €\(Int(maint))")
+        }
+
+        if deal.opexCapitalReserves == 0,
+           let reserves = double(flat, keys: [
+               "opex_capital_reserves_eur", "capital_reserves_eur",
+               "replacement_reserves_eur", "reserve_fund_eur"
+           ]), reserves > 0 {
+            deal.opexCapitalReserves = reserves
+            applied.append("OpEx reserves €\(Int(reserves))")
         }
 
         // ── Hospitality OpEx ratio ────────────────────────────────────────────
@@ -247,6 +322,16 @@ struct DealResearchImporter {
             }
         }
 
+        // ── Property type ─────────────────────────────────────────────────────
+        if deal.propertyType.isEmpty,
+           let ptype = string(flat, keys: [
+               "property_type", "propertyType", "asset_type", "asset_class",
+               "building_type", "development_type", "typology"
+           ]) {
+            deal.propertyType = ptype
+            applied.append("type \(ptype)")
+        }
+
         // ── Bedrooms from typology string ─────────────────────────────────────
         if let bdr = int(flat, keys: ["bedrooms", "bedroom_count", "rooms"]), bdr > 0 {
             // direct integer field
@@ -272,6 +357,96 @@ struct DealResearchImporter {
                 deal.locationCity = city
                 applied.append("city \(city)")
             }
+        }
+
+        // ── Regulatory Fields (7 fields) ──────────────────────────────────────
+        if deal.zoningClass.isEmpty,
+           let zoning = string(flat, keys: [
+               "zoning_class", "zoning", "zoning_designation",
+               "land_use_zoning", "zoning_code"
+           ]) {
+            deal.zoningClass = zoning
+            applied.append("zoning \(zoning)")
+        }
+
+        if deal.floorAreaRatio == 0,
+           let far = double(flat, keys: [
+               "floor_area_ratio", "far", "building_ratio",
+               "construction_index", "utilization_index"
+           ]), far > 0, far <= 10 {
+            deal.floorAreaRatio = far
+            applied.append("FAR \(String(format: "%.2f", far))")
+        }
+
+        if deal.maxBuildingHeight == 0,
+           let height = double(flat, keys: [
+               "max_building_height_m", "max_height_m", "height_limit_m",
+               "maximum_building_height", "max_height_meters"
+           ]), height > 0 {
+            deal.maxBuildingHeight = height
+            applied.append("max height \(Int(height))m")
+        }
+
+        if deal.maxBedroomsOrUnits == 0,
+           let units = int(flat, keys: [
+               "max_bedrooms_or_units", "max_units", "max_dwelling_units",
+               "maximum_bedrooms", "max_residential_units"
+           ]), units > 0 {
+            deal.maxBedroomsOrUnits = units
+            applied.append("max units \(units)")
+        }
+
+        if deal.planningStatus == "unknown",
+           let status = string(flat, keys: [
+               "planning_status", "planning_permission_status",
+               "development_status", "permit_status"
+           ]) {
+            // Normalize to: "none" | "applied" | "approved"
+            let normalized = status.lowercased()
+            if normalized.contains("none") || normalized.contains("not applied") {
+                deal.planningStatus = "none"
+            } else if normalized.contains("applied") || normalized.contains("pending") {
+                deal.planningStatus = "applied"
+            } else if normalized.contains("approved") || normalized.contains("granted") {
+                deal.planningStatus = "approved"
+            } else {
+                deal.planningStatus = normalized
+            }
+            applied.append("planning \(deal.planningStatus)")
+        }
+
+        if !deal.heritageOrListed,
+           let heritage = flat["heritage_or_listed"] as? Bool ?? flat["is_listed"] as? Bool ?? flat["heritage_status"] as? Bool {
+            deal.heritageOrListed = heritage
+            if heritage {
+                applied.append("heritage: listed")
+            }
+        } else if !deal.heritageOrListed,
+                  let heritageStr = string(flat, keys: ["heritage_or_listed", "listed_status", "heritage_status"]) {
+            let normalized = heritageStr.lowercased()
+            if normalized.contains("yes") || normalized.contains("listed") || normalized.contains("protected") {
+                deal.heritageOrListed = true
+                applied.append("heritage: listed")
+            }
+        }
+
+        if deal.strLicenceStatus == "unknown",
+           let strStatus = string(flat, keys: [
+               "str_licence_status", "short_term_rental_license",
+               "str_permit_status", "alojamento_local_status"
+           ]) {
+            // Normalize to: "none" | "applied" | "approved"
+            let normalized = strStatus.lowercased()
+            if normalized.contains("none") || normalized.contains("not required") {
+                deal.strLicenceStatus = "none"
+            } else if normalized.contains("applied") || normalized.contains("pending") {
+                deal.strLicenceStatus = "applied"
+            } else if normalized.contains("approved") || normalized.contains("granted") || normalized.contains("active") {
+                deal.strLicenceStatus = "approved"
+            } else {
+                deal.strLicenceStatus = normalized
+            }
+            applied.append("STR \(deal.strLicenceStatus)")
         }
 
         // ── Address / access road ─────────────────────────────────────────────
