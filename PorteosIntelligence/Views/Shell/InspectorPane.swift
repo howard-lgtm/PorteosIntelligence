@@ -41,9 +41,10 @@ struct InspectorPane: View {
             fullWidthDivider
 
             switch selectedTab {
-            case "weights": weightsContent
-            case "media":   mediaContent
-            default:        aiVibeContent
+            case "weights":  weightsContent
+            case "media":    mediaContent
+            case "research": researchContent
+            default:         aiVibeContent
             }
 
             Spacer(minLength: 0)
@@ -192,13 +193,14 @@ struct InspectorPane: View {
         try? modelContext.save()
     }
 
-    // MARK: Tab Bar — [WEIGHTS] 2px rust underline | [AI VIBE] | [MEDIA]
+    // MARK: Tab Bar — [WEIGHTS] 2px rust underline | [VIBE] | [MEDIA] | [RESEARCH]
 
     private var tabBar: some View {
         HStack(spacing: 0) {
-            tabButton(title: "WEIGHTS", id: "weights")
-            tabButton(title: "AI VIBE", id: "ai_vibe")
-            tabButton(title: "MEDIA",   id: "media")
+            tabButton(title: "WEIGHTS",   id: "weights")
+            tabButton(title: "VIBE",      id: "ai_vibe")     // Shortened from "AI VIBE"
+            tabButton(title: "MEDIA",     id: "media")
+            tabButton(title: "RESEARCH",  id: "research")    // New
             Spacer()
         }
         .padding(.horizontal, DesignTokens.blockGutter)
@@ -490,6 +492,12 @@ struct InspectorPane: View {
             DealMediaGalleryView(deal: deal)
                 .frame(maxWidth: .infinity)
         }
+    }
+
+    // MARK: Research Content
+
+    private var researchContent: some View {
+        ResearchChatView(deal: deal)
     }
 
     // MARK: Rebalance Logic

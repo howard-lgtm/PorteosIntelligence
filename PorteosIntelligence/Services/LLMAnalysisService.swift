@@ -135,6 +135,19 @@ final class LLMAnalysisService {
         return try await call(prompt: prompt)
     }
 
+    // MARK: Public API — Research Chat
+
+    /// Generates a conversational response for property research questions.
+    /// Used by `ResearchChatView` in the RESEARCH tab.
+    func chatResearch(
+        message: String,
+        deal: PropertyDeal,
+        history: [(String, String)]  // (role, content)
+    ) async throws -> String {
+        let prompt = buildResearchPrompt(message: message, deal: deal, history: history)
+        return try await call(prompt: prompt)
+    }
+
     // MARK: Ping
 
     /// Returns true if the configured provider is ready to accept requests.
@@ -401,6 +414,69 @@ Portfolio assets: \(dealList)
 
 Headlines (source in brackets):
 \(headlineList.isEmpty ? "No headlines available." : headlineList)
+"""
+    }
+
+    private func buildResearchPrompt(
+        message: String,
+        deal: PropertyDeal,
+        history: [(String, String)]
+    ) -> String {
+        // Build conversation history context
+        let historyContext: String
+        if history.isEmpty {
+            historyContext = ""
+        } else {
+            let formatted = history.suffix(6)  // Last 6 messages for context
+                .map { role, content in
+                    let prefix = role == "user" ? "User" : "Assistant"
+                    return "\(prefix): \(content)"
+                }
+                .joined(separator: "\n\n")
+            historyContext = """
+
+Previous conversation:
+\(formatted)
+
+"""
+        }
+        
+        // Build deal context
+        let dealContext = """
+Current deal: \(deal.propertyName.isEmpty ? "Unnamed Property" : deal.propertyName)
+Location: \(deal.locationCity), \(deal.locationCountry)
+Type: \(deal.propertyType)
+Area: \(deal.totalArea > 0 ? "\(Int(deal.totalArea))m²" : "N/A")
+Price: \(deal.purchasePrice > 0 ? deal.currencySymbol + "\(Int(deal.purchasePrice))" : "N/A")
+Score: \((deal.porteosScore ?? 0) > 0 ? "\(Int(deal.porteosScore ?? 0))/100" : "N/A")
+"""
+        
+        return """
+You are a professional real estate research assistant helping analyze investment opportunities. The user is asking about a specific property deal.
+
+\(dealContext)\(historyContext)
+User question: \(message)
+
+Instructions:
+1. Answer concisely and professionally.
+2. If the user asks for market data, zoning info, comparable properties, or financial analysis, provide detailed information.
+3. If you provide numerical data or metrics, format them as JSON in a code block so they can be imported into the deal.
+4. JSON format example:
+   ```json
+   {
+     "property_type": "Hotel",
+     "total_area": 1200,
+     "purchase_price": 850000,
+     "land_area": 500,
+     "latitude": 41.1579,
+     "longitude": -8.6291,
+     "target_keys_count": 25,
+     "adr_eur": 95,
+     "occupancy_rate_pct": 72
+   }
+   ```
+
+Answer the user's question now:
 """
     }
 }

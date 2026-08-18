@@ -547,7 +547,7 @@ struct DealResearchImporter {
 
     // MARK: - Field extractors
 
-    private static func double(_ flat: [String: Any], keys: [String]) -> Double? {
+    internal static func double(_ flat: [String: Any], keys: [String]) -> Double? {
         for key in keys {
             if let n = flat[key] as? Double { return n }
             if let n = flat[key] as? Int    { return Double(n) }
