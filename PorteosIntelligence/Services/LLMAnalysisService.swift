@@ -229,7 +229,7 @@ final class LLMAnalysisService {
             "model": modelName,
             "prompt": prompt,
             "stream": false,
-            "options": ["num_predict": 2048]
+            "options": ["num_predict": 4096]
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
@@ -268,7 +268,7 @@ final class LLMAnalysisService {
         let body: [String: Any] = [
             "model": Self.openAIModelName,
             "messages": [["role": "user", "content": prompt]],
-            "max_tokens": 1500
+            "max_tokens": 3000
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
@@ -319,7 +319,7 @@ final class LLMAnalysisService {
 
         let body: [String: Any] = [
             "contents": [["parts": [["text": prompt]]]],
-            "generationConfig": ["maxOutputTokens": 1500]
+            "generationConfig": ["maxOutputTokens": 3000]
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
@@ -368,7 +368,12 @@ final class LLMAnalysisService {
         var req = URLRequest(url: url, timeoutInterval: LLMAnalysisService.ollamaTimeoutSeconds)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body: [String: Any] = ["model": model, "prompt": prompt, "stream": true]
+        let body: [String: Any] = [
+            "model": model,
+            "prompt": prompt,
+            "stream": true,
+            "options": ["num_predict": 4096]
+        ]
         req.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
         let (bytes, response): (URLSession.AsyncBytes, URLResponse)
@@ -404,7 +409,7 @@ final class LLMAnalysisService {
         let body: [String: Any] = [
             "model": LLMAnalysisService.openAIModelName,
             "messages": [["role": "user", "content": prompt]],
-            "max_tokens": 1500,
+            "max_tokens": 3000,
             "stream": true
         ]
         req.httpBody = try? JSONSerialization.data(withJSONObject: body)
@@ -445,7 +450,7 @@ final class LLMAnalysisService {
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let body: [String: Any] = [
             "contents": [["parts": [["text": prompt]]]],
-            "generationConfig": ["maxOutputTokens": 1500]
+            "generationConfig": ["maxOutputTokens": 3000]
         ]
         req.httpBody = try? JSONSerialization.data(withJSONObject: body)
 

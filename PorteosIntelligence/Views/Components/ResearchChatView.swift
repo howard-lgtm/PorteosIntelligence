@@ -18,6 +18,7 @@ struct ResearchChatView: View {
     @State private var streamingText: String  = ""   // live chunks accumulate here
     @State private var streamTask: Task<Void, Never>? = nil
     @State private var showClearConfirm: Bool = false
+    @State private var lastResponseTruncated: Bool = false  // warn if LLM hit token limit
 
     // MARK: Design tokens
     private let bg      = DesignTokens.canvasBase
@@ -101,6 +102,11 @@ struct ResearchChatView: View {
                                          model: LLMAnalysisService.shared.activeModelDisplayName)
                                 .id("stream")
                         }
+                        
+                        // Truncation warning (if last response hit token limit)
+                        if lastResponseTruncated && !isLoading {
+                            truncationWarning
+                        }
                     }
                     // Bottom anchor with breathing room so the last message
                     // is fully visible after the deferred scroll
@@ -156,6 +162,23 @@ struct ResearchChatView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    // MARK: Truncation warning
+
+    private var truncationWarning: some View {
+        HStack(spacing: 6) {
+            Text("⚠")
+                .font(.system(size: 10))
+                .foregroundStyle(DesignTokens.statusWarn)
+            Text("Response may be incomplete. Type \"continue\" or \"finish your thoughts\" for more.")
+                .font(DesignTokens.TypeScale.meta)
+                .foregroundStyle(tp3)
+                .lineLimit(nil)
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(DesignTokens.statusWarn.opacity(0.08))
+    }
+
     // MARK: Input bar
 
     private var inputBar: some View {
@@ -207,6 +230,7 @@ struct ResearchChatView: View {
         inputText    = ""
         isLoading    = true
         streamingText = ""
+        lastResponseTruncated = false  // reset warning on new query
 
         let historySnapshot = messages.map { ($0.role, $0.content) }
 
@@ -220,7 +244,18 @@ struct ResearchChatView: View {
                 for try await chunk in stream {
                     streamingText += chunk
                 }
-                // Stream finished — persist full response
+                // Stream finished — detect truncation.
+                // Heuristic: if response is very long (≥2400 tokens ≈ 1800 words ≈ 9600 chars)
+                // and ends mid-sentence, likely hit token limit.
+                let charCount = streamingText.count
+                let likelyTruncated = charCount >= 9000 &&
+                                      !streamingText.hasSuffix(".") &&
+                                      !streamingText.hasSuffix("?") &&
+                                      !streamingText.hasSuffix("!") &&
+                                      !streamingText.hasSuffix("```")
+                lastResponseTruncated = likelyTruncated
+                
+                // Persist full response
                 let aiMsg = ResearchMessage(
                     dealID: deal.id,
                     role: "assistant",
