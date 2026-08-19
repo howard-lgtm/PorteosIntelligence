@@ -398,4 +398,17 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 
 ---
 
+## P17 — Research chat UX & features (Aug 2026)
+
+|| ID | Task | Status |
+||----|------|--------|
+|| P17-01 | **Auto-continue for truncated responses** — When LLM response ≥9000 chars and doesn't end with sentence terminator, automatically append "continue" prompt and stream remainder. Avoids manual "continue" prompts. | `[ ]` | Phase 2 |
+|| P17-02 | **Copy conversation button** — `[ COPY ]` button next to `[ CLEAR ]` in RESEARCH tab header; copies entire conversation (user + AI messages) to clipboard as plain text with role prefixes. Terminal aesthetic: `[ COPY ]` bracket-text style. | `[x]` | Aug 19 |
+|| P17-03 | **Export conversation as JSON** — Export full chat history including timestamps, model names, extracted fields, and `hasExtractedData` flags. Enables conversation archiving and analysis. | `[ ]` | Phase 2 |
+|| P17-04 | **Import conversation from JSON** — Restore a previously exported chat session into the current deal's research tab. Requires schema version check. | `[ ]` | Phase 2 |
+|| P17-05 | **Pin/save important conversations** — Flag specific chat sessions as "pinned" for quick access; pinned chats appear in a dedicated section or with a visual indicator. | `[ ]` | Phase 3 |
+|| P17-06 | **Message timestamps** — Display `HH:MM:SS` timestamp for each research message in meta style (gray, small font). Placement options: (a) inline with prompt prefix (`porteos@user ~ % [14:23:45]`), (b) trailing right edge of message header, (c) on hover tooltip. Requires `ResearchMessage.timestamp` already in model; add to `MessageRow` and `StreamingRow` UI. | `[ ]` | Phase 2 |
+
+---
+
 *Update this file in place. Do not fork punchlists — keep one living document.*

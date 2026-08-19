@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import Combine
+import AppKit
 
 // MARK: - ResearchChatView
 // AI research chat with live streaming output, text wrapping,
@@ -65,6 +66,21 @@ struct ResearchChatView: View {
                 .foregroundStyle(tp3)
             Spacer()
             if !messages.isEmpty || isLoading {
+                // COPY button
+                Button {
+                    copyConversation()
+                } label: {
+                    Text("[ COPY ]")
+                        .porteosMeta()
+                        .foregroundStyle(tp3)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .overlay(Rectangle().stroke(border, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, 6)
+                
+                // CLEAR button
                 Button {
                     showClearConfirm = true
                 } label: {
@@ -297,6 +313,24 @@ struct ResearchChatView: View {
     private func clearChat() {
         for msg in messages { modelContext.delete(msg) }
         try? modelContext.save()
+    }
+    
+    private func copyConversation() {
+        var text = ""
+        for msg in messages {
+            let prefix = msg.role == "user" ? "porteos@user ~ %" : "porteos@ai ~ %"
+            let model  = (msg.role == "assistant" && msg.modelName != nil) ? " [\(msg.modelName!)]" : ""
+            text += "\(prefix)\(model)\n\(msg.content)\n\n"
+        }
+        // Include streaming content if currently generating
+        if isLoading && !streamingText.isEmpty {
+            let model = LLMAnalysisService.shared.activeModelDisplayName
+            text += "porteos@ai ~ % [\(model)]\n\(streamingText)\n\n"
+        }
+        
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(text.trimmingCharacters(in: .whitespacesAndNewlines), forType: .string)
     }
 
     // MARK: JSON extraction + smart apply
