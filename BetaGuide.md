@@ -1,5 +1,5 @@
 # Porteos Intelligence — Beta Guide
-**Version 1.0 (Build 2) · August 14, 2026 · macOS only (Apple Silicon + Intel via Rosetta 2)**
+**Version 1.2 (Build 3) · August 19, 2026 · macOS only (Apple Silicon + Intel via Rosetta 2)**
 
 Thank you for being part of this early access group. This guide covers everything you need to get started and give meaningful feedback.
 
@@ -83,7 +83,10 @@ Each deal gets a score from 0–100 (grade A–F). It's calculated from:
 Scores are property-type-aware — a hotel and a residential flat are judged by different metrics. Unfilled profile tabs don't penalise the score.
 
 ### AI Vibe Checker
-Open any deal → Inspector panel → `[AI VIBE]` tab → `[ REGENERATE ]`. Produces a SWOT analysis calibrated to the property type (Hotel, Residential, Farm/Rural, Multi-Dwelling, Commercial). Your deal notes feed directly into the analysis.
+Open any deal → Inspector panel → `[VIBE]` tab → `[ REGENERATE ]`. Produces a SWOT analysis calibrated to the property type (Hotel, Residential, Farm/Rural, Multi-Dwelling, Commercial). Your deal notes feed directly into the analysis.
+
+### RESEARCH Chat (New in Build 3)
+Inspector panel → `[RESEARCH]` tab — Interactive AI assistant for deal-specific queries. Ask about market comps, zoning regulations, ADR benchmarks, construction costs, or financial feasibility. The AI auto-applies extracted data to empty deal fields. Use `[ COPY ]` to save the full conversation. `[ CLEAR ]` to start fresh.
 
 ### Multi-Window Profiles
 In the left nav, hover over any profile name (REAL ESTATE, HOSPITALITY, DESIGN, CIRCULAR ECONOMY) — a `[ ↗ ]` button appears. Click it to open that profile in an independent window on any screen. All windows stay in sync — changing the selected deal updates all open windows simultaneously.
@@ -109,27 +112,34 @@ The app automatically switches between metric (m², €) and imperial (ft², $) 
 
 ---
 
-## Recent Updates (Build 2 — Aug 14, 2026)
+## Recent Updates (Build 3 — Aug 19, 2026)
+
+### New Features
+- **RESEARCH chat tab** — Interactive AI assistant in the inspector for deal-specific research queries (market comps, zoning, ADR benchmarks, financial feasibility). Auto-applies extracted data to empty deal fields. Copy entire conversation with `[ COPY ]` button.
+- **Enhanced JSON import** — Research imports now populate OpEx breakdown (6 fields), regulatory fields (7 fields: zoning, FAR, max height, planning status, heritage, STR licence), vacancy rate, closing costs, and property type.
+- **Improved sensitivity analysis** — Hospitality sensitivity now shows upside, downside, and combined stress scenarios with scaled ±10% deltas. Results expressed as % of base GOP for direct comparability.
+- **Preload discoverability** — Market assumptions button always visible in edit sheet (disabled with hint text when city/area not set). Keyboard shortcut: ⌘⇧P.
 
 ### Fixed
-- **Inspector MEDIA tab alignment** — All three inspector tabs (WEIGHTS, AI VIBE, MEDIA) now have identical header alignment. Hero images no longer cause pane width overflow.
-- **Gemini SWOT parsing** — AI Vibe panel now correctly parses Gemini API responses with various markdown formats. Cached analyses preserve SWOT data on reload.
-- **Currency display** — Map pins, GI inspector, and price formatting now use deal-specific currency symbols (€, $, £, kr) instead of hardcoded euro.
-- **Media gallery layout** — Thumbnail grid, filter chips, and action buttons now have uniform padding and alignment within the narrow inspector pane.
-- **CSV export** — Notes column moved to the far right for better readability in Excel/Numbers.
-
-### Improved
-- **Cost control** — Added tiered model protocol for Cursor development. Local Ollama models (qwen2.5-coder, deepseek-r1) handle most tasks, reducing cloud API reliance by ~85%.
-- **JSON import security** — Research JSON imports now have a 10MB size guard to prevent memory spikes from large files.
-- **Compatibility** — Geocoding now uses CLGeocoder instead of macOS 15+ API, ensuring compatibility back to macOS 14 Sonoma.
-- **Full-screen launch** — App now opens full-screen on first launch for maximum visual impact.
+- **RESEARCH chat** — Text wrapping corrected, live scrolling to bottom, truncation warning for incomplete AI responses, clear chat confirmation dialog.
+- **Token limits increased** — OpenAI/Gemini: 3000 tokens (was 800), Ollama: 4096 tokens (was 2048) for longer, more detailed responses.
 
 ### What to Test
-1. **Inspector consistency** — Open the same deal in WEIGHTS, AI VIBE, and MEDIA tabs. Headers should be pixel-identical. No blank space to the right of the PDF button.
-2. **AI Vibe with Gemini** — If using Gemini API, verify SWOT sections parse correctly and persist when switching between deals.
-3. **Currency symbols** — Create deals in different countries (US, UK, Sweden, Portugal). Verify prices show $ / £ / kr / € respectively in map pins and inspector.
-4. **Media gallery** — Add multiple images to a deal. Verify thumbnails, filter chips, and buttons are properly aligned in the MEDIA tab.
-5. **Research JSON import** — Import a large AI-generated research JSON (5–10MB). Should complete without freezing.
+1. **RESEARCH chat** — Open inspector → RESEARCH tab. Ask property-specific questions. Verify text wraps properly, responses stream live, and auto-applied fields appear with checkmarks.
+2. **Copy conversation** — After a multi-turn chat, click `[ COPY ]`. Paste into Notes/email — should show formatted conversation with role prefixes.
+3. **JSON import** — Import a comprehensive research JSON with OpEx breakdown, regulatory fields, and property type. Verify fields populate in edit sheet.
+4. **Sensitivity analysis** — Open a hospitality deal → SENSITIVITY block. Should show 4 scenarios: Base, Upside, Downside, Combined Stress (each as % of base GOP).
+5. **Preload button** — Create new deal → edit sheet → verify `[ PRELOAD MARKET ASSUMPTIONS ]` button always visible. Without city/area: disabled + hint. With city/area: enabled + city name.
+
+---
+
+## Build 2 Updates (Aug 14, 2026)
+
+### Fixed
+- **Inspector MEDIA tab alignment** — All three inspector tabs (WEIGHTS, AI VIBE, MEDIA) now have identical header alignment.
+- **Gemini SWOT parsing** — AI Vibe panel now correctly parses Gemini API responses with various markdown formats.
+- **Currency display** — Map pins and inspector now use deal-specific currency symbols (€, $, £, kr).
+- **Media gallery layout** — Thumbnail grid, filter chips, and action buttons properly aligned.
 
 ---
 

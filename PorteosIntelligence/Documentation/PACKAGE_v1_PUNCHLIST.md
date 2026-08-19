@@ -411,4 +411,57 @@ Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries
 
 ---
 
+## Build 3 Readiness (Aug 19, 2026)
+
+### ✅ Complete & Ready for TestFlight
+- **Version:** 1.2 (Build 3)
+- **Xcode project:** Version numbers updated
+- **Git status:** Clean (all changes committed and pushed)
+- **Linter errors:** Zero across 131 Swift files
+- **Key features:**
+  - P14-15: JSON import expansion (OpEx, regulatory, vacancy, closing costs, property type) ✓
+  - P14-07: Sensitivity analysis rewrite (upside/downside/stress scenarios) ✓
+  - P14-18: Preload discoverability (always-visible button + keyboard shortcut) ✓
+  - P17-02: RESEARCH chat copy button ✓
+  - RESEARCH tab: Live streaming, text wrapping, auto-apply, clear chat ✓
+- **Documentation:** BetaGuide.md updated with Build 3 features and test scenarios
+
+### High-Priority for v1.3 (Next Build)
+|| ID | Task | Impact |
+||----|------|--------|
+|| P17-06 | Message timestamps in RESEARCH chat | UX polish |
+|| P17-01 | Auto-continue for truncated AI responses | UX convenience |
+|| P14-09 | BatchTriage benchmark apply | Consistency |
+|| P14-10 | Hospitality ↔ RE GPI auto-sync | Workflow efficiency |
+|| P13-07 | HTTP ingestion API key | Security (multi-user) |
+
+### Medium-Priority for v1.4+
+|| ID | Task | Impact |
+||----|------|--------|
+|| P17-03 | Export conversation as JSON | Power user feature |
+|| P17-04 | Import conversation from JSON | Power user feature |
+|| P1-08 | Keyboard nav (↑↓ ←→) in deal list | Terminal-style UX |
+|| P2-01 | Terminal segment bar in Full Edit | Visual polish |
+|| P3-07 | PDF external share spacing | Professional output |
+
+### Deferred / v2.0
+|| ID | Task | Reason |
+||----|------|--------|
+|| P4-05 | macOS Help menu | Low priority, in-app guide sufficient |
+|| P11-08 | Multi-model selection UI | Advanced feature |
+|| P11-09 | Cloud LLM fallback abstraction | Already supported via Settings |
+
+### TestFlight Archive Checklist
+- [x] Version 1.2 / Build 3 in Xcode
+- [x] All changes committed and pushed
+- [x] Zero linter errors
+- [x] BetaGuide.md updated
+- [x] "What to Test" scenarios documented
+- [ ] Archive in Xcode (Product → Archive)
+- [ ] Upload to App Store Connect
+- [ ] Submit for TestFlight review
+- [ ] Share build link with beta testers
+
+---
+
 *Update this file in place. Do not fork punchlists — keep one living document.*
