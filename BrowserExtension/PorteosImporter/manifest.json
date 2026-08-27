@@ -1,30 +1,51 @@
 {
   "manifest_version": 3,
   "name": "Porteos Importer",
-  "version": "2.3.0",
-  "description": "Send property listings from Idealista, Zillow, Hemnet, RE/MAX Portugal, and Casa SAPO into the Porteos Intelligence Terminal.",
+  "version": "3.0.0",
+  "description": "Send property listings from 12 major real estate sites (USA, Portugal, Spain, Sweden) into Porteos Intelligence.",
   "permissions": [
     "activeTab",
     "scripting"
   ],
   "host_permissions": [
-    "*://www.idealista.pt/*",
+    "http://localhost:9000/*",
+
     "*://www.zillow.com/*",
-    "*://www.hemnet.se/*",
+    "*://www.realtor.com/*",
+    "*://www.redfin.com/*",
+    "*://www.trulia.com/*",
+
+    "*://www.idealista.pt/*",
+    "*://casa.sapo.pt/*",
     "*://www.remax.pt/*",
     "*://remax.pt/*",
-    "*://casa.sapo.pt/*",
-    "http://localhost:9000/*"
+    "*://www.imovirtual.com/*",
+
+    "*://www.idealista.com/*",
+    "*://www.fotocasa.es/*",
+
+    "*://www.hemnet.se/*",
+    "*://www.booli.se/*"
   ],
   "content_scripts": [
     {
       "matches": [
-        "*://www.idealista.pt/*",
         "*://www.zillow.com/*",
-        "*://www.hemnet.se/*",
+        "*://www.realtor.com/*",
+        "*://www.redfin.com/*",
+        "*://www.trulia.com/*",
+
+        "*://www.idealista.pt/*",
+        "*://casa.sapo.pt/*",
         "*://www.remax.pt/*",
         "*://remax.pt/*",
-        "*://casa.sapo.pt/*"
+        "*://www.imovirtual.com/*",
+
+        "*://www.idealista.com/*",
+        "*://www.fotocasa.es/*",
+
+        "*://www.hemnet.se/*",
+        "*://www.booli.se/*"
       ],
       "js": ["content.js"],
       "run_at": "document_idle"
