@@ -1060,16 +1060,21 @@ struct FullDealEditSheet: View {
         Binding<String>(
             get: {
                 let v = value.wrappedValue
-                guard v > 0 else { return "" }
+                guard v > 0 else {
+                    // For decimal fields show "0" so typing "0.5" doesn't lose
+                    // the leading zero (which would make ".5" un-parseable).
+                    return decimals > 0 ? "0" : ""
+                }
                 return decimals == 0 ? "\(Int(v))" : String(format: "%.\(decimals)f", v)
             },
             set: { str in
-                // Normalise European comma decimal separator → period before parsing.
-                // Handles en-US locale with European keyboard (e.g. "0,02" → "0.02").
                 let normalised = str
                     .filter { $0.isNumber || $0 == "." || $0 == "," }
                     .replacingOccurrences(of: ",", with: ".")
-                if let d = Double(normalised) {
+                // Pad a leading decimal so ".5" → "0.5" (Swift's Double init
+                // rejects a bare leading dot).
+                let adjusted = normalised.hasPrefix(".") ? "0" + normalised : normalised
+                if let d = Double(adjusted) {
                     value.wrappedValue = d
                 } else if str.isEmpty {
                     value.wrappedValue = 0
@@ -1127,12 +1132,63 @@ struct FullDealEditSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionLabel("REGULATORY — advisory only, verify with local consultant")
 
-            TerminalInputField(
+            TerminalComboboxField(
                 label: "Zoning Class",
                 placeholder: "e.g. T1 Tourism, Mixed Use, R1 Residential",
-                prefix: nil,
-                suffix: nil,
-                text: $deal.zoningClass
+                text: $deal.zoningClass,
+                suggestions: { query in
+                    let all: [String] = [
+                        // ── Portugal ──────────────────────────────────────────
+                        "Espaço Agro-Silvo-Pastoril",
+                        "Solo Rústico",
+                        "Solo Urbano",
+                        "Área Residencial / Habitacional",
+                        "Turismo (T1)",
+                        "Turismo (T2)",
+                        "Turismo (T3)",
+                        "Uso Misto",
+                        "Equipamentos e Infraestruturas Urbanas",
+                        "Área Industrial / Logística",
+                        "Área Verde / Espaços Verdes",
+                        "Zona Histórica / Centro Histórico",
+                        "Aproveitamento Turístico-Residencial",
+                        // ── USA ───────────────────────────────────────────────
+                        "R-1 Single Family Residential",
+                        "R-2 Multi-Family Residential",
+                        "R-3 High Density Residential",
+                        "C-1 Neighborhood Commercial",
+                        "C-2 Community Commercial",
+                        "C-3 General Commercial",
+                        "M-1 Light Industrial",
+                        "M-2 Heavy Industrial",
+                        "MX Mixed Use",
+                        "AG Agricultural",
+                        "PUD Planned Unit Development",
+                        "T6 Urban Core (Transect)",
+                        // ── Sweden ────────────────────────────────────────────
+                        "Bostadsområde",
+                        "Blandat boende",
+                        "Centrumändamål",
+                        "Industri",
+                        "Verksamheter",
+                        "Natur",
+                        "Jordbruksmark",
+                        "Friluftsliv",
+                        "Turiständamål",
+                        "Detaljplan Område",
+                        // ── Generic ───────────────────────────────────────────
+                        "Mixed Use",
+                        "Residential",
+                        "Commercial",
+                        "Industrial",
+                        "Agricultural",
+                        "Conservation / Heritage",
+                        "Tourism / Hospitality",
+                        "Green Space / Park",
+                    ]
+                    guard !query.isEmpty else { return all }
+                    return all.filter { $0.localizedCaseInsensitiveContains(query) }
+                }
             )
 
             VStack(alignment: .leading, spacing: 4) {
