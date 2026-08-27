@@ -12,7 +12,10 @@ struct ResearchChatView: View {
     @Bindable var deal: PropertyDeal
     @Environment(\.modelContext) private var modelContext
 
-    @Query private var allMessages: [ResearchMessage]
+    // Scoped query — only messages belonging to this deal, sorted oldest-first.
+    // Predicate is set in init so SwiftData filters at the store level,
+    // preventing cross-deal message bleed when the selection changes.
+    @Query private var messages: [ResearchMessage]
 
     @State private var inputText: String      = ""
     @State private var isLoading: Bool        = false
@@ -31,10 +34,13 @@ struct ResearchChatView: View {
     private let teal    = DesignTokens.accentHospitality
     private let rust    = DesignTokens.accentRust
 
-    init(deal: PropertyDeal) { self.deal = deal }
-
-    private var messages: [ResearchMessage] {
-        allMessages.filter { $0.dealID == deal.id }.sorted { $0.timestamp < $1.timestamp }
+    init(deal: PropertyDeal) {
+        self.deal = deal
+        let id = deal.id
+        _messages = Query(
+            filter: #Predicate<ResearchMessage> { $0.dealID == id },
+            sort: \.timestamp
+        )
     }
 
     // MARK: Body

@@ -498,6 +498,7 @@ struct InspectorPane: View {
 
     private var researchContent: some View {
         ResearchChatView(deal: deal)
+            .id(deal.id)  // force full reinit when selected deal changes
     }
 
     // MARK: Rebalance Logic
