@@ -101,6 +101,8 @@ Files are named deals-\(stamp).store — contact support to recover them.
                     }
                     // Surfaces the NSWindow so WindowStateManager can configure it.
                     .background(WindowAccessor())
+                    // DisplayDensity environment for 1×/2× UI scaling
+                    .environment(\.displayDensity, DisplayDensityStore.shared)
 
                 if showSplash {
                     BootSplashView { showSplash = false }
