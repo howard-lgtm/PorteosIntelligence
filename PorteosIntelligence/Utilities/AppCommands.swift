@@ -18,6 +18,9 @@ extension Notification.Name {
     static let showQuickAdd         = Notification.Name("porteos.showQuickAdd")
     static let showServerConfig     = Notification.Name("porteos.showServerConfig")
     static let showSettings         = Notification.Name("porteos.showSettings")
+    static let showGlossary         = Notification.Name("porteos.showGlossary")
+    static let deleteSelectedDeal   = Notification.Name("porteos.deleteSelectedDeal")
+    static let preloadMarketAssumptions = Notification.Name("porteos.preloadMarketAssumptions")
 }
 
 // MARK: - FocusedValue: hasDealSelected
@@ -42,8 +45,38 @@ struct AppCommandsProvider: Commands {
 
     var body: some Commands {
 
+        // ── Help menu — replaces the system "Help isn't available" alert ─────────
+        CommandGroup(replacing: .help) {
+            Button("Porteos Keyboard Shortcuts") {
+                post(.showShortcutsLegend)
+            }
+            Button("Command Palette") {
+                post(.showCommandPalette)
+            }
+            Divider()
+            Button("Glossary…") {
+                post(.showGlossary)
+            }
+        }
+
         // ── Edit menu: Undo / Redo ─────────────────────────────────────────────
         // Replaces the system undo slot so ⌘Z / ⌘⇧Z route through our stack.
+        // ── Edit menu: Delete selected deal ───────────────────────────────────
+        CommandGroup(after: .undoRedo) {
+            Divider()
+            Button("Preload Market Assumptions…") {
+                post(.preloadMarketAssumptions)
+            }
+            .keyboardShortcut("p", modifiers: [.command, .shift])
+            .disabled(!(hasDealSelected ?? false))
+            
+            Button("Delete Deal…") {
+                post(.deleteSelectedDeal)
+            }
+            .keyboardShortcut(.delete, modifiers: .command)
+            .disabled(!(hasDealSelected ?? false))
+        }
+
         CommandGroup(replacing: .undoRedo) {
             Button("Undo \(DealHistoryManager.shared.undoLabel)") {
                 post(.undoDealEdit)
@@ -85,6 +118,7 @@ struct AppCommandsProvider: Commands {
             Button("Hospitality")    { navigate(.hospitality) }.keyboardShortcut("2", modifiers: .command)
             Button("Design")         { navigate(.design)      }.keyboardShortcut("3", modifiers: .command)
             Button("Circular Economy") { navigate(.circular)  }.keyboardShortcut("4", modifiers: .command)
+            Button("Global Intelligence") { navigate(.globalIntelligence) }.keyboardShortcut("5", modifiers: .command)
         }
 
         // ── Actions menu ──────────────────────────────────────────────────────
@@ -134,6 +168,13 @@ struct AppCommandsProvider: Commands {
                 post(.showCommandPalette)
             }
             .keyboardShortcut("k", modifiers: .command)
+
+            Divider()
+
+            Button("Glossary…") {
+                post(.showGlossary)
+            }
+            .keyboardShortcut("g", modifiers: [.command, .shift])
         }
     }
 

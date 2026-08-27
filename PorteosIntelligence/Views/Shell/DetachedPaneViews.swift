@@ -122,6 +122,9 @@ struct DetachedCenterView: View {
         if wm.activeProfile == .cmdCenter {
             CmdCenterView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if wm.activeProfile == .globalIntelligence {
+            GlobalIntelligenceDashboardView(deals: deals)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let deal = selectedDeal {
             ScrollView {
                 VStack(spacing: 0) {
@@ -181,17 +184,31 @@ struct DetachedInspectorView: View {
     var body: some View {
         VStack(spacing: 0) {
             DetachedWindowHeader(title: "INSPECTOR", pane: .inspector)
-            if let deal = selectedDeal {
+            if wm.activeProfile == .globalIntelligence {
+                if let deal = selectedDeal {
+                    GeoAssetInspectorPanel(deal: deal)
+                        .frame(maxWidth: DesignTokens.inspectorPaneWidth)
+                } else if let marketId = wm.geoMarketFilterId {
+                    MarketContextInspector(marketId: marketId, deals: deals)
+                        .frame(maxWidth: DesignTokens.inspectorPaneWidth)
+                } else if deals.contains(where: { !$0.isGeocoded && (!$0.locationCity.isEmpty || !$0.address.isEmpty) }) {
+                    GeocodeStatusInspector(deals: deals)
+                        .frame(maxWidth: DesignTokens.inspectorPaneWidth)
+                } else {
+                    GlobalIntelligenceIdleInspector()
+                        .frame(maxWidth: DesignTokens.inspectorPaneWidth)
+                }
+            } else if let deal = selectedDeal {
                 InspectorPane(deal: deal)
             } else {
                 VStack {
                     Spacer()
-                    Text("no deal selected")
-                        .porteosRowValue()
+                    Text("// INSPECTOR_V2")
+                        .porteosRowLabel()
                         .foregroundStyle(textSecondary)
                     Spacer()
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(maxWidth: DesignTokens.inspectorPaneWidth, maxHeight: .infinity)
                 .background(shellSurface)
             }
         }

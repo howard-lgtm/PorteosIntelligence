@@ -22,6 +22,10 @@
 | 2026-07-05 | Deal list | **Duplicate PIPELINE rows** — e.g. two “LISBON OFFICE BLOCK A”, two “SEMI-DETACHED HOUSE…”; tighten dedup on import | major | P7-07 |
 | 2026-07-05 | ComparisonView | OPEX panel floated centered in scroll, read-only €0 fields, no deal label | major | P2-09 |
 | 2026-07-05 | ComparisonView OPEX | Input fields capped at ~**2 digits** (88pt + NumberFormatter) — can't enter e.g. €2,400 | major | P2-09 |
+| 2026-07-08 | Global Intelligence | Help menu shows system *“Help isn't available”* alert | minor | P4-05 |
+| 2026-07-08 | Global Intelligence | Wrong pin when deal lacks city/address (e.g. sample deal in Sweden) | major | P10-11 (fixed sample + geocode UX) |
+| 2026-07-09 | Global Intelligence | Pin hover showed duplicate banners (.help tooltip + custom card) | minor | fixed — hover-only banner |
+| 2026-07-09 | Deal list | Duplicate **LISBON OFFICE BLOCK A** rows still in PIPELINE | major | P7-07 |
 
 **Severity:** blocker · major · minor · cosmetic · idea
 
@@ -32,7 +36,7 @@
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
 | PKG-01 | App icon in `AppIcon.appiconset` | `[x]` | 1024 + all macOS slots (2026-07-04) |
-| PKG-02 | Confirm version/build in Xcode (1.0 / 1) | `[ ]` | `MARKETING_VERSION` already 1.0 |
+| PKG-02 | Confirm version/build in Xcode (1.0 / 1) | `[x]` | Confirmed: MARKETING_VERSION=1.0, CURRENT_PROJECT_VERSION=1 Jul 12 | `MARKETING_VERSION` already 1.0 |
 | PKG-03 | Clean git tree + tag `v1.0.0-wild` after icon commit | `[ ]` | Exclude `.DS_Store`, `xcuserstate` |
 | PKG-04 | Archive → Export `.app` for personal install | `[~]` | See `Documentation/DISTRIBUTION.md` |
 | PKG-05 | Smoke test on clean machine (fonts load, SwiftData, server port) | `[ ]` | |
@@ -64,7 +68,7 @@
 | P1-02 | Nav sections | `// NAVIGATION` meta-bold | `[x]` | |
 | P1-03 | Nav footer | Bulk export row vs Figma nav footer | `[ ]` | `img_00_21` left column |
 | P1-04 | Filter panel | Advanced filter visually “admin” | `[ ]` | `AdvancedFilterPanel` spacing/layout |
-| P1-05 | Detached inspector | Empty horizontal margins | `[ ]` | `DetachedPaneViews` width cap |
+| P1-05 | Detached inspector | Empty horizontal margins | `[x]` | frame(maxWidth: inspectorPaneWidth) in DetachedPaneViews Jul 10 | `DetachedPaneViews` width cap |
 | P1-06 | Deal rows | Right column: cap rate vs status chip | `[ ]` | Figma `img_00_22` |
 | P1-07 | HTTP endpoint display | `monospacedDigit` on full URL line | `[ ]` | Server Config / nav status |
 | P1-08 | **Keyboard nav (↑↓ ←→)** | Navigate **profile links** and **deal rows** in left pane with arrow keys; terminal-style focus ring + selection pip follows keyboard. Document in shortcuts legend. | `[ ]` | Wild-use 2026-07-05 |
@@ -81,8 +85,8 @@
 | P2-04 | Template Picker | Reference finish level | `[x]` | Use as sheet gold standard |
 | P2-05 | Footer cancel | `[ CANCEL ]` outlined | `[x]` | |
 | P2-06 | Sheet chrome | macOS rounded sheet corners | `[ ]` | `.presentationBackground` / overlay pattern |
-| P2-07 | Legacy sheets | Deprecate or align `EditDealSheet` / `NewDealSheet` / `QuickAddDealSheet` | `[ ]` | Confirm wiring vs Figma sheets |
-| P2-08 | Full Edit — Base | **Source URL field** — browser/email imports store URL in notes; expose as dedicated row (link or copy) in BASE tab, not buried in NOTES blob | `[ ]` | Casa Guerra Junqueiro; see P7-06 |
+| P2-07 | Legacy sheets | Deprecate or align `EditDealSheet` / `NewDealSheet` / `QuickAddDealSheet` | `[~]` | `QuickAddDealSheet` deleted Jul 28 (P13-03). `NewDealSheet` deleted. `EditDealSheet` still used in NavigationPane context menu — route through `FullDealEditSheet` in v1.2 or keep as quick-edit path. |
+| P2-08 | Full Edit — Base | **Source URL field** — browser/email imports store URL in notes; expose as dedicated row (link or copy) in BASE tab, not buried in NOTES blob | `[x]` | `ListingURLHelpers` + BASE tab link row |
 | P2-09 | **ComparisonView OPEX panel** | `[~]` Fixed layout + editable fields 2026-07-05; **fixed 2-digit input cap** same day (`OpexInlineAmountField`). **Follow-up:** OPEX per deal column; pre-fill from `operatingExpenses` | `[~]` | Wild-use |
 
 ---
@@ -95,9 +99,9 @@
 | P3-02 | Sheet chrome | Rounded corners | `[ ]` |
 | P3-03 | PDF cover output | Overlap | `[x]` |
 | P3-04 | PDF page 3+ | Field mapping (e.g. GFA `400000 m²`) | `[ ]` | Data vs display |
-| P3-05 | B&W mode | Untested output | `[ ]` | Superseded by P3-07 build-out |
+| P3-05 | B&W mode | Untested output | `[—]` | Superseded by P3-07 (done) | Superseded by P3-07 build-out |
 | P3-06 | External share | Cover KPI spacing OK for send-out | `[ ]` | Re-verify after wild PDFs |
-| P3-07 | **B&W mode build-out** | Toggle exists in `PDFReportSheet` but output not fully implemented — user note: “Need to build this out”. Wire `blackAndWhite` through `PDFReportGenerator`; verify print-safe contrast. | `[ ]` | Wild-use 2026-07-05 |
+| P3-07 | **PDF print-safe light mode** | Default: light theme (white bg, black JetBrains Mono text, grayscale accents). Optional dark mode toggle for visual presentations. | `[x]` | Completed Aug 14 |
 
 ---
 
@@ -109,6 +113,7 @@
 | P4-02 | Email Setup / Ingestion panel | Same | `[~]` | + P6-19 show password |
 | P4-03 | Settings | Legacy layout pass | `[ ]` | `SettingsView` |
 | P4-04 | Command palette / shortcuts legend | Visual parity | `[ ]` | Low priority |
+| P4-05 | **macOS Help menu** | Help → shows system alert *“Help isn't available for PorteosIntelligence”* — no Help Book bundled. Wire ⌘? / menu item to in-app help (shortcuts legend + profile overview) **or** ship `.help` bundle + `CFBundleHelpBookFolder` in Info.plist. | `[—]` | Wild-use 2026-07-08; defer post-v1 |
 
 ---
 
@@ -154,9 +159,9 @@
 
 | ID | Task | Status |
 |----|------|--------|
-| P6-19 | **Show/hide password** toggle on `EmailSetupSheet` app-password field (verify paste, no Keychain plain-text log) | `[ ]` | Wild-use 2026-07-05 |
-| P6-17 | **Fix CHECK_NOW curl exit 100** — `EmailMonitorService.fetchAndImport` uses `curl -X SEARCH UNSEEN`; fails after TEST OK. Replace with bounded fetch (recent UIDs / `--list-only` + cap 50) or native IMAP; surface curl stderr in UI. Workaround: dedicated Gmail label + smaller unread set. | `[ ]` **next** |
-| P6-18 | Improve IMAP error messages — map exit 67 → “login denied / check app password”, 100 → “inbox query too large or unsupported” | `[ ]` |
+| P6-19 | **Show/hide password** toggle on `EmailSetupSheet` app-password field (verify paste, no Keychain plain-text log) | `[x]` | Wild-verify Jul 9 |
+| P6-17 | **Fix CHECK_NOW curl exit 100** — bounded `SEARCH UNSEEN SINCE` + fallback `SEARCH SINCE`; surface last-result summary in UI. Wild-verify after Idealista alerts resume. | `[~]` | Code complete Jul 9 — pending live Gmail test |
+| P6-18 | Improve IMAP error messages — map exit 67 → “login denied / check app password”, 100 → “inbox query too large or unsupported” | `[x]` | `humanReadableCurlError()` Jul 10 |
 | P6-10 | Wild-test IMAP with real Gmail + 10 broker emails | `[~]` | Auth OK 2026-07-05; blocked on P6-17 |
 | P6-11 | Parser golden fixtures per broker template | `[ ]` |
 | P6-12 | Batch triage integration for email imports | `[ ]` |
@@ -181,9 +186,9 @@
 | P7-02 | Extension POST payload schema documented | `[ ]` | Match `DealIngestionServer` |
 | P7-03 | Idealista / Zillow / Hemnet DOM drift | `[ ]` | Per-site maintenance |
 | P7-04 | Extension icons + Chrome Web Store | `[—]` | If public distribution |
-| P7-05 | **Pull purchase price from listing** — browser extension import landed Casa Guerra Junqueiro at **€0.00**; fix `content.js` scrape + `DealIngestionPayload.purchasePrice` mapping | `[ ]` | Wild-use 2026-07-05 |
-| P7-06 | **Source URL in deal model/UI** — URL written to notes today; add first-class field or BASE tab row so imports are traceable without parsing NOTES | `[ ]` | See P2-08 |
-| P7-07 | **Duplicate deals on import** — same listing imported twice (e.g. Lisbon Office Block A ×2, Semi-Detached ×2 in PIPELINE). Harden dedup: URL hash in `DealIngestionServer` + email `EmailImportRecord`; surface “duplicate skipped” in nav | `[ ]` | Wild-use 2026-07-05 |
+| P7-05 | **Pull purchase price from listing** — browser extension import landed Casa Guerra Junqueiro at **€0.00**; fix `content.js` scrape + `DealIngestionPayload.purchasePrice` mapping | `[x]` | `parsePrice` + JSON-LD fallback |
+| P7-06 | **Source URL in deal model/UI** — URL written to notes today; add first-class field or BASE tab row so imports are traceable without parsing NOTES | `[x]` | BASE tab link row |
+| P7-07 | **Duplicate deals on import** — same listing imported twice (e.g. Lisbon Office Block A ×2, Semi-Detached ×2 in PIPELINE). Harden dedup: URL hash in `DealIngestionServer` + email `EmailImportRecord`; surface “duplicate skipped” in nav | `[~]` | URL-hash dedup works for imports with URL. Manual entries and partial imports (no URL) still bypass dedup — gap remains. |
 
 ---
 
@@ -195,6 +200,7 @@
 | P8-02 | Scenario save/load edge cases | `[ ]` |
 | P8-03 | Market benchmark wrong city alias | `[ ]` |
 | P8-04 | SwiftData export before schema change | `[ ]` |
+| P8-05 | **Expand MarketBenchmarks PT coverage** — add Braga, Coimbra, Cascais/Sintra, Funchal (Madeira), Setúbal, Aveiro, Évora, Leiria. Also expand US: LA, Chicago, Miami, Dallas, Atlanta; IT: Florence, Naples; ES: Valencia, Bilbao. Enables granular benchmark-apply in AI Vibe for all value-add thesis markets. | `[x]` | 80+ cities: PT/ES/FR/UK/IT/HR/GR/US/JP expanded Jul 11 | Next version |
 
 ---
 
@@ -202,24 +208,130 @@
 
 | ID | Task | Status |
 |----|------|--------|
-| P9-01 | AI vibe panel useful on real deals | `[ ]` |
-| P9-02 | LLM endpoint config + privacy note | `[ ]` |
-| P9-03 | Portfolio learning engine feedback loop | `[ ]` | Scaffold exists |
+| P9-01 | AI vibe panel useful on real deals | `[x]` | qwen2.5:0.5b wired; SWOT + DealVerdict added Jul 10 |
+| P9-02 | LLM endpoint config + privacy note | `[x]` | Settings › INTELLIGENCE tab: endpoint, model, ping, privacy Jul 10 |
+| P9-03 | Portfolio learning engine feedback loop | `[—]` | Deleted Jul 28 — 220 lines never called, no UI; removed to reduce dead code |
+
+---
+
+## P10 — Global Intelligence profile (6th profile) — **engineering epic**
+
+**Goal:** Geo-anchored portfolio map + market news intelligence. Distinct from Command Center (portfolio CRM).
+
+**Workflow:** Shipped on `main` via [PR #6](https://github.com/howard-lgtm/PorteosIntelligence/pull/6) (9 Jul 2026). Branch: `cursor/global-intelligence-3e3e` (merged).
+
+**Design handoff (complete):** [`Design-system/Figma/Global_Intelligence/GLOBAL_INTELLIGENCE_HANDOFF.md`](../../Design-system/Figma/Global_Intelligence/GLOBAL_INTELLIGENCE_HANDOFF.md) + 6 PNG frames.
+
+**Figma brief (original):** [`Design-system/Figma/GLOBAL_INTELLIGENCE_FIGMA_BRIEF.md`](../../Design-system/Figma/GLOBAL_INTELLIGENCE_FIGMA_BRIEF.md)
+
+### Product decisions (8 Jul 2026)
+
+| Decision | Choice |
+|----------|--------|
+| Geocoding | On **import/save only** — no backfill job; sample deals geocode when created/imported later |
+| News feeds | **Universal registry** — see `MarketFeedRegistry.swift`. Launch markets below. Static RSS, daily cache, 30–60d. Topic tags tuned for **value-add / below-market** thesis. |
+| Code weight | **Happy medium** — one registry file, native MapKit (`MKGeocodingRequest`) + URLSession RSS; no external map/news SDKs |
+| AI briefing | **Deferred to P11** — map + news ship first; Ollama/Qwen exists locally but not wired in v1 |
+| Inspector | **Hybrid** — see strategy below; no global InspectorPane refactor |
+
+### Inspector strategy (v1)
+
+| State | Center pane | Inspector (280px) |
+|-------|-------------|-------------------|
+| Idle (no pin) | Map + all-market news | `// SELECT_PIN_OR_MARKET` + market aggregate when filter active |
+| Pin selected | Map + `GeoAssetContextCard` + filtered news | **Existing deal inspector** (weights / AI) — pin tap sets `selectedDealID` |
+| Market focus only | Map zoomed + market-scoped news | `MarketContextInspector` — deal count, exposure, prime yield chip |
+
+**Rationale:** Pin selection reuses the deal inspector users already know. Map-specific UI stays in the center pane (Figma). One `if activeProfile == .globalIntelligence` branch in inspector routing — no changes to RE/Hosp/Design/Circular inspectors.
+
+### Launch markets (8 Jul 2026)
+
+**ID convention:** `{COUNTRY}-{METRO}` — e.g. `UK-LON`, `US-NYC`, `US-LA`, `PT-ALG`
+
+**Investment lens:** Below-market / value-add — quintas & ecotourism (PT), cheap rural stock (IT, JP akiya), distressed US metros, Mediterranean holiday conversion, Nordic yield.
+
+| Region | Countries | Key metros |
+|--------|-----------|------------|
+| **Europe** | `PT` `ES` `IT` `FR` `UK` `HR` `GR` | `PT-LIS` `PT-OPO` `PT-ALG` · `ES-MAD` `ES-BCN` · `IT-ROM` `IT-MIL` `IT-RUR` · `FR-PAR` `FR-RUR` · `UK-LON` `UK-MAN` `UK-BIR` `UK-EDI` · `HR-ZAG` `HR-SPU` · `GR-ATH` `GR-ISL` |
+| **Nordics** | `SE` `DK` `NO` `FI` | `SE-STO` `SE-GOT` · `DK-CPH` · `NO-OSL` · `FI-HEL` |
+| **USA** | `US` | `US-NYC` `US-LA` `US-CHI` `US-MIA` `US-FLA` `US-TX` `US-DET` `US-ATL` `US-BOS` |
+| **Asia** | `JP` | `JP-TYO` `JP-RUR` |
+
+Registry: `PorteosIntelligence/Data/MarketFeedRegistry.swift` — **13 countries + 35 metros**. RSS URLs filled incrementally.
+
+### Figma deliverables
+
+| ID | Task | Status |
+|----|------|--------|
+| P10-01 | 6 reference frames @ 1200×800 | `[x]` |
+| P10-02 | Terminal map overlay + pin component spec | `[x]` |
+| P10-03 | News feed module + market filter bar | `[x]` |
+| P10-04 | Nav integration — `GLOBAL_INTELLIGENCE` ⌘5 + header `porteos@geo` | `[x]` |
+| P10-05 | AI module — 3 variants (engineering picks A for v2) | `[x]` |
+| P10-06 | Handoff doc `GLOBAL_INTELLIGENCE_HANDOFF.md` | `[x]` |
+
+### Engineering phases (v1 — map + news only)
+
+| ID | Task | Status |
+|----|------|--------|
+| P10-10 | `ProfileType.globalIntelligence` + nav ⌘5 + accent `#06B6D4` + AppShell routing | `[x]` |
+| P10-11 | `PropertyDeal` lat/lon/geocodeStatus + `GeocodingService` on save/import/ingest | `[x]` |
+| P10-12 | `GlobalIntelligenceDashboardView` — map 60% / news 40% split | `[x]` |
+| P10-13 | `GeoPortfolioMapView` — MapKit dark + square pins + zoom controls | `[x]` |
+| P10-14 | `MarketFeedRegistry` — PT/ES/IT/FR/UK/HR/GR + Nordics + US metros + JP (value-add thesis) | `[x]` |
+| P10-15 | `NewsAggregatorService` — daily fetch, JSON disk cache, 30–60d filter | `[x]` |
+| P10-16 | `MarketNewsFeedModule` + filter bar + accordion rows | `[x]` |
+| P10-17 | Pin tap → `selectedDealID` + `GeoAssetContextCard` + scoped news | `[x]` |
+| P10-18 | Inspector routing — idle / market context modes for GI profile only | `[x]` |
+| P10-19 | Geocode-empty state + `[ GEOCODE NOW ]` on pending imports | `[x]` |
+| P10-20 | Settings › **Intelligence** tab — sector keyword overrides, headline preview tester, reset-to-defaults (JSON in Application Support) | `[—]` | User note 2026-07-08; defer |
+| P10-21 | **Map pin hover banner** polish — show deal `status` (e.g. PIPELINE), Porteos **grade letter**, keep banner visible while pin **selected** (not hover-only) | `[x]` | `GeoPinHoverBanner` 2026-07-09 |
+
+### Anti-scope (v1)
+
+- Live GPS / device location tracking  
+- Real-time news ticker  
+- ChatGPT-style conversational agent as primary UI  
+- Replacing Command Center  
+- Ollama / LLM briefing (→ P11)  
+- Backfill geocode for existing deals  
+
+---
+
+## P11 — Integrated LLM onboarding (deferred — revisit after P10 ships)
+
+**Context:** Ollama + Qwen already on dev machine. Decide how intelligence is delivered app-wide, not only in Global Intelligence.
+
+| ID | Decision / task | Status |
+|----|-----------------|--------|
+| P11-01 | **Architecture choice:** baked-in service vs optional plugin vs Settings-toggle provider | `[ ]` |
+| P11-02 | `IntelAgentService` — abstract `LLMProvider` protocol (Ollama, future cloud) | `[ ]` |
+| P11-03 | Settings surface — endpoint, model name (`qwen` / `llama3.2:3b`), privacy footer | `[x]` | Settings › INTELLIGENCE tab: endpoint, model, ping, privacy Jul 10 |
+| P11-04 | Global Intelligence Variant A — `03 // DAILY_INTEL_BRIEF` + `[ REGENERATE ]` | `[x]` | IntelBriefView + LLMAnalysisService.generateMarketBrief() Jul 10 |
+| P11-05 | Reuse path for AI Vibe panel — shared provider, different prompts | `[x]` | Single LLMAnalysisService gateway for AI Vibe + INTEL tab Jul 10 |
+| P11-06 | Offline fallback UX — `// AGENT_OFFLINE` + retry (per Figma handoff) | `[x]` | // AGENT_OFFLINE + RETRY + DISMISS in IntelBriefView Jul 10 |
+| P11-07 | App Store / privacy — document local-only default; no portfolio data leaves device | `[ ]` |
+| P11-08 | **Multi-model selection UI** — enumerate installed Ollama models (`GET /api/tags`), let user assign different models per task: *SWOT analysis* vs *market brief* vs *AI Vibe*. Enables e.g. phi4-mini for fast signals + qwen2.5:32b for deep SWOT. Builds on `LLMProvider` protocol (P11-02). Settings → INTELLIGENCE: model picker per task instead of single global field. | `[ ]` | v1.1 |
+| P11-09 | **Cloud LLM fallback** (optional, user-configured) — abstract `LLMProvider` to support OpenAI-compatible endpoints (OpenAI, Mistral API, local LM Studio). User opts in explicitly; privacy note prominent. Portfolio data never sent without explicit consent toggle. | `[ ]` | v2 |
+
+**Lean recommendation (for discussion):** Bake a thin `LLMProvider` into the app (not a separate plugin binary). Ollama is the default local backend; user configures URL + model in Settings. Global Intelligence and AI Vibe both call the same service with different system prompts. Ship P10 without any of this; add in P11.
 
 ---
 
 ## Recommended fix order (when you return)
 
 1. **P6-17** — email CHECK_NOW exit 100 (credentials work; fetch pipeline broken)
-2. **P7-05, P7-06, P7-07 / P2-08** — browser import price, source URL, duplicate rows
-3. **Wild-use log** → new P0s
-4. **P6-19** — email show-password toggle
-5. **P3-07** — PDF B&W mode build-out
-6. **P6** remainder — if inbox intake is top priority
-7. **P1-04, P1-05, P2** — visual finish to match Template Picker
-8. **P3** — PDF trust for external sharing
-9. **PKG-04–07** — if handing app to another machine
-10. **P7-03** — extension DOM maintenance
+2. **Wild-use log** → new P0s
+3. **P6-19** — email show-password toggle
+4. **P3-07** — PDF B&W mode build-out
+5. **P6** remainder — if inbox intake is top priority
+6. **P1-04, P1-05, P2** — visual finish to match Template Picker
+7. **P3** — PDF trust for external sharing
+8. **PKG-04–07** — if handing app to another machine
+9. **P7-03** — extension DOM maintenance
+10. **P11** — LLM integration (daily brief, shared provider)
+11. **P4-05** — macOS Help menu (in-app sheet or `.help` bundle)
+12. **P10-20** — Intelligence settings panel (sector keyword tweaks)
 
 ---
 
@@ -231,6 +343,125 @@
 - [x] P0 PDF / suffix / server port fixes
 - [x] App icon asset set
 - [x] User QA: dashboards + triage + server config “fantastic”
+- [x] **P10 Global Intelligence v1** — map, geocoding, sector news, pin UX ([PR #6](https://github.com/howard-lgtm/PorteosIntelligence/pull/6), `b9303d2`)
+- [x] GI design handoff — 6 frames + `GLOBAL_INTELLIGENCE_HANDOFF.md`
+- [x] Swift compiler warnings cleared (Jul 9)
+- [x] Full Edit QA ([PR #5](https://github.com/howard-lgtm/PorteosIntelligence/pull/5)) — glossary, Design↔Circular sync, carbon 2dp, property type combobox, notes height
+- [x] **P7 browser import cluster** — `parsePrice`, source URL row, `EmailImportRecord` dedup (Jul 9)
+
+---
+
+## P12 — Onboarding & first-launch experience
+
+| ID | Task | Status |
+|----|------|--------|
+| P12-01 | **First-launch checklist** — `FirstLaunchSheet` shown once when `deals.isEmpty`. Four setup paths: add deal, browser extension, email, local AI. Key shortcuts. Privacy note. Dismissed to `AppStorage` flag. | `[x]` | Jul 28 |
+| P12-02 | macOS Help menu — wire ⌘? to `ShortcutsLegendView` in-app (deferred from P4-05) | `[x]` | `CommandGroup(replacing: .help)` shipping Keyboard Shortcuts / Palette / Glossary Jul 28 |
+
+---
+
+## P13 — Security & data integrity
+
+| ID | Task | Status |
+|----|------|--------|
+| P13-01 | **SwiftData backup before store wipe** — copies `.store` / `.store-shm` / `.store-wal` to `~/Documents/PorteosBackups/` with ISO8601 timestamp before deleting on migration failure. Shows `NSAlert` to user before wiping. | `[x]` | Jul 28 |
+| P13-02 | **HTTP server loopback guard** — `DealIngestionServer` already drops non-loopback connections (lines 213–218); server binds to all interfaces but connection handler rejects LAN/WAN requests. | `[x]` | Pre-existing, documented Jul 28 |
+| P13-03 | **Dead boilerplate removed** — deleted `Item.swift` (orphaned `@Model`), `ContentView.swift` (Xcode template), `QuickAddDealSheet.swift` (unreferenced). | `[x]` | Jul 28 |
+| P13-04 | URL-less deal dedup — `findExistingDeal(byName:city:)` fallback added Jul 28. | `[x]` | Exact name+city match for imports without URL |
+| P13-05 | marketId corruption post-geocode — `item.name` fallback removed from `GeocodingService`; only `deal.locationCity` used for marketId resolution. | `[x]` | Jul 28 |
+| P13-06 | **Research JSON import size guard** — `DealResearchImporter.apply()` has no size cap; a crafted large file could spike memory. Add `guard data.count < 10_000_000` before parsing. | `[x]` | Implemented in commit f33f22a Aug 2 |
+| P13-07 | **HTTP ingestion API key** — port 9000 has no auth token; any local process can POST deals. Acceptable for personal use; needs a nonce/key for multi-user or shared machine. | `[ ]` | Pre-distribution |
+
+---
+
+## P14 — Market intelligence & auto-preload (Jul–Aug 2026)
+
+| ID | Task | Status |
+|----|------|--------|
+| P14-01 | **Country + GPS fields in edit sheet** — `locationCountry` added to `PropertyDeal`; GPS manual entry in BASE tab bypasses CLGeocoder; geocoder uses stored country first. | `[x]` | Jul 31 |
+| P14-02 | **Auto-preload on ingestion** — `DealPreloader.applyToNewDeal()` called after deal creation in `DealIngestionServer` and `EmailMonitorService`; fills all-zero fields (GPI, OpEx breakdown, loan, interest, renovation, hospitality) from benchmarks; computes `porteosScore` immediately. Score backfill on launch for nil-score deals. | `[x]` | Aug 1 |
+| P14-03 | **Score safety floor** — `PorteosScoreCalculator` now takes DSCR, LTV, cash-on-cash. DSCR < 0.8 = −25 pts; LTV > 90% = −20 pts; cash-on-cash ≥ 12% = +5 pts. Grade scale unified with `VibeGrade` (B: ≥65, C: ≥50, D: ≥35). | `[x]` | Aug 1 |
+| P14-04 | **Exit cap rate in preloader** — `DealPreloader` sets `exitCapRate` from benchmark prime yield; 5-year NPV calculation no longer shows "—". Exposed in `PreloadReviewSheet`. | `[x]` | Aug 1 |
+| P14-05 | **Condition selector + seasonal preload (Phase 3)** — `PreloadReviewSheet` has 4-button condition override (Ruin/Needs Work/Habitable/Good) and season toggle (Peak/Shoulder/Off-Season) for hospitality ADR/occupancy. | `[x]` | Aug 1 |
+| P14-06 | **Sensitivity analysis metric alignment** — `HospitalitySensitivityBlock` ADR row now uses GOP delta (not RevPAR) so all three bars share the same scale. | `[x]` | Aug 1 |
+| P14-07 | **Sensitivity rewrite** — Scaled deltas (±10% of deal ADR/occupancy/OpEx, not hardcoded ±€10/−5%/+5pp); shows upside (ADR +10%, Occ +10%, OpEx −10%) + downside (ADR −10%, Occ −10%, OpEx +10%) + combined stress scenario; results expressed as % of base GOP for direct comparability. | `[x]` | Aug 18 |
+| P14-08 | **Deal list pagination** — `@Query` fetchLimit requires custom `init()` refactor; deferred. Not a risk at current scale. | `[ ]` | Future |
+| P14-09 | **BatchTriage benchmark apply** — email-imported deals through batch triage don't get auto-preloaded. | `[ ]` | Future |
+| P14-10 | **Hospitality ↔ RE GPI auto-sync** — `[ SYNC GPI ]` button exists; sync still requires manual step. | `[ ]` | Future |
+| P14-11 | **GI geocode overlay** — only blocks map when zero deals are plotted (fixed Aug 1); also fixed: market macros labelled as static estimates, ECB hardcode replaced, signal cards show headline count, undated RSS → `.distantPast`, empty-feed market chips dimmed. | `[x]` | Aug 1 |
+| P14-12 | **Geocoding consistency** — country consistency check post-geocode (rejects Morocco for PT deal), MarketFeedRegistry alias lookup in `inferCountry()`, extended PT heuristic (Odemira, Silves, Portimão etc.), `inferCity()` accepts registry aliases. | `[x]` | Aug 2 |
+| P14-13 | **Intel brief: scrollable, source attribution, market-focused prompt** — ScrollView + context header (N articles · market · 60d), post-hoc article matching shows source/date/link per signal, prompt enforces market relevance and passes article source names. | `[x]` | Aug 2 |
+| P14-14 | **Grade/score discrepancy** — `PorteosScoreCalculator.grade()` aligned to `VibeGrade` thresholds (B:≥65); was B:≥60 causing dashboard B vs AI Vibe C for same score. | `[x]` | Aug 2 |
+| P14-15 | **JSON import expansion** — Add OpEx breakdown (6 fields: property mgmt, tax, insurance, utilities, maintenance, reserves), regulatory fields (7 fields: zoning, FAR, max height, max units, planning status, heritage, STR licence), vacancy rate, closing costs, property type. Enables near-complete ingestion for complex development/hospitality deals from AI research exports. | `[x]` | Aug 18 |
+| P14-16 | **HTTP ingestion API key** — See P13-07 (duplicate). | `[—]` | Duplicate |
+| P14-17 | **Inspector MEDIA tab alignment** — Hero image with `.scaledToFill()` reported aspect-ratio-scaled layout width (~427px for 16:9 @ 240px tall) instead of proposed 280px, making inspector pane wider than WEIGHTS/AI VIBE tabs. Fixed: added `frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)` to Image in `heroSlot` + `.clipped()` backstop in AppShell. All three inspector tabs now pixel-identical in header. | `[x]` | Aug 14 |
+| P14-18 | **Preload discoverability** — `[ PRELOAD MARKET ASSUMPTIONS ]` button in `FullDealEditSheet` was conditionally hidden (`if city.isEmpty == false && totalArea > 0`), making it invisible to users creating new deals before filling those fields. Fixed: button now always visible with disabled state + hint text "// requires city + area" when preconditions not met. Added Edit menu command "Preload Market Assumptions…" (⌘⇧P) for keyboard access. | `[x]` | Aug 18 |
+
+---
+
+## P17 — Research chat UX & features (Aug 2026)
+
+|| ID | Task | Status |
+||----|------|--------|
+|| P17-01 | **Auto-continue for truncated responses** — When LLM response ≥9000 chars and doesn't end with sentence terminator, automatically append "continue" prompt and stream remainder. Avoids manual "continue" prompts. | `[ ]` | Phase 2 |
+|| P17-02 | **Copy conversation button** — `[ COPY ]` button next to `[ CLEAR ]` in RESEARCH tab header; copies entire conversation (user + AI messages) to clipboard as plain text with role prefixes. Terminal aesthetic: `[ COPY ]` bracket-text style. | `[x]` | Aug 19 |
+|| P17-03 | **Export conversation as JSON** — Export full chat history including timestamps, model names, extracted fields, and `hasExtractedData` flags. Enables conversation archiving and analysis. | `[ ]` | Phase 2 |
+|| P17-04 | **Import conversation from JSON** — Restore a previously exported chat session into the current deal's research tab. Requires schema version check. | `[ ]` | Phase 2 |
+|| P17-05 | **Pin/save important conversations** — Flag specific chat sessions as "pinned" for quick access; pinned chats appear in a dedicated section or with a visual indicator. | `[ ]` | Phase 3 |
+|| P17-06 | **Message timestamps** — Display `HH:MM:SS` timestamp for each research message in meta style (gray, small font). Placement options: (a) inline with prompt prefix (`porteos@user ~ % [14:23:45]`), (b) trailing right edge of message header, (c) on hover tooltip. Requires `ResearchMessage.timestamp` already in model; add to `MessageRow` and `StreamingRow` UI. | `[ ]` | Phase 2 |
+
+---
+
+## Build 3 Readiness (Aug 19, 2026)
+
+### ✅ Complete & Ready for TestFlight
+- **Version:** 1.2 (Build 3)
+- **Xcode project:** Version numbers updated
+- **Git status:** Clean (all changes committed and pushed)
+- **Linter errors:** Zero across 131 Swift files
+- **Key features:**
+  - P14-15: JSON import expansion (OpEx, regulatory, vacancy, closing costs, property type) ✓
+  - P14-07: Sensitivity analysis rewrite (upside/downside/stress scenarios) ✓
+  - P14-18: Preload discoverability (always-visible button + keyboard shortcut) ✓
+  - P17-02: RESEARCH chat copy button ✓
+  - RESEARCH tab: Live streaming, text wrapping, auto-apply, clear chat ✓
+- **Documentation:** BetaGuide.md updated with Build 3 features and test scenarios
+
+### High-Priority for v1.3 (Next Build)
+|| ID | Task | Impact |
+||----|------|--------|
+|| P17-06 | Message timestamps in RESEARCH chat | UX polish |
+|| P17-01 | Auto-continue for truncated AI responses | UX convenience |
+|| P14-09 | BatchTriage benchmark apply | Consistency |
+|| P14-10 | Hospitality ↔ RE GPI auto-sync | Workflow efficiency |
+|| P13-07 | HTTP ingestion API key | Security (multi-user) |
+
+### Medium-Priority for v1.4+
+|| ID | Task | Impact |
+||----|------|--------|
+|| P17-03 | Export conversation as JSON | Power user feature |
+|| P17-04 | Import conversation from JSON | Power user feature |
+|| P1-08 | Keyboard nav (↑↓ ←→) in deal list | Terminal-style UX |
+|| P2-01 | Terminal segment bar in Full Edit | Visual polish |
+|| P3-07 | PDF external share spacing | Professional output |
+
+### Deferred / v2.0
+|| ID | Task | Reason |
+||----|------|--------|
+|| P4-05 | macOS Help menu | Low priority, in-app guide sufficient |
+|| P11-08 | Multi-model selection UI | Advanced feature |
+|| P11-09 | Cloud LLM fallback abstraction | Already supported via Settings |
+
+### TestFlight Archive Checklist
+- [x] Version 1.2 / Build 3 in Xcode
+- [x] All changes committed and pushed
+- [x] Zero linter errors
+- [x] BetaGuide.md updated
+- [x] "What to Test" scenarios documented
+- [ ] Archive in Xcode (Product → Archive)
+- [ ] Upload to App Store Connect
+- [ ] Submit for TestFlight review
+- [ ] Share build link with beta testers
 
 ---
 

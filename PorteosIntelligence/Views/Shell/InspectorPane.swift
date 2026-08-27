@@ -41,8 +41,10 @@ struct InspectorPane: View {
             fullWidthDivider
 
             switch selectedTab {
-            case "weights": weightsContent
-            default:        aiVibeContent
+            case "weights":  weightsContent
+            case "media":    mediaContent
+            case "research": researchContent
+            default:         aiVibeContent
             }
 
             Spacer(minLength: 0)
@@ -191,12 +193,14 @@ struct InspectorPane: View {
         try? modelContext.save()
     }
 
-    // MARK: Tab Bar — [WEIGHTS] 2px rust underline | [AI VIBE]
+    // MARK: Tab Bar — [WEIGHTS] 2px rust underline | [VIBE] | [MEDIA] | [RESEARCH]
 
     private var tabBar: some View {
         HStack(spacing: 0) {
-            tabButton(title: "WEIGHTS", id: "weights")
-            tabButton(title: "AI VIBE", id: "ai_vibe")
+            tabButton(title: "WEIGHTS",   id: "weights")
+            tabButton(title: "VIBE",      id: "ai_vibe")     // Shortened from "AI VIBE"
+            tabButton(title: "MEDIA",     id: "media")
+            tabButton(title: "RESEARCH",  id: "research")    // New
             Spacer()
         }
         .padding(.horizontal, DesignTokens.blockGutter)
@@ -233,9 +237,66 @@ struct InspectorPane: View {
 
     // MARK: Weights Content
 
+    private enum WeightPresetCategory {
+        case hotel, farmRural, multiDwelling, commercial, residential
+
+        var displayName: String {
+            switch self {
+            case .hotel:         return "HOTEL"
+            case .farmRural:     return "FARM/RURAL"
+            case .multiDwelling: return "MULTI-DWELLING"
+            case .commercial:    return "COMMERCIAL"
+            case .residential:   return "RESIDENTIAL"
+            }
+        }
+    }
+
+    private var weightPresetCategory: WeightPresetCategory {
+        let t = deal.propertyType.lowercased()
+        if t.contains("hotel") || t.contains("hostel") || t.contains("str") || t.contains("accommodation") { return .hotel }
+        if t.contains("farm") || t.contains("rural") || t.contains("quinta") || t.contains("herdade") || t.contains("agri") { return .farmRural }
+        if t.contains("multi") || t.contains("dwelling") || t.contains("multifamily") || t.contains("building") || t.contains("predio") { return .multiDwelling }
+        if t.contains("commercial") || t.contains("office") || t.contains("retail") || t.contains("industrial") || t.contains("warehouse") { return .commercial }
+        return .residential
+    }
+
+    private func applyPresetWeights() {
+        DealHistoryManager.shared.push(deal: deal, label: "Apply \(weightPresetCategory.displayName) weight preset")
+        switch weightPresetCategory {
+        case .hotel:
+            deal.weightRealEstate  = 30
+            deal.weightHospitality = 45
+            deal.weightDesign      = 15
+            deal.weightCircular    = 10
+        case .farmRural:
+            deal.weightRealEstate  = 35
+            deal.weightHospitality = 35
+            deal.weightDesign      = 15
+            deal.weightCircular    = 15
+        case .multiDwelling:
+            deal.weightRealEstate  = 55
+            deal.weightHospitality = 5
+            deal.weightDesign      = 25
+            deal.weightCircular    = 15
+        case .commercial, .residential:
+            deal.weightRealEstate  = 65
+            deal.weightHospitality = 0
+            deal.weightDesign      = 20
+            deal.weightCircular    = 15
+        }
+        // Immediately persist the recalculated score so GI Inspector stays in sync
+        deal.porteosScore = PropertyDealViewModel(deal: deal).porteosScore.finalScore
+        deal.updatedAt = Date()
+        try? modelContext.save()
+    }
+
     private var weightsContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                if !deal.propertyType.isEmpty {
+                    weightPresetButton
+                    fullWidthDivider
+                }
                 weightRow(label: "Real Estate",       value: deal.weightRealEstate,  accentColor: accentRe, key: "re")
                 insetDivider
                 weightRow(label: "Hospitality",       value: deal.weightHospitality, accentColor: accentHo, key: "ho")
@@ -254,6 +315,31 @@ struct InspectorPane: View {
             }
             .padding(.top, 4)
         }
+    }
+
+    private var weightPresetButton: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Button { applyPresetWeights() } label: {
+                Text("[ APPLY WEIGHTS FOR \(weightPresetCategory.displayName) ]")
+                    .porteosButtonPrimary()
+                    .foregroundStyle(accentRust)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: DesignTokens.rowHeightButton)
+                    .background(accentRust.opacity(0.08))
+                    .overlay(
+                        Rectangle()
+                            .stroke(accentRust.opacity(0.45), lineWidth: DesignTokens.dividerWidth)
+                    )
+                    .clipShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            Text("// resets weights to recommended defaults for this asset class")
+                .porteosMeta()
+                .foregroundStyle(textTertiary)
+        }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .padding(.vertical, 10)
     }
 
     // MARK: Founder Lens
@@ -397,6 +483,21 @@ struct InspectorPane: View {
 
     private var aiVibeContent: some View {
         AIVibePanel(deal: deal, refreshID: vibeRefreshID)
+    }
+
+    // MARK: Media Content
+
+    private var mediaContent: some View {
+        ScrollView {
+            DealMediaGalleryView(deal: deal)
+                .frame(maxWidth: .infinity)
+        }
+    }
+
+    // MARK: Research Content
+
+    private var researchContent: some View {
+        ResearchChatView(deal: deal)
     }
 
     // MARK: Rebalance Logic

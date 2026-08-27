@@ -112,6 +112,8 @@ struct DealIngestionPayload: Decodable {
     var locationCountry:    String?
     var purchasePrice:      Double?
     var totalArea:          Double?
+    var landArea:           Double?
+    var propertyType:       String?
     var bedrooms:           Int?
     var bathrooms:          Int?
     var listingDescription: String?
@@ -120,7 +122,8 @@ struct DealIngestionPayload: Decodable {
 
     enum CodingKeys: String, CodingKey {
         case source, url, propertyName, locationCity, locationCountry,
-             purchasePrice, totalArea, bedrooms, bathrooms,
+             purchasePrice, totalArea, landArea, propertyType,
+             bedrooms, bathrooms,
              listingDescription = "description",
              images, listingDate
     }
@@ -257,8 +260,9 @@ final class DealIngestionServer {
             // Try to parse; if headers are incomplete keep accumulating
             guard let request = HTTPRequest.parse(accumulated) else {
                 if !isDone && error == nil {
+                    let nextBuffer = accumulated
                     Task { @MainActor [weak self] in
-                        self?.receiveRequest(conn: conn, buffer: accumulated)
+                        self?.receiveRequest(conn: conn, buffer: nextBuffer)
                     }
                 } else {
                     conn.cancel()
@@ -268,8 +272,9 @@ final class DealIngestionServer {
 
             // If body is still arriving, accumulate more
             if !request.isComplete && !isDone && error == nil {
+                let nextBuffer = accumulated
                 Task { @MainActor [weak self] in
-                    self?.receiveRequest(conn: conn, buffer: accumulated)
+                    self?.receiveRequest(conn: conn, buffer: nextBuffer)
                 }
                 return
             }
@@ -348,6 +353,47 @@ final class DealIngestionServer {
 
     // MARK: Deal ingestion
 
+    /// Dedup fallback for imports with no URL — matches on normalised name+city.
+    /// Only triggers when both name and city are non-empty (avoids false positives).
+    private func findExistingDeal(byName name: String, city: String, context: ModelContext) -> PropertyDeal? {
+        let trimName = name.trimmingCharacters(in: .whitespaces).lowercased()
+        let trimCity = city.trimmingCharacters(in: .whitespaces).lowercased()
+        guard trimName.count > 3, trimCity.count > 1 else { return nil }
+        guard let deals = try? context.fetch(FetchDescriptor<PropertyDeal>()) else { return nil }
+        return deals.first { deal in
+            deal.propertyName.lowercased() == trimName &&
+            deal.locationCity.lowercased() == trimCity
+        }
+    }
+
+    private func findExistingDeal(forURL url: String, context: ModelContext) -> PropertyDeal? {
+        let normalized = ListingURLHelpers.normalize(url)
+
+        if let records = try? context.fetch(
+            FetchDescriptor<EmailImportRecord>(
+                predicate: #Predicate { $0.listingURL == normalized }
+            )
+        ), let record = records.first, let dealID = record.dealID {
+            let deals = try? context.fetch(
+                FetchDescriptor<PropertyDeal>(
+                    predicate: #Predicate { $0.id == dealID }
+                )
+            )
+            if let deal = deals?.first { return deal }
+        }
+
+        let urlCopy = url
+        if let dupes = try? context.fetch(
+            FetchDescriptor<PropertyDeal>(
+                predicate: #Predicate { $0.notes.contains(urlCopy) }
+            )
+        ), let first = dupes.first {
+            return first
+        }
+
+        return nil
+    }
+
     private func handleDealIngestion(_ req: HTTPRequest, conn: NWConnection) {
         guard let container = modelContainer else {
             send(.error("Server not ready — data container unavailable", status: 503), to: conn)
@@ -367,39 +413,50 @@ final class DealIngestionServer {
         }
 
         let ctx  = ModelContext(container)
-        let city = payload.locationCity ?? ""
+        // Infer city from available text if the scraper didn't capture it
+        let city = (payload.locationCity ?? "").trimmingCharacters(in: .whitespaces).isEmpty
+            ? DealIngestionServer.inferCity(
+                name:    payload.propertyName    ?? "",
+                address: "",
+                country: payload.locationCountry ?? "",
+                url:     payload.url             ?? "")
+            : payload.locationCity ?? ""
 
-        // ── Dedup: skip if a deal with the same source URL already exists ────
-        if let url = payload.url, !url.isEmpty {
-            let urlCopy = url
-            let dupes = try? ctx.fetch(
-                FetchDescriptor<PropertyDeal>(
-                    predicate: #Predicate { $0.notes.contains(urlCopy) }
-                )
-            )
-            if let dupes, !dupes.isEmpty {
-                let reply: [String: Any] = [
-                    "success":   true,
-                    "dealID":    dupes[0].id.uuidString,
-                    "message":   "Deal already exists (deduplicated)",
-                    "duplicate": true,
-                ]
-                send(.json(reply), to: conn)
-                consoleLog(req, status: 200, note: "duplicate")
-                appendLog(method: "POST", path: "/api/deals", status: 200,
-                          source: payload.source ?? "unknown",
-                          name: payload.propertyName ?? "duplicate",
-                          dealID: dupes[0].id)
-                ToastManager.shared.show(IngestionToastData(
-                    dealID:       dupes[0].id,
-                    propertyName: payload.propertyName ?? "Duplicate Deal",
-                    location:     city,
-                    price:        payload.purchasePrice ?? 0,
-                    source:       payload.source ?? "browser_extension",
-                    isDuplicate:  true
-                ))
-                return
-            }
+        // ── Dedup: URL match (primary) or name+city hash (fallback for no-URL imports) ─
+        let duplicateByURL: PropertyDeal? = {
+            guard let url = payload.url, !url.isEmpty else { return nil }
+            return findExistingDeal(forURL: url, context: ctx)
+        }()
+        let duplicateByNameCity: PropertyDeal? = duplicateByURL == nil
+            ? findExistingDeal(
+                byName: payload.propertyName ?? "",
+                city:   city,
+                context: ctx)
+            : nil
+        let duplicateExisting = duplicateByURL ?? duplicateByNameCity
+
+        if let existing = duplicateExisting {
+            let reply: [String: Any] = [
+                "success":   true,
+                "dealID":    existing.id.uuidString,
+                "message":   "Deal already exists (deduplicated)",
+                "duplicate": true,
+            ]
+            send(.json(reply), to: conn)
+            consoleLog(req, status: 200, note: "duplicate")
+            appendLog(method: "POST", path: "/api/deals", status: 200,
+                      source: payload.source ?? "unknown",
+                      name: payload.propertyName ?? "duplicate",
+                      dealID: existing.id)
+            ToastManager.shared.show(IngestionToastData(
+                dealID:       existing.id,
+                propertyName: payload.propertyName ?? "Duplicate Deal",
+                location:     city,
+                price:        payload.purchasePrice ?? 0,
+                source:       payload.source ?? "browser_extension",
+                isDuplicate:  true
+            ))
+            return
         }
 
         // ── Market benchmarks (reuse Data/MarketBenchmarks.swift) ────────────
@@ -444,9 +501,11 @@ final class DealIngestionServer {
         // ── Create PropertyDeal ────────────────────────────────────────────────
         let deal = PropertyDeal(
             propertyName:         payload.propertyName  ?? "Browser Import",
-            propertyType:         "Apartment",
+            propertyType:         payload.propertyType  ?? "Apartment",
             totalArea:            area,
+            landArea:             payload.landArea       ?? 0,
             locationCity:         city,
+            locationCountry:      payload.locationCountry ?? "",
             purchasePrice:        price,
             grossPotentialIncome: gpi,
             vacancyRate:          vacancyRate,
@@ -457,12 +516,29 @@ final class DealIngestionServer {
         )
         ctx.insert(deal)
 
+        // Auto-fill remaining zero fields from benchmark + compute initial score
+        DealPreloader.applyToNewDeal(deal)
+
+        if let url = payload.url, !url.isEmpty {
+            let record = EmailImportRecord(
+                listingURL: ListingURLHelpers.normalize(url),
+                source:     payload.source ?? "browser_extension",
+                rawSubject: payload.propertyName ?? deal.propertyName,
+                dealID:     deal.id
+            )
+            ctx.insert(record)
+        }
+
         do {
             try ctx.save()
         } catch {
             send(.error("Failed to save deal: \(error.localizedDescription)", status: 503), to: conn)
             consoleLog(req, status: 503, note: "save_failed")
             return
+        }
+
+        Task { @MainActor in
+            await GeocodingService.shared.geocode(deal: deal, context: ctx)
         }
 
         // Record metrics into the trend time-series for this city
@@ -536,6 +612,68 @@ final class DealIngestionServer {
                               dealID: dealID)
         recentLogs.insert(entry, at: 0)
         if recentLogs.count > 50 { recentLogs = Array(recentLogs.prefix(50)) }
+    }
+}
+
+// MARK: - City inference
+
+extension DealIngestionServer {
+
+    /// Tries to extract a city name from available import metadata.
+    /// Returns empty string if inference fails — callers should treat "" as "unknown".
+    static func inferCity(name: String, address: String, country: String, url: String) -> String {
+        // 1. "in Porto", "em Lisboa", "en Madrid" pattern in property name or address
+        let locPatterns = [
+            #"\bin\s+([A-ZÀ-Ú][a-zA-ZÀ-ú\-]{2,}(?:\s[A-ZÀ-Ú][a-zA-ZÀ-ú\-]+)?)"#,
+            #"\bem\s+([A-ZÀ-Ú][a-zA-ZÀ-ú\-]{2,}(?:\s[A-ZÀ-Ú][a-zA-ZÀ-ú\-]+)?)"#,
+            #"\ben\s+([A-ZÀ-Ú][a-zA-ZÀ-ú\-]{2,}(?:\s[A-ZÀ-Ú][a-zA-ZÀ-ú\-]+)?)"#,
+        ]
+        for source in [name, address] {
+            for pattern in locPatterns {
+                if let re = try? NSRegularExpression(pattern: pattern),
+                   let m  = re.firstMatch(in: source, range: NSRange(source.startIndex..., in: source)),
+                   let r  = Range(m.range(at: 1), in: source) {
+                    let city = String(source[r]).trimmingCharacters(in: .whitespaces)
+                    // Accept if city is in benchmark database OR in registry aliases
+                    if MarketBenchmarks.benchmark(for: city) != nil { return city }
+                    if MarketFeedRegistry.resolveMarketId(city: city) != nil { return city }
+                }
+            }
+        }
+
+        // 2. URL slug: "venda-predio-t10-porto-bonfim" → segment after T-type
+        if !url.isEmpty {
+            let parts = url.components(separatedBy: "/")
+            if let slug = parts.first(where: { $0.hasPrefix("venda-") || $0.hasPrefix("arrendar-") }) {
+                let segs = slug.components(separatedBy: "-")
+                if let txIdx = segs.firstIndex(where: { $0.range(of: #"^t\d+$"#, options: .regularExpression) != nil }),
+                   txIdx + 1 < segs.count {
+                    let raw = segs[txIdx + 1].prefix(1).uppercased() + segs[txIdx + 1].dropFirst()
+                    if MarketBenchmarks.benchmark(for: String(raw)) != nil { return String(raw) }
+                }
+            }
+        }
+
+        // 3. Last comma-separated segment of address ("Rua X, Porto" → "Porto")
+        if !address.isEmpty {
+            let segments = address.components(separatedBy: ",")
+            if let last = segments.last?.trimmingCharacters(in: .whitespaces), last.count > 2 {
+                if MarketBenchmarks.benchmark(for: last) != nil { return last }
+            }
+        }
+
+        // 4. Country fallback — returns the national capital so benchmarks degrade gracefully
+        switch country.lowercased() {
+        case "portugal":       return "Lisbon"
+        case "spain":          return "Madrid"
+        case "italy":          return "Rome"
+        case "france":         return "Paris"
+        case "united kingdom": return "London"
+        case "usa", "united states": return "New York"
+        case "sweden":         return "Stockholm"
+        case "japan":          return "Tokyo"
+        default:               return ""
+        }
     }
 }
 

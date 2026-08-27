@@ -9,7 +9,7 @@ struct ReportOptions {
     var includeAIAnalysis: Bool = true
     var includeScenarios:  Bool = true
     var includeValidation: Bool = true
-    var blackAndWhite:     Bool = false
+    var darkMode:          Bool = false  // false = light mode (print-safe), true = dark theme
 }
 
 // MARK: - PDFReportGenerator
@@ -38,20 +38,22 @@ final class PDFReportGenerator {
     // MARK: – Page state
 
     private var pageNumber  = 0
-    private var bwMode      = false   // set from options each render
+    private var darkMode    = false   // set from options each render
 
-    // MARK: – B&W colour resolver
+    // MARK: – Color resolver (light mode by default, dark mode optional)
     //
-    // Maps each design-system accent colour to a predetermined greyscale value
-    // that preserves the intended print hierarchy. Shell background/surface/
-    // border/text colours pass through unchanged — they are already dark-on-dark
-    // and render correctly on white paper.
+    // When darkMode = false (default): Light mode for print
+    //   - Inverts shell colors (bg → white, text → black)
+    //   - Converts accent colors to grayscale for print-safe output
+    //
+    // When darkMode = true: Dark theme for visual presentation
+    //   - Uses original design-system colors (black bg, white text, colored accents)
 
     private func c(_ color: CGColor) -> CGColor {
-        guard bwMode else { return color }
+        // Dark mode: return original colors unchanged
+        if darkMode { return color }
 
-        // Round each component to 2 d.p. to handle floating-point drift between
-        // CGColor representations of the same hex value.
+        // Light mode: convert for print-safe output
         let srgb = color.converted(
             to: CGColorSpace(name: CGColorSpace.sRGB)!,
             intent: .defaultIntent, options: nil
@@ -63,29 +65,37 @@ final class PDFReportGenerator {
 
         let r = comp[0], g = comp[1], b2 = comp[2]
 
-        // Rust    #C25E30 → Dark Gray  (primary accent — headings, section bars)
-        if near(r, 0.761) && near(g, 0.369) && near(b2, 0.188) {
+        // SHELL COLORS: Invert for print
+        // Background #0A0A0A → Pure White (no banding)
+        if near(r, 0.039) && near(g, 0.039) && near(b2, 0.039) {
+            return NSColor.white.cgColor }
+        // Surface #111111 → Pure White (no gray alternating rows)
+        if near(r, 0.067) && near(g, 0.067) && near(b2, 0.067) {
+            return NSColor.white.cgColor }
+        // Border #333333 → Light Gray
+        if near(r, 0.200) && near(g, 0.200) && near(b2, 0.200) {
+            return NSColor(white: 0.85, alpha: 1).cgColor }
+        // Text Primary #F8F9FA → Black
+        if near(r, 0.973) && near(g, 0.976) && near(b2, 0.980) {
+            return NSColor.black.cgColor }
+        // Text Secondary #94A3B8 → Dark Gray
+        if near(r, 0.580) && near(g, 0.639) && near(b2, 0.722) {
             return NSColor(white: 0.30, alpha: 1).cgColor }
-        // Red     #EF4444 → Dark Gray  (critical signals)
-        if near(r, 0.937) && near(g, 0.267) && near(b2, 0.267) {
-            return NSColor(white: 0.30, alpha: 1).cgColor }
-        // Green   #10B981 → Medium Gray (positive signals, NOI)
-        if near(r, 0.063) && near(g, 0.725) && near(b2, 0.506) {
-            return NSColor(white: 0.40, alpha: 1).cgColor }
-        // Teal    #14B8A6 → Medium Gray (hospitality accent)
-        if near(r, 0.078) && near(g, 0.722) && near(b2, 0.651) {
-            return NSColor(white: 0.40, alpha: 1).cgColor }
-        // Purple  #A855F7 → Medium Gray (design accent)
-        if near(r, 0.659) && near(g, 0.333) && near(b2, 0.969) {
-            return NSColor(white: 0.40, alpha: 1).cgColor }
-        // Blue    #3B82F6 → Medium Gray (circular accent)
-        if near(r, 0.231) && near(g, 0.510) && near(b2, 0.965) {
-            return NSColor(white: 0.40, alpha: 1).cgColor }
-        // Amber   #F59E0B → Light Gray  (warnings)
-        if near(r, 0.961) && near(g, 0.620) && near(b2, 0.043) {
-            return NSColor(white: 0.50, alpha: 1).cgColor }
+        // Text Dim #666666 → Medium Gray
+        if near(r, 0.400) && near(g, 0.400) && near(b2, 0.400) {
+            return NSColor(white: 0.45, alpha: 1).cgColor }
 
-        // All other colours (shell-bg, surface, border, text tiers) pass through
+        // ACCENT COLORS: Keep for section headers and key indicators
+        // Rust #C25E30 → Keep (section headers, main accent)
+        // Teal #14B8A6 → Keep (hospitality section headers)
+        // Purple #A855F7 → Keep (design section headers)
+        // Blue #3B82F6 → Keep (circular section headers)
+        // Green/Red/Amber → Keep (score indicators, pos/neg signals)
+        
+        // All accent colors pass through unchanged in light mode
+        // This preserves section header bands and score badges
+
+        // Unrecognized colors pass through
         return color
     }
 
@@ -126,7 +136,7 @@ final class PDFReportGenerator {
         options:   ReportOptions,
         scenarios: [DealScenario] = []
     ) -> Data {
-        bwMode = options.blackAndWhite
+        darkMode = options.darkMode
 
         let pdfData = NSMutableData()
         guard let consumer = CGDataConsumer(data: pdfData as CFMutableData) else { return Data() }
@@ -254,7 +264,7 @@ final class PDFReportGenerator {
 
         stat("PURCHASE PRICE", currency(deal.purchasePrice), col: 0)
         stat("LOAN AMOUNT",    currency(deal.loanAmount),    col: 1)
-        stat("TOTAL AREA",     "\(Int(deal.totalArea)) m²",  col: 2)
+        stat("TOTAL AREA",     UnitSystemService.shared.formatArea(deal.totalArea, country: deal.locationCountry),  col: 2)
 
         hline(ctx, x: M, y: statsY - 14, width: cW, color: border)
 
@@ -406,16 +416,21 @@ final class PDFReportGenerator {
         y = sectionHeader(ctx, "03 // DESIGN PERFORMANCE", at: y, accent: purple)
         y -= 8
 
-        y = metricRow(ctx, "GFA",                  "\(f0(des.gfa)) m²",             y: y, alt: true)
-        y = metricRow(ctx, "NIA",                  "\(f0(des.nia)) m²",             y: y)
-        y = metricRow(ctx, "NET-TO-GROSS RATIO",   pct(des.netToGrossRatio),        y: y, alt: true, valueColor: purple)
-        y = metricRow(ctx, "SPACE UTILIZATION",    pct(des.spaceUtilization),       y: y)
-        y = metricRow(ctx, "DAYLIGHTING COVERAGE", pct(des.daylighting),            y: y, alt: true)
-        y = metricRow(ctx, "INDOOR CO₂",           "\(Int(des.co2ppm)) ppm",        y: y)
-        y = metricRow(ctx, "AIR CHANGES / HOUR",   "\(f1(des.ach)) ACH",            y: y, alt: true)
-        y = metricRow(ctx, "THERMAL COMFORT",      pct(des.thermalComfort),         y: y)
-        y = metricRow(ctx, "ACOUSTIC COMFORT",     pct(des.acousticComfort),        y: y, alt: true)
-        y = metricRow(ctx, "BIOPHILIC ELEMENTS",   "\(des.biophilicCount)",         y: y)
+        // GFA/NIA: use designGFA if populated, fall back to totalArea for the PDF.
+        // Guard against 0 (unfilled) to avoid showing "0 m²" or misleading values.
+        let gfaDisplay = des.gfa > 0 ? UnitSystemService.shared.formatArea(des.gfa, country: deal.locationCountry)
+                       : deal.totalArea > 0 ? "\(UnitSystemService.shared.formatArea(deal.totalArea, country: deal.locationCountry)) (built area)" : "—"
+        let niaDisplay = des.nia > 0 ? UnitSystemService.shared.formatArea(des.nia, country: deal.locationCountry) : "—"
+        y = metricRow(ctx, "GFA",                  gfaDisplay,                      y: y, alt: true)
+        y = metricRow(ctx, "NIA",                  niaDisplay,                      y: y)
+        y = metricRow(ctx, "NET-TO-GROSS RATIO",   des.netToGrossRatio > 0 ? pct(des.netToGrossRatio) : "—",  y: y, alt: true, valueColor: purple)
+        y = metricRow(ctx, "SPACE UTILIZATION",    des.spaceUtilization > 0 ? pct(des.spaceUtilization) : "—", y: y)
+        y = metricRow(ctx, "DAYLIGHTING COVERAGE", des.daylighting > 0 ? pct(des.daylighting) : "—",          y: y, alt: true)
+        y = metricRow(ctx, "INDOOR CO₂",           des.co2ppm > 0 ? "\(Int(des.co2ppm)) ppm" : "—",           y: y)
+        y = metricRow(ctx, "AIR CHANGES / HOUR",   des.ach > 0 ? "\(f1(des.ach)) ACH" : "—",                 y: y, alt: true)
+        y = metricRow(ctx, "THERMAL COMFORT",      des.thermalComfort > 0 ? pct(des.thermalComfort) : "—",    y: y)
+        y = metricRow(ctx, "ACOUSTIC COMFORT",     des.acousticComfort > 0 ? pct(des.acousticComfort) : "—", y: y, alt: true)
+        y = metricRow(ctx, "BIOPHILIC ELEMENTS",   des.biophilicCount > 0 ? "\(des.biophilicCount)" : "—",   y: y)
         y -= 12
 
         // ── Circular Economy ──────────────────────────────────────────────────
@@ -515,7 +530,7 @@ final class PDFReportGenerator {
             let rowH: CGFloat = 54
             let accent = accentForProfile(sc.profile)
 
-            fill(ctx, CGRect(x: M,     y: y - rowH, width: cW,     height: rowH), i % 2 == 0 ? surf : bg)
+            // No background fill - only accent stripe on left
             fill(ctx, CGRect(x: M,     y: y - rowH, width: 3,      height: rowH), accent)
 
             text(ctx, sc.name.uppercased(),
@@ -539,16 +554,16 @@ final class PDFReportGenerator {
     @discardableResult
     private func sectionHeader(_ ctx: CGContext, _ label: String, at y: CGFloat, accent: CGColor) -> CGFloat {
         let h: CGFloat = 26
-        fill(ctx, CGRect(x: M,     y: y - h, width: 3,      height: h), accent)
-        fill(ctx, CGRect(x: M + 3, y: y - h, width: cW - 3, height: h), surf)
-        text(ctx, label, x: M + 12, y: y - 18, font: jmB(11), color: accent)
+        // Full-width colored band for section headers (Hospitality/Design/Circular)
+        fill(ctx, CGRect(x: M, y: y - h, width: cW, height: h), accent)
+        text(ctx, label, x: M + 12, y: y - 18, font: jmB(11), color: tp1)  // white text on colored background
         return y - h
     }
 
     @discardableResult
     private func subHeader(_ ctx: CGContext, _ label: String, at y: CGFloat) -> CGFloat {
         let h: CGFloat = 16
-        fill(ctx, CGRect(x: M, y: y - h, width: cW, height: h), bg)
+        // No background fill - keep subsection headers clean
         text(ctx, "// \(label)", x: M + 8, y: y - 12, font: jm(8), color: tp3)
         return y - h
     }
@@ -564,7 +579,7 @@ final class PDFReportGenerator {
         bold: Bool = false
     ) -> CGFloat {
         let h: CGFloat = 20
-        fill(ctx, CGRect(x: M, y: y - h, width: cW, height: h), alt ? surf : bg)
+        // No background fill - keep data rows clean (only section headers have colored bands)
         text(ctx, label, x: M + 8, y: y - 14, font: jm(9.5), color: tp2)
         let vFont = bold ? jmB(9.5) : jm(9.5)
         text(ctx, value, x: 0, y: y - 14, font: vFont, color: valueColor ?? tp1, rightAlignTo: M + cW - 8)

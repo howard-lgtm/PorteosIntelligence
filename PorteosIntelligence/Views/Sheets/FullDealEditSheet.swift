@@ -1,5 +1,7 @@
 import SwiftUI
 import SwiftData
+import AppKit
+import UniformTypeIdentifiers
 
 // MARK: - FullDealEditSheet
 
@@ -64,6 +66,39 @@ struct FullDealEditSheet: View {
     @State private var showBenchmarkPrompt:  Bool   = false
     @State private var pendingBenchmarkCity: String = ""
 
+    // MARK: Research Import State
+    @State private var showResearchImporter: Bool          = false
+    @State private var researchImportResult: String?       = nil   // success/failure line
+
+    // MARK: Preload State
+    @State private var showPreloadReview: Bool             = false
+    @State private var preloadEstimate: DealPreloader.PreloadEstimate? = nil
+
+    // MARK: Cancel revert — snapshot captured before any edits
+    @State private var openSnapshot: DealSnapshot? = nil
+
+    // MARK: Media
+    @State private var showMediaGallery: Bool = false
+
+    // MARK: GPS manual entry
+    @State private var gpsEntry: String = ""
+
+    // MARK: Live score — single source of truth via PropertyDealViewModel (includes Design score)
+    private var liveScore: (score: Double, grade: String, color: Color)? {
+        let result = PropertyDealViewModel(deal: deal).porteosScore
+        let s = result.finalScore
+        guard s > 0 else { return nil }
+        let color: Color = s >= 65 ? DesignTokens.statusGo
+                         : s >= 50 ? DesignTokens.statusWarn
+                         : DesignTokens.statusCritical
+        return (s, result.scoreGrade, color)
+    }
+
+    // MARK: Preload preconditions
+    private var canPreload: Bool {
+        !deal.locationCity.isEmpty && deal.totalArea > 0
+    }
+
     // MARK: Body
 
     var body: some View {
@@ -96,19 +131,47 @@ struct FullDealEditSheet: View {
             }
 
             Rectangle().fill(shellBorder).frame(height: 1)
+            mediaStrip
+            Rectangle().fill(shellBorder).frame(height: 1)
             footer
         }
         .background(shellBg)
         .clipShape(Rectangle())
         .frame(width: 520)
+        .alert("Validation Errors", isPresented: $showValidationAlert) {
+            Button("Save Anyway", role: .destructive) { persistAndDismiss() }
+            Button("Fix Issues", role: .cancel) {}
+        } message: {
+            Text(validationErrors.map { "• \($0.field): \($0.message)" }.joined(separator: "\n"))
+        }
+        .sheet(isPresented: $showMediaGallery) {
+            DealMediaGalleryView(deal: deal)
+                .frame(width: 480, height: 700)
+        }
         .onAppear {
-            // Capture state before the user makes any edits.
-            // Because FullDealEditSheet uses @Bindable, fields update the deal
-            // in real-time; we must snapshot here, not at commit time.
-            DealHistoryManager.shared.push(
-                deal:  deal,
+            // Capture a full snapshot before any edits for Cancel revert.
+            // @Bindable writes immediately to SwiftData; snapshot is the only way to undo.
+            let snap = DealSnapshot(
+                deal: deal,
                 label: "Edit: \(deal.propertyName.isEmpty ? "Untitled" : deal.propertyName)"
             )
+            openSnapshot = snap
+            DealHistoryManager.shared.push(
+                deal:  deal,
+                label: snap.label
+            )
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .preloadMarketAssumptions)) { _ in
+            guard canPreload else { return }
+            preloadEstimate = DealPreloader.estimate(
+                city:          deal.locationCity,
+                area:          deal.totalArea,
+                landArea:      deal.landArea,
+                purchasePrice: deal.purchasePrice,
+                propertyType:  deal.propertyType,
+                propertyName:  deal.propertyName
+            )
+            if preloadEstimate != nil { showPreloadReview = true }
         }
     }
 
@@ -123,7 +186,28 @@ struct FullDealEditSheet: View {
                 .porteosModuleCmd()
                 .foregroundStyle(accentRust)
                 .lineLimit(1)
-            Spacer()
+                .truncationMode(.tail)
+
+            Spacer(minLength: 8)
+
+            // Live score chip — updates as fields change
+            if let live = liveScore {
+                HStack(spacing: 4) {
+                    Text("\(Int(live.score.rounded()))")
+                        .porteosMeta()
+                        .foregroundStyle(live.color)
+                        .monospacedDigit()
+                    Text(live.grade)
+                        .porteosMeta()
+                        .foregroundStyle(live.color)
+                }
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(live.color.opacity(0.1))
+                .overlay { Rectangle().strokeBorder(live.color.opacity(0.4), lineWidth: 1) }
+                .padding(.trailing, 8)
+            }
+
             Button { dismiss() } label: {
                 Text("[ × ]")
                     .porteosModuleCmd()
@@ -197,9 +281,72 @@ struct FullDealEditSheet: View {
                 .focused($focusedField, equals: .propertyName)
             TerminalInputField(label: "Address", placeholder: "Street address", prefix: nil, suffix: nil, text: $deal.address)
                 .focused($focusedField, equals: .address)
-            TerminalInputField(label: "City", placeholder: "City, Country", prefix: nil, suffix: nil, text: $deal.locationCity)
-                .focused($focusedField, equals: .location)
-                .onSubmit { checkForBenchmark() }
+            TerminalComboboxField(
+                label: "City",
+                placeholder: "Start typing…",
+                text: $deal.locationCity,
+                suggestions: { query in Self.citySuggestions(for: query) },
+                focus: $focusedField,
+                equals: .location
+            )
+            .onChange(of: deal.locationCity) { _, _ in checkForBenchmark() }
+
+            TerminalComboboxField(
+                label: "Country",
+                placeholder: "e.g. Portugal, Spain",
+                text: $deal.locationCountry,
+                suggestions: { query in Self.countrySuggestions(for: query) }
+            )
+
+            gpsCoordinatesField
+
+            // Preload button — always visible, disabled when preconditions not met
+            Button {
+                preloadEstimate = DealPreloader.estimate(
+                    city:          deal.locationCity,
+                    area:          deal.totalArea,
+                    landArea:      deal.landArea,
+                    purchasePrice: deal.purchasePrice,
+                    propertyType:  deal.propertyType,
+                    propertyName:  deal.propertyName
+                )
+                if preloadEstimate != nil { showPreloadReview = true }
+            } label: {
+                HStack(spacing: 8) {
+                    Text("[ PRELOAD MARKET ASSUMPTIONS ]")
+                        .porteosRowLabel()
+                        .foregroundStyle(canPreload ? accentRust : textTertiary)
+                    Spacer()
+                    if canPreload {
+                        Text("// \(deal.locationCity) benchmarks")
+                            .porteosMeta()
+                            .foregroundStyle(textTertiary)
+                    } else {
+                        Text("// requires city + area")
+                            .porteosMeta()
+                            .foregroundStyle(textTertiary.opacity(0.6))
+                    }
+                }
+                .padding(.horizontal, 8)
+                .frame(height: DesignTokens.rowHeightData)
+                .background(canPreload ? accentRust.opacity(0.05) : shellSurface)
+                .overlay(Rectangle().strokeBorder(
+                    canPreload ? accentRust.opacity(0.3) : shellBorder,
+                    lineWidth: DesignTokens.dividerWidth
+                ))
+                .clipShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!canPreload)
+            .sheet(isPresented: $showPreloadReview) {
+                if let est = preloadEstimate {
+                    PreloadReviewSheet(deal: deal, estimate: est) {
+                        showPreloadReview = false
+                    }
+                }
+            }
+
+            sourceURLField
 
             if showBenchmarkPrompt {
                 HStack(spacing: 12) {
@@ -235,17 +382,28 @@ struct FullDealEditSheet: View {
                 .padding(.top, 4)
             }
 
+            researchImportRow
+
             sectionLabel("FINANCIAL DETAILS")
-            TerminalInputField(label: "Purchase Price", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.purchasePrice, formatter: currencyFormatter)
+            TerminalInputField(label: "Purchase Price", placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.purchasePrice, formatter: currencyFormatter)
                 .focused($focusedField, equals: .purchasePrice)
             statusPickerField
-            TerminalInputField(label: "Area m²", placeholder: "0", prefix: nil, suffix: "m²", text: numStr($deal.totalArea))
+            TerminalInputField(label: "Area \(UnitSystemService.shared.areaUnitLabel(for: deal.locationCountry))", placeholder: "0", prefix: nil, suffix: UnitSystemService.shared.areaUnitLabel(for: deal.locationCountry), text: numStr($deal.totalArea))
                 .focused($focusedField, equals: .totalArea)
-            TerminalInputField(label: "Property Type", placeholder: "e.g. Office A-Class", prefix: nil, suffix: nil, text: $deal.propertyType)
-                .focused($focusedField, equals: .propertyType)
+            TerminalInputField(label: "Land \(UnitSystemService.shared.areaUnitLabel(for: deal.locationCountry))", placeholder: "0", prefix: nil, suffix: UnitSystemService.shared.areaUnitLabel(for: deal.locationCountry), text: numStr($deal.landArea))
+            TerminalComboboxField(
+                label: "Property Type",
+                placeholder: "e.g. Hotel, Office A-Class",
+                text: $deal.propertyType,
+                suggestions: { DealPropertyTypes.suggestions(matching: $0) },
+                focus: $focusedField,
+                equals: .propertyType
+            )
 
             sectionLabel("NOTES")
             notesField
+
+            regulatorySection
         }
     }
 
@@ -261,23 +419,142 @@ struct FullDealEditSheet: View {
         }
     }
 
+    // MARK: Research Import
+
+    private var researchImportRow: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 10) {
+                Button("[ IMPORT RESEARCH JSON ]") {
+                    showResearchImporter = true
+                }
+                .porteosRowLabel()
+                .foregroundStyle(accentRust)
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                if let result = researchImportResult {
+                    Text(result)
+                        .porteosMeta()
+                        .foregroundStyle(result.hasPrefix("//") ? textTertiary : DesignTokens.statusGo)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+            }
+            .padding(.horizontal, 8)
+            .frame(height: DesignTokens.rowHeightData)
+            .background(shellBg)
+            .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
+            .clipShape(Rectangle())
+        }
+        .fileImporter(
+            isPresented: $showResearchImporter,
+            allowedContentTypes: [.json],
+            allowsMultipleSelection: false
+        ) { result in
+            guard let url = try? result.get().first,
+                  url.startAccessingSecurityScopedResource() else {
+                researchImportResult = "// Could not access file"
+                return
+            }
+            defer { url.stopAccessingSecurityScopedResource() }
+
+            guard let data = try? Data(contentsOf: url) else {
+                researchImportResult = "// Could not read file"
+                return
+            }
+
+            let importResult = DealResearchImporter.apply(json: data, to: deal, context: modelContext)
+            if importResult.applied.isEmpty {
+                researchImportResult = "// No new fields — already populated"
+            } else {
+                let gpsNote = importResult.hadGPS ? " · GPS pinned ✓" : ""
+                researchImportResult = "Applied: \(importResult.applied.joined(separator: " · "))\(gpsNote)"
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var sourceURLField: some View {
+        if let url = ListingURLHelpers.extractFromNotes(deal.notes),
+           let link = URL(string: url) {
+            sectionLabel("SOURCE")
+            HStack(spacing: 8) {
+                Link(destination: link) {
+                    Text(url)
+                        .porteosMeta()
+                        .foregroundStyle(accentRust)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                .buttonStyle(.plain)
+                Spacer()
+            }
+            .padding(.horizontal, 8)
+            .frame(height: DesignTokens.rowHeightData)
+            .background(shellBg)
+            .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
+            .clipShape(Rectangle())
+        }
+    }
+
     private var notesField: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("NOTES")
-                .porteosMeta()
-                .foregroundStyle(textTertiary)
+            HStack {
+                Text("// NOTES")
+                    .porteosMeta()
+                    .foregroundStyle(textTertiary)
+                Spacer()
+                if !deal.notes.isEmpty {
+                    Text("\(deal.notes.count) chars")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textDim)
+                }
+            }
 
             TextEditor(text: $deal.notes)
-                .porteosRowValue()
+                // porteosRowValue() forces frame(height: lineHeight) — single line only.
+                // Apply font directly; let the explicit frame below control height.
+                .font(DesignTokens.TypeScale.rowValue)
                 .foregroundStyle(textPrimary)
                 .scrollContentBackground(.hidden)
                 .padding(8)
-                .frame(minHeight: 88)
+                .frame(height: 260)
                 .background(shellBg)
                 .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
                 .clipShape(Rectangle())
                 .focused($focusedField, equals: .notes)
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: RE ↔ Hospitality helpers
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// Total from individual OPEX line items (when any are non-zero)
+    private var opexLineItemsTotal: Double {
+        deal.opexPropertyManagement + deal.opexPropertyTax + deal.opexInsurance +
+        deal.opexUtilities + deal.opexMaintenance + deal.opexCapitalReserves
+    }
+
+    /// Effective OpEx used by calculators: line items total when present, else aggregate field
+    private var effectiveOpEx: Double {
+        opexLineItemsTotal > 0 ? opexLineItemsTotal : deal.operatingExpenses
+    }
+
+    /// GPI implied by hospitality metrics (room revenue + ancillary)
+    private var hospImpliedGPI: Double? {
+        guard deal.hospitalityRoomCount > 0,
+              deal.hospitalityADR > 0,
+              deal.hospitalityOccupancyRate > 0 else { return nil }
+        let roomRev = Double(deal.hospitalityRoomCount)
+            * deal.hospitalityADR
+            * (deal.hospitalityOccupancyRate / 100)
+            * 365
+        let ancillary = deal.hospitalityFBRevenue + deal.hospitalitySpaRevenue
+            + deal.hospitalityMeetingRevenue + deal.hospitalityOtherRevenue
+        return roomRev + ancillary
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -287,25 +564,71 @@ struct FullDealEditSheet: View {
     private var realEstateContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             sectionLabel("INCOME", color: accentRust)
-            TerminalInputField(label: "Gross Potential Income", placeholder: "0.00", prefix: "€",  suffix: nil, value: $deal.grossPotentialIncome, formatter: currencyFormatter).focused($focusedField, equals: .grossPotentialIncome)
+
+            // GPI — show hospitality-implied suggestion when available
+            TerminalInputField(label: "Gross Potential Income", placeholder: "0.00", prefix: deal.currencySymbol,  suffix: nil, value: $deal.grossPotentialIncome, formatter: currencyFormatter).focused($focusedField, equals: .grossPotentialIncome)
+            if let implied = hospImpliedGPI, abs(implied - deal.grossPotentialIncome) > 100 {
+                HStack(spacing: 8) {
+                    Text("// HOSP. CALC → €\(Int(implied.rounded())) (room rev + ancillary)")
+                        .porteosMeta()
+                        .foregroundStyle(textTertiary)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Button("[ SYNC GPI ]") {
+                        deal.grossPotentialIncome = implied
+                    }
+                    .porteosMeta()
+                    .foregroundStyle(accentRust)
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(accentRust.opacity(0.06))
+                .overlay(Rectangle().strokeBorder(accentRust.opacity(0.25), lineWidth: 1))
+                .clipShape(Rectangle())
+            }
+
             TerminalInputField(label: "Vacancy Rate",           placeholder: "0.00", prefix: nil,  suffix: "%", value: $deal.vacancyRate, formatter: Self.percentFormatter).focused($focusedField, equals: .vacancyRate)
-            TerminalInputField(label: "Other Income",           placeholder: "0.00", prefix: "€",  suffix: nil, value: $deal.otherIncome, formatter: currencyFormatter).focused($focusedField, equals: .otherIncome)
+            TerminalInputField(label: "Other Income",           placeholder: "0.00", prefix: deal.currencySymbol,  suffix: nil, value: $deal.otherIncome, formatter: currencyFormatter).focused($focusedField, equals: .otherIncome)
 
             sectionLabel("EXPENSES", color: accentRust)
-            TerminalInputField(label: "Operating Expenses",    placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.operatingExpenses,       formatter: currencyFormatter).focused($focusedField, equals: .operatingExpenses)
-            TerminalInputField(label: "Property Management",   placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexPropertyManagement,  formatter: currencyFormatter)
-            TerminalInputField(label: "Property Tax",          placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexPropertyTax,          formatter: currencyFormatter)
-            TerminalInputField(label: "Insurance",             placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexInsurance,            formatter: currencyFormatter)
-            TerminalInputField(label: "Utilities",             placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexUtilities,            formatter: currencyFormatter)
-            TerminalInputField(label: "Maintenance & Repairs", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexMaintenance,          formatter: currencyFormatter)
-            TerminalInputField(label: "Capital Reserves",      placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.opexCapitalReserves,      formatter: currencyFormatter)
+
+            // OpEx aggregate — warn when out of sync with line items
+            TerminalInputField(label: "Operating Expenses", placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.operatingExpenses, formatter: currencyFormatter).focused($focusedField, equals: .operatingExpenses)
+            if opexLineItemsTotal > 0 && abs(opexLineItemsTotal - deal.operatingExpenses) > 1 {
+                HStack(spacing: 8) {
+                    Text("// LINE ITEMS TOTAL: €\(Int(opexLineItemsTotal.rounded())) — aggregate differs")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.statusWarn)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Button("[ SYNC ]") {
+                        deal.operatingExpenses = opexLineItemsTotal
+                    }
+                    .porteosMeta()
+                    .foregroundStyle(accentRust)
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(DesignTokens.statusWarn.opacity(0.06))
+                .overlay(Rectangle().strokeBorder(DesignTokens.statusWarn.opacity(0.25), lineWidth: 1))
+                .clipShape(Rectangle())
+            }
+
+            TerminalInputField(label: "Property Management",   placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.opexPropertyManagement,  formatter: currencyFormatter)
+            TerminalInputField(label: "Property Tax",          placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.opexPropertyTax,          formatter: currencyFormatter)
+            TerminalInputField(label: "Insurance",             placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.opexInsurance,            formatter: currencyFormatter)
+            TerminalInputField(label: "Utilities",             placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.opexUtilities,            formatter: currencyFormatter)
+            TerminalInputField(label: "Maintenance & Repairs", placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.opexMaintenance,          formatter: currencyFormatter)
+            TerminalInputField(label: "Capital Reserves",      placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.opexCapitalReserves,      formatter: currencyFormatter)
 
             sectionLabel("ACQUISITION", color: accentRust)
-            TerminalInputField(label: "Closing Costs",     placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.closingCosts,     formatter: currencyFormatter).focused($focusedField, equals: .closingCosts)
-            TerminalInputField(label: "Renovation Budget", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.renovationBudget, formatter: currencyFormatter).focused($focusedField, equals: .renovationBudget)
+            TerminalInputField(label: "Closing Costs",     placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.closingCosts,     formatter: currencyFormatter).focused($focusedField, equals: .closingCosts)
+            TerminalInputField(label: "Renovation Budget", placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.renovationBudget, formatter: currencyFormatter).focused($focusedField, equals: .renovationBudget)
 
             sectionLabel("LEVERAGE", color: accentRust)
-            TerminalInputField(label: "Loan Amount",         placeholder: "0.00", prefix: "€",  suffix: nil,  value: $deal.loanAmount, formatter: currencyFormatter).focused($focusedField, equals: .loanAmount)
+            TerminalInputField(label: "Loan Amount",         placeholder: "0.00", prefix: deal.currencySymbol,  suffix: nil,  value: $deal.loanAmount, formatter: currencyFormatter).focused($focusedField, equals: .loanAmount)
             TerminalInputField(label: "Interest Rate",       placeholder: "0.0", prefix: nil,  suffix: "%",  value: $deal.interestRate, formatter: Self.percentFormatter).focused($focusedField, equals: .interestRate)
             TerminalInputField(label: "Amortization Months", placeholder: "360", prefix: nil,  suffix: "mo", text: intStr($deal.amortizationMonths)).focused($focusedField, equals: .amortizationMonths)
             TerminalInputField(label: "Exit Cap Rate",       placeholder: "0.0", prefix: nil,  suffix: "%",  value: $deal.exitCapRate, formatter: Self.percentFormatter)
@@ -320,20 +643,31 @@ struct FullDealEditSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionLabel("OPERATIONAL", color: accentTeal)
             TerminalInputField(label: "Room Count",     placeholder: "0",   prefix: nil, suffix: nil, text: intStr($deal.hospitalityRoomCount)).focused($focusedField, equals: .roomCount)
-            TerminalInputField(label: "ADR",            placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityADR, formatter: currencyFormatter).focused($focusedField, equals: .adr)
+            TerminalInputField(label: "ADR",            placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.hospitalityADR, formatter: currencyFormatter).focused($focusedField, equals: .adr)
             TerminalInputField(label: "Occupancy Rate", placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.hospitalityOccupancyRate, formatter: Self.percentFormatter).focused($focusedField, equals: .occupancyRate)
             TerminalInputField(label: "OpEx Ratio",     placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.hospitalityOpExRatio, formatter: Self.percentFormatter).focused($focusedField, equals: .opexRatio)
+            if deal.hospitalityOpExRatio > 0 && deal.hospitalityOpExRatio < 20 {
+                Text("// WARNING: OpEx ratio \(String(format: "%.1f", deal.hospitalityOpExRatio))% is unusually low — typical hospitality is 30–45%")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.statusWarn)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                    .background(DesignTokens.statusWarn.opacity(0.06))
+                    .overlay(Rectangle().strokeBorder(DesignTokens.statusWarn.opacity(0.25), lineWidth: 1))
+                    .clipShape(Rectangle())
+            }
 
             sectionLabel("REVENUE STREAMS", color: accentTeal)
-            TerminalInputField(label: "F&B Revenue",     placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityFBRevenue,      formatter: currencyFormatter).focused($focusedField, equals: .fAndBRevenue)
-            TerminalInputField(label: "Spa Revenue",     placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalitySpaRevenue,     formatter: currencyFormatter).focused($focusedField, equals: .spaRevenue)
-            TerminalInputField(label: "Meeting Revenue", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityMeetingRevenue,  formatter: currencyFormatter).focused($focusedField, equals: .meetingRevenue)
-            TerminalInputField(label: "Other Revenue",   placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityOtherRevenue,    formatter: currencyFormatter).focused($focusedField, equals: .otherRevenue)
+            TerminalInputField(label: "F&B Revenue",     placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.hospitalityFBRevenue,      formatter: currencyFormatter).focused($focusedField, equals: .fAndBRevenue)
+            TerminalInputField(label: "Spa Revenue",     placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.hospitalitySpaRevenue,     formatter: currencyFormatter).focused($focusedField, equals: .spaRevenue)
+            TerminalInputField(label: "Meeting Revenue", placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.hospitalityMeetingRevenue,  formatter: currencyFormatter).focused($focusedField, equals: .meetingRevenue)
+            TerminalInputField(label: "Other Revenue",   placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.hospitalityOtherRevenue,    formatter: currencyFormatter).focused($focusedField, equals: .otherRevenue)
 
             sectionLabel("DISTRIBUTION", color: accentTeal)
             TerminalInputField(label: "Direct Booking",    placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.hospitalityDirectBookingPct, formatter: Self.percentFormatter).focused($focusedField, equals: .directBooking)
             TerminalInputField(label: "OTA Booking",       placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.hospitalityOTABookingPct, formatter: Self.percentFormatter).focused($focusedField, equals: .otaBooking)
-            TerminalInputField(label: "Distribution Cost", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.hospitalityDistributionCost, formatter: currencyFormatter).focused($focusedField, equals: .distributionCost)
+            TerminalInputField(label: "Distribution Cost", placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.hospitalityDistributionCost, formatter: currencyFormatter).focused($focusedField, equals: .distributionCost)
         }
     }
 
@@ -376,8 +710,9 @@ struct FullDealEditSheet: View {
     private var circularContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             sectionLabel("MATERIAL FLOW", color: accentBlue)
-            TerminalInputField(label: "Total Construction Cost",  placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.circularTotalConstructionCost,  formatter: currencyFormatter).focused($focusedField, equals: .totalConstructionCost)
-            TerminalInputField(label: "Repurposed Material Cost", placeholder: "0.00", prefix: "€", suffix: nil, value: $deal.circularRepurposedMaterialCost, formatter: currencyFormatter).focused($focusedField, equals: .repurposedMaterialCost)
+            designCircularSyncBar
+            TerminalInputField(label: "Total Construction Cost",  placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.circularTotalConstructionCost,  formatter: currencyFormatter).focused($focusedField, equals: .totalConstructionCost)
+            TerminalInputField(label: "Repurposed Material Cost", placeholder: "0.00", prefix: deal.currencySymbol, suffix: nil, value: $deal.circularRepurposedMaterialCost, formatter: currencyFormatter).focused($focusedField, equals: .repurposedMaterialCost)
             TerminalInputField(label: "Kg Materials Used",        placeholder: "0", prefix: nil,  suffix: "kg", text: numStr($deal.circularKgMaterialsUsed)).focused($focusedField, equals: .kgMaterialsUsed)
             TerminalInputField(label: "Kg Materials Returned",    placeholder: "0", prefix: nil,  suffix: "kg", text: numStr($deal.circularKgMaterialsReturned)).focused($focusedField, equals: .kgMaterialsReturned)
             TerminalInputField(label: "Kg Materials Disposed",    placeholder: "0", prefix: nil,  suffix: "kg", text: numStr($deal.circularKgMaterialsDisposed)).focused($focusedField, equals: .kgMaterialsDisposed)
@@ -387,10 +722,70 @@ struct FullDealEditSheet: View {
 
             sectionLabel("CARBON", color: accentBlue)
             TerminalInputField(label: "CO2 Embodied",         placeholder: "0",   prefix: nil, suffix: "kg",        text: numStr($deal.circularCO2Embodied)).focused($focusedField, equals: .co2Embodied)
-            TerminalInputField(label: "Operational Carbon",   placeholder: "0.0", prefix: nil, suffix: "tCO2e/yr",  text: numStr($deal.circularOperationalCarbon, decimals: 2)).focused($focusedField, equals: .operationalCarbon)
+            TerminalInputField(label: "Operational Carbon",   placeholder: "0.00", prefix: nil, suffix: "tCO2e/yr",  value: $deal.circularOperationalCarbon, formatter: Self.carbonFormatter).focused($focusedField, equals: .operationalCarbon)
             TerminalInputField(label: "Building Area",        placeholder: "0",   prefix: nil, suffix: "m²",        text: numStr($deal.circularBuildingAreaM2)).focused($focusedField, equals: .buildingArea)
             TerminalInputField(label: "Water Recycling Rate", placeholder: "0.0", prefix: nil, suffix: "%",         value: $deal.circularWaterRecyclingRate, formatter: Self.percentFormatter).focused($focusedField, equals: .waterRecyclingRate)
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: Media Strip
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var mediaStrip: some View {
+        let hero = deal.images.first(where: { $0.isHero })
+        return HStack(spacing: DesignTokens.blockGutter) {
+            // Hero thumbnail or dashed placeholder
+            if let h = hero, let img = NSImage(data: h.thumbnailData) {
+                Image(nsImage: img)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 40, height: 40)
+                    .clipped()
+                    .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
+                    .clipShape(Rectangle())
+            } else {
+                ZStack {
+                    shellBg
+                    Text("+")
+                        .porteosMeta()
+                        .foregroundStyle(textTertiary)
+                }
+                .frame(width: 40, height: 40)
+                .overlay(
+                    Rectangle()
+                        .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [4]))
+                        .foregroundStyle(shellBorder)
+                )
+                .clipShape(Rectangle())
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("// MEDIA")
+                    .porteosMeta()
+                    .foregroundStyle(textTertiary)
+                Text("\(deal.images.count) IMAGES")
+                    .porteosMeta()
+                    .foregroundStyle(deal.images.isEmpty ? textTertiary : textSecondary)
+            }
+
+            Spacer()
+
+            Button { showMediaGallery = true } label: {
+                Text("[ MANAGE ]")
+                    .porteosButtonPrimary()
+                    .foregroundStyle(accentRust)
+                    .padding(.horizontal, 10)
+                    .frame(height: DesignTokens.rowHeightData)
+                    .background(accentRust.opacity(0.08))
+                    .overlay(Rectangle().strokeBorder(accentRust.opacity(0.45), lineWidth: DesignTokens.dividerWidth))
+                    .clipShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, DesignTokens.blockGutter)
+        .frame(height: 56)
+        .background(shellSurface)
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -399,7 +794,7 @@ struct FullDealEditSheet: View {
 
     private var footer: some View {
         HStack(spacing: 12) {
-            Button { dismiss() } label: {
+            Button { revertAndDismiss() } label: {
                 Text("[ CANCEL ]")
             }
             .buttonStyle(TerminalButtonStyle(outlined: .muted))
@@ -421,17 +816,46 @@ struct FullDealEditSheet: View {
     // MARK: Commit
     // ─────────────────────────────────────────────────────────────────────────
 
+    private func revertAndDismiss() {
+        // Restore every field to the pre-edit snapshot so Cancel truly cancels.
+        if let snap = openSnapshot {
+            DealHistoryManager.shared.apply(snap, to: deal)
+            deal.updatedAt = snap.timestamp
+            try? modelContext.save()
+        }
+        dismiss()
+    }
+
+    @State private var validationErrors: [ValidationMessage] = []
+    @State private var showValidationAlert: Bool = false
+
     private func commitChanges() {
-        let viewModel = PropertyDealViewModel(deal: deal)
-        deal.porteosScore = viewModel.porteosScore.finalScore
+        // Run validation — block on critical errors, warn on others
+        let messages = DataValidator.validate(deal: deal)
+        let criticals = messages.filter { $0.severity == .critical }
+        if !criticals.isEmpty {
+            validationErrors = criticals
+            showValidationAlert = true
+            return   // don't save yet — user must resolve or force-save
+        }
+
+        persistAndDismiss()
+    }
+
+    private func persistAndDismiss() {
+        // Sync OpEx aggregate from line items if any are non-zero
+        if opexLineItemsTotal > 0 {
+            deal.operatingExpenses = opexLineItemsTotal
+        }
+        // Compute and persist the Porteos Score
+        deal.porteosScore = PropertyDealViewModel(deal: deal).porteosScore.finalScore
         deal.updatedAt    = Date()
         do {
             try modelContext.save()
-            print("[SUCCESS] Deal saved: \(deal.propertyName)")
+            GeocodingService.shared.scheduleGeocode(deal: deal, context: modelContext)
         } catch {
             print("[ERROR] Failed to save: \(error)")
         }
-        // Record metrics into the trend time-series for this city
         TrendRecorder.record(deal, context: modelContext, source: "portfolio")
         dismiss()
     }
@@ -440,22 +864,195 @@ struct FullDealEditSheet: View {
     // MARK: Helpers
     // ─────────────────────────────────────────────────────────────────────────
 
+    // MARK: City autocomplete
+
+    /// All city names from MarketBenchmarks + MarketFeedRegistry aliases, deduplicated and sorted.
+    private static let allCityNames: [String] = {
+        var names = Set<String>()
+        // Benchmark city names (all have data — best for autocomplete)
+        MarketBenchmarks.benchmarks.forEach { names.insert($0.cityName) }
+        // Friendly aliases from MarketFeedRegistry metro definitions
+        MarketFeedRegistry.metros.forEach { metro in
+            metro.cityAliases.forEach { alias in
+                let cap = alias.prefix(1).uppercased() + alias.dropFirst()
+                names.insert(cap)
+            }
+            names.insert(metro.displayName)
+        }
+        return names.sorted()
+    }()
+
+    static func citySuggestions(for query: String) -> [String] {
+        guard query.count >= 2 else { return [] }
+        let q = query.lowercased()
+        let prefix   = allCityNames.filter { $0.lowercased().hasPrefix(q) }
+        let contains = allCityNames.filter { !$0.lowercased().hasPrefix(q) && $0.lowercased().contains(q) }
+        return Array((prefix + contains).prefix(8))
+    }
+
+    private static let allCountryNames: [String] = {
+        Array(Set(MarketBenchmarks.benchmarks.map(\.country))).sorted()
+    }()
+
+    static func countrySuggestions(for query: String) -> [String] {
+        guard query.count >= 1 else { return [] }
+        let q = query.lowercased()
+        return allCountryNames.filter { $0.lowercased().hasPrefix(q) }.prefix(8).map { $0 }
+    }
+
+    // MARK: GPS coordinates field
+
+    @ViewBuilder
+    private var gpsCoordinatesField: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("GPS COORDINATES")
+                .porteosMeta()
+                .foregroundStyle(textTertiary)
+            HStack(spacing: 8) {
+                if let lat = deal.latitude, let lon = deal.longitude {
+                    Text(String(format: "%.5f, %.5f", lat, lon))
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.statusGo)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Button("[ CLEAR ]") {
+                        deal.latitude = nil
+                        deal.longitude = nil
+                        deal.geocodeStatus = .none
+                    }
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.statusCritical)
+                    .buttonStyle(.plain)
+                } else {
+                    TextField("lat, lon — e.g. 37.24355, -8.26125", text: $gpsEntry)
+                        .textFieldStyle(.plain)
+                        .porteosMeta()
+                        .foregroundStyle(textPrimary)
+                        .onSubmit { applyGPSEntry() }
+                    if !gpsEntry.isEmpty {
+                        Button("[ SET ]") { applyGPSEntry() }
+                            .porteosMeta()
+                            .foregroundStyle(accentRust)
+                            .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(.horizontal, 8)
+            .frame(minHeight: DesignTokens.rowHeightData)
+            .background(shellBg)
+            .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
+            .clipShape(Rectangle())
+
+            if deal.geocodeStatus == .failed || deal.geocodeStatus == .none {
+                Text("// Paste coordinates from Google Maps or import research JSON to pin correctly")
+                    .porteosMeta()
+                    .foregroundStyle(textTertiary)
+            }
+        }
+    }
+
+    private func applyGPSEntry() {
+        let parts = gpsEntry
+            .replacingOccurrences(of: " ", with: "")
+            .components(separatedBy: ",")
+        guard parts.count == 2,
+              let lat = Double(parts[0]),
+              let lon = Double(parts[1]),
+              lat >= -90, lat <= 90,
+              lon >= -180, lon <= 180 else { return }
+        deal.latitude = lat
+        deal.longitude = lon
+        deal.geocodeStatus = .ok
+        gpsEntry = ""
+    }
+
     private static let percentFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
+        decimalFormatter(maxFractionDigits: 2)
+    }()
+
+    private static let carbonFormatter: NumberFormatter = {
+        let formatter = decimalFormatter(maxFractionDigits: 2)
         formatter.minimumFractionDigits = 2
-        formatter.maximumFractionDigits = 2
-        formatter.decimalSeparator = "."
-        formatter.groupingSeparator = ","
         return formatter
     }()
 
+    private static func decimalFormatter(maxFractionDigits: Int) -> NumberFormatter {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = maxFractionDigits
+        formatter.decimalSeparator = "."
+        formatter.groupingSeparator = ","
+        return formatter
+    }
+
+    // MARK: Design ↔ Circular sync
+
+    private var designCircularSyncBar: some View {
+        let hasGFA      = deal.designGFA > 0
+        let hasReno     = deal.renovationBudget > 0
+        let hasArea     = deal.totalArea > 0
+
+        return Group {
+            if hasGFA || hasReno || hasArea {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Design & acquisition fields available — pull into material flow:")
+                        .porteosRowValue()
+                        .foregroundStyle(textPrimary)
+
+                    HStack(spacing: 8) {
+                        if hasGFA {
+                            syncButton("[ GFA → AREA ]") {
+                                deal.circularBuildingAreaM2 = deal.designGFA
+                            }
+                        } else if hasArea {
+                            syncButton("[ AREA → BUILDING ]") {
+                                deal.circularBuildingAreaM2 = deal.totalArea
+                            }
+                        }
+
+                        if hasReno {
+                            syncButton("[ RENO → COST ]") {
+                                deal.circularTotalConstructionCost = deal.renovationBudget
+                            }
+                        }
+
+                        if let estimate = estimatedConstructionCost {
+                            syncButton("[ EST. COST ]") {
+                                deal.circularTotalConstructionCost = estimate
+                            }
+                        }
+                    }
+                }
+                .padding(8)
+                .background(shellSurface)
+                .overlay(Rectangle().strokeBorder(shellBorder, lineWidth: DesignTokens.dividerWidth))
+                .clipShape(Rectangle())
+            }
+        }
+    }
+
+    private var estimatedConstructionCost: Double? {
+        guard deal.designGFA > 0 else { return nil }
+        if let metrics = MarketBenchmarks.benchmark(for: deal.locationCity) {
+            return deal.designGFA * metrics.avgConstructionCostPerSqm
+        }
+        return nil
+    }
+
+    private func syncButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(title, action: action)
+            .porteosButtonPrimary()
+            .foregroundStyle(accentBlue)
+            .buttonStyle(.plain)
+    }
+
     private let currencyFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
+        // Use decimal style — currency symbol comes from deal.currencySymbol prefix
+        // so the formatter only handles number layout (separators, decimals).
+        formatter.numberStyle = .decimal
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
-        formatter.currencyCode = "EUR"
         return formatter
     }()
 
@@ -467,7 +1064,12 @@ struct FullDealEditSheet: View {
                 return decimals == 0 ? "\(Int(v))" : String(format: "%.\(decimals)f", v)
             },
             set: { str in
-                if let d = Double(str.filter { $0.isNumber || $0 == "." }) {
+                // Normalise European comma decimal separator → period before parsing.
+                // Handles en-US locale with European keyboard (e.g. "0,02" → "0.02").
+                let normalised = str
+                    .filter { $0.isNumber || $0 == "." || $0 == "," }
+                    .replacingOccurrences(of: ",", with: ".")
+                if let d = Double(normalised) {
                     value.wrappedValue = d
                 } else if str.isEmpty {
                     value.wrappedValue = 0
@@ -515,6 +1117,148 @@ struct FullDealEditSheet: View {
             .porteosMeta()
             .foregroundStyle(color)
             .padding(.top, 4)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MARK: Regulatory Section
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private var regulatorySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionLabel("REGULATORY — advisory only, verify with local consultant")
+
+            TerminalInputField(
+                label: "Zoning Class",
+                placeholder: "e.g. T1 Tourism, Mixed Use, R1 Residential",
+                prefix: nil,
+                suffix: nil,
+                text: $deal.zoningClass
+            )
+
+            VStack(alignment: .leading, spacing: 4) {
+                TerminalInputField(
+                    label: "Floor Area Ratio (FAR)",
+                    placeholder: "0.00",
+                    prefix: nil,
+                    suffix: "×",
+                    text: numStr($deal.floorAreaRatio, decimals: 2)
+                )
+                if deal.advisoryMaxBuildableArea > 0 {
+                    HStack(spacing: 8) {
+                        Text("Max buildable: ~\(Int(deal.advisoryMaxBuildableArea))m²")
+                            .porteosMeta()
+                            .foregroundStyle(textSecondary)
+                        if deal.farHeadroom > 0 {
+                            Text("↑ \(Int(deal.farHeadroom))m² headroom")
+                                .porteosMeta()
+                                .foregroundStyle(DesignTokens.statusGo)
+                        } else if deal.farHeadroom < 0 {
+                            Text("↓ \(Int(abs(deal.farHeadroom)))m² over FAR")
+                                .porteosMeta()
+                                .foregroundStyle(DesignTokens.statusCritical)
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                }
+            }
+
+            TerminalInputField(
+                label: "Max Height (\(UnitSystemService.shared.heightUnitLabel(for: deal.locationCountry)))",
+                placeholder: "0",
+                prefix: nil,
+                suffix: UnitSystemService.shared.heightUnitLabel(for: deal.locationCountry),
+                text: numStr($deal.maxBuildingHeight, decimals: 1)
+            )
+
+            TerminalInputField(
+                label: "Max Bedrooms / Units",
+                placeholder: "unknown",
+                prefix: nil,
+                suffix: nil,
+                text: intStr($deal.maxBedroomsOrUnits)
+            )
+
+            regulatoryChipRow(
+                label: "PLANNING STATUS",
+                options: ["unknown", "none", "applied", "approved"],
+                selection: $deal.planningStatus
+            )
+
+            heritageToggleRow
+
+            regulatoryChipRow(
+                label: "SHORT-TERM RENTAL LICENCE",
+                options: ["unknown", "none", "applied", "approved"],
+                selection: $deal.strLicenceStatus
+            )
+
+            Text("// ADVISORY — not legal advice. Verify all regulatory data with a qualified local consultant.")
+                .porteosMeta()
+                .foregroundStyle(DesignTokens.textDim)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 4)
+        }
+    }
+
+    private func regulatoryChipRow(label: String, options: [String], selection: Binding<String>) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label.uppercased())
+                .porteosMeta()
+                .foregroundStyle(textTertiary)
+
+            HStack(spacing: 0) {
+                ForEach(options, id: \.self) { option in
+                    let isActive = selection.wrappedValue == option
+                    Button {
+                        selection.wrappedValue = option
+                    } label: {
+                        Text(option.uppercased())
+                            .porteosMeta()
+                            .foregroundStyle(isActive ? DesignTokens.statusGo : textTertiary)
+                            .padding(.horizontal, 10)
+                            .frame(height: DesignTokens.rowHeightData)
+                            .background(isActive ? DesignTokens.statusGo.opacity(0.1) : shellBg)
+                            .overlay(
+                                Rectangle().strokeBorder(
+                                    isActive ? DesignTokens.statusGo.opacity(0.5) : shellBorder,
+                                    lineWidth: DesignTokens.dividerWidth
+                                )
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .clipShape(Rectangle())
+        }
+    }
+
+    private var heritageToggleRow: some View {
+        HStack(spacing: 8) {
+            Text("HERITAGE / LISTED BUILDING")
+                .porteosMeta()
+                .foregroundStyle(textTertiary)
+            Spacer()
+            if deal.heritageOrListed {
+                Text("score penalty applied")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.statusWarn)
+            }
+            Toggle("", isOn: $deal.heritageOrListed)
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .scaleEffect(0.75)
+        }
+        .padding(.horizontal, 8)
+        .frame(minHeight: DesignTokens.rowHeightData)
+        .background(deal.heritageOrListed ? DesignTokens.statusWarn.opacity(0.05) : shellBg)
+        .overlay(
+            Rectangle().strokeBorder(
+                deal.heritageOrListed ? DesignTokens.statusWarn.opacity(0.3) : shellBorder,
+                lineWidth: DesignTokens.dividerWidth
+            )
+        )
+        .clipShape(Rectangle())
     }
 
     private func pickerField<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {

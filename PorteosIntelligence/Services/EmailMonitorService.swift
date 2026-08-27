@@ -106,8 +106,13 @@ final class EmailMonitorService {
     var totalDealsImported  = 0        // cumulative successful imports
     var duplicatesSkipped   = 0        // cumulative dedup hits
     var errorMessage:       String?
+    /// Human-readable outcome of the most recent check (imports, dupes, scan scope).
+    var lastCheckSummary:   String?
 
     var isConfigured: Bool { IMAPCredentials.load() != nil }
+
+    /// Default lookback when no prior successful check exists.
+    private let searchLookbackDays = 14
 
     // MARK: Private
 
@@ -156,11 +161,17 @@ final class EmailMonitorService {
 
         isCheckingNow = true
         errorMessage  = nil
+        lastCheckSummary = nil
 
         do {
-            let count = try await fetchAndImport(creds: creds, container: container)
-            newImportCount += count
+            let result = try await fetchAndImport(creds: creds, container: container)
+            newImportCount += result.imported
             lastCheckDate   = Date()
+            lastCheckSummary = result.summary
+            if result.imported == 0 && result.duplicatesSkipped > 0 && errorMessage == nil {
+                // Not an error — inbox may be quiet or everything already imported.
+                lastCheckSummary = (lastCheckSummary ?? "") + " // no new deals"
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -194,25 +205,72 @@ final class EmailMonitorService {
 
     // MARK: - Fetch-and-import pipeline
 
-    private func fetchAndImport(creds: IMAPCredentials, container: ModelContainer) async throws -> Int {
-        let baseURL = "imaps://\(creds.imapHost):\(creds.imapPort)/\(creds.folder)"
+    private struct EmailCheckResult {
+        var imported: Int
+        var duplicatesSkipped: Int
+        var scanned: Int
+        var unparsed: Int
+        var searchCriteria: String
 
-        // Step 1: SEARCH UNSEEN → get sequence numbers
-        let searchOutput = try await runCurl([
-            "-s", "--ssl-reqd",
-            "--connect-timeout", "15",
-            "-u", "\(creds.email):\(creds.password)",
-            baseURL, "-X", "SEARCH UNSEEN",
-        ])
+        var summary: String {
+            var parts: [String] = []
+            parts.append("\(imported) imported")
+            if duplicatesSkipped > 0 { parts.append("\(duplicatesSkipped) duplicates skipped") }
+            if unparsed > 0 { parts.append("\(unparsed) unparsed") }
+            parts.append("\(scanned) scanned")
+            parts.append("via \(searchCriteria)")
+            return parts.joined(separator: " · ")
+        }
+    }
 
-        let indices = parseSearchResponse(searchOutput)
-        guard !indices.isEmpty else { return 0 }
+    private func fetchAndImport(creds: IMAPCredentials, container: ModelContainer) async throws -> EmailCheckResult {
+        let baseURL = imapBaseURL(creds: creds)
+        let sinceDate = searchSinceDate()
+        let criteriaList = [
+            "SEARCH UNSEEN SINCE \(sinceDate)",
+            "SEARCH SINCE \(sinceDate)",
+        ]
 
-        // Step 2: Process at most 50 unseen messages per cycle
+        var indices: [Int] = []
+        var usedCriteria = criteriaList[0]
+        var lastSearchError: Error?
+
+        for criteria in criteriaList {
+            do {
+                let output = try await runCurl([
+                    "-s", "--ssl-reqd",
+                    "--connect-timeout", "20",
+                    "--max-time", "45",
+                    "-u", "\(creds.email):\(creds.password)",
+                    baseURL, "-X", criteria,
+                ])
+                indices = parseSearchResponse(output)
+                usedCriteria = criteria
+                lastSearchError = nil
+                break
+            } catch {
+                lastSearchError = error
+            }
+        }
+
+        if indices.isEmpty, let lastSearchError {
+            throw lastSearchError
+        }
+
+        guard !indices.isEmpty else {
+            return EmailCheckResult(
+                imported: 0, duplicatesSkipped: 0, scanned: 0, unparsed: 0,
+                searchCriteria: usedCriteria
+            )
+        }
+
+        // Process at most 50 messages per cycle (newest first when indices are ascending)
         var importedCount = 0
+        var dupesThisCycle = 0
+        var unparsedCount  = 0
         let ctx = ModelContext(container)
 
-        for index in indices.prefix(50) {
+        for index in indices.suffix(50) {
             guard let rawEmail = try? await runCurl([
                 "-s", "--ssl-reqd",
                 "--connect-timeout", "15",
@@ -230,17 +288,23 @@ final class EmailMonitorService {
                 allListingParsers.first { $0.canParse(subject: subject, senderDomain: senderDomain) }
                 ?? GenericListingEmailParser()
 
-            guard let listing = parser.parse(subject: subject, body: body) else { continue }
+            guard let listing = parser.parse(subject: subject, body: body) else {
+                unparsedCount += 1
+                continue
+            }
 
             // Step 4: Deduplication by listing URL
             let listingURL = listing.listingURL ?? ""
-            if !listingURL.isEmpty {
+            let normalizedURL = listingURL.isEmpty ? "" : ListingURLHelpers.normalize(listingURL)
+            if !normalizedURL.isEmpty {
+                let urlKey = normalizedURL
                 let dupes = try ctx.fetch(
                     FetchDescriptor<EmailImportRecord>(
-                        predicate: #Predicate { $0.listingURL == listingURL }
+                        predicate: #Predicate { $0.listingURL == urlKey }
                     )
                 )
                 if !dupes.isEmpty {
+                    dupesThisCycle += 1
                     await MainActor.run { duplicatesSkipped += 1 }
                     continue
                 }
@@ -267,8 +331,11 @@ final class EmailMonitorService {
             )
             ctx.insert(deal)
 
+            // Auto-fill remaining zero fields from market benchmark + compute initial score
+            DealPreloader.applyToNewDeal(deal)
+
             // Step 6: Record the import for future dedup
-            let dedupeURL = listingURL.isEmpty ? "noop://\(UUID().uuidString)" : listingURL
+            let dedupeURL = normalizedURL.isEmpty ? "noop://\(UUID().uuidString)" : normalizedURL
             let record = EmailImportRecord(
                 listingURL: dedupeURL,
                 source:     listing.source,
@@ -299,7 +366,38 @@ final class EmailMonitorService {
             }
         }
 
-        return importedCount
+        return EmailCheckResult(
+            imported: importedCount,
+            duplicatesSkipped: dupesThisCycle,
+            scanned: min(indices.count, 50),
+            unparsed: unparsedCount,
+            searchCriteria: usedCriteria
+        )
+    }
+
+    // MARK: - IMAP helpers
+
+    private func imapBaseURL(creds: IMAPCredentials) -> String {
+        let folder = creds.folder.isEmpty ? "INBOX" : creds.folder
+        let encoded = folder
+            .split(separator: "/")
+            .map { $0.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? String($0) }
+            .joined(separator: "/")
+        return "imaps://\(creds.imapHost):\(creds.imapPort)/\(encoded)"
+    }
+
+    /// IMAP `SINCE` date — `DD-Mon-YYYY` (e.g. `09-Jul-2026`).
+    private func searchSinceDate() -> String {
+        let bufferDays = 2
+        let anchor = lastCheckDate ?? Calendar.current.date(
+            byAdding: .day, value: -searchLookbackDays, to: Date()
+        ) ?? Date()
+        let since = Calendar.current.date(byAdding: .day, value: -bufferDays, to: anchor) ?? anchor
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "dd-MMM-yyyy"
+        return formatter.string(from: since)
     }
 
     // MARK: - curl subprocess runner (nonisolated so it never blocks the main actor)
@@ -328,7 +426,11 @@ final class EmailMonitorService {
                         data: errPipe.fileHandleForReading.readDataToEndOfFile(),
                         encoding: .utf8
                     ) ?? ""
-                    let msg = errOut.isEmpty ? "exit code \(proc.terminationStatus)" : errOut
+                    let trimmed = errOut.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let msg: String = Self.humanReadableCurlError(
+                        exitCode: Int(proc.terminationStatus),
+                        stderr: trimmed
+                    )
                     continuation.resume(throwing: IMAPError.curlFailed(msg))
                 }
             }
@@ -338,6 +440,35 @@ final class EmailMonitorService {
             } catch {
                 continuation.resume(throwing: error)
             }
+        }
+    }
+
+    // MARK: - curl exit code mapping (P6-18)
+
+    /// Maps curl exit codes to human-readable IMAP error messages.
+    /// See https://curl.se/docs/manpage.html for the full exit code table.
+    nonisolated private static func humanReadableCurlError(exitCode: Int, stderr: String) -> String {
+        switch exitCode {
+        case 67:
+            return "Login denied — check app password and Gmail IMAP is enabled (Settings › Security)."
+        case 100:
+            return "Inbox query too large or unsupported — try reducing polling window or using SEARCH SINCE fallback."
+        case 6:
+            return "Could not resolve IMAP host — check server address in Email Setup."
+        case 7:
+            return "Could not connect to IMAP server — check host, port, and network connection."
+        case 35:
+            return "SSL/TLS handshake failed — verify SSL mode and server certificate."
+        case 28:
+            return "Connection timed out — IMAP server not responding."
+        case 78:
+            return "Remote file not found — mailbox path may be incorrect."
+        default:
+            if !stderr.isEmpty {
+                let line = stderr.components(separatedBy: .newlines).first ?? stderr
+                return String(line.prefix(200))
+            }
+            return "IMAP error (curl exit \(exitCode)) — check logs for details."
         }
     }
 

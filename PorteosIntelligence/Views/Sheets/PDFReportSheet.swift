@@ -92,7 +92,12 @@ struct PDFReportSheet: View {
             infoRow("STATUS", deal.status.rawValue.uppercased())
             insetDivider
             infoRow("PORTEOS SCORE", deal.porteosScore.map { "\(Int($0.rounded())) / 100" } ?? "—")
+            insetDivider
+            infoRow("PURCHASE PRICE", deal.purchasePrice > 0
+                ? "€\(String(format: "%.0f", deal.purchasePrice))"
+                : "—")
         }
+        .clipShape(Rectangle())  // prevent text overflowing the block edge
     }
 
     // MARK: Sections
@@ -144,10 +149,10 @@ struct PDFReportSheet: View {
             infoRow("ESTIMATED PAGES", "\(estimatedPages)")
             insetDivider
 
-            Button { options.blackAndWhite.toggle() } label: {
+            Button { options.darkMode.toggle() } label: {
                 HStack(spacing: 10) {
-                    selectionSquare(isActive: options.blackAndWhite, useRustFill: true)
-                    Text("BLACK_AND_WHITE_MODE")
+                    selectionSquare(isActive: options.darkMode, useRustFill: true)
+                    Text("DARK_MODE")
                         .porteosRowLabel()
                         .foregroundStyle(DesignTokens.textPrimary)
                     Spacer()
@@ -158,8 +163,14 @@ struct PDFReportSheet: View {
             .padding(.vertical, 10)
             .background(DesignTokens.surfacePanel)
 
-            if options.blackAndWhite {
-                Text("[ INFO ] PDF will be optimised for black & white printing.")
+            if options.darkMode {
+                Text("[ INFO ] PDF will use dark theme (optimized for screen viewing).")
+                    .porteosMeta()
+                    .foregroundStyle(DesignTokens.textDim)
+                    .padding(.horizontal, DesignTokens.blockGutter)
+                    .padding(.bottom, 10)
+            } else {
+                Text("[ INFO ] PDF will use light theme (optimized for printing).")
                     .porteosMeta()
                     .foregroundStyle(DesignTokens.textDim)
                     .padding(.horizontal, DesignTokens.blockGutter)
@@ -199,15 +210,17 @@ struct PDFReportSheet: View {
     }
 
     private func infoRow(_ label: String, _ value: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .center, spacing: 12) {
             Text(label)
                 .porteosRowLabel()
                 .foregroundStyle(DesignTokens.textSecondary)
-            Spacer()
+                .fixedSize()
+            Spacer(minLength: 8)
             Text(value)
                 .porteosRowValue()
                 .foregroundStyle(DesignTokens.textPrimary)
-                .multilineTextAlignment(.trailing)
+                .lineLimit(1)
+                .truncationMode(.tail)
         }
         .padding(.horizontal, DesignTokens.blockGutter)
         .padding(.vertical, 9)

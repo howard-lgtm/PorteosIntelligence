@@ -19,6 +19,10 @@ final class WindowManager {
     var detachedPanes:  Set<PaneType> = []
     var selectedDealID: UUID?         = nil
     var activeProfile:  ProfileType   = .cmdCenter
+    var geoMarketFilterId: String?    = nil
+    var geoSectorFilter: IntelSector?   = nil
+    var geoNewsWindowDays: Int          = 60
+    var geoActiveTab: String            = "map"   // "map" | "intel"
 
     // MARK: Non-Observable Storage
 

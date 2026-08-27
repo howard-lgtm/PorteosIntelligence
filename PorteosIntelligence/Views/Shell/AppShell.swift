@@ -13,6 +13,7 @@ struct AppShell: View {
     @State private var showComparison      = false
     @State private var compareDeals:       [PropertyDeal] = []
     @State private var showShortcutsPanel  = false
+    @State private var showGlossaryPanel   = false
     @State private var showCommandPalette  = false
     @State private var showNewDealSheet    = false
     @State private var showEmailSetup      = false
@@ -20,6 +21,9 @@ struct AppShell: View {
     @State private var showServerConfig    = false
     @State private var showSettings        = false
     @State private var pendingAITriggerID: UUID? = nil
+
+    @AppStorage("porteos.didCompleteOnboarding") private var didCompleteOnboarding = false
+    @State private var showOnboarding = false
 
     // Toast manager — @Observable, body re-renders on currentToast changes
     private let toastManager = ToastManager.shared
@@ -65,6 +69,34 @@ struct AppShell: View {
 
     var body: some View {
         coreView
+        .onAppear {
+            if !didCompleteOnboarding && deals.isEmpty {
+                showOnboarding = true
+            }
+        }
+        .sheet(isPresented: $showOnboarding) {
+            FirstLaunchSheet(
+                onDismiss: {
+                    didCompleteOnboarding = true
+                    showOnboarding = false
+                },
+                onNewDeal: {
+                    didCompleteOnboarding = true
+                    showOnboarding = false
+                    showNewDealSheet = true
+                },
+                onEmailSetup: {
+                    didCompleteOnboarding = true
+                    showOnboarding = false
+                    showEmailSetup = true
+                },
+                onSettings: {
+                    didCompleteOnboarding = true
+                    showOnboarding = false
+                    showSettings = true
+                }
+            )
+        }
         .sheet(isPresented: $showNewDealSheet) {
             TemplatePickerSheet { newID in
                 pendingDealID    = newID
@@ -217,50 +249,74 @@ struct AppShell: View {
         .onReceive(NotificationCenter.default.publisher(for: .showCommandPalette)) { _ in
             showCommandPalette = true
         }
-        .overlay {
-            if showCommandPalette {
-                ZStack(alignment: .top) {
-                    Color.black.opacity(0.55)
-                        .ignoresSafeArea()
-                        .onTapGesture { showCommandPalette = false }
+        .overlay { commandPaletteOverlay }
+        .overlay { shortcutsOverlay }
+        .onReceive(NotificationCenter.default.publisher(for: .showGlossary)) { _ in
+            showGlossaryPanel = true
+        }
+        .overlay { glossaryOverlay }
+    }
 
-                    CommandPalette(
-                        isPresented: $showCommandPalette,
-                        deals:       deals,
-                        onSelectDeal: { deal in
-                            wm.selectedDealID = deal.id
-                            wm.activeProfile  = deal.hospitalityRoomCount > 0 || deal.hospitalityADR > 0
-                                ? .hospitality
-                                : .realEstate
-                        },
-                        onNewDeal: { showNewDealSheet = true },
-                        onImport: {
-                            NotificationCenter.default.post(name: .showImportDeals, object: nil)
-                        },
-                        onRunAI: {
-                            if let deal = selectedDeal {
-                                NotificationCenter.default.post(
-                                    name: .autoTriggerAI,
-                                    object: nil,
-                                    userInfo: ["dealID": deal.id]
-                                )
-                            }
-                            wm.activeProfile = .cmdCenter
+    @ViewBuilder
+    private var commandPaletteOverlay: some View {
+        if showCommandPalette {
+            ZStack(alignment: .top) {
+                Color.black.opacity(0.55)
+                    .ignoresSafeArea()
+                    .onTapGesture { showCommandPalette = false }
+
+                CommandPalette(
+                    isPresented: $showCommandPalette,
+                    deals: deals,
+                    onSelectDeal: { deal in
+                        wm.selectedDealID = deal.id
+                        wm.activeProfile = deal.hospitalityRoomCount > 0 || deal.hospitalityADR > 0
+                            ? .hospitality : .realEstate
+                    },
+                    onNewDeal: { showNewDealSheet = true },
+                    onImport: {
+                        NotificationCenter.default.post(name: .showImportDeals, object: nil)
+                    },
+                    onRunAI: {
+                        if let deal = selectedDeal {
+                            NotificationCenter.default.post(
+                                name: .autoTriggerAI,
+                                object: nil,
+                                userInfo: ["dealID": deal.id]
+                            )
                         }
-                    )
-                    .padding(.top, 100)
-                }
+                        wm.activeProfile = .cmdCenter
+                    },
+                    onGlossary: {
+                        showCommandPalette = false
+                        NotificationCenter.default.post(name: .showGlossary, object: nil)
+                    }
+                )
+                .padding(.top, 100)
             }
         }
-        .overlay {
-            if showShortcutsPanel {
-                ZStack {
-                    Color.black.opacity(0.55)
-                        .ignoresSafeArea()
-                        .onTapGesture { showShortcutsPanel = false }
+    }
 
-                    ShortcutsLegendView(onDismiss: { showShortcutsPanel = false })
-                }
+    @ViewBuilder
+    private var shortcutsOverlay: some View {
+        if showShortcutsPanel {
+            ZStack {
+                Color.black.opacity(0.55)
+                    .ignoresSafeArea()
+                    .onTapGesture { showShortcutsPanel = false }
+                ShortcutsLegendView(onDismiss: { showShortcutsPanel = false })
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var glossaryOverlay: some View {
+        if showGlossaryPanel {
+            ZStack {
+                Color.black.opacity(0.55)
+                    .ignoresSafeArea()
+                    .onTapGesture { showGlossaryPanel = false }
+                GlossarySheet(onDismiss: { showGlossaryPanel = false })
             }
         }
     }
@@ -278,6 +334,10 @@ struct AppShell: View {
             .background(shellBg)
         } else if wm.activeProfile == .cmdCenter {
             CmdCenterView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(shellBg)
+        } else if wm.activeProfile == .globalIntelligence {
+            GlobalIntelligenceDashboardView(deals: deals)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(shellBg)
         } else if let deal = selectedDeal {
@@ -324,6 +384,8 @@ struct AppShell: View {
     private func loadSampleDeal() {
         let deal = PropertyDeal(
             propertyName:           "Lisbon Office Block A",
+            address:                "Av. da Liberdade 125, Lisboa",
+            locationCity:           "Lisbon",
             purchasePrice:          1_250_000,
             closingCosts:           37_500,
             grossPotentialIncome:   125_000,
@@ -341,6 +403,7 @@ struct AppShell: View {
             opexCapitalReserves:    3_500
         )
         modelContext.insert(deal)
+        GeocodingService.shared.scheduleGeocode(deal: deal, context: modelContext)
         wm.selectedDealID = deal.id
         wm.activeProfile  = .realEstate
     }
@@ -366,8 +429,24 @@ struct AppShell: View {
 
     @ViewBuilder
     private var inspectorPane: some View {
-        if let deal = selectedDeal {
+        if wm.activeProfile == .globalIntelligence {
+            if let deal = selectedDeal {
+                GeoAssetInspectorPanel(deal: deal)
+                    .frame(width: inspectorPaneWidth)
+            } else if let marketId = wm.geoMarketFilterId {
+                MarketContextInspector(marketId: marketId, deals: deals)
+                    .frame(width: inspectorPaneWidth)
+            } else if deals.contains(where: { !$0.isGeocoded && (!$0.locationCity.isEmpty || !$0.address.isEmpty) }) {
+                GeocodeStatusInspector(deals: deals)
+                    .frame(width: inspectorPaneWidth)
+            } else {
+                GlobalIntelligenceIdleInspector()
+                    .frame(width: inspectorPaneWidth)
+            }
+        } else if let deal = selectedDeal {
             InspectorPane(deal: deal)
+                .frame(width: inspectorPaneWidth)
+                .clipped()
         } else {
             VStack {
                 Spacer()

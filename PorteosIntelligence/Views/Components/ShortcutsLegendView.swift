@@ -31,10 +31,12 @@ struct ShortcutsLegendView: View {
             .init(keys: ["⌘", "2"],       description: "Hospitality Profile"),
             .init(keys: ["⌘", "3"],       description: "Design Profile"),
             .init(keys: ["⌘", "4"],       description: "Circular Economy Profile"),
+            .init(keys: ["⌘", "5"],       description: "Global Intelligence Profile"),
         ]),
         .init(title: "ACTIONS", entries: [
             .init(keys: ["⌘", "K"],        description: "Command Palette"),
             .init(keys: ["⌘", "E"],        description: "Edit Deal Data"),
+            .init(keys: ["⌘", "⇧", "G"], description: "Glossary"),
             .init(keys: ["⌘", "⇧", "O"], description: "Export Data"),
             .init(keys: ["⌘", "⏎"],       description: "Save / Commit Changes"),
             .init(keys: ["Esc"],           description: "Cancel / Close Sheet"),

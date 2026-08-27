@@ -55,7 +55,7 @@ enum DesignTokens {
     // MARK: Layout — shell (Figma: layout/*)
 
     static let navPaneWidth:       CGFloat = 260
-    static let inspectorPaneWidth: CGFloat = 280
+    static let inspectorPaneWidth: CGFloat = 320  // Widened for RESEARCH tab (+40px)
     static let windowMinWidth:     CGFloat = 1200
     static let windowMinHeight:    CGFloat = 800
 

@@ -11,6 +11,15 @@ enum DealStatus: String, Codable, CaseIterable {
     case pipeline
 }
 
+// MARK: - GeocodeStatus
+
+enum GeocodeStatus: String, Codable, CaseIterable {
+    case none
+    case pending
+    case ok
+    case failed
+}
+
 // MARK: - PropertyDeal
 
 @Model
@@ -24,8 +33,56 @@ final class PropertyDeal {
     var propertyName:    String
     var address:         String
     var propertyType:    String
-    var totalArea:       Double
+    var totalArea:       Double   // built / floor area (m²)
+    var landArea:        Double   // rustic / plot area (m²) — quintas, rural
     var locationCity:    String
+    var locationCountry: String   // e.g. "Portugal", "Spain" — used for geocoding context
+
+    /// Currency symbol inferred from deal country. No stored field needed —
+    /// derived at display time so there is zero risk of stale data.
+    var currencySymbol: String {
+        let c = locationCountry.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        // US
+        if c.contains("united states") || c == "usa" || c == "us" { return "$" }
+        // UK
+        if c.contains("united kingdom") || c == "uk" || c == "gb" { return "£" }
+        // Scandinavia — match full name, ISO code, and native name
+        if c.contains("sweden") || c == "se" || c.contains("sverige")  { return "kr" }
+        if c.contains("norway") || c == "no" || c.contains("norge")    { return "kr" }
+        if c.contains("denmark") || c == "dk" || c.contains("danmark") { return "kr" }
+        // Other
+        if c.contains("switzerland") || c == "ch"                       { return "Fr" }
+        if c.contains("japan") || c == "jp"                             { return "¥" }
+        if c.contains("brazil") || c == "br"                            { return "R$" }
+        if c.contains("australia") || c == "au"                         { return "A$" }
+        if c.contains("canada") || c == "ca"                            { return "C$" }
+        // Fallback: infer from marketId prefix if country is blank
+        let mPrefix = marketId.prefix(2).lowercased()
+        if mPrefix == "se" { return "kr" }
+        if mPrefix == "no" { return "kr" }
+        if mPrefix == "dk" { return "kr" }
+        if mPrefix == "gb" { return "£" }
+        if mPrefix == "us" { return "$" }
+        return "€"  // EU / unknown → Euro
+    }
+
+    // MARK: Regulatory (user-entered advisory — not legal advice)
+    var zoningClass: String = ""              // e.g. "T1 Tourism", "Mixed Use", "R1 Residential"
+    var floorAreaRatio: Double = 0            // FAR e.g. 0.5 means 0.5× land area is max buildable
+    var maxBuildingHeight: Double = 0         // metres
+    var maxBedroomsOrUnits: Int = 0           // 0 = unknown
+    var planningStatus: String = "unknown"    // "unknown" | "none" | "applied" | "approved"
+    var heritageOrListed: Bool = false
+    var strLicenceStatus: String = "unknown"  // "unknown" | "none" | "applied" | "approved"
+
+    // MARK: Media
+    @Relationship(deleteRule: .cascade) var images: [DealImage] = []
+
+    // MARK: Global Intelligence / Geo
+    var latitude:         Double?
+    var longitude:        Double?
+    var geocodeStatusRaw: String
+    var marketId:         String
 
     // MARK: Real Estate Core Financials
     var purchasePrice:        Double
@@ -115,12 +172,44 @@ final class PropertyDeal {
 
     // MARK: - Computed helpers
 
+    /// FAR × land area = advisory max buildable m². Zero if either input is zero.
+    var advisoryMaxBuildableArea: Double {
+        guard floorAreaRatio > 0, landArea > 0 else { return 0 }
+        return floorAreaRatio * landArea
+    }
+
+    /// How much FAR headroom remains vs current total area (negative = over-built).
+    var farHeadroom: Double {
+        guard advisoryMaxBuildableArea > 0 else { return 0 }
+        return advisoryMaxBuildableArea - totalArea
+    }
+
     /// Returns the sum of individual OpEx line items if any have been entered;
     /// otherwise falls back to the `operatingExpenses` summary field.
     var effectiveOpEx: Double {
         let lineItemSum = opexPropertyManagement + opexPropertyTax + opexInsurance
                        + opexUtilities + opexMaintenance + opexCapitalReserves
         return lineItemSum > 0 ? lineItemSum : operatingExpenses
+    }
+
+    var geocodeStatus: GeocodeStatus {
+        get { GeocodeStatus(rawValue: geocodeStatusRaw) ?? .none }
+        set { geocodeStatusRaw = newValue.rawValue }
+    }
+
+    var isGeocoded: Bool {
+        geocodeStatus == .ok && latitude != nil && longitude != nil
+    }
+
+    /// Map pin can render while geocode is pending — coords are kept until replaced.
+    var hasPlottableCoordinates: Bool {
+        guard let lat = latitude, let lon = longitude else { return false }
+        return lat != 0 || lon != 0
+    }
+
+    var needsGeocode: Bool {
+        geocodeStatus == .none || geocodeStatus == .pending
+            || (geocodeStatus == .failed && (!address.isEmpty || !locationCity.isEmpty))
     }
 
     // MARK: - Init
@@ -133,7 +222,20 @@ final class PropertyDeal {
         address:                     String  = "",
         propertyType:                String  = "",
         totalArea:                   Double  = 0,
+        landArea:                    Double  = 0,
         locationCity:                String  = "",
+        locationCountry:             String  = "",
+        latitude:                    Double? = nil,
+        longitude:                   Double? = nil,
+        geocodeStatusRaw:            String  = GeocodeStatus.none.rawValue,
+        marketId:                    String  = "",
+        zoningClass:                 String  = "",
+        floorAreaRatio:              Double  = 0,
+        maxBuildingHeight:           Double  = 0,
+        maxBedroomsOrUnits:          Int     = 0,
+        planningStatus:              String  = "unknown",
+        heritageOrListed:            Bool    = false,
+        strLicenceStatus:            String  = "unknown",
         purchasePrice:               Double  = 0,
         closingCosts:                Double  = 0,
         renovationBudget:            Double  = 0,
@@ -208,7 +310,20 @@ final class PropertyDeal {
         self.address                        = address
         self.propertyType                   = propertyType
         self.totalArea                      = totalArea
+        self.landArea                       = landArea
         self.locationCity                   = locationCity
+        self.locationCountry               = locationCountry
+        self.latitude                       = latitude
+        self.longitude                      = longitude
+        self.geocodeStatusRaw               = geocodeStatusRaw
+        self.marketId                       = marketId
+        self.zoningClass                    = zoningClass
+        self.floorAreaRatio                 = floorAreaRatio
+        self.maxBuildingHeight              = maxBuildingHeight
+        self.maxBedroomsOrUnits             = maxBedroomsOrUnits
+        self.planningStatus                 = planningStatus
+        self.heritageOrListed               = heritageOrListed
+        self.strLicenceStatus               = strLicenceStatus
         self.purchasePrice                  = purchasePrice
         self.closingCosts                   = closingCosts
         self.renovationBudget               = renovationBudget

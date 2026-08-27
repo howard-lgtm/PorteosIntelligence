@@ -1,9 +1,9 @@
 # Porteos Intelligence — Package v1.0 Status Report
 
-**Date:** 4 July 2026 (EOD)  
+**Date:** 9 July 2026 (EOD)  
 **Version:** 1.0 (build 1)  
-**Branch:** `main` (pending EOD commit)  
-**Design authority:** Figma V2.06 (`7XdLK0I2aWj7KVkvhnJEyE`)  
+**Branch:** `main` @ `b9303d2`  
+**Design authority:** Figma V2.06 + Global Intelligence handoff (`Design-system/Figma/Global_Intelligence/`)  
 **Return checklist:** [`PACKAGE_v1_PUNCHLIST.md`](PACKAGE_v1_PUNCHLIST.md)  
 **Distribution:** [`DISTRIBUTION.md`](DISTRIBUTION.md)
 
@@ -11,15 +11,15 @@
 
 ## Executive summary
 
-Porteos Intelligence is **ready for first-package wild use**. The terminal shell, four profile dashboards, deal pipeline, calculators, PDF export, HTTP ingestion server, and browser extension path are functional. Typography now matches the v2.06 font specification via bundled JetBrains Mono and the `PorteosText` style pipeline.
+Porteos Intelligence remains **ready for wild use**, now with **six profiles** including **Global Intelligence** (geo map + sector news) merged via [PR #6](https://github.com/howard-lgtm/PorteosIntelligence/pull/6).
 
-This is a **personal / internal v1** — not App Store polish. Use it in real deal flow, capture friction in the punchlist, then return for a focused second pass.
+The terminal shell, profile dashboards, deal pipeline, calculators, PDF export, HTTP ingestion, and browser extension path are functional. **P10 (Global Intelligence v1) is complete on `main`.** LLM daily briefing (P11) and sector settings UI (P10-20) are deferred.
 
-**Shipped today (2026-07-04):**
-- App icon — Pi mark; master at `Design-system/AppIcon/`, installed in `AppIcon.appiconset`
-- Package v1 status report + wild-use punchlist
-- Developer ID distribution guide + export script
-- Archive uploaded to Apple notary service (status: **In Progress** at EOD)
+**Shipped this cycle (Jul 7–9):**
+- **Global Intelligence profile** — map pins, geocoding, sector-filtered RSS, hover banners, inspector routing
+- **Full Edit QA branch** — glossary, Design↔Circular sync, carbon decimals (PR #5, **not merged**)
+- **Compiler warning sweep** — zero Swift warnings on clean build
+- **Design handoff** — 6 GI frames + `GLOBAL_INTELLIGENCE_HANDOFF.md`
 
 ---
 
@@ -27,123 +27,105 @@ This is a **personal / internal v1** — not App Store polish. Use it in real de
 
 | Item | Value |
 |------|-------|
-| Latest commit | `5a6b27d` — typography pipeline + bundled fonts |
-| Prior UI commits | `709e5e5` (DesignTokens shell), `bcc1b10` (ComparisonView) |
-| Platform | macOS 14+, SwiftUI + SwiftData |
+| Latest commit | `b9303d2` — Merge PR #6 (Global Intelligence) |
+| Prior milestone | `df81e86` — splash hero + handoff doc |
+| Platform | macOS 26+, SwiftUI + SwiftData + MapKit |
 | Marketing version | 1.0 |
-| Swift sources | ~107 files under `PorteosIntelligence/` |
-| Typography gate | `./scripts/typography-check.sh` (passes on `Views/`) |
-| App icon | `Assets.xcassets/AppIcon.appiconset/` — Pi mark, all slots |
-| Distribution | Developer ID export — see `DISTRIBUTION.md`; notarization submitted EOD |
+| Profiles | **6** — Cmd Center + 4 asset profiles + Global Intelligence |
+| Geocoding | `MKGeocodingRequest` (macOS 26 MapKit; replaces CLGeocoder) |
+| Typography gate | `./scripts/typography-check.sh` |
+| Open PRs | #1–#5 (see below) |
 
 ---
 
-## What ships in v1.0
+## What ships on `main` today
 
 ### Core workflow
-- **3-pane shell** — navigation, dashboard, inspector (`AppShell`, `NavigationPane`, `InspectorPane`)
-- **Five profiles** — Real Estate, Hospitality, Design, Circular Economy + Command Center
-- **Deal lifecycle** — create, edit (Full Edit 5-tab sheet), triage, pipeline filters, bulk export/delete
-- **Calculators** — profile-specific metrics derived on-the-fly; Porteos score
-- **Scenarios & sensitivity** — scenario manager, profile sensitivity blocks
-- **Comparison view** — side-by-side deal comparison
-- **PDF reports** — generate + B&W toggle (output QA still open)
-- **Templates** — deal templates picker
-- **Batch triage** — multi-deal review sheet
-- **Market trends** — trend recording/analysis modules
-- **AI analysis panel** — vibe / LLM-assisted review (local service wiring)
+- **3-pane shell** — navigation, dashboard, inspector (+ detached panes)
+- **Six profiles** — Real Estate, Hospitality, Design, Circular Economy, Command Center, **Global Intelligence**
+- **Deal lifecycle** — create, edit, triage, pipeline filters, bulk export/delete
+- **Calculators** — profile metrics + Porteos score
+- **Comparison, PDF, templates, batch triage, market trends**
+- **AI vibe panel** — rule-based signals + optional Ollama narrative
 
-### Data & persistence
-- **SwiftData models:** `PropertyDeal`, `DealScenario`, `EmailImportRecord`, `MarketTrend`
-- **Market benchmarks** — 43-city lookup, auto-populate on city entry
-- **Portfolio learning** — history / learning engine scaffold
-- **Import/export** — CSV/JSON import, bulk export with depth/scope options
+### Global Intelligence (P10 — complete)
+| Capability | Status |
+|------------|--------|
+| Portfolio map with square pins | ✅ |
+| Geocode on save/import (no backfill) | ✅ |
+| Market filter (13 countries) | ✅ |
+| Sector filter (RE, HOSP, CAP, TECH, etc.) | ✅ |
+| RSS news cache (60-day, daily refresh) | ✅ |
+| Pin hover banner | ✅ |
+| `[ CLEAR PIN ]` / `[ RE-GEOCODE ]` | ✅ |
+| Hybrid inspector (idle / market / deal) | ✅ |
+| LLM daily brief | ❌ → P11 |
 
 ### Ingestion (three paths)
 
-| Path | Mechanism | Status |
-|------|-----------|--------|
-| **Manual / Quick Add** | Paste or type listing text → `QuickEntryParser` | ✅ Usable |
-| **HTTP localhost server** | `DealIngestionServer` on port 9000 (default) | ✅ Usable — sandbox entitlements include network server |
-| **Browser extension** | `BrowserExtension/PorteosImporter/` → POST to localhost | ✅ Scaffold — Idealista, Zillow, Hemnet |
-| **Email IMAP** | `EmailMonitorService` polls Gmail/Outlook/etc. via IMAP + `ListingEmailParser` | ⚠️ Scaffold — works in theory; needs wild-use validation + product pass (see punchlist P6) |
-
-The **preferred future intake** (per product direction) is a **passive Gmail inbox feed** — broker alert emails instead of site scraping. IMAP polling exists; a full anti-scraper email product pass is deferred to post–wild-use (P6 in punchlist).
+| Path | Status |
+|------|--------|
+| Manual / Quick Add | ✅ Usable |
+| HTTP localhost `:9000` | ✅ Usable |
+| Browser extension | ✅ Scaffold — price/URL gaps (P7) |
+| Email IMAP | ⚠️ CHECK_NOW broken (P6-17) |
 
 ---
 
-## Design system — current state
+## Open pull requests
 
-### Complete
-- **Bundled fonts** — JetBrains Mono Regular/Medium/SemiBold/Bold; registered at launch
-- **Type scale** — `DesignTokens.TypeScale` + `PorteosTextStyle` / `PorteosText` / `PorteosMetricStack`
-- **Fixed line heights & tracking** — per `PORTEOS INTELLIGENCE v2.06 — FONT SPECIFICATION.md`
-- **Shell typography** — navigation, inspector, header, command bar migrated
-- **Dashboard typography** — all four profile dashboards + Cmd Center
-- **Shared components** — terminal blocks, metrics, buttons, segments (~47 view files migrated)
-- **Hard rules enforced** — `cornerRadius = 0`, DesignTokens colors, no synthetic `.weight()`
-
-### User QA verdict (July 2026)
-- **Inspector / dashboards:** “looks fantastic” — Hospitality dashboard, Batch Triage, Server Config confirmed
-- **Template Picker:** reference implementation for sheet finish level
-- **Left nav:** improved (NAV_V2 header, meta section labels, selection pip) but still slightly behind inspector polish
+| PR | Title | Merge to `main`? |
+|----|-------|------------------|
+| **#5** | Full Edit QA (Casa Hibiscos) | **Next** — expect ~5 conflicts with GI |
+| #4 | AI signals accordion | Draft — when ready |
+| #3 | Startup splash | Independent |
+| #2 | Figma design tokens | Independent |
+| #1 | Email ingestion panel | Independent |
 
 ---
 
-## P0 fixes already landed
+## User QA verdict
+
+| Area | Verdict | Date |
+|------|---------|------|
+| Dashboards / triage / server config | “Fantastic” | Jul 4–5 |
+| Global Intelligence map + geocoding | Works — Lisbon pin QA passed | Jul 8–9 |
+| Full Edit (Casa Hibiscos) | QA’d on branch #5 | Jul 8 |
+| Help menu | System “not available” alert — deferred P4-05 | Jul 8 |
+
+---
+
+## P0 fixes landed
 
 | ID | Fix |
 |----|-----|
 | P0-01 | PDF cover KPI overlap |
-| P0-02/03 | `TerminalInputField` suffix width (tCO2e/yr, ACH) |
-| P0-04 | Server Config port display (`localhost:9000`) |
+| P0-02/03 | Full Edit suffix width (tCO2e/yr, ACH) |
+| P0-04 | Server Config port display |
 
 ---
 
-## Known limitations (expect in wild use)
+## Known limitations
 
-1. **macOS sheet chrome** — system sheets may show rounded corners despite `cornerRadius = 0` in views (P2-06).
-2. **PDF output** — cover fixed; page-level field mapping and B&W mode need smoke test (P3).
-3. **Detached inspector window** — content column narrow vs window width (P1-05).
-4. **Advanced filter panel** — functional but visually “admin” (P1-04).
-5. **Full Edit tabs** — usable; not yet at Template Picker finish (P2).
-6. **Email ingestion** — IMAP + app password model; no OAuth/Gmail API yet; parser coverage unknown on real broker formats.
-7. **Browser extension** — not packaged/signed; manual load in Chrome; site DOM changes will break scrapers.
-8. **Schema migration** — app deletes store on migration failure (logged); back up exports before major model changes.
-9. **Untracked WIP** — some files in git status may not be committed; confirm clean tree before tagging a release.
+1. **Duplicate import rows** — same deal can appear twice in nav (P7-07).
+2. **Browser import** — price €0.00 on some listings; source URL buried in notes (P7-05/06, P2-08).
+3. **Email CHECK_NOW** — curl exit 100 on `SEARCH UNSEEN` (P6-17).
+4. **Existing deals** — no geocode backfill; only save/import triggers geocode.
+5. **News feeds** — RSS URLs partial; empty feeds skipped gracefully.
+6. **macOS Help** — no Help Book bundled (P4-05).
+7. **Full Edit QA** — on branch, not `main` until PR #5 merges.
 
 ---
 
-## Entitlements & security
+## Recommended return order (updated 9 Jul)
 
-```
-App Sandbox: ON
-Network server: ON  (localhost ingestion)
-Network client: ON  (IMAP, optional LLM)
-User-selected files: read-write  (export/import)
-```
-
-IMAP credentials stored in Keychain (`com.porteos.intelligence` / `imap_credentials`).
-
----
-
-## How to run wild-use validation
-
-1. Build & run from Xcode (`PorteosIntelligence` scheme).
-2. Create 3–5 real deals across profiles (or import sample CSV).
-3. Exercise **Full Edit**, **PDF export**, **Batch Triage**, **Comparison**.
-4. Start **HTTP server** → test browser extension on one listing site.
-5. Optionally configure **Email Setup** with Gmail app password → run manual check.
-6. Note bugs, UX friction, and data wrongness in [`PACKAGE_v1_PUNCHLIST.md`](PACKAGE_v1_PUNCHLIST.md) § Wild-use log.
-
----
-
-## Recommended return order
-
-1. Wild-use log triage → promote blockers to P0
-2. Email feed product design + implementation (P6) if inbox intake is priority
-3. Remaining visual polish (P1–P3)
-4. **Distribution** — [`DISTRIBUTION.md`](DISTRIBUTION.md) (Developer ID, notarize, install on other Macs)
+1. **Merge PR #5** — Full Edit QA (resolve GI conflicts)
+2. **P6-17 / P7-05–07** — email fetch + browser import fixes
+3. **P3-07** — PDF B&W mode
+4. **P1–P2 visual finish** — nav keyboard, sheets polish
+5. **P11** — LLM integration (daily brief, shared provider)
+6. **P10-20 / P4-05** — Intelligence settings + Help menu
+7. **PKG-03–05** — tag release, clean machine smoke test
 
 ---
 
@@ -151,22 +133,26 @@ IMAP credentials stored in Keychain (`com.porteos.intelligence` / `imap_credenti
 
 | Doc | Purpose |
 |-----|---------|
-| [`PACKAGE_v1_PUNCHLIST.md`](PACKAGE_v1_PUNCHLIST.md) | Full return checklist |
-| [`FIGMA_PUNCHLIST.md`](FIGMA_PUNCHLIST.md) | Visual QA detail (subset; superseded by v1 punchlist) |
-| [`PORTEOS INTELLIGENCE v2.06 — FONT SPECIFICATION.md`](PORTEOS%20INTELLIGENCE%20v2.06%20%E2%80%94%20FONT%20SPECIFICATION.md) | Typography authority |
-| [`FIGMA_FONT_MAP.md`](FIGMA_FONT_MAP.md) | Figma → code token map |
-| [`DISTRIBUTION.md`](DISTRIBUTION.md) | Install on multiple Macs (Developer ID, no App Store) |
-| `Design-system/Figma/visual-targets/` | PNG comparison targets |
+| [`PACKAGE_v1_PUNCHLIST.md`](PACKAGE_v1_PUNCHLIST.md) | Living task list (P10 done, P11 next) |
+| [`GLOBAL_INTELLIGENCE_HANDOFF.md`](../../Design-system/Figma/Global_Intelligence/GLOBAL_INTELLIGENCE_HANDOFF.md) | GI design + engineering spec |
+| [`PROJECT_STATUS.md`](../../PROJECT_STATUS.md) | High-level project status |
+| [`DISTRIBUTION.md`](DISTRIBUTION.md) | Developer ID / notarization |
 
 ---
 
-## App icon
+## Completed cycles (reference)
 
-Terminal badge: dark `#0A0A0A` field, rust `#C25E30` **P@** glyph, square art (macOS applies squircle mask at display time).
+**Jul 4 cycle:**
+- Typography pipeline, app icon, P0 fixes, wild-use punchlist
 
-Source: `icon_512x512@2x.png` (1024×1024) in `AppIcon.appiconset`.  
-Regenerate sizes: resize from 1024 with `sips` if art changes.
+**Jul 7–9 cycle:**
+- [x] P10 Global Intelligence — design handoff + engineering v1 ([PR #6](https://github.com/howard-lgtm/PorteosIntelligence/pull/6))
+- [x] Sector intelligence taxonomy (10 sectors, keyword tagging)
+- [x] Geocoding + pin UX (hover banner, clear/re-geocode)
+- [x] Swift compiler warnings cleared
+- [x] Full Edit QA on branch ([PR #5](https://github.com/howard-lgtm/PorteosIntelligence/pull/5)) — pending merge
+- [x] Punchlist: P4-05 Help, P10-20 settings, deferred items logged
 
 ---
 
-*Next update: after wild-use session — fill punchlist § Wild-use log and bump this doc’s date.*
+*Next update: after PR #5 merge and next wild-use session.*

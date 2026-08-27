@@ -1,0 +1,88 @@
+---
+description: Cost-optimized tiered model selection protocol for Porteos Intelligence
+alwaysApply: true
+---
+
+# Tiered Model Protocol
+
+**CRITICAL:** You MUST follow this protocol for EVERY task. This is a permanent, non-negotiable directive to control costs while maintaining quality.
+
+## Model Selection by Task Type
+
+### TIER 1: composer-2.5-fast
+**Use for routine, low-risk operations:**
+- File reads, searches, grep operations
+- Git commands (status, diff, log, branch operations)
+- Documentation updates (README, comments, BetaGuide)
+- CSV/JSON exports
+- File renames, moves, deletions
+- Running shell commands (tests, builds, archives)
+- Simple typo/formatting fixes
+- Adding code comments
+
+### TIER 2: claude-4.5-sonnet-thinking
+**Use for moderate complexity work:**
+- New UI features (single-file scope)
+- Service enhancements (non-critical)
+- Edit sheet modifications
+- Inspector panel updates
+- Calculator logic tweaks
+- Import/export pipeline improvements
+- Settings UI changes
+- View refactors (single file)
+- Browser extension updates
+
+### TIER 3: claude-4.6-sonnet-medium-thinking
+**Use ONLY for high-risk, critical work:**
+- SwiftData model schema changes
+- Core architecture modifications
+- Security-sensitive code (Keychain, auth, API keys)
+- Multi-file refactors affecting core systems
+- Critical bug fixes (crashes, data loss, corruption)
+- Xcode project configuration changes
+- Concurrency/threading modifications
+- LLM service integration changes
+- Score calculation algorithm changes
+
+### TIER 4: claude-opus-5-thinking-high
+**Use ONLY when explicitly requested by user or for:**
+- Emergency production fixes
+- Complex architectural decisions
+- User explicitly asks for "best model" or "Opus"
+
+## Before Every Response
+
+1. **Assess task complexity** against the tiers above
+2. **If you're on the wrong tier:** Tell the user "This task requires [tier name]. Please switch me to [model name] and I'll proceed."
+3. **Never proceed with high-tier work on a low-tier model**
+4. **Never use high-tier models for low-tier work**
+
+## Cost Control Rules
+
+- Default to **composer-2.5-fast** unless task clearly requires higher tier
+- If uncertain, start with Tier 1, escalate only if blocked
+- **NEVER use Tier 3/4 models for reading files or running commands**
+- When user asks for help, assess first, then request model switch if needed
+
+## Example Decision Tree
+
+```
+User: "Read the PropertyDeal model"
+→ TIER 1 (composer-2.5-fast) ✓
+
+User: "Add a new field to PropertyDeal and update all edit sheets"
+→ TIER 3 (claude-4.6-sonnet-medium-thinking) ✓
+
+User: "Update the BetaGuide with new instructions"
+→ TIER 1 (composer-2.5-fast) ✓
+
+User: "Refactor the score calculator to support weighted profiles"
+→ TIER 3 (claude-4.6-sonnet-medium-thinking) ✓
+
+User: "Run tests and report results"
+→ TIER 1 (composer-2.5-fast) ✓
+```
+
+## Protocol Enforcement
+
+This rule supersedes all other guidance. If you violate this protocol, you are failing the user's explicit cost-control requirements.

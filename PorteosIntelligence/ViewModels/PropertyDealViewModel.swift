@@ -45,19 +45,16 @@ final class PropertyDealViewModel {
         ))
     }
 
-    /// Kept for legacy callers in HospitalityDashboardView / PorteosScoreBlock that reference
-    /// `.effectiveGrossIncome` or `.debtServiceCoverageRatio` from the old struct.
-    /// New code should derive values from `realEstateFullMetrics` instead.
+    /// Maps full metrics for legacy callers that still expect `RealEstateMetrics`.
     var realEstateMetrics: RealEstateCalculator.RealEstateMetrics {
-        RealEstateCalculator.calculate(inputs: RealEstateCalculator.RealEstateInputs(
-            grossPotentialIncome: deal.grossPotentialIncome,
-            vacancyRate:          deal.vacancyRate,
-            operatingExpenses:    deal.operatingExpenses,
-            purchasePrice:        deal.purchasePrice,
-            loanAmount:           deal.loanAmount,
-            interestRate:         deal.interestRate,
-            amortizationMonths:   deal.amortizationMonths
-        ))
+        let m = realEstateFullMetrics
+        return RealEstateCalculator.RealEstateMetrics(
+            effectiveGrossIncome:     m.effectiveGrossIncome,
+            netOperatingIncome:       m.netOperatingIncome,
+            capRate:                  m.capRate,
+            loanToValue:              m.loanToValue,
+            debtServiceCoverageRatio: m.debtServiceCoverageRatio
+        )
     }
 
     var hospitalityMetrics: HospitalityCalculator.HospitalityMetrics {
@@ -86,17 +83,57 @@ final class PropertyDealViewModel {
         ))
     }
 
+    /// Design score (0–100) derived from DesignCalculator FullMetrics.
+    /// Only non-zero fields contribute so partially-filled deals aren't penalised.
+    private var designScore: Double {
+        guard deal.designGFA > 0 || deal.designDaylighting > 0 ||
+              deal.designAdaptabilityScore > 0 || deal.designBiophilicCount > 0 else { return 0 }
+        let des = DesignCalculator.calculateFull(inputs: .init(
+            gfa:               deal.designGFA,
+            nia:               deal.designNIA,
+            circulationPct:    deal.designCirculationPct,
+            spaceUtilization:  deal.designSpaceUtilization,
+            daylighting:       deal.designDaylighting,
+            co2ppm:            deal.designCO2ppm,
+            ach:               deal.designACH,
+            thermalComfort:    deal.designThermalComfort,
+            acousticComfort:   deal.designAcousticComfort,
+            biophilicCount:    deal.designBiophilicCount,
+            greenWallM2:       deal.designGreenWallM2,
+            viewsToNaturePct:  deal.designViewsToNaturePct,
+            naturalMaterialsPct: deal.designNaturalMaterialsPct,
+            movablePartitionPct: deal.designMovablePartitionPct,
+            multiUseSpaces:    deal.designMultiUseSpaces,
+            adaptabilityScore: deal.designAdaptabilityScore
+        ))
+        var components: [Double] = []
+        if des.daylighting > 0      { components.append(des.daylighting) }
+        if des.thermalComfort > 0   { components.append(des.thermalComfort) }
+        if des.acousticComfort > 0  { components.append(des.acousticComfort) }
+        if des.spaceUtilization > 0 { components.append(min(des.spaceUtilization, 100)) }
+        if des.adaptabilityScore > 0 { components.append(des.adaptabilityScore) }
+        if des.biophilicCount > 0   { components.append(min(Double(des.biophilicCount) * 25, 100)) }
+        return components.isEmpty ? 0 : components.reduce(0, +) / Double(components.count)
+    }
+
     var porteosScore: PorteosScoreCalculator.PorteosMetrics {
-        PorteosScoreCalculator.calculate(inputs: PorteosScoreCalculator.PorteosInputs(
-            capRate:           realEstateFullMetrics.capRate,
+        let re = realEstateFullMetrics
+        return PorteosScoreCalculator.calculate(inputs: PorteosScoreCalculator.PorteosInputs(
+            capRate:           re.capRate,
             revPAR:            hospitalityMetrics.revPAR,
-            designScore:       0,   // TODO: wire DesignCalculator when design inputs added to PropertyDeal
+            designScore:       designScore,
             circularScore:     circularMetrics.overallCEScore,
             totalRevenue:      hospitalityMetrics.totalRevenue,
+            dscr:              re.debtServiceCoverageRatio,
+            ltv:               re.loanToValue,
+            cashOnCash:        re.cashOnCashReturn,
             weightRealEstate:  deal.weightRealEstate,
             weightHospitality: deal.weightHospitality,
             weightDesign:      deal.weightDesign,
-            weightCircular:    deal.weightCircular
+            weightCircular:    deal.weightCircular,
+            heritageOrListed:  deal.heritageOrListed,
+            planningStatus:    deal.planningStatus,
+            strLicenceStatus:  deal.strLicenceStatus
         ))
     }
 

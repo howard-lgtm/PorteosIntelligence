@@ -37,6 +37,9 @@ struct EmailIngestionPanel: View {
                 if let err = ems.errorMessage {
                     errorRow(err)
                     divider
+                } else if let summary = ems.lastCheckSummary {
+                    summaryRow(summary)
+                    divider
                 }
                 controlRow
             }
@@ -108,6 +111,20 @@ struct EmailIngestionPanel: View {
             Text(msg)
                 .porteosMeta()
                 .foregroundStyle(red)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+    }
+
+    private func summaryRow(_ msg: String) -> some View {
+        HStack(spacing: 6) {
+            Text(">")
+                .porteosMeta()
+                .foregroundStyle(tp2)
+            Text(msg)
+                .porteosMeta()
+                .foregroundStyle(tp2)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 12)

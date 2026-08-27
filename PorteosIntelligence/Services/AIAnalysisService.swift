@@ -73,10 +73,43 @@ struct AnalysisSignal {
     }
 }
 
+// MARK: - DealVerdict
+
+enum DealVerdict {
+    case go       // Grade A or B  (score ≥ 65)
+    case review   // Grade C       (score 50–64)
+    case noGo     // Grade D or F  (score < 50)
+
+    static func from(grade: VibeGrade) -> DealVerdict {
+        switch grade {
+        case .a, .b: return .go
+        case .c:     return .review
+        case .d, .f: return .noGo
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .go:     return "GO"
+        case .review: return "REVIEW"
+        case .noGo:   return "NO GO"
+        }
+    }
+
+    var hexColor: String {
+        switch self {
+        case .go:     return "#27C93F"
+        case .review: return "#FFBD2E"
+        case .noGo:   return "#FF5F56"
+        }
+    }
+}
+
 // MARK: - AnalysisResult
 
 struct AnalysisResult {
     let grade:                      VibeGrade
+    let verdict:                    DealVerdict
     let headline:                   String
     let realEstateSignals:          [AnalysisSignal]
     let hospitalitySignals:         [AnalysisSignal]
@@ -85,6 +118,8 @@ struct AnalysisResult {
     let marketIntelligenceSignals:  [AnalysisSignal]
     let summary:                    String
     let formattedText:              String
+    /// Parsed SWOT sections from LLM output. Nil when LLM was offline.
+    let swot:                       SWOTAnalysis?
 
     var allSignals: [AnalysisSignal] {
         realEstateSignals + hospitalitySignals + designSignals + circularSignals + marketIntelligenceSignals
@@ -96,6 +131,14 @@ struct AnalysisResult {
         [!realEstateSignals.isEmpty, !hospitalitySignals.isEmpty,
          !designSignals.isEmpty,     !circularSignals.isEmpty].filter { $0 }.count
     }
+}
+
+struct SWOTAnalysis {
+    let strength:    String
+    let weakness:    String
+    let opportunity: String
+    let threat:      String
+    let verdict:     DealVerdict   // as parsed from LLM; may differ from rule-based
 }
 
 // MARK: - AnalysisPhase
@@ -125,7 +168,7 @@ final class AIAnalysisService {
     ) async -> AnalysisResult {
 
         // ── Phase 1: rule-based signals ───────────────────────────────────────
-        await onPhaseChange?(.analyzingRules)
+        await notifyPhase(.analyzingRules, handler: onPhaseChange)
 
         let re   = analyzeRealEstate(deal)
         let hosp = analyzeHospitality(deal)
@@ -136,32 +179,155 @@ final class AIAnalysisService {
         let headline = buildHeadline(deal: deal, grade: grade)
         let ruleSummary = buildSummary(re: re, hosp: hosp, des: des, circ: circ, mkt: mkt, grade: grade)
 
-        // ── Phase 2: LLM narrative (optional, non-blocking) ───────────────────
-        await onPhaseChange?(.generatingNarrative)
+        // ── Phase 2: LLM SWOT (optional, non-blocking) ────────────────────────
+        await notifyPhase(.generatingNarrative, handler: onPhaseChange)
 
-        let allSignals = (re + hosp + des + circ + mkt).map(\.message)
+        let allSignalMessages = (re + hosp + des + circ + mkt).map(\.message)
         var finalSummary = ruleSummary
         var llmOffline   = false
+        var swot: SWOTAnalysis? = nil
+
+        // Resolve city benchmark — used to ground the LLM in local market norms
+        let cityBenchmark = MarketBenchmarks.benchmark(for: deal.locationCity)
+
+        // Compute key metrics to include in the LLM prompt for grounded analysis
+        let computedMetrics = RealEstateCalculator.calculateFull(inputs: .init(
+            grossPotentialIncome:   deal.grossPotentialIncome,
+            vacancyRate:            deal.vacancyRate,
+            otherIncome:            deal.otherIncome,
+            operatingExpenses:      deal.operatingExpenses,
+            opexPropertyManagement: deal.opexPropertyManagement,
+            opexPropertyTax:        deal.opexPropertyTax,
+            opexInsurance:          deal.opexInsurance,
+            opexUtilities:          deal.opexUtilities,
+            opexMaintenance:        deal.opexMaintenance,
+            opexCapitalReserves:    deal.opexCapitalReserves,
+            purchasePrice:          deal.purchasePrice,
+            closingCosts:           deal.closingCosts,
+            renovationBudget:       deal.renovationBudget,
+            loanAmount:             deal.loanAmount,
+            interestRate:           deal.interestRate,
+            amortizationMonths:     deal.amortizationMonths,
+            exitCapRate:            deal.exitCapRate
+        ))
+        var dealMetricLines: [String] = []
+        if computedMetrics.capRate > 0 {
+            dealMetricLines.append("Cap rate: \(String(format: "%.2f", computedMetrics.capRate))%")
+        }
+        if computedMetrics.loanToValue > 0 {
+            dealMetricLines.append("LTV: \(String(format: "%.1f", computedMetrics.loanToValue))%")
+        }
+        if computedMetrics.debtServiceCoverageRatio > 0 {
+            dealMetricLines.append("DSCR: \(String(format: "%.2f", computedMetrics.debtServiceCoverageRatio))x")
+        }
+        if computedMetrics.cashOnCashReturn > 0 {
+            dealMetricLines.append("Cash-on-cash: \(String(format: "%.1f", computedMetrics.cashOnCashReturn))%")
+        }
+        if deal.purchasePrice > 0 {
+            dealMetricLines.append("Purchase price: €\(Int(deal.purchasePrice))")
+        }
+        let enrichedSignals = allSignalMessages + dealMetricLines
+
+        // Determine property type for prompt calibration and signal filtering
+        let typeLC        = deal.propertyType.lowercased()
+        let isHotel       = typeLC.contains("hotel") || typeLC.contains("hostel") || typeLC.contains("str") || typeLC.contains("accommodation")
+        let isFarmRural   = typeLC.contains("farm") || typeLC.contains("rural") || typeLC.contains("quinta") || typeLC.contains("herdade") || typeLC.contains("agri")
+        let isMulti       = typeLC.contains("multi") || typeLC.contains("dwelling") || typeLC.contains("multifamily") || typeLC.contains("building") || typeLC.contains("predio")
+        let isCommercial  = typeLC.contains("commercial") || typeLC.contains("office") || typeLC.contains("retail") || typeLC.contains("industrial") || typeLC.contains("warehouse")
+
+        // Prepend calibrated asset class line so the LLM scores against the right metrics
+        var finalEnrichedSignals = enrichedSignals
+        if !deal.propertyType.isEmpty {
+            let assetClassSignal: String
+            if isHotel {
+                assetClassSignal = "Asset class: Hotel (urban hospitality) — primary metrics: ADR, RevPAR, GOP margin, STR licence status."
+            } else if isFarmRural {
+                assetClassSignal = "Asset class: Farm/Rural (hospitality conversion) — evaluate conversion potential vs local benchmarks. Pre-operational zeros are not failures."
+            } else if isMulti {
+                assetClassSignal = "Asset class: Multi-Dwelling — score on blended yield, per-unit NOI, GRM, DSCR."
+            } else if isCommercial {
+                assetClassSignal = "Asset class: Commercial — score on net yield, WAULT proxy, cap rate, DSCR."
+            } else {
+                assetClassSignal = "Asset class: Residential — score on yield, DSCR, price/m². STR income is supplemental only, not a primary venture driver."
+            }
+            finalEnrichedSignals.insert(assetClassSignal, at: 0)
+        }
+
+        // Filter hospitality signals for non-hotel, non-farm deals to avoid polluting SWOT
+        let hospitalityKeywords = ["ADR", "RevPAR", "GOP", "TRevPAR", "occupancy rate", "hospitality"]
+        if !isHotel && !isFarmRural {
+            finalEnrichedSignals = finalEnrichedSignals.filter { signal in
+                !hospitalityKeywords.contains { keyword in
+                    signal.lowercased().contains(keyword.lowercased())
+                }
+            }
+            // Add STR nudge for larger residential properties
+            if deal.hospitalityRoomCount >= 3 {
+                finalEnrichedSignals.append("STR income potential: note as Opportunity only — not a primary venture driver.")
+            }
+        } else if isFarmRural {
+            finalEnrichedSignals.append("Pre-operational hospitality conversion — assess against local market benchmarks. Do not penalise zero ADR/RevPAR.")
+        }
+
+        // Build regulatory context string from user-entered fields
+        var regParts: [String] = []
+        if !deal.zoningClass.isEmpty {
+            regParts.append("Zoning: \(deal.zoningClass)")
+        }
+        if deal.floorAreaRatio > 0 {
+            let maxBuild = deal.advisoryMaxBuildableArea
+            let headroom = deal.farHeadroom
+            let headroomNote = headroom < 0
+                ? ", OVER FAR by \(Int(abs(headroom)))m²"
+                : ", \(Int(headroom))m² headroom"
+            regParts.append("FAR: \(deal.floorAreaRatio) (max buildable ~\(Int(maxBuild))m²\(headroomNote))")
+        }
+        if deal.maxBuildingHeight > 0 {
+            regParts.append("Max height: \(deal.maxBuildingHeight)m")
+        }
+        if deal.maxBedroomsOrUnits > 0 {
+            regParts.append("Max bedrooms/units: \(deal.maxBedroomsOrUnits)")
+        }
+        if deal.heritageOrListed {
+            regParts.append("Heritage/listed building: YES — renovation constraints likely")
+        }
+        if deal.planningStatus != "unknown" {
+            regParts.append("Planning permission: \(deal.planningStatus)")
+        }
+        if deal.strLicenceStatus != "unknown" {
+            regParts.append("STR licence: \(deal.strLicenceStatus)")
+        }
+        let regulatoryContext: String? = regParts.isEmpty ? nil : regParts.joined(separator: "\n  ")
 
         do {
-            let narrative = try await LLMAnalysisService.shared.generateVibeNarrative(
-                dealName: deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName,
-                grade:    "\(grade.rawValue) — \(grade.label)",
-                score:    deal.porteosScore,
-                signals:  allSignals
+            let raw = try await LLMAnalysisService.shared.generateSWOT(
+                dealName:          deal.propertyName.isEmpty ? "Untitled Deal" : deal.propertyName,
+                grade:             "\(grade.rawValue) — \(grade.label)",
+                score:             deal.porteosScore,
+                signals:           finalEnrichedSignals,
+                benchmark:         cityBenchmark,
+                analystNotes:      deal.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                                       ? nil : deal.notes,
+                regulatoryContext: regulatoryContext
             )
-            finalSummary = narrative + "\n\n" + ruleSummary
+            swot = parseSWOT(from: raw, fallbackGrade: grade)
+            if let s = swot {
+                finalSummary = formatSWOTSummary(s) + "\n\n" + ruleSummary
+            } else {
+                finalSummary = raw + "\n\n" + ruleSummary
+            }
         } catch {
             llmOffline = true
         }
 
-        await onPhaseChange?(.done(llmOffline: llmOffline))
+        await notifyPhase(.done(llmOffline: llmOffline), handler: onPhaseChange)
 
         let text = formatText(deal: deal, grade: grade,
                               re: re, hosp: hosp, des: des, circ: circ, mkt: mkt,
                               summary: finalSummary)
         return AnalysisResult(
             grade:                     grade,
+            verdict:                   DealVerdict.from(grade: grade),
             headline:                  headline,
             realEstateSignals:         re,
             hospitalitySignals:        hosp,
@@ -169,8 +335,17 @@ final class AIAnalysisService {
             circularSignals:           circ,
             marketIntelligenceSignals: mkt,
             summary:                   finalSummary,
-            formattedText:             text
+            formattedText:             text,
+            swot:                      swot
         )
+    }
+
+    private func notifyPhase(
+        _ phase: AnalysisPhase,
+        handler: (@MainActor (AnalysisPhase) -> Void)?
+    ) async {
+        guard let handler else { return }
+        await MainActor.run { handler(phase) }
     }
 
     // MARK: Market Intelligence Analysis
@@ -251,25 +426,6 @@ final class AIAnalysisService {
             s.append(.init(
                 "High acquisition rate in \(d.locationCity) (\(Int(marketHeat.acquisitionRate * 100))% of imports converted) — proven market for your strategy",
                 sentiment: .positive
-            ))
-        }
-
-        // ── Portfolio fit ──────────────────────────────────────────────────────
-        let userFit = PortfolioLearningEngine.calculateDealFitScore(deal: d, context: context)
-        if userFit >= 80 {
-            s.append(.init(
-                "Strong fit for your portfolio strategy — fit score \(Int(userFit)) / 100",
-                sentiment: .positive
-            ))
-        } else if userFit >= 60 {
-            s.append(.init(
-                "Moderate fit for your typical strategy — fit score \(Int(userFit)) / 100",
-                sentiment: .neutral
-            ))
-        } else if userFit < 40 {
-            s.append(.init(
-                "Low fit for your typical strategy — fit score \(Int(userFit)) / 100; review against acquisition criteria",
-                sentiment: .warning
             ))
         }
 
@@ -710,6 +866,105 @@ final class AIAnalysisService {
 
     // MARK: Plain-text Formatter
 
+    // MARK: SWOT Parsing
+
+    /// Parses the structured LLM SWOT output into a typed value.
+    /// Accepts both strict format (S:, W:, O:, T:) and Gemini variants:
+    ///   - Full words: Strengths:, Weaknesses:, Opportunities:, Threats:
+    ///   - Markdown headers: ## S, **Strengths**, etc.
+    ///   - Bullet prefixes: - S:, • W:
+    ///   - Mixed with preamble prose before the structured section
+    func parseSWOT(from raw: String, fallbackGrade: VibeGrade) -> SWOTAnalysis? {
+        // Strip markdown formatting so "**S:**" → "S:" and "*VERDICT:*" → "VERDICT:"
+        let cleaned = raw
+            .replacingOccurrences(of: "**", with: "")
+            .replacingOccurrences(of: "__", with: "")
+            .replacingOccurrences(of: "*",  with: "")
+            .replacingOccurrences(of: "#",  with: "")
+
+        var verdictRaw = ""
+        var s = ""; var w = ""; var o = ""; var t = ""
+
+        for line in cleaned.components(separatedBy: "\n") {
+            // Strip leading bullets and dashes
+            var trimmed = line.trimmingCharacters(in: .whitespaces)
+            for prefix in ["- ", "• ", "· ", "* "] {
+                if trimmed.hasPrefix(prefix) { trimmed = String(trimmed.dropFirst(prefix.count)) }
+            }
+            let up = trimmed.uppercased()
+
+            if verdictRaw.isEmpty {
+                // Match "VERDICT: GO" or "VERDICT: NO GO"
+                if up.hasPrefix("VERDICT:") {
+                    verdictRaw = trimmed.dropFirst(8).trimmingCharacters(in: .whitespaces)
+                } else if up.hasPrefix("VERDICT -") {
+                    verdictRaw = trimmed.dropFirst(9).trimmingCharacters(in: .whitespaces)
+                }
+            }
+
+            // Strict single-letter format: "S:", "W:", "O:", "T:"
+            if s.isEmpty && up.hasPrefix("S:") {
+                s = trimmed.dropFirst(2).trimmingCharacters(in: .whitespaces)
+            } else if w.isEmpty && up.hasPrefix("W:") {
+                w = trimmed.dropFirst(2).trimmingCharacters(in: .whitespaces)
+            } else if o.isEmpty && up.hasPrefix("O:") {
+                o = trimmed.dropFirst(2).trimmingCharacters(in: .whitespaces)
+            } else if t.isEmpty && up.hasPrefix("T:") {
+                t = trimmed.dropFirst(2).trimmingCharacters(in: .whitespaces)
+            // Full-word variants: "Strengths:", "Weakness:", "Opportunities:", "Threats:"
+            } else if s.isEmpty && (up.hasPrefix("STRENGTH:") || up.hasPrefix("STRENGTHS:")) {
+                let idx = up.hasPrefix("STRENGTHS:") ? 10 : 9
+                s = trimmed.dropFirst(idx).trimmingCharacters(in: .whitespaces)
+            } else if w.isEmpty && (up.hasPrefix("WEAKNESS:") || up.hasPrefix("WEAKNESSES:")) {
+                let idx = up.hasPrefix("WEAKNESSES:") ? 11 : 9
+                w = trimmed.dropFirst(idx).trimmingCharacters(in: .whitespaces)
+            } else if o.isEmpty && (up.hasPrefix("OPPORTUNITY:") || up.hasPrefix("OPPORTUNITIES:")) {
+                let idx = up.hasPrefix("OPPORTUNITIES:") ? 14 : 12
+                o = trimmed.dropFirst(idx).trimmingCharacters(in: .whitespaces)
+            } else if t.isEmpty && (up.hasPrefix("THREAT:") || up.hasPrefix("THREATS:")) {
+                let idx = up.hasPrefix("THREATS:") ? 8 : 7
+                t = trimmed.dropFirst(idx).trimmingCharacters(in: .whitespaces)
+            }
+        }
+
+        // If VERDICT wasn't found on its own line, scan for it anywhere in the text
+        if verdictRaw.isEmpty {
+            let up = cleaned.uppercased()
+            if up.contains("VERDICT: NO GO") || up.contains("VERDICT:NO GO") {
+                verdictRaw = "NO GO"
+            } else if up.contains("VERDICT: REVIEW") {
+                verdictRaw = "REVIEW"
+            } else if up.contains("VERDICT: GO") {
+                verdictRaw = "GO"
+            }
+        }
+
+        guard !s.isEmpty, !w.isEmpty, !o.isEmpty, !t.isEmpty else { return nil }
+
+        let vUp = verdictRaw.uppercased()
+        let verdict: DealVerdict
+        if vUp.contains("NO GO") || vUp.contains("NOGO") || vUp.contains("NO-GO") {
+            verdict = .noGo
+        } else if vUp.contains("REVIEW") {
+            verdict = .review
+        } else if vUp.contains("GO") {
+            verdict = .go
+        } else {
+            verdict = DealVerdict.from(grade: fallbackGrade)
+        }
+        return SWOTAnalysis(strength: s, weakness: w, opportunity: o, threat: t, verdict: verdict)
+    }
+
+    private func formatSWOTSummary(_ swot: SWOTAnalysis) -> String {
+        """
+VERDICT: \(swot.verdict.label)
+S: \(swot.strength)
+W: \(swot.weakness)
+O: \(swot.opportunity)
+T: \(swot.threat)
+"""
+    }
+
     private func formatText(
         deal: PropertyDeal, grade: VibeGrade,
         re: [AnalysisSignal], hosp: [AnalysisSignal],
@@ -759,4 +1014,13 @@ final class AIAnalysisService {
     private func f1(_ v: Double) -> String { String(format: "%.1f", v) }
     private func f2(_ v: Double) -> String { String(format: "%.2f", v) }
     private func f3(_ v: Double) -> String { String(format: "%.3f", v) }
+}
+
+// MARK: - String helper
+
+private extension String {
+    func dropPrefix(_ prefix: String) -> String {
+        guard hasPrefix(prefix) else { return self }
+        return String(dropFirst(prefix.count))
+    }
 }

@@ -13,9 +13,11 @@ struct NavigationPane: View {
     @Binding var compareDeals: [PropertyDeal]
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.openWindow)   private var openWindow
     @Query(sort: \PropertyDeal.createdAt, order: .reverse) var deals: [PropertyDeal]
 
     @State private var dealToEdit:        PropertyDeal? = nil
+    @State private var dealToDelete:      PropertyDeal? = nil   // single-deal delete target
     @State private var showImportSheet:   Bool          = false
     @State private var showExportSheet:   Bool          = false
     @State private var statusFilter:      DealStatus?   = nil   // nil = ALL
@@ -36,6 +38,30 @@ struct NavigationPane: View {
     private func matchesStatus(_ deal: PropertyDeal) -> Bool {
         guard let filter = statusFilter else { return true }
         return deal.status == filter
+    }
+
+    /// Right column label: cap rate if computable, score if available, else status.
+    private func dealRowRightLabel(_ deal: PropertyDeal) -> String {
+        if deal.purchasePrice > 0 && deal.grossPotentialIncome > 0 {
+            let egi = deal.grossPotentialIncome * (1 - deal.vacancyRate / 100)
+            let noi = max(0, egi - deal.operatingExpenses)
+            if noi > 0 {
+                let cr = noi / deal.purchasePrice * 100
+                return String(format: "%.1f%%", cr)
+            }
+        }
+        if let score = deal.porteosScore { return "\(Int(score.rounded()))" }
+        return deal.status.rawValue.uppercased()
+    }
+
+    private func dealRowRightColor(_ deal: PropertyDeal) -> Color {
+        if deal.purchasePrice > 0 && deal.grossPotentialIncome > 0 {
+            let egi = deal.grossPotentialIncome * (1 - deal.vacancyRate / 100)
+            let noi = max(0, egi - deal.operatingExpenses)
+            if noi > 0 { return DesignTokens.textSecondary }
+        }
+        if deal.porteosScore != nil { return DesignTokens.textSecondary }
+        return deal.status.tokenColor
     }
 
     private func profileFor(_ deal: PropertyDeal) -> ProfileType {
@@ -82,7 +108,7 @@ struct NavigationPane: View {
         }
         .clipShape(Rectangle())
         .sheet(item: $dealToEdit) { deal in
-            EditDealSheet(deal: deal)
+            FullDealEditSheet(deal: deal)
         }
         .sheet(isPresented: $showImportSheet) {
             ImportDealSheet()
@@ -130,27 +156,60 @@ struct NavigationPane: View {
 
     private func navLinkRow(_ profile: ProfileType) -> some View {
         let isActive = profile == activeProfile
+        let profileKey = profileWindowKey(profile)
 
-        return Button {
-            activeProfile = profile
-        } label: {
-            HStack(spacing: 0) {
-                Rectangle()
-                    .fill(isActive ? textPrimary : Color.clear)
-                    .frame(width: DesignTokens.navSelectionBorder)
+        return ZStack(alignment: .trailing) {
+            Button {
+                activeProfile = profile
+            } label: {
+                HStack(spacing: 0) {
+                    Rectangle()
+                        .fill(isActive ? textPrimary : Color.clear)
+                        .frame(width: DesignTokens.navSelectionBorder)
 
-                Text(profile.shellNavLabel)
-                    .porteosTextStyle(.shellNav(isActive: isActive))
-                    .foregroundStyle(isActive ? textPrimary : textTertiary)
-                    .padding(.leading, 12)
+                    Text(profile.shellNavLabel)
+                        .porteosTextStyle(.shellNav(isActive: isActive))
+                        .foregroundStyle(isActive ? textPrimary : textTertiary)
+                        .padding(.leading, 12)
 
-                Spacer()
+                    Spacer()
+                }
+                .frame(height: DesignTokens.rowHeightNavLink)
+                .background(isActive ? shellElevated : Color.clear)
+                .clipShape(Rectangle())
             }
-            .frame(height: DesignTokens.rowHeightNavLink)
-            .background(isActive ? shellElevated : Color.clear)
-            .clipShape(Rectangle())
+            .buttonStyle(.plain)
+
+            // [ ↗ ] — only for the four profile dashboard types
+            if let key = profileKey {
+                Button {
+                    let dealID = selectedDeal?.id ?? deals.first?.id
+                    if let id = dealID {
+                        openWindow(value: ProfileWindowValue(dealID: id, profile: key))
+                    }
+                } label: {
+                    Text("[ ↗ ]")
+                        .porteosMeta()
+                        .foregroundStyle(DesignTokens.textDim)
+                }
+                .buttonStyle(.plain)
+                .help("Open \(profile.shellNavLabel) in new window")
+                .disabled(selectedDeal == nil && deals.isEmpty)
+                .padding(.trailing, 6)
+            }
         }
-        .buttonStyle(.plain)
+    }
+
+    /// Returns the ProfileWindowValue profile key for profiles that support windowing,
+    /// or nil for profiles that don't (cmdCenter, globalIntelligence).
+    private func profileWindowKey(_ profile: ProfileType) -> String? {
+        switch profile {
+        case .realEstate:  return "realEstate"
+        case .hospitality: return "hospitality"
+        case .design:      return "design"
+        case .circular:    return "circular"
+        default:           return nil
+        }
     }
 
     // MARK: Deals Section
@@ -252,11 +311,34 @@ struct NavigationPane: View {
             titleVisibility: .visible
         ) {
             Button("Delete", role: .destructive) {
-                for deal in filteredDeals { modelContext.delete(deal) }
+                for deal in filteredDeals { deleteDeal(deal) }
                 selectedDeal = nil
             }
         } message: {
             Text("This cannot be undone.")
+        }
+        // Single-deal delete confirmation (right-click or ⌘⌫)
+        .confirmationDialog(
+            "Delete \"\(dealToDelete?.propertyName.isEmpty == false ? dealToDelete!.propertyName : "Untitled Deal")\"?",
+            isPresented: Binding(
+                get: { dealToDelete != nil },
+                set: { if !$0 { dealToDelete = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Delete Deal", role: .destructive) {
+                if let deal = dealToDelete {
+                    deleteDeal(deal)
+                    if selectedDeal?.id == deal.id { selectedDeal = nil }
+                    dealToDelete = nil
+                }
+            }
+            Button("Cancel", role: .cancel) { dealToDelete = nil }
+        } message: {
+            Text("This cannot be undone.")
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .deleteSelectedDeal)) { _ in
+            if let deal = selectedDeal { dealToDelete = deal }
         }
     }
 
@@ -395,10 +477,10 @@ struct NavigationPane: View {
 
                     Spacer()
 
-                    Text(deal.status.rawValue.uppercased())
+                    Text(dealRowRightLabel(deal))
                         .porteosMeta()
                         .monospacedDigit()
-                        .foregroundStyle(deal.status.tokenColor)
+                        .foregroundStyle(dealRowRightColor(deal))
                 }
                 .padding(.leading, 10)
                 .padding(.trailing, 12)
@@ -415,7 +497,43 @@ struct NavigationPane: View {
             Button { dealToEdit = deal } label: {
                 Label("Edit Deal", systemImage: "pencil")
             }
+            Divider()
+            Button(role: .destructive) {
+                dealToDelete = deal
+            } label: {
+                Label("Delete Deal", systemImage: "trash")
+            }
         }
+    }
+
+    // MARK: Delete — with orphan cleanup
+
+    /// Deletes a deal and sweeps orphaned EmailImportRecord + DealScenario rows.
+    /// MarketTrend rows are market-level aggregates and do not reference individual deals.
+    private func deleteDeal(_ deal: PropertyDeal) {
+        let dealID = deal.id
+
+        // Sweep EmailImportRecord orphans
+        if let records = try? modelContext.fetch(
+            FetchDescriptor<EmailImportRecord>(
+                predicate: #Predicate { $0.dealID == dealID }
+            )
+        ) {
+            records.forEach { modelContext.delete($0) }
+        }
+
+        // Sweep DealScenario orphans
+        if let scenarios = try? modelContext.fetch(
+            FetchDescriptor<DealScenario>(
+                predicate: #Predicate { $0.dealID == dealID }
+            )
+        ) {
+            scenarios.forEach { modelContext.delete($0) }
+        }
+
+        // DealImage rows cascade automatically via @Relationship(deleteRule: .cascade)
+        modelContext.delete(deal)
+        try? modelContext.save()
     }
 
     // MARK: Footer — Figma img_00_21: ./IMPORT_DEALS + [ ./NEW_DEAL ] + CLI prompt

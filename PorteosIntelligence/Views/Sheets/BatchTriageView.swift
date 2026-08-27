@@ -340,7 +340,7 @@ struct BatchTriageView: View {
             return "\(deal.hospitalityRoomCount) rooms"
         }
         if deal.totalArea > 0 {
-            return "\(Int(deal.totalArea)) m²"
+            return UnitSystemService.shared.formatArea(deal.totalArea, country: deal.locationCountry)
         }
         return "—"
     }

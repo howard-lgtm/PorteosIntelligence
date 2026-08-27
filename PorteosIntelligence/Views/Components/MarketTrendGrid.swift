@@ -84,14 +84,21 @@ enum MarketTrendGridBuilder {
             directBookingPct: deal.hospitalityDirectBookingPct, otaBookingPct: deal.hospitalityOTABookingPct,
             distributionCost: deal.hospitalityDistributionCost
         ))
-        let mktRevpar = bm.map { eur($0.avgRevPAR) } ?? "—"
-        let compAdr = bm.map { eur($0.avgADR) } ?? "—"
-        let demandDelta = deal.hospitalityOccupancyRate - (bm?.avgOccupancyRate ?? 70)
-        let compRevparDelta = vm.revPAR - (bm?.avgRevPAR ?? vm.revPAR)
+
+        // Benchmark values — fall back to deal's own metrics when city has no benchmark entry,
+        // so cells never display "—" as long as deal data exists.
+        let bmRevPAR  = bm?.avgRevPAR       ?? (deal.hospitalityADR * (deal.hospitalityOccupancyRate / 100))
+        let bmADR     = bm?.avgADR          ?? deal.hospitalityADR
+        let bmOcc     = bm?.avgOccupancyRate ?? 65.0
+
+        let mktRevparLabel = bm != nil ? eur(bmRevPAR) : "\(eur(bmRevPAR))*"
+        let compAdrLabel   = bm != nil ? eur(bmADR)    : "\(eur(bmADR))*"
+        let demandDelta    = deal.hospitalityOccupancyRate - bmOcc
+        let compRevparDelta = vm.revPAR - bmRevPAR
 
         return [
-            .init(label: "MARKET REVPAR", value: mktRevpar),
-            .init(label: "COMP SET ADR", value: compAdr),
+            .init(label: "MARKET REVPAR", value: mktRevparLabel),
+            .init(label: "COMP SET ADR",  value: compAdrLabel),
             .init(label: "DEMAND INDEX",
                   value: signedPct(demandDelta, dp: 1),
                   state: demandDelta >= 0 ? .optimal : .warning),

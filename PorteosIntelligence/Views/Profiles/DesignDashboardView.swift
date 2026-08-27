@@ -165,7 +165,7 @@ struct DesignDashboardView: View {
     }
 
     private func m2(_ v: Double) -> String {
-        "\(v.formatted(.number.precision(.fractionLength(0)))) m²"
+        UnitSystemService.shared.formatArea(v, country: deal.locationCountry)
     }
 
     private func pct(_ v: Double, dp: Int = 1) -> String {

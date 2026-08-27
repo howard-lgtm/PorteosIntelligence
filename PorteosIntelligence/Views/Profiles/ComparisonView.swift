@@ -468,6 +468,21 @@ private struct OpexDraft: Equatable {
         utilities          = deal.opexUtilities
         maintenance        = deal.opexMaintenance
         capitalReserves    = deal.opexCapitalReserves
+
+        // Pre-fill from aggregate operatingExpenses when all line items are zero.
+        // Uses typical commercial real estate cost distribution as a baseline.
+        let total = deal.opexPropertyManagement + deal.opexPropertyTax +
+                    deal.opexInsurance + deal.opexUtilities +
+                    deal.opexMaintenance + deal.opexCapitalReserves
+        if total == 0, deal.operatingExpenses > 0 {
+            let opex = deal.operatingExpenses
+            propertyManagement = opex * 0.20
+            propertyTax        = opex * 0.25
+            insurance          = opex * 0.15
+            utilities          = opex * 0.15
+            maintenance        = opex * 0.15
+            capitalReserves    = opex * 0.10
+        }
     }
 
     func apply(to deal: PropertyDeal) {

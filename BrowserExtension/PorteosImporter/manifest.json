@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Porteos Importer",
-  "version": "2.0.0",
-  "description": "Send property listings from Idealista, Zillow, and Hemnet into the Porteos Intelligence Terminal.",
+  "version": "2.3.0",
+  "description": "Send property listings from Idealista, Zillow, Hemnet, RE/MAX Portugal, and Casa SAPO into the Porteos Intelligence Terminal.",
   "permissions": [
     "activeTab",
     "scripting"
@@ -11,6 +11,9 @@
     "*://www.idealista.pt/*",
     "*://www.zillow.com/*",
     "*://www.hemnet.se/*",
+    "*://www.remax.pt/*",
+    "*://remax.pt/*",
+    "*://casa.sapo.pt/*",
     "http://localhost:9000/*"
   ],
   "content_scripts": [
@@ -18,13 +21,26 @@
       "matches": [
         "*://www.idealista.pt/*",
         "*://www.zillow.com/*",
-        "*://www.hemnet.se/*"
+        "*://www.hemnet.se/*",
+        "*://www.remax.pt/*",
+        "*://remax.pt/*",
+        "*://casa.sapo.pt/*"
       ],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
   ],
+  "icons": {
+    "16":  "icon16.png",
+    "48":  "icon48.png",
+    "128": "icon128.png"
+  },
   "action": {
-    "default_title": "Porteos Importer"
+    "default_title": "Porteos Importer",
+    "default_icon": {
+      "16":  "icon16.png",
+      "48":  "icon48.png",
+      "128": "icon128.png"
+    }
   }
 }
