@@ -155,10 +155,15 @@ struct TerminalInputField: View {
 
     // MARK: Helpers
 
-    /// Strip everything except digits and the decimal point, then parse.
+    /// Strip non-numeric chars, normalise comma → period, pad leading dot,
+    /// then parse. Handles European keyboards (0,5 → 0.5) and bare leading
+    /// decimal points (.5 → 0.5, which Swift's Double init rejects otherwise).
     private func parse(_ text: String) -> Double {
-        let cleaned = text.filter { $0.isNumber || $0 == "." }
-        return Double(cleaned) ?? 0
+        let cleaned = text
+            .filter { $0.isNumber || $0 == "." || $0 == "," }
+            .replacingOccurrences(of: ",", with: ".")
+        let padded = cleaned.hasPrefix(".") ? "0" + cleaned : cleaned
+        return Double(padded) ?? 0
     }
 
     /// Format `value` as a plain decimal string using the formatter's configured

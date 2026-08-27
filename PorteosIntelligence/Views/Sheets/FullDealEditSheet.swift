@@ -1197,7 +1197,8 @@ struct FullDealEditSheet: View {
                     placeholder: "0.00",
                     prefix: nil,
                     suffix: "×",
-                    text: numStr($deal.floorAreaRatio, decimals: 2)
+                    value: $deal.floorAreaRatio,
+                    formatter: Self.decimalFormatter(maxFractionDigits: 2)
                 )
                 if deal.advisoryMaxBuildableArea > 0 {
                     HStack(spacing: 8) {
@@ -1224,7 +1225,8 @@ struct FullDealEditSheet: View {
                 placeholder: "0",
                 prefix: nil,
                 suffix: UnitSystemService.shared.heightUnitLabel(for: deal.locationCountry),
-                text: numStr($deal.maxBuildingHeight, decimals: 1)
+                value: $deal.maxBuildingHeight,
+                formatter: Self.decimalFormatter(maxFractionDigits: 1)
             )
 
             TerminalInputField(
