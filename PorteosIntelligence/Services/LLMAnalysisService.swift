@@ -183,6 +183,16 @@ final class LLMAnalysisService {
         return try await call(prompt: prompt)
     }
 
+    // MARK: Public API — Find Comparables (AI Search)
+
+    /// Searches for 3-5 comparable properties similar to the given deal.
+    /// Returns structured Comparable objects parsed from LLM JSON output.
+    func findComparables(for deal: PropertyDeal) async throws -> [Comparable] {
+        let prompt = buildComparablesPrompt(deal: deal)
+        let response = try await call(prompt: prompt)
+        return parseComparables(from: response, deal: deal)
+    }
+
     // MARK: Ping
 
     /// Returns true if the configured provider is ready to accept requests.
@@ -669,4 +679,99 @@ This market has strong fundamentals - Porto saw 3.5M tourists in 2025, and bouti
 Now respond to the user's question:
 """
     }
+
+    // MARK: Private — Comparables Prompt & Parser
+
+    private func buildComparablesPrompt(deal: PropertyDeal) -> String {
+        let dealDesc = """
+Property: \(deal.propertyName.isEmpty ? "Unnamed Property" : deal.propertyName)
+Type: \(deal.propertyType.isEmpty ? "Property" : deal.propertyType)
+Location: \(deal.locationCity), \(deal.locationCountry)
+Area: \(deal.totalArea > 0 ? "\(Int(deal.totalArea))m²" : "Unknown")
+Price: \(deal.purchasePrice > 0 ? deal.currencySymbol + "\(Int(deal.purchasePrice))" : "Unknown")
+"""
+        
+        return """
+You are a real estate market analyst. Find 3-5 comparable properties similar to the subject property described below.
+
+## Subject Property:
+\(dealDesc)
+
+## Task:
+Search for comparable properties in the same or nearby markets with similar characteristics (type, size, price range).
+
+## Output Format:
+Return ONLY a valid JSON array with this exact structure:
+
+[
+  {
+    "name": "Property Name",
+    "location": "City",
+    "price": 780000,
+    "area": 260,
+    "distance": 12.5
+  }
+]
+
+## Requirements:
+- `name`: Full property name or identifier
+- `location`: City or address
+- `price`: Purchase price or asking price (numeric, no currency symbols)
+- `area`: Floor area in square meters (numeric)
+- `distance`: Distance from subject property in kilometers (optional, use null if unknown)
+
+## Important:
+- Return ONLY the JSON array, no additional text or explanation
+- Include 3-5 comparable properties
+- Properties should be similar in type, location, and price range to the subject
+- If you cannot find real comparables, use realistic market-based estimates for the region
+
+Example output:
+[{"name":"Rio Art Hotel","location":"Setúbal","price":780000,"area":260,"distance":12.0},{"name":"RM Guesthouse","location":"Setúbal","price":690000,"area":245,"distance":8.5}]
+"""
+    }
+
+    private func parseComparables(from response: String, deal: PropertyDeal) -> [Comparable] {
+        // Try to extract JSON array from response (might be wrapped in markdown or have extra text)
+        let cleaned = response
+            .replacingOccurrences(of: "```json", with: "")
+            .replacingOccurrences(of: "```", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Find JSON array boundaries
+        guard let start = cleaned.firstIndex(of: "["),
+              let end = cleaned.lastIndex(of: "]") else {
+            return []
+        }
+        
+        let jsonString = String(cleaned[start...end])
+        guard let data = jsonString.data(using: .utf8) else { return [] }
+        
+        // Decode JSON array
+        struct CompJSON: Codable {
+            let name: String
+            let location: String
+            let price: Double
+            let area: Double
+            let distance: Double?
+        }
+        
+        guard let compsJSON = try? JSONDecoder().decode([CompJSON].self, from: data) else {
+            return []
+        }
+        
+        // Convert to Comparable structs
+        return compsJSON.compactMap { json in
+            guard !json.name.isEmpty, json.price > 0, json.area > 0 else { return nil }
+            return Comparable(
+                name: json.name,
+                location: json.location,
+                price: json.price,
+                area: json.area,
+                distance: json.distance,
+                source: "AI"
+            )
+        }
+    }
 }
+

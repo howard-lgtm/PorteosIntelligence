@@ -78,6 +78,12 @@ final class PropertyDeal {
     // MARK: Media
     @Relationship(deleteRule: .cascade) var images: [DealImage] = []
 
+    // MARK: Comparables
+    /// JSON-encoded array of comparable properties for this deal.
+    /// Each comparable includes name, location, price, area, source (AI/Manual),
+    /// and property-type-specific metrics (e.g., ADR for hotels, yield for RE).
+    @Attribute(.externalStorage) var comparablesData: Data?
+
     // MARK: Global Intelligence / Geo
     var latitude:         Double?
     var longitude:        Double?
@@ -392,3 +398,76 @@ final class PropertyDeal {
         self.aiAnalysisText                 = aiAnalysisText
     }
 }
+
+// MARK: - Comparable
+
+/// Represents a comparable property for market analysis.
+/// Stored as JSON in PropertyDeal.comparablesData for simplicity (no migration).
+struct Comparable: Codable, Identifiable {
+    let id: UUID
+    let name: String
+    let location: String     // city or address
+    let price: Double
+    let area: Double         // m²
+    let pricePerArea: Double // calculated: price / area
+    let distance: Double?    // km from subject property (optional)
+    let source: String       // "AI" | "Manual" | "API"
+    let dateAdded: Date
+    
+    /// Property-type-specific metrics stored as flexible key-value pairs.
+    /// Examples: "adr" (hotel), "occupancy" (hotel), "yield" (RE), "revpar" (hotel)
+    let metrics: [String: Double]
+    
+    init(
+        id: UUID = UUID(),
+        name: String,
+        location: String,
+        price: Double,
+        area: Double,
+        distance: Double? = nil,
+        source: String,
+        metrics: [String: Double] = [:],
+        dateAdded: Date = Date()
+    ) {
+        self.id = id
+        self.name = name
+        self.location = location
+        self.price = price
+        self.area = area
+        self.pricePerArea = area > 0 ? price / area : 0
+        self.distance = distance
+        self.source = source
+        self.metrics = metrics
+        self.dateAdded = dateAdded
+    }
+}
+
+// MARK: - PropertyDeal Comparable Helpers
+
+extension PropertyDeal {
+    /// Decoded comparables array from JSON data.
+    var comparables: [Comparable] {
+        get {
+            guard let data = comparablesData else { return [] }
+            return (try? JSONDecoder().decode([Comparable].self, from: data)) ?? []
+        }
+        set {
+            comparablesData = try? JSONEncoder().encode(newValue)
+        }
+    }
+    
+    /// Add a new comparable property to this deal.
+    func addComparable(_ comp: Comparable) {
+        var current = comparables
+        current.append(comp)
+        comparables = current
+    }
+    
+    /// Remove a comparable by ID.
+    func removeComparable(id: UUID) {
+        var current = comparables
+        current.removeAll { $0.id == id }
+        comparables = current
+    }
+}
+

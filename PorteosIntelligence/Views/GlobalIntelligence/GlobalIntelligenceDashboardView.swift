@@ -38,6 +38,8 @@ struct GlobalIntelligenceDashboardView: View {
 
             if wm.geoActiveTab == "map" {
                 mapTabContent
+            } else if wm.geoActiveTab == "comps" {
+                CompsTabContent(deal: selectedDeal)
             } else {
                 IntelBriefView(deals: deals, marketId: effectiveIntelMarketId)
             }
@@ -56,6 +58,7 @@ struct GlobalIntelligenceDashboardView: View {
         HStack(spacing: 0) {
             tabButton(label: "[ MAP ]",   id: "map")
             tabButton(label: "[ INTEL ]", id: "intel")
+            tabButton(label: "[ COMPS ]", id: "comps")
             Spacer()
             if wm.geoActiveTab == "map" {
                 Text(giModeLabel)
