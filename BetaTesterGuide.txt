@@ -1,0 +1,163 @@
+================================================================================
+PORTEOS INTELLIGENCE — BETA TESTING GUIDE
+Build 1.1 (2) | August 19, 2026
+================================================================================
+
+SYSTEM REQUIREMENTS
+-------------------
+• macOS 14 Sonoma or later (Intel & Apple Silicon supported)
+• Internet connection (for cloud AI & news feeds)
+
+
+GETTING STARTED — THREE WAYS TO ADD DEALS
+------------------------------------------
+1. BROWSER EXTENSION (Chrome/Arc/Edge only)
+   Click [ SEND TO PORTEOS ] on Zillow, Idealista, or Casa SAPO listings
+   Download: https://shorturl.at/f5y6Q
+
+2. MANUAL ENTRY
+   Click [ ./NEW_DEAL ] (bottom-left) → Complete BASE tab (name, location, price)
+
+3. RESEARCH JSON IMPORT
+   Paste structured data via [ IMPORT RESEARCH JSON ] in the deal edit sheet
+
+
+WHAT TO TEST — PRIORITY ORDER
+==============================
+
+HIGH PRIORITY (Test First)
+---------------------------
+☐ PDF EXPORT
+  • Toggle between light mode (print-friendly) and dark mode (presentations)
+  • Verify section headers keep colors, data rows have no stripes
+  • Check all deal data appears correctly formatted
+
+☐ RESEARCH CHAT
+  • Open Inspector → RESEARCH tab
+  • Ask property questions (comps, zoning, ADR, financial feasibility)
+  • Confirm: Live streaming text, proper wrapping, checkmarks on auto-applied fields
+  • Look for truncation warnings if AI output is incomplete
+
+☐ AI VIBE CHECKER
+  • Inspector → [ AI VIBE ] → [ REGENERATE ]
+  • Verify property-calibrated SWOT analysis integrates with your deal notes
+  • Test with OpenAI, Gemini, or Ollama (active model name should display)
+
+☐ INSPECTOR TAB ALIGNMENT
+  • Check tabs (WEIGHTS/AI VIBE/MEDIA) are perfectly aligned
+  • Verify media gallery layout is refined and functional
+
+☐ CURRENCY AUTO-DETECTION
+  • Create deals in different countries
+  • Confirm currency symbols auto-detect correctly (€, $, £, etc.)
+
+
+MEDIUM PRIORITY
+---------------
+☐ SENSITIVITY ANALYSIS (Hospitality Deals)
+  • Open a hospitality property → SENSITIVITY block
+  • Verify 4 scenarios appear: Base, Upside, Downside, Combined Stress
+  • Check percentages calculate correctly as % of base GOP
+
+☐ PRELOAD MARKET ASSUMPTIONS
+  • Click [ PRELOAD MARKET ASSUMPTIONS ] in deal edit sheet
+  • Without city: Button should be disabled with hint
+  • With city: Button enabled, shows city name, loads benchmarks for 80+ cities
+
+☐ MULTI-WINDOW PROFILES
+  • Hover over left nav profile names → Click [ ↗ ]
+  • Open multiple windows, verify selection updates sync real-time
+
+☐ COPY CONVERSATION
+  • Complete a multi-turn RESEARCH chat
+  • Click [ COPY ] button
+  • Paste into Notes/email, verify formatted role prefixes appear
+
+☐ JSON IMPORT
+  • Import research JSONs with OpEx, regulatory data, property type
+  • Verify edit sheet fields populate correctly
+  • Test with files up to 10MB (size limit guard)
+
+
+STANDARD FEATURES TO VERIFY
+----------------------------
+☐ PORTEOS SCORE (0-100 / Grades A-F)
+  • Evaluates: Cap rates, yields, DSCR, LTV, cash-on-cash return
+  • Also checks: Circular design, regulatory flags
+  • Note: Scores adapt by property type; unfilled profile tabs carry no penalty
+
+☐ GLOBAL INTELLIGENCE
+  • Check portfolio market news feeds
+  • Review daily briefs
+  • Verify INTEL tab signal cards (Reg. Pressure, Rate Outlook, Tourism Index,
+    Supply Pipeline)
+
+☐ AUTOMATIC UNIT SYSTEM
+  • Properties in Europe: Should show metric (€/m²)
+  • Properties in USA: Should show imperial ($/ft²)
+  • Override available in: Settings → Units
+
+☐ FULL-SCREEN LAUNCH
+  • First open should launch in full-screen mode
+
+
+CORE FEATURES OVERVIEW
+=======================
+• Porteos Score: 0-100 scoring system with A-F grades, adapts by property type
+• AI Vibe Checker: Property-calibrated SWOT analysis with deal note integration
+• Multi-Window Profiles: Independent windows with real-time selection sync
+• Global Intelligence: Market news feeds, daily briefs, regulatory signal cards
+• Market Preload: Financial benchmarks (cap rates, RevPAR, OpEx) for 80+ cities
+• Research Chat: Live-streaming AI assistant for property questions
+• Sensitivity Analysis: 4-scenario stress testing for hospitality deals
+
+
+RECENT IMPROVEMENTS (Build 1.1)
+================================
+✓ PDF export defaults to light mode, dark mode toggle added
+✓ Inspector tabs perfectly aligned
+✓ Currency symbols auto-detect by country
+✓ Unit system auto-switches (metric/imperial)
+✓ Gemini SWOT parsing improved
+✓ Active model name displays correctly
+✓ OpenAI/Gemini API support added
+✓ Intel Mac support (universal binary)
+✓ Chat text wrapping and live auto-scrolling fixed
+✓ Token limits increased: OpenAI/Gemini to 3,000; Ollama to 4,096
+✓ 10MB JSON import size guard added
+✓ Truncation warnings for incomplete AI outputs
+
+
+KNOWN LIMITATIONS
+=================
+• Browser Extension: Chrome, Arc, Edge only (Safari not supported in this build)
+• Platform: macOS only (Windows planned for future release)
+• Market Data: Uses 2024-25 static benchmark estimates (directional guidance,
+  not live feeds)
+• Security: Post-beta SOC/ISO hardening pending—avoid storing sensitive client
+  data during testing
+
+
+BUG REPORTING & FEEDBACK
+=========================
+We welcome feedback on:
+• First impressions and overall usability
+• Import reliability (browser extension, manual, JSON)
+• Score accuracy and relevance
+• AI Vibe quality and usefulness
+• Multi-window workflows
+• Missing property types or markets
+• Layout issues, currency errors, PDF formatting problems
+
+SUBMIT TO: info@htdstudio.net
+
+INCLUDE IN YOUR REPORT:
+• App version (found in Settings)
+• Your macOS version
+• Screenshots if applicable
+• Steps to reproduce any issues
+
+
+================================================================================
+Thank you for testing Porteos Intelligence!
+================================================================================
