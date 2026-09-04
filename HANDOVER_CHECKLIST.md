@@ -10,16 +10,16 @@
 
 ### Day 1: Setup (Target: 2 hours)
 
-- [ ] Clone repository to local machine
-- [ ] Run `chmod +x setup.sh && ./setup.sh`
-- [ ] Fix any FAILED checks from setup script
-- [ ] Verify Xcode 16.6+ installed
-- [ ] Verify JetBrains Mono font installed
-- [ ] Open `PorteosIntelligence.xcodeproj` in Xcode
-- [ ] Build project successfully (⌘B)
-- [ ] Run project successfully (⌘R)
-- [ ] App launches and shows empty deal list
-- [ ] Run unit tests (⌘U) — all pass
+- [x] Clone repository to local machine
+- [x] Run `chmod +x setup.sh && ./setup.sh`
+- [x] Fix any FAILED checks from setup script
+- [x] Verify Xcode 16.6+ installed
+- [x] Verify JetBrains Mono font installed
+- [x] Open `PorteosIntelligence.xcodeproj` in Xcode
+- [x] Build project successfully (⌘B)
+- [x] Run project successfully (⌘R)
+- [x] App launches and shows empty deal list
+- [x] Run unit tests (⌘U) — all pass
 
 **Deliverable:** Screenshot of running app + passing tests
 
@@ -29,19 +29,19 @@
 
 **Phase 1 Documentation:**
 
-- [ ] Read HANDOVER.md (30 min)
-- [ ] Read README.md (15 min)
-- [ ] Read DEVELOPER_SETUP.md (30 min)
-- [ ] Read ARCHITECTURE.md (45 min)
-  - [ ] Understand MVVM pattern
-  - [ ] Understand 3-pane shell
-  - [ ] Understand calculator pattern
-- [ ] Read EXTERNAL_SERVICES.md (30 min)
-- [ ] Read DATA_MODEL_GUIDE.md (30 min)
-  - [ ] Understand PropertyDeal model
-  - [ ] Understand 6 model relationships
+- [x] Read HANDOVER.md (30 min)
+- [x] Read README.md (15 min)
+- [x] Read DEVELOPER_SETUP.md (30 min)
+- [x] Read ARCHITECTURE.md (45 min)
+  - [x] Understand MVVM pattern
+  - [x] Understand 3-pane shell
+  - [x] Understand calculator pattern
+- [x] Read EXTERNAL_SERVICES.md (30 min)
+- [x] Read DATA_MODEL_GUIDE.md (30 min)
+  - [x] Understand PropertyDeal model
+  - [x] Understand 6 model relationships
 
-**Deliverable:** One-paragraph summary of architecture in your own words
+**Deliverable:** One-paragraph summary of architecture in your own words — ✅ Completed, see Notes section (Session 4 entry)
 
 ---
 
@@ -519,6 +519,18 @@
 **Notes:**
 
 (Use this space for personal notes, questions, or observations)
+
+---
+
+### Session 4 — Day 2 complete (handover takeover)
+
+- All 6 Phase 1 docs read in full: HANDOVER, README, DEVELOPER_SETUP, ARCHITECTURE, EXTERNAL_SERVICES, DATA_MODEL_GUIDE. Reading queue complete.
+- **Day 2 deliverable — architecture summary (own words):** Porteos Intelligence is a zero-dependency SwiftUI + SwiftData macOS app (~35k lines, 142 files) built on strict MVVM. SwiftData `@Model` classes (6 total; `PropertyDeal` is the core, with 85+ raw inputs grouped into Base / Real Estate / Hospitality / Design / Circular Economy / Regulatory / Geocoding / Metadata) hold data only and contain no logic. `@Observable` ViewModels (e.g., `PropertyDealViewModel`) bridge model and view, exposing 50+ computed metrics by delegating to five pure-function calculator structs (RealEstate, Hospitality, Design, CircularEconomy, PorteosScore 0–100) — stateless, synchronous, guard-clause-returns-0, never persisted (the sole exception is `porteosScore`, cached for list sorting and recomputed on launch). Views are dumb renderers. The shell is a fixed 3-pane layout — 260pt NavigationPane | flexible center hosting 6 profile dashboards (⌘1–⌘6) | 280pt InspectorPane (WEIGHTS / AI VIBE / RESEARCH / MEDIA tabs) — plus a 40pt TopHeaderBar and 32pt GlobalCommandBar, with multi-window profile instances kept in sync via `@AppStorage("selectedDealID")`. All side effects are quarantined in singleton Services (multi-provider LLM, HTTP ingest server :9000 for the 12-site browser extension, IMAP mail polling, RSS news aggregation, MapKit geocoding, PDF reports, deal history, window management); every one is optional, so the core app works fully offline. Design authority is `DesignTokens.swift` (JetBrains Mono only, zero rounded corners, 8pt grid, monospaced digits). Persistence is SwiftData with a backup-and-reset migration strategy (schema mismatch → backup to `~/Documents/PorteosBackups/` + fresh store; only add-with-default field changes are safe).
+- `xcodebuild test` CLI failure is a known sandbox/environment limitation (documented in KNOWN_ISSUES.md, commit 5910e89). Workaround: ⌘U in Xcode IDE. Non-blocking.
+- ✅ User instruction (via Cursor, Sept 4): removed stale `PorteosUnitTests` scheme reference from KNOWN_ISSUES.md (v1.1) — the scheme was deleted in Session 3 and stays deleted; `PorteosIntelligence` scheme (with its TestableReference) is the only one.
+- ✅ Day 1 checked off — user confirmed: environment setup confirmed (setup 27 pass / 1 warn / 0 fail, build SUCCEEDED, ⌘U passes in IDE).
+- ✅ User feedback: "Architecture summary demonstrates solid understanding."
+- Next: Day 3 code exploration (PorteosIntelligenceApp.swift, PropertyDeal.swift in sections, RealEstateCalculator.swift, PropertyDealViewModel.swift, AppShell.swift, DesignTokens.swift). Deliverable: 3 things found interesting or confusing.
 
 ---
 

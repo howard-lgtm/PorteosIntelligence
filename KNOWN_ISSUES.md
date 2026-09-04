@@ -15,8 +15,8 @@
 **Details:**
 - Command: `xcodebuild test -scheme PorteosIntelligence`
 - Error: "Scheme PorteosIntelligence is not currently configured for the test action"
-- Affects: Both `PorteosIntelligence` and `PorteosUnitTests` schemes
-- Schemes appear correctly configured (TestableReference present)
+- Affects: `PorteosIntelligence` scheme
+- Scheme appears correctly configured (TestableReference present)
 - Likely caused by sandbox/environment restrictions
 
 **Workaround:** ✅ Use Xcode IDE for testing
@@ -30,7 +30,7 @@
 - Tests are fully functional in Xcode
 
 **Investigation Notes:**
-- Both scheme files contain valid `<TestableReference>` entries
+- The scheme file contains a valid `<TestableReference>` entry
 - Issue appears related to xcodebuild command-line tool environment
 - All simulator service connections fail in sandbox
 - This is a tooling issue, not a code issue
@@ -68,5 +68,5 @@ If you discover new issues during handover:
 
 ---
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Maintained By:** Development team
