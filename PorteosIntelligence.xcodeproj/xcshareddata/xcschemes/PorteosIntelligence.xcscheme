@@ -28,6 +28,16 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
+      <TestableReference
+         skipped = "NO">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "2C1E3EF02FECB3F9000026A3"
+            BuildableName = "PorteosIntelligenceTests.xctest"
+            BlueprintName = "PorteosIntelligenceTests"
+            ReferencedContainer = "container:PorteosIntelligence.xcodeproj">
+         </BuildableReference>
+      </TestableReference>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"

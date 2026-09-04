@@ -31,13 +31,13 @@ print_status() {
     local message=$2
     if [ "$status" = "pass" ]; then
         echo -e "${GREEN}✅ PASS${NC} - $message"
-        ((CHECKS_PASSED++))
+        CHECKS_PASSED=$((CHECKS_PASSED + 1))
     elif [ "$status" = "fail" ]; then
         echo -e "${RED}❌ FAIL${NC} - $message"
-        ((CHECKS_FAILED++))
+        CHECKS_FAILED=$((CHECKS_FAILED + 1))
     elif [ "$status" = "warn" ]; then
         echo -e "${YELLOW}⚠️  WARN${NC} - $message"
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS + 1))
     elif [ "$status" = "info" ]; then
         echo -e "${BLUE}ℹ️  INFO${NC} - $message"
     fi
