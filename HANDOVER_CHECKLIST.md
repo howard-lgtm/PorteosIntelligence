@@ -75,16 +75,16 @@
 
 **Task: Add a simple field to PropertyDeal**
 
-- [ ] Read SWIFTDATA_MIGRATION.md (risk mitigation)
-- [ ] Backup database: `~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/Library/Application Support/default.store`
-- [ ] Add field: `var testField: String = "default"` to PropertyDeal
-- [ ] Build project (⌘B)
-- [ ] Run project (⌘R)
-- [ ] Create new deal and verify field exists
-- [ ] Delete test field
-- [ ] Build again to confirm no errors
+- [x] Read SWIFTDATA_MIGRATION.md (risk mitigation)  *(read in full — 764 lines, Session 11)*
+- [x] Backup database: `~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/Library/Application Support/default.store`  *(real container is `com.porteos.native.v2` — checklist path carries a stale bundle ID; 174 MiB triple saved to `~/Documents/PorteosBackups/default-2026-09-05T17-06-16Z-day4-pre.*` via SQLite online backup while app running, then graceful quit)*
+- [x] Add field: `var testField: String = "default"` to PropertyDeal  *(2 lines: marker comment + field, after `status`)*
+- [x] Build project (⌘B)  *(incremental `xcodebuild build` — BUILD SUCCEEDED)*
+- [x] Run project (⌘R)  *(launched built .app; **no reset** — in-place lightweight migration added `ZTESTFIELD`, backfilled all 10 existing deals with the default)*
+- [x] Create new deal and verify field exists  *(probe deal via ingest `POST /api/deals` on :9000 — 11 rows, all with `testField == "default"`; original 10 Z_PKs untouched; required temporarily setting `serverAutoStartEnabled` — deleted again afterwards)*
+- [x] Delete test field  *(probe row removed via sqlite3 while app stopped; field removed via `git restore` — 0 occurrences left; post-revert launch confirmed migration DROPPED the residual column — schema matches model exactly, 10 deals intact, no reset/backup)*
+- [x] Build again to confirm no errors  *(BUILD SUCCEEDED; safe SwiftData add-field workflow validated)*
 
-**Deliverable:** Git diff of your changes (even if reverted)
+**Deliverable:** Git diff of your changes (even if reverted) — ✅ Saved: `~/.lmstudio/scratchpads/r/day4-propertydeal-testfield.diff` (2-line addition + marker comment; `PropertyDeal.swift` restored to `main` state)
 
 ---
 
@@ -547,6 +547,25 @@
 - Carried-forward doc inconsistencies (non-blocking): README "80+ cities" vs MarketBenchmarks 43; "7 test bundles" count unverified; README "Running Tests" still documents CLI `xcodebuild test` (left as-is per user instruction; see KNOWN_ISSUES.md).
 - ✅ Day 3 checked off — all 19 boxes.
 - Next: Day 4 — first code change (add `testField` to PropertyDeal; 6-step workflow in DATA_MODEL_GUIDE.md + DB backup step).
+
+---
+
+### Session 11 — Day 4 complete (handover takeover)
+
+- **Day 4 headline — the docs over-predicted the risk.** Adding a stored property *with a default value* (`var testField: String = "default"`) → `ModelContainer(for:)` succeeded via Core Data **in-place lightweight migration**; the backup+reset catch branch (`PorteosIntelligenceApp.swift:26–87`) never fired, no new backup triple appeared, and all 10 existing deals were silently backfilled with the default. **`SWIFTDATA_MIGRATION.md:190`'s claim that "even safe changes trigger reset" is contradicted by observation** — one-line doc-correction candidate for Week 2 (SWIFTDATA_MIGRATION.md intentionally NOT touched during Day 4).
+- **Workflow executed (all 8 plan steps + cleanup + final launch check):**
+  1. Backup: 174 MiB triple (`default-2026-09-05T17-06-16Z-day4-pre.store` + `-shm` + `-wal`) → `~/Documents/PorteosBackups/` via SQLite online-backup while the app ran, then graceful quit. (Checklist backup path uses stale bundle ID `net.htdstudio.PorteosIntelligence`; real is `com.porteos.native.v2` — carried to Week 2, not fixed here.)
+  2. 2-line test-field edit in `PropertyDeal.swift` (after `status`) → incremental build SUCCEEDED.
+  3. Launch → no reset; `ZTESTFIELD` column added in-place, all 10 rows backfilled `'default'`.
+  4. Probe deal created via ingest HTTP: `serverAutoStartEnabled` was absent in UserDefaults (auto-start is off by default when the key is missing) → set temporarily; `POST /api/deals` → `{"dealID":"6C875B93-1DF8-4D47-B366-19EB6ADF6AA9","success":true}`; 11 rows, all with `testField == "default"`.
+  5. Persistence: quit (≈2s) → relaunch → health 200 in 5s → 11 rows, probe intact → **persistence validated** ✅ (no second reset).
+  6. Cleanup + revert: quit app; probe row deleted via sqlite3 (surgical, app stopped); `git restore` on PropertyDeal.swift (0 `testField` occurrences left; tree back to only the 2 known dirty files); rebuild SUCCEEDED.
+  7. Final post-revert launch check: Core Data lightweight migration ran **in reverse** — the residual `ZTESTFIELD` column was **dropped** (91 columns, exact model match), 10 original deals intact (Z_PK 3,5,6,7,16–21), no reset, no new backup triple. The store is byte-equivalent in content to pre-Day 4.
+  8. Environment restored: app quit; `serverAutoStartEnabled` UserDefaults key deleted again (absent before Day 4 → behavior exactly as found).
+- **Deliverable:** git diff saved as `~/.lmstudio/scratchpads/r/day4-propertydeal-testfield.diff` — the 2-line addition (marker comment + `var testField: String = "default"`) after `status` in `PropertyDeal.swift`; file restored to `main` state and rebuilt clean.
+- Carried forward, not fixed in Day 4 (Week 2 candidates): SWIFTDATA_MIGRATION.md §181–190 reset claim vs observed in-place migration (above); README "80+ cities" vs MarketBenchmarks 43; "7 test bundles" count unverified; app displays backup path `~/Documents/PorteosBackups/` but the sandboxed app lands them in `~/Library/Containers/com.porteos.native.v2/Data/Documents/PorteosBackups/`.
+- ✅ Day 4 checked off — all 8 boxes + deliverable.
+- Next: Day 5 — first metric (`pricePerSqft` in RealEstateCalculator + computed property in PropertyDealViewModel + RealEstateDashboardView display + unit test).
 
 ---
 
