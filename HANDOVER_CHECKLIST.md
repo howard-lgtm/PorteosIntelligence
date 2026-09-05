@@ -49,25 +49,25 @@
 
 **Core Files to Study:**
 
-- [ ] `PorteosIntelligenceApp.swift` (entry point)
-- [ ] `Models/PropertyDeal.swift` (read sections, not full file)
-  - [ ] Lines 1-100 (properties)
-  - [ ] Lines 100-200 (more properties)
-  - [ ] Lines 400-474 (computed properties)
-- [ ] `Calculators/RealEstateCalculator.swift` (full file, ~200 lines)
-  - [ ] Understand pure function pattern
-  - [ ] Understand cap rate formula
-  - [ ] Understand NOI formula
-- [ ] `ViewModels/PropertyDealViewModel.swift` (sections)
-  - [ ] Understand @Observable pattern
-  - [ ] Understand calculated metrics
-- [ ] `Views/Shell/AppShell.swift` (structure only)
-  - [ ] Understand 3-pane layout
-- [ ] `Utilities/DesignTokens.swift` (full file)
-  - [ ] Understand color system
-  - [ ] Understand spacing system
+- [x] `PorteosIntelligenceApp.swift` (entry point)
+- [x] `Models/PropertyDeal.swift` (read sections, not full file)
+  - [x] Lines 1-100 (properties)
+  - [x] Lines 100-200 (more properties)
+  - [x] Lines 400-474 (computed properties)
+- [x] `Calculators/RealEstateCalculator.swift` (full file, ~200 lines)  *(actual: 349 lines, read in full)*
+  - [x] Understand pure function pattern
+  - [x] Understand cap rate formula
+  - [x] Understand NOI formula
+- [x] `ViewModels/PropertyDealViewModel.swift` (sections)  *(actual: 178 lines, read in full)*
+  - [x] Understand @Observable pattern
+  - [x] Understand calculated metrics
+- [x] `Views/Shell/AppShell.swift` (structure only)
+  - [x] Understand 3-pane layout
+- [x] `Utilities/DesignTokens.swift` (full file)
+  - [x] Understand color system
+  - [x] Understand spacing system
 
-**Deliverable:** Document 3 things you found interesting or confusing
+**Deliverable:** Document 3 things you found interesting or confusing — ✅ Completed, see Notes section (Session 9 entry)
 
 ---
 
@@ -531,6 +531,22 @@
 - ✅ Day 1 checked off — user confirmed: environment setup confirmed (setup 27 pass / 1 warn / 0 fail, build SUCCEEDED, ⌘U passes in IDE).
 - ✅ User feedback: "Architecture summary demonstrates solid understanding."
 - Next: Day 3 code exploration (PorteosIntelligenceApp.swift, PropertyDeal.swift in sections, RealEstateCalculator.swift, PropertyDealViewModel.swift, AppShell.swift, DesignTokens.swift). Deliverable: 3 things found interesting or confusing.
+
+---
+
+### Session 9 — Day 3 complete (handover takeover)
+
+- All 6 core files read and verified against current `main` (0df230d): PorteosIntelligenceApp.swift (150), PropertyDeal.swift (473), RealEstateCalculator.swift (349), PropertyDealViewModel.swift (178), AppShell.swift (515), DesignTokens.swift (306). Per-file notes posted in chat (files 1–2 in Session 5; files 3–4 in Session 8; files 5–6 in Session 9).
+- **Day 3 deliverable — 3 interesting + 3 confusing (line refs verified this session):**
+  - *Interesting:* `DesignTokens.swift` is the single design authority — Figma-annotated colors, 8pt-grid layout constants, JetBrains-Mono TypeScale — plus `MetricState`/`DealStatus`/`TerminalSemanticAction` semantic-color extensions and a `@deprecated` alias block (V2.06_STABLE token governance). The "tokens" file doubles as the semantic-state color spec.
+  - *Interesting:* `RealEstateCalculator.swift:177–179` — silent 3-step exit-cap fallback (exitCapRate → capRate → 5.0%) with no warning; hidden 5-yr return assumptions (flat NOI, 80%/39-yr depreciation :151, flat 25% tax :163). Also `sanityCheck` (:333–348) uses `print()` — a soft side-effect in an otherwise pure calculator; it returns 0, so the UI silently shows "—" on bad data.
+  - *Interesting:* `AppShell.swift` — the entire 6-dashboard ⌘1–⌘6 surface is one `@ViewBuilder` if/else-if cascade on `wm.activeProfile` (:333–357); terminal-style empty state `ls ./deals` + `[ ./LOAD_SAMPLE_DEAL ]` hardcoded Lisbon sample deal (:364–371); "MODULE NOT YET IMPLEMENTED" placeholder (:418); a `Binding` get/set bridges AppStorage ↔ `wm.activeProfile` (:46–47).
+  - *Confusing:* `PropertyDeal.swift:449` — `var comparables: [Comparable]` shadows Foundation's `Comparable` protocol (JSON round-trips on every access, "for simplicity, no migration").
+  - *Confusing:* `PropertyDealViewModel.swift:164,168` — `formattedNOI`/`formattedADR` hardcode `.currency(code: "EUR")` while the model derives `currencySymbol` per country.
+  - *Confusing:* multi-window source-of-truth tangle — App file comment "each window fully self-contained" + AppShell reading selection from `wm`, vs ARCHITECTURE.md's `@AppStorage("selectedDealID")` sync claim. Stale doc or mid-migration; reconcile in Week 2 `MULTI_WINDOW_SYSTEM.md`.
+- Carried-forward doc inconsistencies (non-blocking): README "80+ cities" vs MarketBenchmarks 43; "7 test bundles" count unverified; README "Running Tests" still documents CLI `xcodebuild test` (left as-is per user instruction; see KNOWN_ISSUES.md).
+- ✅ Day 3 checked off — all 19 boxes.
+- Next: Day 4 — first code change (add `testField` to PropertyDeal; 6-step workflow in DATA_MODEL_GUIDE.md + DB backup step).
 
 ---
 
