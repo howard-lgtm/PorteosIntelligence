@@ -92,15 +92,16 @@
 
 **Task: Add a simple calculated metric**
 
-- [ ] Read CALCULATOR_SYSTEM.md
-- [ ] Add function to RealEstateCalculator:
+- [x] Read CALCULATOR_SYSTEM.md  *(read for Day 5 context — full deep-read is Week 2 Day 1)*
+- [x] Add function to RealEstateCalculator:
   ```swift
   static func pricePerSqft(purchasePrice: Double, totalArea: Double) -> Double {
       guard totalArea > 0 else { return 0 }
       return purchasePrice / totalArea
   }
   ```
-- [ ] Add computed property to PropertyDealViewModel:
+  *(bannered `// MARK: - Unit Price` section with doc comments; +14 lines)*
+- [x] Add computed property to PropertyDealViewModel:
   ```swift
   var pricePerSqft: Double {
       RealEstateCalculator.pricePerSqft(
@@ -109,8 +110,9 @@
       )
   }
   ```
-- [ ] Display in RealEstateDashboardView
-- [ ] Write unit test:
+  *(+9 lines, after `occupancyState`)*
+- [x] Display in RealEstateDashboardView  *(TerminalMetricCell "PRICE / M²" — shows `—` when area is 0; +11 lines)*
+- [x] Write unit test:
   ```swift
   func testPricePerSqft() {
       let result = RealEstateCalculator.pricePerSqft(
@@ -120,21 +122,22 @@
       XCTAssertEqual(result, 250.0, accuracy: 0.01)
   }
   ```
-- [ ] Run test (⌘U) and verify it passes
-- [ ] Create test deal, verify metric displays correctly
+  *(new file `PorteosIntelligenceTests/RealEstateCalculatorTests.swift` — happy path 500_000/2_000 → 250.0 + zero-area guard → 0)*
+- [x] Run test (⌘U) and verify it passes  ✅ **via CLI** — `xcodebuild` runs the full suite (52 tests, MLX-confirmed); IDE ⌘U still reports "0 of 0, all passed" → tracked as known Xcode 26 quirk, KNOWN_ISSUES.md #1 (v1.2)
+- [x] Create test deal, verify metric displays correctly  ✅ user-verified in app: **€2,000/m²** on the real estate dashboard
 
-**Deliverable:** Git commit with working metric + test
+**Deliverable:** Git commit with working metric + test — ✅ committed + pushed (3 source files + new test file + `.gitignore` `/build/` + docs updates)
 
 ---
 
 **Week 1 Checkpoint:**
 
-- [ ] Environment fully configured
-- [ ] All Phase 1 docs read
-- [ ] Core files explored
-- [ ] First code change completed
-- [ ] First metric added with test
-- [ ] Confidence level: Can navigate codebase independently
+- [x] Environment fully configured
+- [x] All Phase 1 docs read
+- [x] Core files explored
+- [x] First code change completed
+- [x] First metric added with test
+- [x] Confidence level: Can navigate codebase independently  *(user-confirmed: 5 days of solo builds, data probes, and code changes)*
 
 ---
 
@@ -565,7 +568,18 @@
 - **Deliverable:** git diff saved as `~/.lmstudio/scratchpads/r/day4-propertydeal-testfield.diff` — the 2-line addition (marker comment + `var testField: String = "default"`) after `status` in `PropertyDeal.swift`; file restored to `main` state and rebuilt clean.
 - Carried forward, not fixed in Day 4 (Week 2 candidates): SWIFTDATA_MIGRATION.md §181–190 reset claim vs observed in-place migration (above); README "80+ cities" vs MarketBenchmarks 43; "7 test bundles" count unverified; app displays backup path `~/Documents/PorteosBackups/` but the sandboxed app lands them in `~/Library/Containers/com.porteos.native.v2/Data/Documents/PorteosBackups/`.
 - ✅ Day 4 checked off — all 8 boxes + deliverable.
-- Next: Day 5 — first metric (`pricePerSqft` in RealEstateCalculator + computed property in PropertyDealViewModel + RealEstateDashboardView display + unit test).
+- Next: Day 5 — first metric (`pricePerSqft` in RealEstateCalculator + computed property in PropertyDealViewModel + RealEstateDashboardView display + unit test). ✅ completed Sept 6 — see below.
+
+---
+
+### Sept 6 — Day 5 complete (handover takeover)
+
+- **Day 5 deliverable (all verified):** `pricePerSqft` pure function in `RealEstateCalculator` (bannered `// MARK: - Unit Price`, +14) → `PropertyDealViewModel.pricePerSqft` computed property (+9) → `RealEstateDashboardView` TerminalMetricCell "PRICE / M²" (`—` when area 0, +11) → new `RealEstateCalculatorTests.swift` (happy path + zero-area guard). Display verified in app by user (**€2,000/m²**); suite runs via CLI (**52 tests**, MLX-confirmed).
+- **Test-runner reality inverted vs KNOWN_ISSUES v1.1:** CLI *does* run the full suite; the IDE ⌘U is the side reporting "0 of 0, all passed". The 4-line fix (remove `TEST_HOST`/`BUNDLE_LOADER`) is **not viable** — the tests `@testable import` app-target code, so the hosted-bundle wiring is load-bearing; removal broke the test target's link (`ld: symbol(s) not found`, both archs) and was fully reverted (`project.pbxproj` diff empty, build green). Host app is healthy (store writes observed, no crash reports), so the IDE 0-runs is IDE-side discovery/state — leading suspect is stale build (⌘⇧K + ⌘U is the next diagnostic). KNOWN_ISSUES.md rewritten to match reality (v1.2).
+- **Durable fix parked (needs explicit approval):** Option B — extract the 5 pure static calculators into a `PorteosCore` framework shared by app + tests; tests become non-hosted, ⌘U and CLI behave identically, issue retires. Not done here (restructure beyond the fix).
+- `.gitignore` now includes `/build/` (the xcodebuild output dir was untracked noise).
+- **Week 1 complete** — all 5 days checked off, Week 1 checkpoint green.
+- Next: Week 2 Day 1 — Phase 2 docs (SWIFTDATA_MIGRATION, LLM_INTEGRATION, CALCULATOR_SYSTEM, BROWSER_EXTENSION_GUIDE, MULTI_WINDOW_SYSTEM).
 
 ---
 

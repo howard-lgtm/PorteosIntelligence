@@ -175,4 +175,13 @@ final class PropertyDealViewModel {
     var occupancyState: MetricState {
         getMetricState(for: deal.hospitalityOccupancyRate, type: .occupancy)
     }
+
+    // MARK: - Unit Price
+
+    var pricePerSqft: Double {
+        RealEstateCalculator.pricePerSqft(
+            purchasePrice: deal.purchasePrice,
+            totalArea: deal.totalArea
+        )
+    }
 }

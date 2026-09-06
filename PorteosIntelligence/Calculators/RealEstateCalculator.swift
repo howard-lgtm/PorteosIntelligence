@@ -243,6 +243,20 @@ struct RealEstateCalculator {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // MARK: - Unit Price
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// Calculate price per square foot
+    /// - Parameters:
+    ///   - purchasePrice: Total purchase price
+    ///   - totalArea: Total area in square feet/meters
+    /// - Returns: Price per unit area
+    static func pricePerSqft(purchasePrice: Double, totalArea: Double) -> Double {
+        guard totalArea > 0 else { return 0 }
+        return purchasePrice / totalArea
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // MARK: - Shared Helpers (internal for ViewModel legacy path)
     // ─────────────────────────────────────────────────────────────────────────
 

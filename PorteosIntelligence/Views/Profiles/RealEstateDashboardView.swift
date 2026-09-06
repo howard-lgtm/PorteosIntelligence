@@ -62,6 +62,13 @@ struct RealEstateDashboardView: View {
         return metrics.netOperatingIncome / metrics.totalRevenue * 100
     }
 
+    private var pricePerSqft: Double {
+        RealEstateCalculator.pricePerSqft(
+            purchasePrice: localDeal.purchasePrice,
+            totalArea: localDeal.totalArea
+        )
+    }
+
     // MARK: Body
 
     var body: some View {
@@ -118,6 +125,10 @@ struct RealEstateDashboardView: View {
                     state: localDeal.vacancyRate > 10 ? .warning : .neutral
                 )
                 TerminalMetricCell(label: "OTHER INCOME", value: eur(metrics.otherIncome))
+                TerminalMetricCell(
+                    label: "PRICE / M²",
+                    value: localDeal.totalArea > 0 ? "\(eur(pricePerSqft)) /m²" : "—"
+                )
             }
         }
     }
