@@ -33,9 +33,9 @@
 - This is the recommended validation path for the MLX Bionic handover
 - Treat the IDE ⌘U "0 of 0, all passed" report as a quirk, not a failure
 
-**Future Fix (parked — needs approval):**
+**Future Fix (Option B):**
 - Option B: extract the pure static calculators into a shared `PorteosCore` framework used by both app and tests; the tests become non-hosted and ⌘U and CLI behave identically, retiring this issue
-- This is a restructure beyond the scope of a bug fix — **parked, requires explicit approval**
+- **Decision Sept 6 (user): keep parked** — not worth the restructure cost. CLI tests work fine; this stays documented as a known IDE quirk
 
 **For MLX Bionic:**
 - Continue handover as normal

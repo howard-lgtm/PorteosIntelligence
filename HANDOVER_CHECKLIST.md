@@ -68,6 +68,7 @@
   - [x] Understand spacing system
 
 **Deliverable:** Document 3 things you found interesting or confusing — ✅ Completed, see Notes section (Session 9 entry)
+- **Round 2 deep-dive (6 questions): queue APPROVED Sept 6.** Dispositions: currency fix (EUR hardcoding + LLM prompt € literals) → Week 2 Day 3 (AI prompt day); `pricePerSqft` in ScenarioDetailView → Week 3; PRs + PUNCHLIST → Week 3.
 
 ---
 
@@ -576,7 +577,7 @@
 
 - **Day 5 deliverable (all verified):** `pricePerSqft` pure function in `RealEstateCalculator` (bannered `// MARK: - Unit Price`, +14) → `PropertyDealViewModel.pricePerSqft` computed property (+9) → `RealEstateDashboardView` TerminalMetricCell "PRICE / M²" (`—` when area 0, +11) → new `RealEstateCalculatorTests.swift` (happy path + zero-area guard). Display verified in app by user (**€2,000/m²**); suite runs via CLI (**52 tests**, MLX-confirmed).
 - **Test-runner reality inverted vs KNOWN_ISSUES v1.1:** CLI *does* run the full suite; the IDE ⌘U is the side reporting "0 of 0, all passed". The 4-line fix (remove `TEST_HOST`/`BUNDLE_LOADER`) is **not viable** — the tests `@testable import` app-target code, so the hosted-bundle wiring is load-bearing; removal broke the test target's link (`ld: symbol(s) not found`, both archs) and was fully reverted (`project.pbxproj` diff empty, build green). Host app is healthy (store writes observed, no crash reports), so the IDE 0-runs is IDE-side discovery/state — leading suspect is stale build (⌘⇧K + ⌘U is the next diagnostic). KNOWN_ISSUES.md rewritten to match reality (v1.2).
-- **Durable fix parked (needs explicit approval):** Option B — extract the 5 pure static calculators into a `PorteosCore` framework shared by app + tests; tests become non-hosted, ⌘U and CLI behave identically, issue retires. Not done here (restructure beyond the fix).
+- **Durable fix (Option B): user decision Sept 6 — keep parked.** Extract the 5 pure static calculators into a `PorteosCore` framework shared by app + tests (would retire the IDE quirk) — not worth the restructure cost. CLI tests work fine; tracked as known IDE quirk in KNOWN_ISSUES.md v1.2.
 - `.gitignore` now includes `/build/` (the xcodebuild output dir was untracked noise).
 - **Week 1 complete** — all 5 days checked off, Week 1 checkpoint green.
 - Next: Week 2 Day 1 — Phase 2 docs (SWIFTDATA_MIGRATION, LLM_INTEGRATION, CALCULATOR_SYSTEM, BROWSER_EXTENSION_GUIDE, MULTI_WINDOW_SYSTEM).
