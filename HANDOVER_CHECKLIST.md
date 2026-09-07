@@ -146,31 +146,35 @@
 
 ### Day 1: Phase 2 Documentation (Target: 4 hours)
 
+**Status: ✅ Day 1 COMPLETE (Sept 7)** — re-scoped: external services + AI Vibe validation + deep code review (planned Phase 2 doc reads: SWIFTDATA_MIGRATION + LLM_INTEGRATION covered via Week 1 live validation + Day 1 code review; CALCULATOR_SYSTEM + MULTI_WINDOW_SYSTEM deferred to Day 2; BROWSER_EXTENSION_GUIDE to Day 3 — see Sept 7 log)
+
 **Advanced Documentation:**
 
-- [ ] Read SWIFTDATA_MIGRATION.md (45 min)
-  - [ ] Understand backup + reset strategy
-  - [ ] Understand safe vs unsafe changes
-  - [ ] Understand testing strategy
-- [ ] Read LLM_INTEGRATION.md (60 min)
-  - [ ] Understand multi-provider architecture
-  - [ ] Understand prompt patterns
-  - [ ] Understand error handling
-- [ ] Read CALCULATOR_SYSTEM.md (45 min)
+- [x] Read SWIFTDATA_MIGRATION.md (45 min)  *(read in full Sept 5, Session 11 — 764 lines; backup/reset + safe-vs-unsafe validated live Day 4; testing strategy = 52-test CLI suite Day 5)*
+  - [x] Understand backup + reset strategy
+  - [x] Understand safe vs unsafe changes
+  - [x] Understand testing strategy
+- [x] Read LLM_INTEGRATION.md (60 min)  *(multi-provider architecture, prompt patterns, and error handling verified in Day 1 code review of `LLMAnalysisService.swift` — code is the stronger source)*
+  - [x] Understand multi-provider architecture
+  - [x] Understand prompt patterns
+  - [x] Understand error handling
+- [ ] Read CALCULATOR_SYSTEM.md (45 min) *(deferred to Day 2 — Day 1 code review covered CircularEconomy + currency hazards only)*
   - [ ] Understand all 5 calculator modules
   - [ ] Understand key formulas
-- [ ] Read BROWSER_EXTENSION_GUIDE.md (45 min)
+- [ ] Read BROWSER_EXTENSION_GUIDE.md (45 min) *(deferred to Day 3 — browser extension day)*
   - [ ] Understand scraper pattern
   - [ ] Understand 12 supported sites
-- [ ] Read MULTI_WINDOW_SYSTEM.md (45 min)
+- [ ] Read MULTI_WINDOW_SYSTEM.md (45 min) *(deferred to Day 2 — code tangle already identified in Day 1 review, finding F4)*
   - [ ] Understand @AppStorage sync
   - [ ] Understand WindowGroup pattern
 
-**Deliverable:** Notes on each doc's most important concepts
+**Deliverable:** Notes on each doc's most important concepts — ✅ re-scoped Day 1 deliverable: 5 code findings + 6 new observations, see Sept 7 log
 
 ---
 
 ### Day 2: External Services (Target: 3 hours)
+
+*(Ollama + AI Vibe effectively pre-cleared on Day 1 — Ollama running with 7 models, both providers validated; see Sept 7 log)*
 
 **Optional but Recommended:**
 
@@ -259,7 +263,7 @@
 
 **Week 2 Checkpoint:**
 
-- [ ] All Phase 2 docs read
+- [ ] All Phase 2 docs read *(Day 1 progress: 2 of 5 doc groups covered via code review + live validation)*
 - [ ] External services configured (at least one)
 - [ ] Browser extension tested
 - [ ] AI prompt modified
@@ -580,9 +584,33 @@
 - **Durable fix (Option B): user decision Sept 6 — keep parked.** Extract the 5 pure static calculators into a `PorteosCore` framework shared by app + tests (would retire the IDE quirk) — not worth the restructure cost. CLI tests work fine; tracked as known IDE quirk in KNOWN_ISSUES.md v1.2.
 - `.gitignore` now includes `/build/` (the xcodebuild output dir was untracked noise).
 - **Week 1 complete** — all 5 days checked off, Week 1 checkpoint green.
-- Next: Week 2 Day 1 — Phase 2 docs (SWIFTDATA_MIGRATION, LLM_INTEGRATION, CALCULATOR_SYSTEM, BROWSER_EXTENSION_GUIDE, MULTI_WINDOW_SYSTEM).
+- Next: Week 2 Day 1 — Phase 2 docs (SWIFTDATA_MIGRATION, LLM_INTEGRATION, CALCULATOR_SYSTEM, BROWSER_EXTENSION_GUIDE, MULTI_WINDOW_SYSTEM). ✅ completed Sept 7 — see below.
 
 ---
 
-**Version:** 1.0 (Sept 4, 2026)  
-**Last updated by:** Original development team
+### Sept 7 — Day 1 (Week 2) complete (handover takeover)
+
+- **Scope re-scoped from plan:** planned Day 1 = Phase 2 doc reads; actual Day 1 = external services setup + AI Vibe validation + deep code review (session decision).
+- **External services:** Ollama **v0.32.14** running, **7 models** on machine (phi4-mini, qwen2.5-coder:14b/7b/32b, gemma4:12b, deepseek-r1:14b, qwen2.5:0.5b — re-verified Sept 7 headless via `:11434/api/tags`). Live headless re-verify: **phi4-mini HTTP 200 in 15.2s / 135 tokens** on a real SWOT prompt (Lisbon deal, 1,200 m², €2.4M) → coherent deal-specific SWOT + 78/100 GO. In-app AI Vibe (prior session, user-verified): phi4-mini (local) ~42s + gemini-3.5-flash (cloud) ~60s; both produced consistent deal-specific SWOT with the same **41/100 NO GO** verdict. Planned `ollama pull llama3.2:latest` substituted with **phi4-mini** (llama3.2 not on machine; 3.8B fits the intent; user confirmed phi4-mini works in-app).
+- **Portugal deal currency = EUR, displayed correctly in app ✅** — Round 2 currency question answered for the test deal; the general fix (hardcoded EUR) remains Week 2 Day 3 — finding F3.
+- **Deep code analysis — 5 findings (3 interesting + 2 confusing), all with file:line:**
+  - *F1 interesting:* `struct Comparable` shadows Swift's `Comparable` protocol at module level — `Models/PropertyDeal.swift:406` (`struct Comparable: Codable, Identifiable`); used at :449, :452 (`decode([Comparable].self)`), :460, and `Views/GlobalIntelligence/GlobalIntelligenceCompsView.swift:258,308`.
+  - *F2 interesting:* LLM fabricates market data — chat-only providers with no web access (`Services/LLMAnalysisService.swift:6–8`); "market insights" are confident guesses. A static `MarketBenchmarks` table is injected into the prompt (:505–525, with `€` literals), the system prompt is "professional real estate investment analyst" with no tools (:547), and the prompt seeds a **fabricated example with invented stats** (:660: "ADR of €95-110 ... 15-20% above city average ... UNESCO"). My live phi4-mini run reproduced the same sourceless-claims pattern.
+  - *F3 confusing:* currency logic split 3 ways — model `currencySymbol` (country→symbol map with `€` fallback, `PropertyDeal.swift:67`) vs VM hardcoded `formatted(.currency(code: "EUR"))` (`ViewModels/PropertyDealViewModel.swift:164,168`) vs prompt `€` literals (`LLMAnalysisService.swift:513–518`) mixed with `deal.currencySymbol` (:621, :691). All agree for Portugal (why EUR displays correctly); they diverge for e.g. a US deal.
+  - *F4 interesting:* multi-window doc-vs-code tangle — `ARCHITECTURE.md:395,398,521` claims `@AppStorage("selectedDealID")` sync, but the code has no `@AppStorage` for selection; it uses the `WindowManager.shared.selectedDealID` singleton (`Views/Shell/ProfileWindowView.swift:22,115,168–175` "single source of truth" comment; `Views/Shell/DetachedPaneViews.swift:59–67,109,122`), while the `PorteosIntelligenceApp.swift:120` "fully self-contained" comment contradicts it. Stale-docs theme recurs from Week 1 (bundle-ID fix 241ce87, SWIFTDATA_MIGRATION.md:190).
+  - *F5 confusing:* circular economy — `PropertyDealViewModel.swift:81–82` hardcodes `vendorCount: 0, averageHourlyRate: 0` into `CircularEconomyInputs`; the CE model fields default to 0 (`PropertyDeal.swift:130–141`), so a deal with no CE data scores **0 as if measured** (`Calculators/CircularEconomyCalculator.swift`).
+- **New observations (6):**
+  - *N1:* `LLMAnalysisService.swift:74` — `ollamaTimeoutSeconds = 45`; the in-app phi4-mini run was 42s → only 3s of headroom (a longer SWOT risks flaky timeouts; my headless run 15.2s ≈ 8.9 tok/s).
+  - *N2:* hardcoded provider model names `gpt-4o-mini` (:72) / `gemini-3.5-flash` (:73); only the Ollama model is user-selectable in Settings.
+  - *N3:* `PropertyDeal.swift:67` — `currencySymbol` fallback `return "€"` silently buckets ALL unlisted countries (PT, ES, DE, TR…); the "zero risk of stale data" comment (:41) is contradicted by the hardcoded-EUR VM + prompt `€` literals.
+  - *N4:* `PropertyDeal.swift:452` — `comparables` stored as a JSON blob, decoded with `try?` + `?? []` — a decode failure silently discards comps.
+  - *N5:* the prompt seeds a fabricated few-shot example with invented statistics (`LLMAnalysisService.swift:660`) — teaches the model to fabricate confidently (reinforces F2).
+  - *N6:* app-level comment (`PorteosIntelligenceApp.swift:120`) and shell-level comment (`ProfileWindowView.swift:168`) disagree on who owns selection state.
+- **Checklist:** Week 2 Day 1 boxes updated — SWIFTDATA_MIGRATION + LLM_INTEGRATION groups checked; CALCULATOR_SYSTEM + MULTI_WINDOW_SYSTEM deferred to Day 2; BROWSER_EXTENSION_GUIDE to Day 3.
+- ✅ **Day 1 complete.** Week 2 checkpoint: 0/6 (day 1 of 5).
+- Next: Week 2 Day 2 — Ollama/llama3.2 decision + Settings provider config + in-app AI Vibe re-verify (largely pre-cleared on Day 1); then Day 3 = OpenAI Cloud Code + browser extension.
+
+---
+
+**Version:** 1.1 (Sept 7, 2026)  
+**Last updated by:** Handover (Week 2 Day 1)
