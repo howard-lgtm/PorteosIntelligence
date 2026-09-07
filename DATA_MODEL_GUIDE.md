@@ -23,7 +23,7 @@ Complete guide to the SwiftData schema, relationships, migration strategy, and s
 
 **Version:** Build 3 (Sept 2026)  
 **Persistence:** SwiftData (Core Data successor)  
-**Location:** `~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/Library/Application Support/default.store`
+**Location:** `~/Library/Containers/com.porteos.native.v2/Data/Library/Application Support/default.store`
 
 ### Models (6 Total)
 
@@ -552,7 +552,7 @@ enum DealStatus: String, Codable, CaseIterable {
 
 **Production DB:**
 ```
-~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/Library/Application Support/default.store
+~/Library/Containers/com.porteos.native.v2/Data/Library/Application Support/default.store
 ```
 
 **Backup Folder (auto-created on migration failure):**
@@ -566,13 +566,13 @@ enum DealStatus: String, Codable, CaseIterable {
 # Quit Porteos Intelligence first
 
 # Copy database
-cp -R ~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/Library/Application\ Support/default.store \
+cp -R ~/Library/Containers/com.porteos.native.v2/Data/Library/Application\ Support/default.store \
      ~/Desktop/porteos-backup-$(date +%Y%m%d).store
 
 # Copy WAL and SHM files too (important!)
-cp ~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/Library/Application\ Support/default.store-shm \
+cp ~/Library/Containers/com.porteos.native.v2/Data/Library/Application\ Support/default.store-shm \
    ~/Desktop/porteos-backup-$(date +%Y%m%d).store-shm
-cp ~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/Library/Application\ Support/default.store-wal \
+cp ~/Library/Containers/com.porteos.native.v2/Data/Library/Application\ Support/default.store-wal \
    ~/Desktop/porteos-backup-$(date +%Y%m%d).store-wal
 ```
 
@@ -582,15 +582,15 @@ cp ~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/Library/Applicati
 # Quit Porteos Intelligence
 
 # Delete current database
-rm ~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/Library/Application\ Support/default.store*
+rm ~/Library/Containers/com.porteos.native.v2/Data/Library/Application\ Support/default.store*
 
 # Copy backup
 cp ~/Desktop/porteos-backup-TIMESTAMP.store* \
-   ~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/Library/Application\ Support/
+   ~/Library/Containers/com.porteos.native.v2/Data/Library/Application\ Support/
 
 # Rename
-mv ~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/Library/Application\ Support/porteos-backup-TIMESTAMP.store \
-   ~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/Library/Application\ Support/default.store
+mv ~/Library/Containers/com.porteos.native.v2/Data/Library/Application\ Support/porteos-backup-TIMESTAMP.store \
+   ~/Library/Containers/com.porteos.native.v2/Data/Library/Application\ Support/default.store
 
 # Relaunch app
 ```

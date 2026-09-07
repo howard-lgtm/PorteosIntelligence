@@ -207,7 +207,7 @@ struct DealDetailView: View {
 
 ### Persistence Strategy
 
-**Location:** `~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/Library/Application Support/default.store`
+**Location:** `~/Library/Containers/com.porteos.native.v2/Data/Library/Application Support/default.store`
 
 **Migration:** Backup + reset on failure (see [`PorteosIntelligenceApp.swift:26-87`](PorteosIntelligence/PorteosIntelligenceApp.swift))
 - On schema change: Attempts to migrate
@@ -469,7 +469,7 @@ await NewsAggregatorService.shared.fetchAllFeeds()
 - Streaming support for RESEARCH chat
 - Error handling and fallbacks
 
-**Credentials:** Stored in Keychain for OpenAI/Gemini, none needed for Ollama.
+**Credentials:** OpenAI/Gemini API keys stored in UserDefaults (Keychain migration planned); none needed for Ollama.
 
 ### MapKit Geocoding
 

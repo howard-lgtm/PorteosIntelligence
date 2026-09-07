@@ -17,7 +17,7 @@ Porteos Intelligence is a terminal-style investment intelligence platform for re
 - **Multi-Window Profiles:** Independent windows with real-time state sync across 6 analysis profiles
 - **Browser Extension:** One-click import from 12 major real estate sites (Zillow, Idealista, Casa SAPO, etc.)
 - **Global Intelligence:** Market news feeds, geocoded portfolio mapping, sector-filtered intelligence
-- **Market Benchmarks:** Preloaded financial data for 80+ cities across 13 countries
+- **Market Benchmarks:** Preloaded financial data for 80+ cities across 30 countries
 
 ---
 
@@ -164,7 +164,7 @@ xcodebuild test -scheme PorteosIntelligence -destination 'platform=macOS'
 - **MapKit:** Geocoding and portfolio mapping
 - **Combine:** Reactive state management
 - **URLSession:** HTTP client for LLM APIs and RSS feeds
-- **Security:** Keychain for API keys and IMAP credentials
+- **Security:** UserDefaults for API keys; Keychain for IMAP credentials
 
 ---
 

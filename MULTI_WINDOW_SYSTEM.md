@@ -507,7 +507,7 @@ Button("Compare Selected") {
 **Debug:**
 1. Check `@AppStorage("selectedDealID")` used in both windows
 2. Verify spelling: `selectedDealID` vs `selectedDealId` (case matters!)
-3. Check UserDefaults: `defaults read net.htdstudio.PorteosIntelligence selectedDealID`
+3. Check UserDefaults: `defaults read com.porteos.native.v2 selectedDealID`
 4. Add logging:
    ```swift
    @AppStorage("selectedDealID") private var selectedDealID: String = "" {

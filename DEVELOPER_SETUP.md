@@ -96,7 +96,7 @@ Xcode should detect your system and configure automatically. Verify:
    - **Architectures:** Universal (Apple Silicon, Intel)
 3. **Signing & Capabilities** tab:
    - **Team:** Select your Apple Developer team (or use "Sign to Run Locally")
-   - **Bundle Identifier:** Leave as `net.htdstudio.PorteosIntelligence` or change to your own
+   - **Bundle Identifier:** Leave as `com.porteos.native.v2` or change to your own
 
 ### If You Don't Have an Apple Developer Account
 - Select **Signing & Capabilities**
@@ -292,7 +292,7 @@ The project includes `.cursor/rules/` with AI coding standards. If using Cursor:
 **SwiftData "schema mismatch" error:**
 ```
 1. Quit app
-2. Delete database: ~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/Library/Application Support/default.store
+2. Delete database: ~/Library/Containers/com.porteos.native.v2/Data/Library/Application Support/default.store
 3. Relaunch app (fresh DB created)
 ```
 
@@ -347,7 +347,7 @@ Once you've successfully built and run the app:
 
 **App launches but shows blank window**
 - Database corruption
-- Delete: `~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/`
+- Delete: `~/Library/Containers/com.porteos.native.v2/Data/`
 - Relaunch
 
 **"HTTP server failed to start"**
@@ -374,7 +374,7 @@ A: For viewing code, yes. For building/running, you need Xcode (Swift/SwiftUI re
 A: Not for building or running core features. Only for AI features (unless using Ollama locally), news feeds, and geocoding.
 
 **Q: Where is the database stored?**  
-A: `~/Library/Containers/net.htdstudio.PorteosIntelligence/Data/Library/Application Support/default.store`
+A: `~/Library/Containers/com.porteos.native.v2/Data/Library/Application Support/default.store`
 
 **Q: How do I reset the app completely?**  
 A: Delete the container folder above, then relaunch. All data is lost (unrecoverable).

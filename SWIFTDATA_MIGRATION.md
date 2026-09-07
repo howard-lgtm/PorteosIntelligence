@@ -22,8 +22,8 @@ How to safely modify the PropertyDeal schema and related models without losing u
 
 **Strategy:** Backup + Reset  
 **Version:** Build 3 (Sept 2026)  
-**Lightweight Migrations:** ❌ Not implemented  
-**Data Loss Risk:** ⚠️ HIGH on schema changes
+**Lightweight Migrations:** ⚠️ Implicit only — Core Data lightweight migration applies safe changes in place (validated Day 4 / Build 3); no explicit VersionedSchema/migration plan  
+**Data Loss Risk:** ⚠️ LOW for field-add (validated in place); HIGH for remove/rename/type-change
 
 ### How It Works Today
 
@@ -69,7 +69,7 @@ var sharedModelContainer: ModelContainer = {
 
 ### Level 1: Safe (Lightweight Migration)
 
-SwiftData can automatically migrate these changes **without data loss** (when lightweight migrations are enabled):
+SwiftData can automatically migrate these changes **without data loss** (validated: Core Data applies these in place; Build 3, no reset):
 
 ✅ **Adding optional properties:**
 ```swift
@@ -187,7 +187,7 @@ var address: String  // Requires: Combine street + city
 2. ✅ No data transformation needed
 3. ✅ SwiftData can infer mapping automatically
 
-**With current backup+reset strategy, even "safe" changes trigger reset.** This section describes what *would* work once lightweight migrations are implemented.
+**Safe changes migrate in place via Core Data lightweight migration** (validated Day 4 — column added and backfilled in place, no reset, no data loss). The backup+reset path only fires for changes that fail to load (Level 2/3). This section describes what *does* work in practice.
 
 ### Example: Add Optional Field
 
@@ -212,7 +212,7 @@ final class PropertyDeal {
 }
 ```
 
-**Migration (automatic when lightweight enabled):**
+**Migration (automatic — validated in place, no reset):**
 - Existing records: `propertyTaxAnnual` = `nil`
 - New records: User fills value
 - No data loss
@@ -238,7 +238,7 @@ final class PropertyDeal {
 }
 ```
 
-**Migration (automatic when lightweight enabled):**
+**Migration (automatic — validated in place, no reset):**
 - Existing records: `tags` = `[]` (empty array)
 - New records: User can add tags
 - No data loss
@@ -255,7 +255,7 @@ SwiftData lightweight migration **cannot:**
 - Convert types automatically
 - Migrate complex transformations
 
-**Current workaround:** Backup + reset strategy accepts data loss.
+**Current workaround:** In-place lightweight migration is avoided for these; the backup+reset path is the safety net (you can restore manually from backup).
 
 ### Example: Remove Field (Data Loss)
 

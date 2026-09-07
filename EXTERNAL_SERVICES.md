@@ -48,10 +48,13 @@ ollama serve
 ```bash
 # In a NEW terminal (keep ollama serve running)
 
-# Small, fast model (2.5GB) — good for testing
+# Recommended default (matches the app's default — fast, ~400MB)
+ollama pull qwen2.5:0.5b
+
+# OR: Small, fast model (2.5GB) — good for testing
 ollama pull phi4-mini
 
-# OR: Better quality model (4.7GB) — recommended
+# OR: Better quality model (4.7GB)
 ollama pull qwen2.5-coder:7b
 
 # OR: High-quality reasoning model (9GB) — best results
@@ -70,7 +73,7 @@ ollama list
 2. **Settings → AI Provider**
 3. Select: **"Local (Ollama)"**
 4. Base URL: `http://localhost:11434` (default)
-5. Model Name: Enter the model you pulled (e.g., `qwen2.5-coder:7b`)
+5. Model Name: Enter the model you pulled (e.g., `qwen2.5:0.5b`)
 6. Click **Save**
 
 #### Test
@@ -112,7 +115,7 @@ ollama list
 4. Paste API key
 5. Click **Save**
 
-**Key stored securely in macOS Keychain**
+**Key stored securely in UserDefaults** (Keychain migration planned)
 
 #### Test
 
@@ -156,7 +159,7 @@ ollama list
 4. Paste API key
 5. Click **Save**
 
-**Key stored securely in macOS Keychain**
+**Key stored securely in UserDefaults** (Keychain migration planned)
 
 #### Test
 
@@ -166,7 +169,7 @@ ollama list
 4. Should see "Analyzing..." then SWOT analysis appears (~3-5 seconds)
 
 **Rate Limits:**
-- Free tier: 15 requests/minute, 1500/day
+- Free tier: 15 req/min, 1M tokens/day
 - Paid tier: 2000/minute (if you upgrade)
 
 ---
@@ -544,9 +547,9 @@ To remove coordinates:
 - AI (cloud providers), news feeds, geocoding require internet
 - Ollama (local AI) works offline after model download
 
-**Check Keychain access:**
-- API keys and IMAP credentials stored in macOS Keychain
-- If "Keychain access denied" error: System Settings → Privacy → Keychain → Allow Porteos
+**Check key storage:**
+- API keys stored in UserDefaults; IMAP credentials stored in macOS Keychain
+- If a "Keychain access denied" error appears for IMAP: System Settings → Privacy → Keychain → Allow Porteos
 
 ### Provider-Specific
 
