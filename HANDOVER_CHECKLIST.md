@@ -174,7 +174,7 @@
 
 ### Day 2: Browser Extension (Target: 3 hours)
 
-**Status: ✅ Day 2 COMPLETE (Sept 8)** — re-scoped: browser extension pulled forward from Day 3 per user instruction ("proceed directly to browser extension"); external-services boxes below superseded by Day 1 (Ollama 7 models + in-app AI Vibe on two providers pre-verified Sept 7 — see Sept 7 log). Code review ✅ agent; **live Chrome test pending Howard** (install + pre-flight + matrix below). Week 2 checkpoint "Browser extension tested" stays open until Howard reports.
+**Status: ✅ Day 2 COMPLETE (Sept 8)** — re-scoped: browser extension pulled forward from Day 3 per user instruction ("proceed directly to browser extension"); external-services boxes below superseded by Day 1 (Ollama 7 models + in-app AI Vibe on two providers pre-verified Sept 7 — see Sept 7 log). Code review ✅ agent; **live Chrome test ✅ Howard** (Sept 8 ~20:07 — install + import succeeded, deal landed in-app; see Sept 8 log). Week 2 checkpoint "Browser extension tested" now checked.
 
 **External Services (superseded Day 1 — boxes checked against Sept 7 evidence):**
 
@@ -301,7 +301,7 @@
 
 - [ ] All Phase 2 docs read *(Day 1 progress: 2 of 5 doc groups covered via code review + live validation)*
 - [x] External services configured (at least one)  *(Ollama pre-verified Sept 7 — 7 models serving; in-app AI Vibe on two providers, 41/100 NO GO consistent)*
-- [ ] Browser extension tested  *(code review ✅ Sept 8 — 20 findings; live Chrome test pending Howard per Day 2 matrix; box stays open until results reported)*
+- [x] Browser extension tested  *(code review ✅ Sept 8 — 20 findings; live Chrome test ✅ Sept 8 — install + import succeeded, deal in-app with real name / correct city / EUR)*
 - [ ] AI prompt modified
 - [ ] Debugging skills validated
 - [ ] Confidence level: Can make targeted changes independently
@@ -655,9 +655,10 @@
 - **Delivered (Day 2 section):** Chrome install steps (guide :129–141 verified) · pre-flight checklist (H2 auto-start OFF by default) · per-site test matrix (Zillow + Idealista.pt primary, Imovirtual, optional Casa SAPO/Booli) · expectations (bathrooms 0, D1/D2/M4) · 20 findings M1–M4 / D1–D4 / G1–G6 / H1–H2 / I1–I4, all file:line-verified.
 - **Headline:** extension is structurally healthy (MV3; 12 site modules, all v5) but the **protocol diverged** — everything useful the scrapers send beyond the 14 struct fields (`currency`, `locationFullAddress`, `latitude`/`longitude`; `images` was never emitted at all) is silently dropped by `DealIngestionServer`; currency/city are best-effort derived server-side (D1–D4).
 - ✅ Checklist: Day 2 boxes updated (external-services boxes checked against Sept 7 evidence; OpenAI boxes noted "not needed"); Day 3 annotated (pulled-forward note, `PorteosImporter/` path fix, `extractZillowData` footnote); Week 2 checkpoint — "External services configured" checked (Sept 7 in-app evidence), **"Browser extension tested" left UNCHECKED** pending Howard's live Chrome test. Checklist v1.2.
-- **Next: await Howard's live Chrome test** (Day 2 matrix) before closing the Week 2 checkpoint; Day 3 = deferred Phase 2 docs when scheduled.
+- ✅ **Live Chrome test PASSED** (Howard, Sept 8 ~20:07): install + import succeeded — deal now in app (sidebar 67.0%, grade B); **real scraper name** (D4 "Browser Import" default NOT hit), city derived correctly, **EUR** (€5 486/m² — Portugal = EUR; server-side derivation works despite the D1 currency drop); HTTP indicator green, 2 requests logged. Cosmetic nit observed: macOS **window title bar strips diacritics** ("Marco Cabaco" vs in-app "MARCO CABACÇO") — punchlist candidate. **Punchlist (add more sites to extension) deferred by user** until after handover complete.
+- **Next:** punchlist (extension site additions) after handover; Day 3 = deferred Phase 2 docs when scheduled. Checklist v1.3.
 
 ---
 
-**Version:** 1.2 (Sept 8, 2026)  
-**Last updated by:** Handover (Week 2 Day 2)
+**Version:** 1.3 (Sept 8, 2026)  
+**Last updated by:** Handover (Week 2 Day 2 + live test results)
