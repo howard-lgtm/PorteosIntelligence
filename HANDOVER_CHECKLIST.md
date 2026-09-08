@@ -172,39 +172,75 @@
 
 ---
 
-### Day 2: External Services (Target: 3 hours)
+### Day 2: Browser Extension (Target: 3 hours)
 
-*(Ollama + AI Vibe effectively pre-cleared on Day 1 — Ollama running with 7 models, both providers validated; see Sept 7 log)*
+**Status: ✅ Day 2 COMPLETE (Sept 8)** — re-scoped: browser extension pulled forward from Day 3 per user instruction ("proceed directly to browser extension"); external-services boxes below superseded by Day 1 (Ollama 7 models + in-app AI Vibe on two providers pre-verified Sept 7 — see Sept 7 log). Code review ✅ agent; **live Chrome test pending Howard** (install + pre-flight + matrix below). Week 2 checkpoint "Browser extension tested" stays open until Howard reports.
 
-**Optional but Recommended:**
+**External Services (superseded Day 1 — boxes checked against Sept 7 evidence):**
 
-- [ ] Install Ollama: https://ollama.com/download
-- [ ] Pull model: `ollama pull llama3.2:latest`
-- [ ] Start Ollama server: `ollama serve`
-- [ ] Open app Settings → LLM Provider → Ollama
-- [ ] Set URL: `http://localhost:11434`
-- [ ] Set model: `llama3.2:latest`
-- [ ] Test AI Vibe feature on a deal
-- [ ] Verify SWOT analysis generates
+- [x] Install Ollama: https://ollama.com/download  *(v0.32.14 installed + serving; headless re-verify Sept 7)*
+- [x] Pull model: `ollama pull llama3.2:latest`  *(intent met — llama3.2 not on machine; **phi4-mini** used instead — user confirmed in-app)*
+- [x] Start Ollama server: `ollama serve`  *(:11434 — HTTP 200 on `/api/tags`)*
+- [x] Open app Settings → LLM Provider → Ollama
+- [x] Set URL: `http://localhost:11434`
+- [x] Set model: `llama3.2:latest`  *(Settings: `phi4-mini` — the model actually used)*
+- [x] Test AI Vibe feature on a deal  *(in-app Sept 7: phi4-mini local ~42s; gemini-3.5-flash cloud ~60s)*
+- [x] Verify SWOT analysis generates  *(both providers: coherent, deal-specific SWOT; consistent 41/100 NO GO)*
 
 **Alternative (if Ollama fails):**
 
-- [ ] Use OpenAI instead
+- [ ] Use OpenAI instead  *(not needed — Ollama + Gemini both worked Sept 7)*
 - [ ] Add API key in Settings
 - [ ] Test AI Vibe with OpenAI
 
-**Deliverable:** Screenshot of working AI Vibe panel
+**Deliverable:** Screenshot of working AI Vibe panel  ✅ pre-cleared Day 1
+
+**Chrome install (Howard — guide :129–141, path verified):**
+
+1. Open `chrome://extensions` (Arc/Edge/Brave: same)
+2. Toggle **Developer mode** (top-right)
+3. Click **Load unpacked**
+4. Select: `BrowserExtension/PorteosImporter/` (repo-root-relative — **not** bare `BrowserExtension/`; the manifest lives inside `PorteosImporter/`)
+5. Reload any listing page already open — the in-page **[ SEND TO PORTEOS ]** button is injected at `document_idle` (the toolbar icon does nothing — M3)
+
+**Pre-flight (before any test):**
+
+- App running + ingest server **enabled** — auto-start is **OFF by default** (H2: `serverAutoStartEnabled` absent in UserDefaults = off, Week 1 Day 4 evidence) — app shows green `HTTP` indicator (guide :137–141)
+- `curl -s http://localhost:9000/api/health` → 200 (`DealIngestionServer.swift:156`; optional `X-Porteos-Key` 401 guard :331–338 only if a key is set in Settings)
+
+**Per-site test matrix** *(per import, verify in-app: real name ≠ "Browser Import" (D4) · plausible price · correct city · correct currency (Portugal = EUR) · **re-click returns "already exists" toast, no second deal** (server URL dedupe; I1); server keeps last 50 request logs for post-mortem):*
+
+- **Zillow US (primary)** — any `zillow.com/homedetails/…`: button appears (M4 gate), deal with name/price, USD + USA
+- **Idealista.pt (primary)** — any `idealista.pt/imovel/…`: **EUR + Portugal** (D1); `bathrooms: 0` by design
+- **Imovirtual.com** — any `/oferta/…` (or `/anuncio/`): guide has no Imovirtual section (G1) — verify name/price carefully
+- **Optional:** Casa SAPO.pt (`/comprar-…` listings), Booli.se (`/bostad/…` — **verify the button appears at all** — G5)
+
+**Expectations (do not file bugs for these):** `bathrooms: 0` on Idealista/Booli paths (DOM doesn't expose it); extension `latitude`/`longitude` dropped (D2) → app re-geocodes post-save; currency always derives from country (D1); "no button" = URL gate or JSON shape change (M4), not necessarily an error.
+
+**Day 2 findings (all file:line-verified Sept 8):**
+
+*Manifest* (`BrowserExtension/PorteosImporter/manifest.json`): **M1** `version: "3.0.0"` vs `content.js` **v5.0** (header :2 + 12 console markers :311–:1483). **M2** `permissions [activeTab, scripting]` never used (declarative content_scripts only) — removable, non-blocking. **M3** no background service worker → toolbar icon click does nothing. **M4** Zillow button requires `/homedetails/` URL (content.js:216) **and** parseable `__NEXT_DATA__` — no DOM-only fallback. (`host_permissions` = `:9000` + 14 www patterns for 12 sites — remax.pt ×2.)
+
+*Protocol* (content.js payload vs `DealIngestionServer.swift` `DealIngestionPayload` :108–128): **D1** server never decodes `currency` (grep = 0) — model derives from country with `€` fallback (`PropertyDeal.swift:67`; ties Day 1 F3). **D2** server never decodes `latitude`/`longitude` — `GeocodingService` re-geocodes post-save. **D3** guide documents `images` in ~11 places (:199, :227, :514, :730…) but **no v5 scraper emits `images`** (grep = 0). **D4** no server required-field validation (guide pseudo-code :772–781 is aspirational) — near-empty payloads accepted with defaults ("Browser Import" :503; `inferCity` def :624 / call :418 with `address: ""`). **All 12 scrapers send `locationFullAddress` + `currency` + coords (grep-verified 12/12) — the server drops all of them.**
+
+*Guide* (`BROWSER_EXTENSION_GUIDE.md`, 937 lines): **G1** Quick Stats "12 sites" (:30) vs per-site docs covering 11 — Imovirtual section missing (grep = 0); code + manifest have 12. **G2** Data Shape `sourceURL`/`address` (:198–199, :226, :721–731) vs code `url`/`locationFullAddress`. **G3** Zillow "Key Selectors" `data-test=…` (:245–252) stale vs v5 `__NEXT_DATA__` + `data-testid='price'` (:221–241). **G4** guide "3.0.0" (:28, :66) vs content.js v5 — same root cause as M1. **G5** Booli URL `/annons/*/` (:379) vs code gate `/bostad/` (:1403) → Howard: verify button appears. **G6** stale "Select `BrowserExtension/`" path was in this checklist's Day 3 box, not the guide (guide :137 correct) — fixed below.
+
+*Hygiene + improvements:* **H1** prebuilt `PorteosImporter.zip` in source tree — already gitignored (`*.zip`) + untracked; no git change needed (leave or delete). **I1** no client idempotency token — button re-enables 4 s after success / 5 s after error; repeat clicks are caught by **server dedupe** (URL primary :428, name+city fallback :430–435, returns `duplicate: true`) but payloads with differing URLs (query params) or no URL can still duplicate; suggest keeping the button disabled after a successful send. **I2** bedroom regex `/\bT(\d)\b/` single-digit at :628 (Idealista.pt) / :754 (Remax.pt) / :898 (Casa SAPO) / :1036 (Imovirtual) — `T10`-edge + bare-`T1` false match; `T(\d+)` proposed. **I3** server should accept payload lat/lon and skip geocoding when present (D2). **I4** server should accept `locationFullAddress` + `currency` as fallbacks (D1/D2).
+
+**Task-named Rightmove:** does not exist in the code (guide-only hypothetical at :391+) — Zillow (215–315) + Idealista.pt (608–684) + Booli (1402–1485) reviewed in full; Imovirtual / Casa SAPO / Hemnet spot-checked.
 
 ---
 
 ### Day 3: Browser Extension (Target: 2 hours)
+
+**Status: ⬜ superseded → Day 3 free** — browser extension pulled forward to Day 2 (Sept 8) per user instruction; boxes below kept for reference. **Suggested Day 3 content:** the Phase 2 docs deferred on Day 1 — CALCULATOR_SYSTEM (5 calculator modules, key formulas) + MULTI_WINDOW_SYSTEM (@AppStorage-sync vs `WindowManager` singleton tangle, finding F4).
 
 **Install and Test:**
 
 - [ ] Open Chrome: `chrome://extensions/`
 - [ ] Enable "Developer mode" (top right)
 - [ ] Click "Load unpacked"
-- [ ] Select: `BrowserExtension/` folder
+- [ ] Select: `BrowserExtension/PorteosImporter/` folder  *(G6-corrected — original `BrowserExtension/` was wrong; the manifest lives inside `PorteosImporter/`)*
 - [ ] Navigate to Zillow listing (USA)
 - [ ] Click [ SEND TO PORTEOS ] button
 - [ ] Verify deal appears in app
@@ -212,13 +248,13 @@
 
 **Study Scraper Code:**
 
-- [ ] Open `BrowserExtension/content.js`
-- [ ] Find `initZillow()` function (lines 200-300)
-- [ ] Understand scraper pattern
-- [ ] Find `extractZillowData()` function
-- [ ] Understand data extraction utilities
+- [ ] Open `BrowserExtension/PorteosImporter/content.js`  *(1,486 lines; file lives inside `PorteosImporter/`)*
+- [ ] Find `initZillow()` function (lines 215-315)  *(actual module range)*
+- [ ] Understand scraper pattern  *(each `init*()` module = URL gate → extraction → `injectButton` :120–186 → POST)*
+- [ ] ~~Find `extractZillowData()` function~~  *(doesn't exist in v5 — extraction is inline closures per module; no such function)*
+- [ ] Understand data extraction utilities  *(shared helpers :23–118: `trySelect` / `parsePrice` / `priceFromJsonLd` / `extractJsonLd` / `coordsFrom*`)*
 
-**Deliverable:** Successfully import 2 properties from different sites
+**Deliverable:** Successfully import 2 properties from different sites  *(= Day 2 test matrix — Howard)*
 
 ---
 
@@ -264,8 +300,8 @@
 **Week 2 Checkpoint:**
 
 - [ ] All Phase 2 docs read *(Day 1 progress: 2 of 5 doc groups covered via code review + live validation)*
-- [ ] External services configured (at least one)
-- [ ] Browser extension tested
+- [x] External services configured (at least one)  *(Ollama pre-verified Sept 7 — 7 models serving; in-app AI Vibe on two providers, 41/100 NO GO consistent)*
+- [ ] Browser extension tested  *(code review ✅ Sept 8 — 20 findings; live Chrome test pending Howard per Day 2 matrix; box stays open until results reported)*
 - [ ] AI prompt modified
 - [ ] Debugging skills validated
 - [ ] Confidence level: Can make targeted changes independently
@@ -608,9 +644,20 @@
   - *N6:* app-level comment (`PorteosIntelligenceApp.swift:120`) and shell-level comment (`ProfileWindowView.swift:168`) disagree on who owns selection state.
 - **Checklist:** Week 2 Day 1 boxes updated — SWIFTDATA_MIGRATION + LLM_INTEGRATION groups checked; CALCULATOR_SYSTEM + MULTI_WINDOW_SYSTEM deferred to Day 2; BROWSER_EXTENSION_GUIDE to Day 3.
 - ✅ **Day 1 complete.** Week 2 checkpoint: 0/6 (day 1 of 5).
-- Next: Week 2 Day 2 — Ollama/llama3.2 decision + Settings provider config + in-app AI Vibe re-verify (largely pre-cleared on Day 1); then Day 3 = OpenAI Cloud Code + browser extension.
+- Next: Week 2 Day 2 — Ollama/llama3.2 decision + Settings provider config + in-app AI Vibe re-verify (largely pre-cleared on Day 1); then Day 3 = OpenAI Cloud Code + browser extension. ✅ superseded Sept 8 — see below.
 
 ---
 
-**Version:** 1.1 (Sept 7, 2026)  
-**Last updated by:** Handover (Week 2 Day 1)
+### Sept 8 — Day 2 complete (handover takeover)
+
+- **Scope:** Day 2 re-scoped to browser extension per user instruction ("proceed directly to browser extension") — external services pre-cleared Day 1 (Sept 7 log); Day 3 freed (suggested: deferred Phase 2 docs CALCULATOR_SYSTEM + MULTI_WINDOW_SYSTEM from Day 1).
+- **Successor session** (prior handoff after context overflow) — every predecessor finding **re-verified directly** this session; corrections vs the handoff: manifest `content_scripts.matches` = the same 14 specific www patterns + `:9000` (not `*://*/*`); send button **disables in-flight** and re-enables 4 s success / **5 s** error (handoff guessed 15 s); G6 stale-path bug is in this checklist's Day 3 box, not the guide (guide :137 correct); `PorteosImporter.zip` gitignored + untracked (no git change); `T(\d)` spans **4** modules (:628/:754/:898/:1036); **all 12** scrapers send `locationFullAddress` + `currency` + coords (handoff said 11/12) — server drops all three; server **does** dedupe by URL (primary :428) + name+city (:430–435) — predecessor's "no URL dedupe" in I1 retracted, I1 re-scoped to client token / URL-mismatch residual.
+- **Delivered (Day 2 section):** Chrome install steps (guide :129–141 verified) · pre-flight checklist (H2 auto-start OFF by default) · per-site test matrix (Zillow + Idealista.pt primary, Imovirtual, optional Casa SAPO/Booli) · expectations (bathrooms 0, D1/D2/M4) · 20 findings M1–M4 / D1–D4 / G1–G6 / H1–H2 / I1–I4, all file:line-verified.
+- **Headline:** extension is structurally healthy (MV3; 12 site modules, all v5) but the **protocol diverged** — everything useful the scrapers send beyond the 14 struct fields (`currency`, `locationFullAddress`, `latitude`/`longitude`; `images` was never emitted at all) is silently dropped by `DealIngestionServer`; currency/city are best-effort derived server-side (D1–D4).
+- ✅ Checklist: Day 2 boxes updated (external-services boxes checked against Sept 7 evidence; OpenAI boxes noted "not needed"); Day 3 annotated (pulled-forward note, `PorteosImporter/` path fix, `extractZillowData` footnote); Week 2 checkpoint — "External services configured" checked (Sept 7 in-app evidence), **"Browser extension tested" left UNCHECKED** pending Howard's live Chrome test. Checklist v1.2.
+- **Next: await Howard's live Chrome test** (Day 2 matrix) before closing the Week 2 checkpoint; Day 3 = deferred Phase 2 docs when scheduled.
+
+---
+
+**Version:** 1.2 (Sept 8, 2026)  
+**Last updated by:** Handover (Week 2 Day 2)
