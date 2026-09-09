@@ -231,30 +231,32 @@
 
 ---
 
-### Day 3: Browser Extension (Target: 2 hours)
+### Day 3: AI Prompt Modification — Currency De-hardcoding (Target: 2 hours)
 
-**Status: ⬜ superseded → Day 3 free** — browser extension pulled forward to Day 2 (Sept 8) per user instruction; boxes below kept for reference. **Suggested Day 3 content:** the Phase 2 docs deferred on Day 1 — CALCULATOR_SYSTEM (5 calculator modules, key formulas) + MULTI_WINDOW_SYSTEM (@AppStorage-sync vs `WindowManager` singleton tangle, finding F4).
+**Status: ✅ Day 3 COMPLETE (Sept 9)** — user-assigned task: make ViewModel + LLM prompts respect the deal's dynamic currency (closes Day 1 finding F3). The old browser-extension Day 3 boxes were superseded — all delivered with Day 2 (Sept 8: code review + live Chrome test, deal imported with EUR). **Handoff correction:** a successor session's handover claimed Day 3 was "complete, committed, pushed" (commit `652562d`) — **false** (object does not exist; `origin/main` was `3087698`; the work was uncommitted and non-compiling until the missing `Currency` source was written this session). See Sept 9 log.
 
-**Install and Test:**
+**Task (user step list — ViewModel + LLM prompts only):**
 
-- [ ] Open Chrome: `chrome://extensions/`
-- [ ] Enable "Developer mode" (top right)
-- [ ] Click "Load unpacked"
-- [ ] Select: `BrowserExtension/PorteosImporter/` folder  *(G6-corrected — original `BrowserExtension/` was wrong; the manifest lives inside `PorteosImporter/`)*
-- [ ] Navigate to Zillow listing (USA)
-- [ ] Click [ SEND TO PORTEOS ] button
-- [ ] Verify deal appears in app
-- [ ] Test with another site (Idealista Portugal)
+- [x] Locate hardcoded `"EUR"` in `PropertyDealViewModel` — `formattedNOI` :164 / `formattedADR` :168 used `.currency(code: "EUR")`
+- [x] Replace with `deal.currencyCode`  *(ISO 4217 code — `FormatStyle.currency(code:)` requires a code, not a display symbol)*
+- [x] Locate hardcoded `€` in LLM prompts (`LLMAnalysisService`) — benchmark block :507–518 + research few-shot example :660, :665
+- [x] Replace with dynamic symbols  *(benchmark block: `Currency.symbol(forCountry: bm.country)`; research example: `deal.currencySymbol`)*
+- [x] Logic verified — static trace: Portugal matches no country branch, marketId prefix misses → `("€","EUR")` fallback (behavior unchanged — matches Day 1 live evidence + Day 2 import); a US deal now resolves `$`/`USD` end-to-end
+- [x] Build — `xcodebuild … -destination 'platform=macOS' build` → **BUILD SUCCEEDED** (headless)
 
-**Study Scraper Code:**
+**Key design decision:** new top-level `enum Currency` in `Models/PropertyDeal.swift` — ONE classifier `resolve(country:marketId:) -> (symbol, code)` whose if-chain is byte-identical to the old `currencySymbol` logic, each branch now paired with the ISO code; public `symbol(forCountry:marketId:)` + `code(forCountry:marketId:)` wrappers. `currencySymbol` delegates to it; new `currencyCode` sits beside it. Symbol and code can no longer diverge (the actual F3 fix); a future country is added in exactly one place.
 
-- [ ] Open `BrowserExtension/PorteosImporter/content.js`  *(1,486 lines; file lives inside `PorteosImporter/`)*
-- [ ] Find `initZillow()` function (lines 215-315)  *(actual module range)*
-- [ ] Understand scraper pattern  *(each `init*()` module = URL gate → extraction → `injectButton` :120–186 → POST)*
-- [ ] ~~Find `extractZillowData()` function~~  *(doesn't exist in v5 — extraction is inline closures per module; no such function)*
-- [ ] Understand data extraction utilities  *(shared helpers :23–118: `trySelect` / `parsePrice` / `priceFromJsonLd` / `extractJsonLd` / `coordsFrom*`)*
+**Day 3 findings — remaining hardcoded-`€` sites (known, out of scope — user scoped Day 3 to VM + prompts; listed for a future day, NOT fixed):**
 
-**Deliverable:** Successfully import 2 properties from different sites  *(= Day 2 test matrix — Howard)*
+- `Services/AIAnalysisService.swift` — 10 `€` sites  *(predecessor handoff said ~15 — corrected by grep this session)*
+- `Services/DealResearchImporter.swift` — 19 `€` sites  *(predecessor handoff said ~13 — corrected by grep this session)*
+- `Services/DealPreloader.swift` — :99, :100 (comments), :238 (comment), **:260, :264–265 (interpolated strings)**  *(predecessor handoff path `DealPrelearner/` did not exist — real path `DealPreloader`)*
+- `Views/Sheets/QuickAddSheet.swift:422–423` — `let sym = currency == "USD" ? "$" : (currency == "SEK" ? "" : "€")` — 3-way ternary with EUR default
+- `Views/GlobalIntelligence/GlobalIntelligenceInspectorViews.swift:360–370` — `formatCurrency` uses `NumberFormatter` with `f.currencyCode = "EUR"` + `"€%.1fM"` for ≥1M
+
+**Still pending (needs a slot):** the Phase 2 docs deferred on Day 1 — CALCULATOR_SYSTEM (5 calculator modules, key formulas) + MULTI_WINDOW_SYSTEM (@AppStorage-sync vs `WindowManager` singleton tangle, finding F4) — Day 3 was consumed by the user-assigned currency task.
+
+**Deliverable:** 4-file commit (PropertyDeal.swift + PropertyDealViewModel.swift + LLMAnalysisService.swift + this checklist) — `€` literal count in the two in-scope files now 0.
 
 ---
 
@@ -302,7 +304,7 @@
 - [ ] All Phase 2 docs read *(Day 1 progress: 2 of 5 doc groups covered via code review + live validation)*
 - [x] External services configured (at least one)  *(Ollama pre-verified Sept 7 — 7 models serving; in-app AI Vibe on two providers, 41/100 NO GO consistent)*
 - [x] Browser extension tested  *(code review ✅ Sept 8 — 20 findings; live Chrome test ✅ Sept 8 — install + import succeeded, deal in-app with real name / correct city / EUR)*
-- [ ] AI prompt modified
+- [x] AI prompt modified  *(Day 3 — LLMAnalysisService prompt de-hardcoded: benchmark block + research few-shot example now use dynamic currency; Sept 9. Day 4's separate SWOT exercise remains pending)*
 - [ ] Debugging skills validated
 - [ ] Confidence level: Can make targeted changes independently
 
@@ -660,5 +662,18 @@
 
 ---
 
-**Version:** 1.3 (Sept 8, 2026)  
-**Last updated by:** Handover (Week 2 Day 2 + live test results)
+### Sept 9 — Day 3 complete (handover takeover)
+
+- **Handoff discrepancy discovered + recovered:** the predecessor's handover claimed Day 3 was "complete, committed, and pushed" at commit `652562d` — verified **false** this session (`git cat-file -t 652562d` → no such object; `origin/main` = `3087698`). Tree reality: uncommitted real changes in exactly the 2 files described (VM + prompts), but **non-compiling** — they referenced a `Currency` enum + `currencyCode` property the predecessor claimed to have written but never did; no checklist update; no commit. Predecessor's VM + prompt edits were correct — kept; this session supplied the missing `Currency` source.
+- **What was done:** (1) top-level `enum Currency` in `Models/PropertyDeal.swift` — single classifier returning `(symbol, code)` pairs, if-chain byte-identical to the old `currencySymbol`, plus `symbol(forCountry:marketId:)` / `code(forCountry:marketId:)` wrappers; `currencySymbol` now delegates, new `currencyCode` beside it (name-collision grep clean — no pre-existing `Currency` type or `currencyCode` property). (2) predecessor's edits re-verified and kept — `PropertyDealViewModel` :164/:168 → `.currency(code: deal.currencyCode)`; `LLMAnalysisService` benchmark :507–518 → `Currency.symbol(forCountry: bm.country)`, research example :660/:665 → `deal.currencySymbol`. **`€` count now 0 in both in-scope files** (the 4 remaining in PropertyDeal.swift are the enum's own fallback + doc comments + one pre-existing field comment).
+- **Static-trace evidence:** "Portugal" matches no country branch; marketId prefix misses → `("€","EUR")` — behavior unchanged, consistent with Day 1 live evidence (Portugal deal displays EUR) + Day 2 live import. A US deal now resolves `$`/`USD` end-to-end (VM + prompt) — closes F3; the N3 `€`-fallback now exists in exactly one place.
+- **Build:** `xcodebuild -project PorteosIntelligence.xcodeproj -scheme PorteosIntelligence -destination 'platform=macOS' build` → **BUILD SUCCEEDED** (headless — predecessor's "not buildable headless" claim was wrong).
+- **Scope guard:** ViewModel + LLM prompts only, per user instruction. Remaining hardcoded-`€` sites (AIAnalysisService 10 · DealResearchImporter 19 · DealPreloader :260/:264–265 · QuickAddSheet :422–423 · GlobalIntelligenceInspectorViews :360–370) listed in the Day 3 section as follow-ups — **not** fixed.
+- ✅ Checklist v1.4: Day 3 section re-titled + rewritten (boxes checked, `Currency` decision, follow-ups with corrected counts, pending Phase 2 docs note); Week 2 checkpoint — "AI prompt modified" **checked** *(my call, flagged: Day 3 literally modified prompts; Day 4's separate SWOT exercise remains pending)*.
+- **Commit:** exactly 4 files (PropertyDeal.swift, PropertyDealViewModel.swift, LLMAnalysisService.swift, HANDOVER_CHECKLIST.md); the 3 dirty Xcode user files (xcuserstate / xcscheme / xcschememanagement) excluded — tree otherwise unchanged.
+- **Next: Day 4 — SWOT prompt exercise** (awaiting user instruction). Week 2 checkpoint: 3/6.
+
+---
+
+**Version:** 1.4 (Sept 9, 2026)  
+**Last updated by:** Handover (Week 2 Day 3 — currency de-hardcoding; predecessor handoff discrepancy recovered)

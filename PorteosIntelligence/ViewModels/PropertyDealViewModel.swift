@@ -161,11 +161,11 @@ final class PropertyDealViewModel {
     // MARK: - Formatted Outputs
 
     var formattedNOI: String {
-        realEstateFullMetrics.netOperatingIncome.formatted(.currency(code: "EUR"))
+        realEstateFullMetrics.netOperatingIncome.formatted(.currency(code: deal.currencyCode))
     }
 
     var formattedADR: String {
-        deal.hospitalityADR.formatted(.currency(code: "EUR"))
+        deal.hospitalityADR.formatted(.currency(code: deal.currencyCode))
     }
 
     var formattedOccupancyRate: String {

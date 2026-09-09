@@ -1,6 +1,57 @@
 import Foundation
 import SwiftData
 
+// MARK: - Currency
+
+/// Shared currency inference for deals and market data (Week 2 Day 3).
+///
+/// The display symbol and ISO 4217 code come from ONE classifier, so the two
+/// can never diverge — previously `PropertyDeal` inferred the symbol from
+/// country while the ViewModel and LLM prompts hard-coded EUR/"€".
+enum Currency {
+
+    /// Single classifier: maps a country name to a `(symbol, code)` pair,
+    /// with a marketId 2-letter prefix fallback when the country is blank.
+    /// The if-chain is identical to the pre-Day-3 `PropertyDeal.currencySymbol`
+    /// logic, with the ISO code added to each branch.
+    private static func resolve(country: String, marketId: String? = nil) -> (symbol: String, code: String) {
+        let c = country.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        // US
+        if c.contains("united states") || c == "usa" || c == "us" { return ("$", "USD") }
+        // UK
+        if c.contains("united kingdom") || c == "uk" || c == "gb" { return ("£", "GBP") }
+        // Scandinavia — match full name, ISO code, and native name
+        if c.contains("sweden") || c == "se" || c.contains("sverige")  { return ("kr", "SEK") }
+        if c.contains("norway") || c == "no" || c.contains("norge")    { return ("kr", "NOK") }
+        if c.contains("denmark") || c == "dk" || c.contains("danmark") { return ("kr", "DKK") }
+        // Other
+        if c.contains("switzerland") || c == "ch"                       { return ("Fr", "CHF") }
+        if c.contains("japan") || c == "jp"                             { return ("¥", "JPY") }
+        if c.contains("brazil") || c == "br"                            { return ("R$", "BRL") }
+        if c.contains("australia") || c == "au"                         { return ("A$", "AUD") }
+        if c.contains("canada") || c == "ca"                            { return ("C$", "CAD") }
+        // Fallback: infer from marketId prefix if country is blank
+        let mPrefix = (marketId ?? "").prefix(2).lowercased()
+        if mPrefix == "se" { return ("kr", "SEK") }
+        if mPrefix == "no" { return ("kr", "NOK") }
+        if mPrefix == "dk" { return ("kr", "DKK") }
+        if mPrefix == "gb" { return ("£", "GBP") }
+        if mPrefix == "us" { return ("$", "USD") }
+        return ("€", "EUR")  // EU / unknown → Euro
+    }
+
+    /// Display symbol (e.g. "€", "$") for a country, with marketId prefix fallback.
+    static func symbol(forCountry country: String, marketId: String? = nil) -> String {
+        resolve(country: country, marketId: marketId).symbol
+    }
+
+    /// ISO 4217 code (e.g. "EUR", "USD") for a country, with marketId prefix fallback.
+    /// Use with `FormatStyle.currency(code:)` in the UI layer.
+    static func code(forCountry country: String, marketId: String? = nil) -> String {
+        resolve(country: country, marketId: marketId).code
+    }
+}
+
 // MARK: - DealStatus
 
 enum DealStatus: String, Codable, CaseIterable {
@@ -40,30 +91,15 @@ final class PropertyDeal {
 
     /// Currency symbol inferred from deal country. No stored field needed —
     /// derived at display time so there is zero risk of stale data.
+    /// Shared classifier (`Currency`) guarantees symbol and ISO code agree.
     var currencySymbol: String {
-        let c = locationCountry.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        // US
-        if c.contains("united states") || c == "usa" || c == "us" { return "$" }
-        // UK
-        if c.contains("united kingdom") || c == "uk" || c == "gb" { return "£" }
-        // Scandinavia — match full name, ISO code, and native name
-        if c.contains("sweden") || c == "se" || c.contains("sverige")  { return "kr" }
-        if c.contains("norway") || c == "no" || c.contains("norge")    { return "kr" }
-        if c.contains("denmark") || c == "dk" || c.contains("danmark") { return "kr" }
-        // Other
-        if c.contains("switzerland") || c == "ch"                       { return "Fr" }
-        if c.contains("japan") || c == "jp"                             { return "¥" }
-        if c.contains("brazil") || c == "br"                            { return "R$" }
-        if c.contains("australia") || c == "au"                         { return "A$" }
-        if c.contains("canada") || c == "ca"                            { return "C$" }
-        // Fallback: infer from marketId prefix if country is blank
-        let mPrefix = marketId.prefix(2).lowercased()
-        if mPrefix == "se" { return "kr" }
-        if mPrefix == "no" { return "kr" }
-        if mPrefix == "dk" { return "kr" }
-        if mPrefix == "gb" { return "£" }
-        if mPrefix == "us" { return "$" }
-        return "€"  // EU / unknown → Euro
+        Currency.symbol(forCountry: locationCountry, marketId: marketId)
+    }
+
+    /// ISO 4217 code for this deal (e.g. "EUR", "USD") — for use with
+    /// `FormatStyle.currency(code:)` in the view layer.
+    var currencyCode: String {
+        Currency.code(forCountry: locationCountry, marketId: marketId)
     }
 
     // MARK: Regulatory (user-entered advisory — not legal advice)

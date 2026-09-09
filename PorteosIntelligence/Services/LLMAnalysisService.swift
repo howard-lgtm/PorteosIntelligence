@@ -505,17 +505,18 @@ final class LLMAnalysisService {
 
         let benchmarkBlock: String
         if let bm = benchmark {
+            let cur = Currency.symbol(forCountry: bm.country)
             benchmarkBlock = """
 
 Market benchmarks for \(bm.cityName), \(bm.country):
   Prime yield (cap rate): \(String(format: "%.1f", bm.avgCapRate))%
   Typical vacancy rate:   \(String(format: "%.1f", bm.avgVacancyRate))%
-  Gross potential income: €\(String(format: "%.0f", bm.avgGPIPerSqm))/m²/yr
-  Operating expenses:     €\(String(format: "%.0f", bm.avgOpExPerSqm))/m²/yr
-  Insurance (est.):       €\(String(format: "%.1f", bm.avgInsuranceRatePerSqm))/m²/yr
+  Gross potential income: \(cur)\(String(format: "%.0f", bm.avgGPIPerSqm))/m²/yr
+  Operating expenses:     \(cur)\(String(format: "%.0f", bm.avgOpExPerSqm))/m²/yr
+  Insurance (est.):       \(cur)\(String(format: "%.1f", bm.avgInsuranceRatePerSqm))/m²/yr
   Market interest rate:   \(String(format: "%.1f", bm.avgInterestRate))%
   Property tax rate:      \(String(format: "%.2f", bm.avgPropertyTaxRate))%\
-\(bm.avgADR > 0 ? "\n  Hospitality ADR:        €\(String(format: "%.0f", bm.avgADR))" : "")\
+\(bm.avgADR > 0 ? "\n  Hospitality ADR:        \(cur)\(String(format: "%.0f", bm.avgADR))" : "")\
 \(bm.avgOccupancyRate > 0 ? "\n  Hospitality occupancy:  \(String(format: "%.0f", bm.avgOccupancyRate))%" : "")
 
 Use these benchmarks when assessing the deal. Flag explicitly when deal metrics deviate from market norms above.
@@ -657,11 +658,11 @@ User question: \(message)
 
 **Example response format:**
 
-"Based on market data for the centro histórico in Porto, average hotel ADR is around **€95-110** per night for boutique properties. This is 15-20% higher than the city average due to tourism demand and UNESCO heritage status.
+"Based on market data for the centro histórico in Porto, average hotel ADR is around **\(deal.currencySymbol)95-110** per night for boutique properties. This is 15-20% higher than the city average due to tourism demand and UNESCO heritage status.
 
 For a 25-room hotel in this area, you'd typically see:
 - **Occupancy**: 70-75% annually
-- **RevPAR**: €70-80
+- **RevPAR**: \(deal.currencySymbol)70-80
 - **OpEx ratio**: 25-30% of revenue
 
 This market has strong fundamentals - Porto saw 3.5M tourists in 2025, and boutique hotels under 30 keys perform particularly well in the historic core.
