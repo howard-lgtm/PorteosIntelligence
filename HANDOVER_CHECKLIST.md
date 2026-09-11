@@ -281,35 +281,46 @@
 
 ---
 
-### Day 5: AI Prompt Modification — SWOT Prompt Customization (Target: 2 hours)
+### Day 5: Review & Consolidation (Target: 2 hours)
 
-**Note:** moved here from Day 4 (user re-scope Sept 10 — Day 4 became debugging practice). The original Day 5 guard-crash boxes were superseded by the executed Day 4 plan (not performed as written).
+**Status: ✅ Day 5 COMPLETE (Sept 11)** — re-scoped by user (Sept 11): the original Day 5 (SWOT prompt exercise, moved here from Day 4 on Sept 10) became the Week 2 final-day review & consolidation. The SWOT exercise was **not performed** — deliberately carried to backlog below, not silently dropped.
 
-**Task: Customize SWOT prompt**
+**Tasks (user step list, Sept 11):**
 
-- [ ] Read LLM_INTEGRATION.md (refresh)
-- [ ] Open `Services/LLMAnalysisService.swift`
-- [ ] Find `generateSWOT()` function (line ~200)
-- [ ] Find prompt template string
-- [ ] Add custom instruction: "Focus on cash-on-cash return"
-- [ ] Build and run app
-- [ ] Generate SWOT on test deal
-- [ ] Verify output reflects your change
-- [ ] Revert change (or commit if improvement)
-- [ ] Bonus: fix stale `testGradeBoundaries` in `PorteosScoreCalculatorTests.swift` — asserts the pre-`67e67ee` 60/40/20 scale; the app's live scale is 80/65/50/35 (`VibeGrade.from()`, `AIAnalysisService.swift:33–39`) → update the test, not the calculator
+- [x] Read HANDOVER_CHECKLIST.md Week 2 section (Days 1–5, checkpoint, Sept 7–11 logs)
+- [x] Review Days 1–4 accomplishments — Day 1 external services (Ollama 7 models + AI Vibe on two providers) · Day 2 browser extension (20 findings + live Chrome import) · Day 3 currency de-hardcoding (`Currency` enum, 4-file commit `82b8765`) · Day 4 debugging practice (real RED/GREEN + scheme test-action mystery, `f2f5596`)
+- [x] Week 2 checkpoint: all 6 boxes checked (below)
+- [x] Retrospective written (5 bullets below)
+- [x] Checklist footer bumped (v1.5 → v1.6 — user instruction said "v1.4"; footer was already at v1.5 since Day 4, so bumped forward, not backwards)
+- [x] Commit: "Complete Week 2: Knowledge transfer phase" *(agent shell dead this session (zsh ENOENT) — Howard ran add/commit/push in his terminal; this is that commit)*
 
-**Deliverable:** Git diff of prompt change + screenshot of result
+**Carry-over backlog (not performed — documented for Week 3+):**
+
+1. **SWOT prompt customization** — `generateSWOT()` ~:200 in `Services/LLMAnalysisService.swift`: add "Focus on cash-on-cash return"; build + run; generate on test deal; verify output reflects the change; revert or commit if improvement
+2. **Stale `testGradeBoundaries`** (`PorteosScoreCalculatorTests.swift` ~:68) — 3 assertions (60→B, 40→C, 20→D) encode the pre-`67e67ee` 60/40/20 scale; live scale is 80/65/50/35 (`PorteosScoreCalculator.swift:117–125`, `AIAnalysisService.swift:33–39`) → update the **test**, not the calculator (found during Day 4 RED/GREEN — Sept 10 log)
+3. **Phase 2 doc backlog** — `CALCULATOR_SYSTEM.md` (5 calculator modules, key formulas) + `MULTI_WINDOW_SYSTEM.md` (@AppStorage sync vs `WindowManager` singleton tangle, finding F4) — deferred Day 1, never slotted
+4. **Remaining hardcoded-`€` sites** (out of Day 3 scope) — `AIAnalysisService` (10) · `DealResearchImporter` (19) · `DealPreloader` :260/:264–265 · `QuickAddSheet` :422–423 · `GlobalIntelligenceInspectorViews` :360–370 (see Day 3 section)
+
+**Deliverable:** This commit — Week 2 closed; next: Week 3 (independent development — pick one feature from PUNCHLIST.md)
 
 ---
 
 **Week 2 Checkpoint:**
 
-- [ ] All Phase 2 docs read *(Day 1 progress: 2 of 5 doc groups covered via code review + live validation)*
+- [x] All Phase 2 docs read  *(SWIFTDATA_MIGRATION + LLM_INTEGRATION Day 1; BROWSER_EXTENSION_GUIDE Day 2 — 937 lines, 6 guide findings; CALCULATOR_SYSTEM + MULTI_WINDOW_SYSTEM deferred to carry-over backlog on Day 5 — consolidation judged knowledge transfer complete via code review; user-confirmed at Week 2 close)*
 - [x] External services configured (at least one)  *(Ollama pre-verified Sept 7 — 7 models serving; in-app AI Vibe on two providers, 41/100 NO GO consistent)*
 - [x] Browser extension tested  *(code review ✅ Sept 8 — 20 findings; live Chrome test ✅ Sept 8 — install + import succeeded, deal in-app with real name / correct city / EUR)*
-- [x] AI prompt modified  *(Day 3 — LLMAnalysisService prompt de-hardcoded: benchmark block + research few-shot example now use dynamic currency; Sept 9. Day 4 re-scoped to debugging Sept 10 — SWOT exercise moved to Day 5, remains pending)*
+- [x] AI prompt modified  *(Day 3 — LLMAnalysisService prompt de-hardcoded: benchmark block + research few-shot example now use dynamic currency; Sept 9. SWOT exercise re-scoped out on Day 5 (Sept 11) — carried to backlog)*
 - [x] Debugging skills validated  *(Day 4 Sept 10 — real xcodebuild test RED/GREEN; scheme test-action mystery solved, see Sept 10 log)*
-- [ ] Confidence level: Can make targeted changes independently
+- [x] Confidence level: Can make targeted changes independently  *(user-confirmed Week 2 close: 4 days of targeted changes — 1 refactor (Currency enum), 1 protocol audit (20 findings), 1 debug cycle, 1 punchlist entry — all committed + pushed)*
+
+**Week 2 Retrospective (Day 5, Sept 11):**
+
+- **What went well — the re-scope mechanism.** Every day pivoted cleanly (Day 1 docs → external services; Day 2 extension pulled forward; Day 3 user-assigned currency fix; Day 4 debugging; Day 5 consolidation) and the checklist + dated session logs kept the evidence chain unbroken across four agent handoffs.
+- **What went well — live verification pairing.** Howard's in-app / in-browser checks (AI Vibe on two providers, Chrome import, in-app EUR) closed what an agent can't run headless; the Day 2 live import surfaced the server's protocol divergence that code review could only half-see.
+- **What was hard — three kinds of drift:** extension ↔ server protocol (D1–D4: 3 of 12 payload fields silently dropped), docs vs code (guide 3.0.0 vs v5, stale selectors, wrong install path), and handoff docs vs repo (a 5th stale handoff, incl. one claimed commit that never existed). Plus the agent shell died every session (zsh ENOENT) — every commit depended on Howard's terminal.
+- **Key learning 1 — code is the source of truth.** Docs over-predicted risk (SwiftData reset → actually in-place lightweight migration) and under-documented reality (server drops fields, dedupes where the guide says it doesn't). Verify against code; treat docs as leads.
+- **Key learning 2 — single-source refactors beat patching.** The `Currency` enum (Day 3) is the shape of the fix for duplicated domain logic: one classifier, symbol and code can no longer diverge, one place to add a country. And real test runs caught a genuinely stale test (`testGradeBoundaries`, stale since `67e67ee`) — which became the scheme test-action milestone.
 
 ---
 
@@ -559,8 +570,8 @@
 **Tracking:**
 
 - Start date: _______________
-- Week 1 complete: _______________
-- Week 2 complete: _______________
+- Week 1 complete: 6 September 2026
+- Week 2 complete: 11 September 2026
 - Week 3 complete: _______________
 - Week 4 complete: _______________
 - Handover date: _______________
@@ -697,5 +708,16 @@
 
 ---
 
-**Version:** 1.5 (Sept 10, 2026)  
-**Last updated by:** Handover (Week 2 Day 4 — debugging practice; scheme test-action mystery solved; real RED/GREEN runs)
+### Sept 11 — Day 5 complete: Week 2 closed (handover takeover)
+
+- **Day 5 re-scoped by user (Sept 11):** planned Day 5 (SWOT prompt exercise) → Review & Consolidation, the final day of Week 2. SWOT exercise + `testGradeBoundaries` fix not performed — recorded in the Day 5 carry-over backlog, not dropped.
+- **Consolidation performed:** Week 2 section re-read (Days 1–5 + checkpoint + Sept 7–11 logs); all 6 checkpoint boxes now checked ("All Phase 2 docs read" + "Confidence level" per user, with honest annotations — 3 of 5 doc groups read, CALCULATOR_SYSTEM + MULTI_WINDOW_SYSTEM in backlog); 5-bullet retrospective added; tracking dates filled (Week 1: Sept 6; Week 2: Sept 11).
+- **Footer correction:** user instruction said "update footer to v1.4" — footer was already v1.5 since Day 4; bumped forward to **v1.6** (a version regression would have corrupted the history the logs describe).
+- **Week 2 by the numbers:** 5 days · 6 commits (`c2b0fe7` · `16ca921` + `3087698` · `82b8765` · `f2f5596` · `715efe7`) · 21 documented findings (5 code + 6 obs Day 1; 20 M/D/G/H/I Day 2; 5-site € follow-up list Day 3) · 1 durable refactor (`Currency` enum) · 1 test-run mystery solved · 1 punchlist entry (Scoring System — hero 100 vs ≈84 component average; fix deferred Week 5+).
+- **Commit mechanics:** agent shell dead this session (zsh ENOENT, retried) — Howard ran `git add HANDOVER_CHECKLIST.md && git commit && git push` in his terminal per the exact commands handed over; 3 dirty Xcode user files excluded as always.
+- **Next: Week 3 — Independent Development.** Pick ONE feature from PUNCHLIST.md (recommend Medium complexity). Suggested first candidates from Week 2 backlog: `testGradeBoundaries` fix (small) or the Scoring System display (Medium — already investigated: bars are a sentiment formula, the hero is saturation + bonuses + clamp; punchlist has the analysis).
+
+---
+
+**Version:** 1.6 (Sept 11, 2026)  
+**Last updated by:** Handover (Week 2 Day 5 — review & consolidation; Week 2 closed; SWOT exercise + testGradeBoundaries fix carried to backlog)
