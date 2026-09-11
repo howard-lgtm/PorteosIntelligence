@@ -260,7 +260,30 @@
 
 ---
 
-### Day 4: AI Prompt Modification (Target: 2 hours)
+### Day 4: Debugging Practice (Target: 2 hours)
+
+**Status:** ✅ Day 4 COMPLETE (Sept 10) — re-scoped by user from the SWOT prompt task (SWOT moved to Day 5); handoff takeover finished the checklist.
+
+**Task: Intentionally break something, catch it, fix it**
+
+- [x] Pick a target — `capRate` @ `RealEstateCalculator.swift:153`
+- [x] Introduce a bug — remove `* 100` (cap rate silently becomes a fraction: 0.07 instead of 7.0 — no crash)
+- [x] Create a failing test — temp `testCapRate` in `RealEstateCalculatorTests.swift` (€10M purchase price, 10% vacancy → NOI €700k ⇒ expect 7.0)
+- [x] RED — real `xcodebuild test` run: `testCapRate` fails `7.0 != 0.07`
+- [x] Debug in Xcode — breakpoint :153; inspect `noi` / `purchasePrice` / `capRate` → ratio correct, scale missing
+- [x] Fix — restore `* 100` (byte-identical vs `82b8765`)
+- [x] GREEN — suite re-runs; `testCapRate` passes (0.000s)
+- [x] Revert — `git restore` both files; `git diff` vs `82b8765` empty; never committed
+
+**Prerequisite milestone — scheme test-action mystery solved:** CLI "not configured for the test action" = Xcode auto-creates an empty test plan (`shouldAutocreateTestPlan=YES` + `LastUpgradeCheck=2660`) that replaces the TestableReference. Durable one-line fix: Xcode ▸ Edit Scheme ▸ Test tab → uncheck *Automatically create test plans*.
+
+**Deliverable:** RED/GREEN evidence + debugger walkthrough in the Sept 10 log; tree fully reverted (no code committed).
+
+---
+
+### Day 5: AI Prompt Modification — SWOT Prompt Customization (Target: 2 hours)
+
+**Note:** moved here from Day 4 (user re-scope Sept 10 — Day 4 became debugging practice). The original Day 5 guard-crash boxes were superseded by the executed Day 4 plan (not performed as written).
 
 **Task: Customize SWOT prompt**
 
@@ -273,29 +296,9 @@
 - [ ] Generate SWOT on test deal
 - [ ] Verify output reflects your change
 - [ ] Revert change (or commit if improvement)
+- [ ] Bonus: fix stale `testGradeBoundaries` in `PorteosScoreCalculatorTests.swift` — asserts the pre-`67e67ee` 60/40/20 scale; the app's live scale is 80/65/50/35 (`VibeGrade.from()`, `AIAnalysisService.swift:33–39`) → update the test, not the calculator
 
 **Deliverable:** Git diff of prompt change + screenshot of result
-
----
-
-### Day 5: Debugging Practice (Target: 2 hours)
-
-**Task: Intentionally break something and fix it**
-
-- [ ] Open `Calculators/RealEstateCalculator.swift`
-- [ ] Find `capRate()` function
-- [ ] Comment out guard statement (introduce crash)
-- [ ] Build and run
-- [ ] Create deal with zero purchase price
-- [ ] Observe crash or error
-- [ ] Enable Exception Breakpoint (⌘7 → Breakpoints → +)
-- [ ] Reproduce crash with breakpoint
-- [ ] Inspect variables in debugger
-- [ ] Identify issue
-- [ ] Uncomment guard
-- [ ] Verify fix
-
-**Deliverable:** Written explanation of debugging process
 
 ---
 
@@ -304,8 +307,8 @@
 - [ ] All Phase 2 docs read *(Day 1 progress: 2 of 5 doc groups covered via code review + live validation)*
 - [x] External services configured (at least one)  *(Ollama pre-verified Sept 7 — 7 models serving; in-app AI Vibe on two providers, 41/100 NO GO consistent)*
 - [x] Browser extension tested  *(code review ✅ Sept 8 — 20 findings; live Chrome test ✅ Sept 8 — install + import succeeded, deal in-app with real name / correct city / EUR)*
-- [x] AI prompt modified  *(Day 3 — LLMAnalysisService prompt de-hardcoded: benchmark block + research few-shot example now use dynamic currency; Sept 9. Day 4's separate SWOT exercise remains pending)*
-- [ ] Debugging skills validated
+- [x] AI prompt modified  *(Day 3 — LLMAnalysisService prompt de-hardcoded: benchmark block + research few-shot example now use dynamic currency; Sept 9. Day 4 re-scoped to debugging Sept 10 — SWOT exercise moved to Day 5, remains pending)*
+- [x] Debugging skills validated  *(Day 4 Sept 10 — real xcodebuild test RED/GREEN; scheme test-action mystery solved, see Sept 10 log)*
 - [ ] Confidence level: Can make targeted changes independently
 
 ---
@@ -675,5 +678,24 @@
 
 ---
 
-**Version:** 1.4 (Sept 9, 2026)  
-**Last updated by:** Handover (Week 2 Day 3 — currency de-hardcoding; predecessor handoff discrepancy recovered)
+### Sept 10 — Day 4 complete (handover takeover)
+
+- **Scope re-scoped by user (Sept 10):** planned Day 4 (SWOT prompt exercise) → debugging practice (bug in `capRate`); the SWOT task moved to Day 5. The debugging work was executed Sept 10 by the prior agent; this takeover verified its claims against the repo and finished the checklist.
+- **The exercise:** (1) target = `capRate` @ `RealEstateCalculator.swift:153`; (2) bug = removed `* 100` — the cap rate silently becomes a fraction (0.07 instead of 7.0), no crash; (3) failing test = temp `testCapRate` in `RealEstateCalculatorTests.swift` (€10,000,000 purchase price, 10% vacancy → NOI €700,000 ⇒ expect 7.0).
+- **RED (real `xcodebuild test` run):** 20 tests executed; `testCapRate` fails `7.0 != 0.07`; the only other failing case is `testGradeBoundaries` (pre-existing — see below).
+- **Debugger walkthrough (Xcode):** breakpoint at :153; inspect `noi = 700,000` / `purchasePrice = 10,000,000` / `capRate = 0.07` → the ratio is correct (700k/10M) but the percent scale is missing — a silent-wrong-value bug, exactly the class the exercise targets.
+- **Fix:** restored `* 100` — both files then byte-identical vs `82b8765` (`git diff` empty).
+- **GREEN:** 20 tests executed; `testCapRate` passes (0.000s); the only failing case remains `testGradeBoundaries`.
+- **Pre-existing failure found during RED/GREEN (re-verified by this takeover):** the only failing case is `testGradeBoundaries` (`PorteosScoreCalculatorTests.swift` ~:68) — 3 stale assertions (60→B, 40→C, 20→D) still encode the pre-`67e67ee` 60/40/20 scale; 80→A + 19→F still pass. The calculator is **not** stale: `PorteosScoreCalculator.swift:117–125` = 80/65/50/35 ("matches VibeGrade.from() — was 60, now 65") and the app's live scale `AIAnalysisService.swift:33–39` = 80/65/50/35; commit `67e67ee` (Fri Jul 31, 2026) is the realignment. **Day 5 fix = update the test to the 80/65/50/35 boundaries — not the calculator.**
+- **Prerequisite milestone — scheme test-action mystery solved:** the CLI error "not configured for the test action" comes from Xcode auto-creating an *empty* test plan (`shouldAutocreateTestPlan=YES` + `LastUpgradeCheck=2660`) that replaces the TestableReference. Durable one-line fix (Howard): Xcode ▸ Edit Scheme ▸ Test tab → uncheck *Automatically create test plans* (or `shouldAutocreateTestPlan="NO"` in the scheme XML). Tail anomaly: the 01:49 final probe (`.build/day4-probe.log`, 458 B) still hit the error even with autocreate=NO + TestableReference present — unresolved, but the earlier successful probe runs stand and Howard's fix is unaffected.
+- **Mach-o runner dead-end:** one alternative — dlopen-ing the test bundle after an MH_EXECUTE→MH_BUNDLE patch — loaded, but died on two-level namespace binding. Dead end, no further pursuit.
+- **Revert:** `git restore` on `RealEstateCalculator.swift` + `RealEstateCalculatorTests.swift` (no `testCapRate` remains); `git diff` vs `82b8765` empty on both; never committed. The untracked handover probe scheme (`HandoverDay4Probe.xcscheme`) was deleted by this takeover to complete the full revert; Howard's scheme + the 3 dirty Xcode user files untouched.
+- **Evidence note:** the prior agent's `verify_math` fallback is superseded by these real test runs.
+- ✅ Checklist v1.5: Day 4 section rewritten (debugging practice — 8 boxes, complete); Day 5 re-titled to the moved SWOT task + bonus `testGradeBoundaries` box; Week 2 checkpoint: 4/6.
+- **Commit:** `HANDOVER_CHECKLIST.md` only (3 dirty Xcode user files excluded).
+- Next: Day 5 — SWOT prompt customization + `testGradeBoundaries` fix (awaiting user instruction).
+
+---
+
+**Version:** 1.5 (Sept 10, 2026)  
+**Last updated by:** Handover (Week 2 Day 4 — debugging practice; scheme test-action mystery solved; real RED/GREEN runs)
