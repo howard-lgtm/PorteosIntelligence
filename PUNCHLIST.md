@@ -1,6 +1,6 @@
 # Porteos Intelligence — Punchlist
 
-**Last updated:** 7 July 2026  
+**Last updated:** 10 September 2026  
 **Build:** compiling  
 **Platform:** macOS (SwiftUI + SwiftData)  
 **Apple App Store:** approved — running locally
@@ -61,6 +61,30 @@ PorteosIntelligence/Resources/Splash/
 | A1 | App submitted — waiting on Apple | 🔄 |
 | A2 | Triage any review feedback when received | ⬜ |
 | A3 | Map required changes against Figma redesign (avoid double work) | ⬜ |
+
+---
+
+## Scoring System
+
+**Symptom** (observed 10 Sept 2026, AI Vibe panel, Portugal deal): overall score hero shows **100/100** while the five signal bars read **88 / 89 / 90 / 62 / 92** (Location, Market Timing, Cash Flow, Risk, ESG — ≈ 84 avg). The hero looks inconsistent with its own components.
+**Priority:** Medium — cosmetic, but score credibility matters.
+**Status:** documented in Week 2; **fix deferred to Week 5+ (post-handover)**. No code change made.
+
+Investigation (4 avenues):
+
+1. **The bars are not components.** `AIVibePanel.swift:763–773` (`topBarSignals`) derives each bar's score from `scoreForSignal` (`:775–782`) — a **sentiment formula**: `positive = 88 + index`, `neutral = 75 + index`, `warning = max(45, 68 − 2·index)`, `critical = max(25, 42 − 3·index)`. The observed 88/89/90/**62**/92 is *exactly* positive ×4 plus one `warning` at index 3. The bars visualise LLM sentiment (and `:767` positionally renames whatever the LLM returned into the five fixed labels). They have no arithmetic relation to the composite — they were never meant to average to it.
+2. **The calculator can legitimately reach 100.** `PorteosScoreCalculator.swift`: `normalizedCapRate` / `normalizedRevPAR` saturate at 100 (`:55–56`: cap ≥ 10% / revPAR ≥ €200); unpopulated profiles have their weights **redistributed into real-estate** (`:44–52`); bonuses stack (revenue > €5M +10, DSCR ≥ 2.0 +8, LTV < 65 +5, CoC ≥ 20% +10, planning/STR approved +4/+5); final clamp `min(max(…, 0), 100)` (`:109`) crushes anything ≥ 100 to exactly 100.
+3. **Weights:** user-set sliders — a weighted mean of ~84-average components cannot produce 100 *without* the saturation + bonuses + clamp in #2.
+4. **No error-default-to-100** — the only `100` constants in the calculator are the normalization caps and the clamp bounds; no try/catch fallback.
+
+**Working root cause:** the UI shows two independent quantities side by side — a deterministic composite (cached `deal.porteosScore`, `AIVibePanel.swift:174`; written from 7 call sites, e.g. `:982` after benchmark-apply, so it can go stale) vs sentiment-derived bars. The 100-vs-84 gap is a presentation / category error, possibly compounded by hero staleness.
+
+Fix directions (Week 5+, pick one):
+
+- [ ] Label the bars as sentiment indicators (drop the numbers), or derive them from real component inputs
+- [ ] Recompute the hero live from `PorteosScoreCalculator` instead of the cached `deal.porteosScore` (or show both, labelled)
+- [ ] Score-breakdown tooltip (base + bonuses/penalties, pre-clamp) so 100 reads as “saturated”, not “perfect”
+- [ ] Audit the 7 `deal.porteosScore` write sites for staleness (recompute-on-edit on every path)
 
 ---
 
