@@ -68,7 +68,7 @@ PorteosIntelligence/Resources/Splash/
 
 **Symptom** (observed 10 Sept 2026, AI Vibe panel, Portugal deal): overall score hero shows **100/100** while the five signal bars read **88 / 89 / 90 / 62 / 92** (Location, Market Timing, Cash Flow, Risk, ESG — ≈ 84 avg). The hero looks inconsistent with its own components.
 **Priority:** Medium — cosmetic, but score credibility matters.
-**Status:** documented in Week 2; **fix deferred to Week 5+ (post-handover)**. No code change made.
+**Status:** documented in Week 2; **selected Week 3 Day 1 (Sept 12)** for Week 3 implementation (was "deferred to Week 5+ (post-handover)" — user's Week 3 task brief takes precedence). No code change made yet.
 
 Investigation (4 avenues):
 
@@ -79,7 +79,7 @@ Investigation (4 avenues):
 
 **Working root cause:** the UI shows two independent quantities side by side — a deterministic composite (cached `deal.porteosScore`, `AIVibePanel.swift:174`; written from 7 call sites, e.g. `:982` after benchmark-apply, so it can go stale) vs sentiment-derived bars. The 100-vs-84 gap is a presentation / category error, possibly compounded by hero staleness.
 
-Fix directions (Week 5+, pick one):
+Fix directions (Week 3, pick one):
 
 - [ ] Label the bars as sentiment indicators (drop the numbers), or derive them from real component inputs
 - [ ] Recompute the hero live from `PorteosScoreCalculator` instead of the cached `deal.porteosScore` (or show both, labelled)

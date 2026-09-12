@@ -326,14 +326,51 @@
 
 ## Week 3: Independent Development
 
-### Feature Selection
+### Day 1: Feature Selection (Target: 1 hour)
 
-**Pick ONE feature from PUNCHLIST.md:**
+**Status: ✅ Day 1 COMPLETE (Sat 12 Sept 2026)** — selection: **AI Vibe score display fix** (PUNCHLIST "Scoring System"). *Agent recommendation per the Week 3 task brief — flagged for Howard's confirmation; approval box below deliberately left unchecked.*
 
-- [ ] Review PUNCHLIST.md
-- [ ] Select feature (recommend: Medium complexity)
-- [ ] Document choice and reasoning
-- [ ] Get approval from original developer (optional)
+**Task:**
+
+- [x] Review PUNCHLIST.md  *(root — all 7 sections: Today · Scoring System · High priority · V2 considerations · Low priority · Done · Quick ref — plus `Documentation/PACKAGE_v1_PUNCHLIST.md` P0–P17; full read, ~1 h)*
+- [x] Review the 4 named sections  *(Scoring System — root :67 · Protocol — PACKAGE_v1 P7 :181, D1–D4 live in Day 2 entry · UI/UX — PACKAGE_v1 P1–P5 (shell / sheets / PDF / admin / visual QA) · Future Enhancements — root V2 :98 + epics P10/P14/P17)*
+- [x] Select ONE feature (medium)  ✅ AI Vibe score display fix
+- [x] Document choice and reasoning  ✅ below
+- [x] Sync PUNCHLIST.md status  *(Scoring System :71 "deferred to Week 5+" → "selected for Week 3"; fix-directions header :82 "Week 5+" → "Week 3" — same-repo drift guard per Week 2 retrospective learning 1)*
+- [ ] Get approval from original developer ← **pending Howard**
+
+**Feature description** — the AI Vibe panel shows two quantities that don't agree: the composite-score hero reads the **cached** `deal.porteosScore` (`AIVibePanel.swift:178`, function `resultHero` :175 — the punchlist's `:174` is stale, that line is blank) while the five signal bars (`topBarSignals` :763–773, `scoreForSignal` :775) are **derived from LLM sentiment** by a positional formula (positive = min(99, 88+idx) … critical = max(25, 42 - 3·idx)) — no arithmetic relation to the composite. Observed on the 10 Sept Portugal deal: hero **100/100** vs bars **88 / 89 / 90 / 62 / 92** (avg ≈84) — the panel looks internally inconsistent. Root cause was fully investigated Week 2 (4 avenues, PUNCHLIST :73–80): 100 is a *legitimate* calculator output (saturation caps :55–56 + bonus stack + clamp :109 in the 126-line `PorteosScoreCalculator.swift`), so the 100-vs-84 gap is a **presentation / category error**, possibly compounded by hero staleness (11 write sites; e.g. `:982` after benchmark-apply).
+
+**Why I chose it:**
+
+1. **Right complexity tier** — PUNCHLIST rates it Priority: Medium; the brief asked for medium (not trivial, not too complex).
+2. **Root cause already known** — Week 2's 4-avenue investigation is done and documented; Week 3 is execution, not archaeology.
+3. **App-only scope** — no live-Chrome dependency (unlike the protocol-divergence candidate), no network re-test; verifiable via the 52-test CLI suite + Howard's in-app manual check.
+4. **Highest user-visible credibility impact** — a 100/100 hero the user can't reconcile with its own bars is a direct trust hit on AI Vibe, the Week 2 headline feature.
+
+**Estimated complexity: Medium.** One code file touched (`AIVibePanel.swift`); `PorteosScoreCalculator.swift` consumed read-only — **no formula changes in scope**. Fits Day 2 (Planning) → Day 3–5 (implement · test · manual verify). Stretch (out of default scope): staleness audit of the 11 `deal.porteosScore` write sites.
+
+**Implementation approach (high-level):**
+
+1. **Live-recompute the hero** — in `resultHero`, compute the composite through the same calculator path `PropertyDealViewModel(…).porteosScore.finalScore` uses, so the hero reflects current inputs (kills the staleness half of the gap).
+2. **Honest bars** — label the five bars as sentiment indicators (or derive from real component inputs) so they can no longer be read as the hero's components. Presentation-only; no score-formula changes.
+3. **Stretch** — audit the 11 write sites (9 recompute-via-`PropertyDealViewModel` — incl. `ResearchChatView:401`, added since the punchlist was written; 1 sample `= 78` in `PDFReportSheet:391`; 1 snapshot restore `DealHistoryManager:355`).
+
+**Files to modify:** `AIVibePanel.swift` (only code file — `resultHero` :175–178 + `topBarSignals`/`scoreForSignal` :763–782) · `PorteosScoreCalculator.swift` (read-only) · `PropertyDeal.swift:204` only if the "show both" variant is chosen (hero = live, subtitle = last stored) · `PUNCHLIST.md` (Scoring System item → Done on completion).
+
+**Testing strategy:** existing `PorteosScoreCalculatorTests` (6 test funcs; `testGradeBoundaries` :68) via the full 52-test xcodebuild CLI suite — with no formula changes, the calculator tests must stay green, which *proves* the fix is presentation-only · the stale `testGradeBoundaries` (stale since `67e67ee`) stays a **separate backlog item**, not part of this feature · Howard's manual in-app check on the 10 Sept Portugal deal — hero should read the live composite (a 100 is then defensible, not a contradiction, once the bars carry sentiment labels) (Week 2 learning 2: paired live verification).
+
+**Candidates evaluated:**
+
+| Candidate | Complexity | Verdict |
+|---|---|---|
+| **Score display fix (100/100 discrepancy)** | Medium | ✅ **selected** — right tier · root cause known · app-only · highest credibility impact |
+| Protocol divergence (`currency` / `lat` / `long` / `locationFullAddress` missing from payload :107–128) | Medium-High | rejected — latent: 8 Sept live import worked (server derives currency/geo server-side, D1–D2); cross-codebase (extension + server + 14-field `DealIngestionPayload`); needs live re-test |
+| Title-bar diacritics fix | Trivial | rejected — cosmetic, below medium tier (Week 2 Day 2 live-test nit: macOS window title "Marco Cabaco" vs in-app "MARCO CABACÇO") |
+
+**Day 1 findings (corrections to prior docs):** punchlist hero line `:174` → `:178` (stale — `:174` is blank) · `deal.porteosScore` write sites = **11**, not the punchlist's 7 · `PorteosScoreCalculator.swift` = 126 lines, not 113 · `DealIngestionPayload` (`DealIngestionServer.swift:107–128`) = 14 fields incl. `images` — the D3 gap is that the v5 scrapers never *emit* it, not a missing struct field · PUNCHLIST status synced (drift guard).
+
+**Template reference (original brief, kept for the archive):**
 
 **Example features:**
 - Add new property type
@@ -341,6 +378,8 @@
 - Add new calculator metric
 - Enhance dashboard view
 - Add email parsing rule
+
+**Deliverable:** this documented selection, committed + pushed · next: Day 2 Planning (2 h) — `AIVibePanel` + calculator call graph, change list, test plan · pending: Howard's confirmation of the selection (box above).
 
 ---
 
@@ -719,5 +758,5 @@
 
 ---
 
-**Version:** 1.6 (Sept 11, 2026)  
-**Last updated by:** Handover (Week 2 Day 5 — review & consolidation; Week 2 closed; SWOT exercise + testGradeBoundaries fix carried to backlog)
+**Version:** 1.7 (Sept 12, 2026)  
+**Last updated by:** Handover (Week 3 Day 1 — feature selection: AI Vibe score display fix; Week 3 opened)
