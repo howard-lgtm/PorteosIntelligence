@@ -383,21 +383,225 @@
 
 ---
 
-### Planning (Target: 2 hours)
+### Day 2: Planning (Target: 2 hours)
 
-- [ ] Read relevant documentation for your feature
-- [ ] Identify files that need changes
-- [ ] List affected components:
-  - [ ] Models?
-  - [ ] Calculators?
-  - [ ] Services?
-  - [ ] ViewModels?
-  - [ ] Views?
-- [ ] Sketch implementation approach
-- [ ] Identify potential risks
-- [ ] Write test plan
+**Status: ✅ Day 2 COMPLETE (Sat 12 Sept 2026)** — implementation plan ready for Day 3 execution.
 
-**Deliverable:** Implementation plan (1-2 pages)
+- [x] Read relevant documentation for your feature
+- [x] Identify files that need changes
+- [x] List affected components:
+  - [ ] Models? — no schema changes
+  - [ ] Calculators? — read-only (PorteosScoreCalculator)
+  - [ ] Services? — no
+  - [ ] ViewModels? — read-only (PropertyDealViewModel.porteosScore computed property)
+  - [x] Views? — YES: AIVibePanel.swift only
+- [x] Sketch implementation approach
+- [x] Identify potential risks
+- [x] Write test plan
+
+**Deliverable:** Implementation plan (below)
+
+---
+
+## Week 3 Day 2: Implementation Plan — AI Vibe Score Display Fix
+
+**Feature:** Fix hero/bars discrepancy (hero 100/100 vs bars ≈84 sentiment average)
+
+**Root Cause (confirmed via code inspection):**
+
+The AI Vibe panel displays two independent quantities side-by-side that the user reads as related:
+
+1. **Hero score** (`AIVibePanel.swift:178`): reads **cached** `deal.porteosScore` (Optional<Double> stored property on PropertyDeal model :204). This value is written from 10+ locations across the app and can become stale relative to current deal inputs.
+
+2. **Signal bars** (`AIVibePanel.swift:775-782`): derived from LLM **sentiment** via a positional formula:
+   - `positive = min(99, 88 + index)` → 88, 89, 90, 91, 92
+   - `neutral = 75 + index` → 75, 76, 77, 78, 79
+   - `warning = max(45, 68 - index * 2)` → 68, 66, 64, 62, 60
+   - `critical = max(25, 42 - index * 3)` → 42, 39, 36, 33, 30
+
+The bars have **no arithmetic relation** to the composite score — they visualize sentiment only. The observed 100 vs ≈84 gap is a **presentation category error** (two different metrics shown without clarification) possibly compounded by hero staleness.
+
+---
+
+### Files Requiring Changes
+
+**Primary (code changes):**
+
+1. **`PorteosIntelligence/Views/Components/AIVibePanel.swift`** (1,149 lines)
+   - `resultHero` function (:175-178) — swap cached `deal.porteosScore` for live computation
+   - `topBarSignals`/`scoreForSignal` (:763-782) — add "SENTIMENT" label prefix or derive from real components
+   - Stretch: add breakdown tooltip showing base + bonuses/penalties
+
+**Read-only (reference for live computation):**
+
+2. **`PorteosIntelligence/ViewModels/PropertyDealViewModel.swift`**
+   - Line 119-137: `porteosScore` computed property — this is the live calculation path
+   - Instantiate a ViewModel from the deal to get `.porteosScore.finalScore`
+
+3. **`PorteosIntelligence/Calculators/PorteosScoreCalculator.swift`** (126 lines)
+   - Reference for understanding saturation (:55-56), bonuses (:64-107), clamp (:109)
+   - No changes — the formula is correct
+
+**Documentation (status update on completion):**
+
+4. **`PUNCHLIST.md`** (root)
+   - Move Scoring System item (:67-88) from current status to Done section
+
+---
+
+### Component Analysis
+
+**Models:** No changes. `PropertyDeal.porteosScore` remains as stored Optional<Double> for historical/snapshot purposes (e.g. `DealHistoryManager:355` snapshot restore). The fix makes the hero ignore the cached value in favor of live computation.
+
+**Calculators:** Read-only. `PorteosScoreCalculator.calculate()` is the source of truth; no formula changes.
+
+**Services:** Not involved.
+
+**ViewModels:** Read-only. `PropertyDealViewModel.porteosScore` already implements the live calculation — we just need to call it from the view layer.
+
+**Views:** `AIVibePanel.swift` only. Changes are local to the AI Vibe panel; no ripple to dashboards, sheets, or inspector.
+
+---
+
+### Implementation Approach
+
+**Option A: Live Hero + Sentiment-Labeled Bars** (recommended — lowest risk, highest clarity)
+
+1. **Live hero computation** (`:175-178`):
+   - Replace `deal.porteosScore` with live calculation:
+   ```swift
+   let vm = PropertyDealViewModel(deal: deal)
+   let liveScore = vm.porteosScore.finalScore
+   let scoreText = "\(Int(liveScore.rounded()))"
+   ```
+   - This ensures the hero always reflects current deal inputs (no staleness)
+   
+2. **Honest bar labels** (`:767`):
+   - Prefix each bar label with "SENTIMENT:" or use a section header "LLM Sentiment Signals"
+   - Keep the sentiment formula (:775-782) unchanged — it correctly represents LLM confidence
+   - User now understands the bars are **not components** of the hero
+
+3. **Visual separation** (optional enhancement):
+   - Add a subtle divider or spacing between hero and bars
+   - Add a subtitle under hero: "Composite Score (live)" vs bars section header "Sentiment Analysis"
+
+**Option B: Show Both (cached + live)** — if we want to preserve visibility into staleness for debugging
+
+- Hero main: live score (as in Option A)
+- Hero subtitle: `"Last stored: \(cachedScore)"` when they differ by > 5 points
+- Bars: keep sentiment labels (as in Option A)
+
+**Option C: Component-Derived Bars** — higher complexity, deferred to backlog
+
+- Replace sentiment formula with real component scores (capRate, revPAR, design, circular, weighted)
+- Requires redesign of bar semantics (not just a label change)
+- Out of scope for Week 3 Medium task
+
+**Selected approach: Option A** — lowest risk, clearest user communication, fits Medium complexity tier.
+
+---
+
+### Risks & Mitigations
+
+**Risk 1: Performance**
+- **Concern:** Live computation on every view redraw (PropertyDealViewModel instantiation + calculator call)
+- **Mitigation:** The calculator is 126 lines of pure arithmetic (no I/O, no async). Tested implicitly via 52-test suite; realistic deal count in UI = 1-20 visible, not thousands. If profiling shows slowdown, add `@State` cached computation that invalidates on deal changes.
+- **Severity:** Low (calculator is trivial cost)
+
+**Risk 2: ViewModel Instantiation Pattern**
+- **Concern:** AIVibePanel creates its own ViewModel instance instead of receiving one from parent
+- **Current state:** The panel takes `deal: PropertyDeal` as a binding; it does not currently have access to a ViewModel
+- **Mitigation:** Instantiate `PropertyDealViewModel(deal: deal)` locally within `resultHero`. This is safe — ViewModels in this codebase are stateless read-only wrappers (confirmed by grep: no `@Published`, no side effects in computed properties).
+- **Severity:** Low (pattern is consistent with read-only ViewModel usage)
+
+**Risk 3: Grade Display**
+- **Concern:** Hero also shows `r.grade.hexColor` — does this come from cached score or live analysis?
+- **Investigation:** Line 176 reads `r.grade` where `r` is `AnalysisResult` (LLM response). The grade is part of the AI analysis text, not the composite calculator. No change needed — grade remains tied to the LLM verdict (correct behavior).
+- **Severity:** None (grade is separate from score, intentionally)
+
+**Risk 4: Test Coverage**
+- **Concern:** No direct tests for AIVibePanel UI (it's a view, not a calculator)
+- **Mitigation:** Existing `PorteosScoreCalculatorTests` (6 test functions, 52-test suite) covers the scoring logic. The view change is presentation-only. Manual verification via Howard's in-app check on the Portugal deal (100 should remain 100, now defensible with live calculation + sentiment labels).
+- **Severity:** Low (formula unchanged, tests stay green)
+
+**Risk 5: Staleness Elsewhere**
+- **Concern:** 11 write sites for `deal.porteosScore` may still be reading stale values in other UI areas
+- **Out of scope:** This fix targets AI Vibe panel only. A full staleness audit (Day 1 "stretch goal") is tracked separately in backlog.
+- **Mitigation:** Document the 11 write sites (including `PDFReportSheet.swift:391` hardcoded `= 78` fake-value write); flag for future audit if other panels show similar discrepancies.
+- **Severity:** Medium (known debt, not blocking this fix)
+
+---
+
+### Test Plan
+
+**Automated Tests (must stay green):**
+
+1. **`PorteosScoreCalculatorTests.swift`** (6 test functions)
+   - Run full 52-test suite via `xcodebuild test` (CLI, since IDE test discovery is quirky per Week 2 Day 5)
+   - Expected: **52 passing tests, 0 failures** (except pre-existing `testGradeBoundaries` stale assertions — tracked separately in backlog)
+   - Rationale: No calculator changes = no test changes. Green suite proves the fix is presentation-only.
+
+2. **Build verification**
+   - `xcodebuild -project PorteosIntelligence.xcodeproj -scheme PorteosIntelligence -destination 'platform=macOS' build`
+   - Expected: **BUILD SUCCEEDED**
+   - Gate per `zero-defect-quality.mdc` — no Swift syntax/type errors introduced
+
+**Manual Verification (Howard in-app):**
+
+3. **Portugal deal check** (10 Sept reference case)
+   - Precondition: Deal with capRate ≥ 10%, unpopulated profiles (weights redistributed), bonuses stacking → legitimate 100 composite
+   - **Before fix:** Hero reads cached `deal.porteosScore` = 100, bars show 88/89/90/62/92 (sentiment formula)
+   - **After fix:** Hero shows **live 100** (recomputed), bars **labeled as "SENTIMENT"** or equivalent
+   - **Pass criteria:** User can now understand why 100 ≠ 84 (different metrics, not an error)
+
+4. **Edge cases**
+   - Deal with `porteosScore = nil` (never scored): hero displays live-computed value (likely low for empty inputs, since `finalScore` is non-optional). The "—" fallback is intentionally retired — all deals now show a number.
+   - Deal with low score (e.g. 35, grade D): verify live computation matches expected calculator output
+   - Deal with stale cached score: edit deal inputs (e.g. change capRate), verify hero updates immediately (proves live computation)
+
+5. **Visual QA**
+   - Verify hero font/color unchanged (DesignTokens compliance per `project-rules.mdc`)
+   - Verify bar labels fit layout (no truncation with "SENTIMENT:" prefix)
+   - Verify no layout shifts or spacing regressions
+
+**Acceptance Criteria:**
+
+- [ ] Build succeeds (no Swift errors)
+- [ ] 52-test suite passes (calculator unchanged)
+- [ ] Portugal deal hero = 100 (live), bars labeled as sentiment (not components)
+- [ ] Nil-score deal computes hero live (no "—" fallback)
+- [ ] Edited deal inputs update hero immediately (proves live)
+- [ ] Visual compliance (DesignTokens, no layout regression)
+
+**Out of Scope (tracked in backlog):**
+
+- `testGradeBoundaries` fix (pre-existing stale test, separate item)
+- Full staleness audit of 10+ `deal.porteosScore` write sites
+- Component-derived bars (Option C above)
+- Breakdown tooltip showing base + bonuses/penalties
+
+---
+
+**Estimated Implementation Time:**
+
+- Day 3: Core changes (hero live computation + bar labels) — 2-3 hours
+- Day 4: Testing (automated suite + manual verification) — 2 hours  
+- Day 5: Documentation + PUNCHLIST update — 1 hour
+
+**Total: 5-6 hours** (well within Day 3-5 target of 6-8 hours)
+
+**Files Modified (predicted Day 3 diff):**
+
+- `AIVibePanel.swift` (+8 / -2 lines — hero logic + bar label prefix)
+- `HANDOVER_CHECKLIST.md` (Day 3 status)
+- `PUNCHLIST.md` (Scoring System → Done)
+
+**No Changes:**
+
+- `PorteosScoreCalculator.swift` (read-only)
+- `PropertyDealViewModel.swift` (read-only)
+- `PropertyDeal.swift` (model unchanged)
+- Test files (suite must stay green as-is)
 
 ---
 
@@ -758,5 +962,5 @@
 
 ---
 
-**Version:** 1.7 (Sept 12, 2026)  
-**Last updated by:** Handover (Week 3 Day 1 — feature selection: AI Vibe score display fix; Week 3 opened)
+**Version:** 1.8 (Sept 12, 2026)  
+**Last updated by:** Cursor Agent (Week 3 Day 2 — planning complete: implementation plan for AI Vibe score display fix)
