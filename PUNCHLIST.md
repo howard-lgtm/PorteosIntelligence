@@ -68,7 +68,7 @@ PorteosIntelligence/Resources/Splash/
 
 **Symptom** (observed 10 Sept 2026, AI Vibe panel, Portugal deal): overall score hero shows **100/100** while the five signal bars read **88 / 89 / 90 / 62 / 92** (Location, Market Timing, Cash Flow, Risk, ESG — ≈ 84 avg). The hero looks inconsistent with its own components.
 **Priority:** Medium — cosmetic, but score credibility matters.
-**Status:** documented in Week 2; **selected Week 3 Day 1 (Sept 12)** for Week 3 implementation (was "deferred to Week 5+ (post-handover)" — user's Week 3 task brief takes precedence). No code change made yet.
+**Status:** ✅ **RESOLVED** (Week 3 Day 3, Sept 13-14, 2026) — Hero now computes live, bars labeled as sentiment. See Done section.
 
 Investigation (4 avenues):
 
@@ -119,6 +119,7 @@ Fix directions (Week 3, pick one):
 
 ## Done recently
 
+- [x] **AI Vibe score display fix** (Week 3 Day 3, Sept 13-14, 2026) — Fixed hero/bars discrepancy. Hero now computes live via `PropertyDealViewModel` (no cached staleness). Bars labeled as "SENTIMENT:" indicators (clarifies they're not composite components). Also fixed window vanishing crash (`WindowStateManager` fullscreen toggle guard). Manual verification passed. Commit: d8746ee.
 - [x] Figma design token package (`Design-system/Figma/`)
 - [x] Cursor execution plan JSON
 - [x] Full feature inventory for UI redesign
