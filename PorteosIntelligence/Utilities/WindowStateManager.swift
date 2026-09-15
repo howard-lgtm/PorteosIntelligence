@@ -49,7 +49,13 @@ final class WindowStateManager: NSObject, NSWindowDelegate {
 
         if shouldGoFullScreen {
             // Small delay — the window must be fully on screen before toggling.
+            // Guard: configure() can be invoked again if SwiftUI re-creates the
+            // WindowAccessor (e.g. when a sheet is presented on the window). An
+            // unguarded toggle would send an already-full-screen window out, or a
+            // windowed window into a dedicated Space, making the app appear to
+            // "crash or close". Only toggle if the state actually differs.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                guard !window.styleMask.contains(.fullScreen) else { return }
                 window.toggleFullScreen(nil)
             }
         }

@@ -23,7 +23,8 @@ struct AIVibePanel: View {
 
     private var activeModelName: String { LLMAnalysisService.shared.activeModelDisplayName }
     private static let signalLabels = [
-        "LOCATION SCORE", "MARKET TIMING", "CASH FLOW", "RISK PROFILE", "ESG COMPLIANCE"
+        "SENTIMENT: LOCATION", "SENTIMENT: TIMING", "SENTIMENT: CASH FLOW",
+        "SENTIMENT: RISK", "SENTIMENT: ESG"
     ]
 
     // MARK: Body
@@ -175,7 +176,9 @@ struct AIVibePanel: View {
     private func resultHero(_ r: AnalysisResult) -> some View {
         let gradeColor   = Color(hex: r.grade.hexColor)
         let verdictColor = Color(hex: r.verdict.hexColor)
-        let scoreText    = deal.porteosScore.map { "\(Int($0.rounded()))" } ?? "—"
+        // Compute live score with defensive handling for invalid/NaN values
+        let liveScore    = PropertyDealViewModel(deal: deal).porteosScore.finalScore
+        let scoreText    = (liveScore.isNaN || liveScore.isInfinite) ? "—" : "\(Int(liveScore.rounded()))"
 
         return VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 12) {
