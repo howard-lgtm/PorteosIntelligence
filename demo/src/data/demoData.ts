@@ -1,38 +1,27 @@
-import type { PropertyData, EvaluationResult } from '../types/demo'
+import type { Deal } from '../types/demo'
 
-export const DEMO_PROPERTIES: PropertyData[] = [
+export const DEALS: Deal[] = [
   {
-    id: 'prop-001',
+    id: 'deal-001',
+    name: 'Andrew Freedman Hotel',
+    location: 'New York, NY',
+    type: 'Hospitality',
+    value: 12300000,
+    score: 80,
+    grade: 'B',
+    status: 'viable',
+  },
+  {
+    id: 'deal-002',
     name: 'Riverside Plaza',
     location: 'Portland, OR',
     type: 'Commercial Mixed-Use',
     value: 8500000,
-  },
-  {
-    id: 'prop-002',
-    name: 'Marina Heights Hotel',
-    location: 'San Diego, CA',
-    type: 'Hospitality',
-    value: 12300000,
-  },
-  {
-    id: 'prop-003',
-    name: 'Greenfield Commons',
-    location: 'Austin, TX',
-    type: 'Residential Multi-family',
-    value: 6200000,
+    score: 87,
+    grade: 'A',
+    status: 'viable',
   },
 ]
 
-export const DEMO_EVALUATION: EvaluationResult = {
-  score: 87,
-  grade: 'B+',
-  verdict: 'STRONG',
-  signals: {
-    location: 92,
-    timing: 78,
-    cashFlow: 85,
-    risk: 81,
-    esg: 89,
-  },
-}
+export const PORTFOLIO_TOTAL = 22000000
+export const AVG_PORTFOLIO_SCORE = 87

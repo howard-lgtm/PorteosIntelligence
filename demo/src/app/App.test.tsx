@@ -3,23 +3,26 @@ import { render, screen } from '@testing-library/react'
 import { App } from './App'
 
 describe('App', () => {
-  it('should render scaffold heading', () => {
+  it('should render Porteos Intelligence UI', () => {
     render(<App />)
-    expect(screen.getByText('Porteos Intelligence')).toBeInTheDocument()
+    expect(screen.getByText(/PORTEOSINTELLIGENCE/i)).toBeInTheDocument()
   })
 
-  it('should render reset button', () => {
+  it('should render command center by default', () => {
     render(<App />)
-    expect(screen.getByRole('button', { name: /reset demo state/i })).toBeInTheDocument()
+    expect(screen.getByText(/TOTAL PORTFOLIO VALUE/i)).toBeInTheDocument()
   })
 
-  it('should display initial phase as prepare', () => {
+  it('should render navigation items', () => {
     render(<App />)
-    expect(screen.getByText('prepare')).toBeInTheDocument()
+    expect(screen.getByText(/CMD CENTER/i)).toBeInTheDocument()
+    expect(screen.getByText(/REAL ESTATE/i)).toBeInTheDocument()
+    expect(screen.getByText(/HOSPITALITY/i)).toBeInTheDocument()
   })
 
-  it('should display implementation pending message', () => {
+  it('should render inspector tabs', () => {
     render(<App />)
-    expect(screen.getByText(/UI implementation is pending/i)).toBeInTheDocument()
+    expect(screen.getByText(/LATEST/i)).toBeInTheDocument()
+    expect(screen.getByText(/INTEL/i)).toBeInTheDocument()
   })
 })

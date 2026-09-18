@@ -1,0 +1,115 @@
+.profile-dashboard {
+  padding: var(--space-6);
+  overflow-y: auto;
+}
+
+.profile-header {
+  display: flex;
+  gap: var(--space-6);
+  align-items: center;
+  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.score-hero {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.score-value {
+  font-size: 72px;
+  font-weight: 300;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.score-label {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
+}
+
+.deal-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.deal-title {
+  font-size: var(--font-size-xl);
+  color: var(--color-text-primary);
+}
+
+.grade-badge {
+  padding: var(--space-2) var(--space-4);
+  border: 2px solid;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  min-width: 48px;
+  text-align: center;
+}
+
+.dashboard-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 300;
+  margin-bottom: var(--space-6);
+  letter-spacing: -0.01em;
+}
+
+.dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.dashboard-section {
+  padding: var(--space-6);
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-default);
+}
+
+.section-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-4);
+}
+
+.section-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.metric-row:last-child {
+  border-bottom: none;
+}
+
+.metric-key {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.05em;
+}
+
+.metric-val {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.metric-val.positive {
+  color: var(--color-green);
+}
+
+.metric-val.warning {
+  color: var(--color-yellow);
+}

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test.describe('Demo Scaffold Smoke Test', () => {
+test.describe('Porteos Intelligence Demo', () => {
   test('should load without console errors', async ({ page }) => {
     const consoleErrors: string[] = []
     page.on('console', (msg) => {
@@ -15,29 +15,27 @@ test.describe('Demo Scaffold Smoke Test', () => {
     expect(consoleErrors).toHaveLength(0)
   })
 
-  test('should render scaffold heading', async ({ page }) => {
+  test('should render Porteos UI', async ({ page }) => {
     await page.goto('/')
-    const heading = page.getByRole('heading', { name: /porteos intelligence/i })
-    await expect(heading).toBeVisible()
+    const header = page.getByText(/PORTEOSINTELLIGENCE/i)
+    await expect(header).toBeVisible()
   })
 
-  test('should have functional reset button', async ({ page }) => {
+  test('should not show scaffold text', async ({ page }) => {
     await page.goto('/')
-    const resetButton = page.getByRole('button', { name: /reset demo state/i })
-    await expect(resetButton).toBeVisible()
-    await expect(resetButton).toBeEnabled()
-    await resetButton.click()
+    const scaffoldText = page.getByText(/Usability Demo Scaffold/i)
+    await expect(scaffoldText).not.toBeVisible()
   })
 
-  test('should display current phase', async ({ page }) => {
+  test('should have functional navigation', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByText('prepare')).toBeVisible()
+    const cmdCenterBtn = page.getByRole('button', { name: /CMD CENTER/i })
+    await expect(cmdCenterBtn).toBeVisible()
+    await cmdCenterBtn.click()
   })
 
-  test('should be keyboard navigable', async ({ page }) => {
+  test('should display command center by default', async ({ page }) => {
     await page.goto('/')
-    await page.keyboard.press('Tab')
-    const resetButton = page.getByRole('button', { name: /reset demo state/i })
-    await expect(resetButton).toBeFocused()
+    await expect(page.getByText(/TOTAL PORTFOLIO VALUE/i)).toBeVisible()
   })
 })
