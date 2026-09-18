@@ -1,147 +1,199 @@
+/* Profile Dashboard — shares TerminalBlock classes with CommandCenter */
 .profile-dashboard {
-  padding: var(--space-8) var(--space-10);
-  max-width: 1400px;
-}
-
-.pd-hero {
   display: flex;
-  gap: var(--space-8);
-  align-items: center;
-  margin-bottom: var(--space-10);
-  padding-bottom: var(--space-8);
-  border-bottom: 1px solid var(--color-border-default);
+  flex-direction: column;
 }
 
-.score-display {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-}
-
-.score-number {
-  font-size: 96px;
-  font-weight: 200;
-  color: var(--color-text-primary);
-  line-height: 0.9;
-  letter-spacing: -0.03em;
-}
-
-.score-max {
-  font-size: var(--font-size-2xl);
-  color: var(--color-text-muted);
-  font-weight: 300;
-}
-
-.deal-header {
+/* CLI Breadcrumb (same as CommandCenter) */
+.cli-breadcrumb {
+  height: var(--row-height-header);
+  padding: 0 var(--spacing-block-gutter);
+  border-bottom: var(--divider-width) solid var(--color-divider-structural);
   display: flex;
   align-items: center;
-  gap: var(--space-6);
-  flex: 1;
+  gap: 12px;
+  background-color: var(--color-surface-panel);
+  flex-shrink: 0;
 }
 
-.deal-name {
-  font-size: var(--font-size-2xl);
+.cli-path {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-row-label);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-dim);
+  white-space: nowrap;
+}
+
+.cli-asset {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-row-label);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Score Hero Row */
+.pd-hero-row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  border-bottom: var(--divider-width) solid var(--color-divider-structural);
+  background-color: var(--color-surface-panel);
+}
+
+.pd-score-box {
+  padding: var(--spacing-block-gutter);
+  border-right: var(--divider-width) solid var(--color-divider-structural);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.pd-score-number {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-score-hero);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-score-hero);
+  font-variant-numeric: tabular-nums;
+}
+
+.pd-score-label {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+  margin-top: var(--spacing-metric-stack-gap);
+}
+
+.pd-score-grade {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-score-grade);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-score-grade);
+  margin-top: 2px;
+}
+
+.pd-deal-info {
+  padding: var(--spacing-block-gutter);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--spacing-block);
+}
+
+.pd-deal-name {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-metric-value);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
-  font-weight: 300;
-  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-metric-value);
 }
 
-.grade-box {
-  padding: var(--space-3) var(--space-5);
-  border: 2px solid;
-  font-size: 32px;
-  font-weight: 600;
-  line-height: 1;
-  min-width: 60px;
-  text-align: center;
-  letter-spacing: -0.02em;
-}
-
-.dashboard-header {
-  font-size: 36px;
-  font-weight: 300;
-  margin-bottom: var(--space-8);
-  letter-spacing: -0.02em;
-}
-
-.pd-section {
-  margin-bottom: var(--space-10);
-  padding-bottom: var(--space-8);
-  border-bottom: 1px solid rgba(42, 42, 42, 0.5);
-}
-
-.pd-section-title {
-  font-size: 10px;
-  color: var(--color-text-muted);
-  letter-spacing: 0.1em;
-  margin-bottom: var(--space-6);
-  font-weight: 500;
+.pd-deal-profile {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-module-cmd);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-metric-label);
   text-transform: uppercase;
 }
 
-.pd-metrics {
+/* Empty State */
+.pd-empty-state {
+  padding: var(--spacing-block-gutter);
+  border-bottom: var(--divider-width) solid var(--color-divider-structural);
+  background-color: var(--color-surface-panel);
+}
+
+.pd-empty-prompt {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-row-label);
+  color: var(--color-text-dim);
+  margin-bottom: var(--spacing-block);
+}
+
+.pd-empty-hint {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-meta);
+  color: var(--color-text-dim);
+}
+
+/* TerminalBlock — shared classes (also defined in CommandCenter.css) */
+/* Defined here so ProfileDashboard works standalone */
+.profile-dashboard .terminal-block {
+  border-bottom: var(--divider-width) solid var(--color-divider-structural);
+}
+
+.profile-dashboard .terminal-block-header {
+  height: var(--row-height-data);
+  padding: 0 var(--spacing-block-gutter);
+  border-bottom: var(--divider-width) solid var(--color-divider-structural);
+  display: flex;
+  align-items: center;
+  background-color: var(--color-surface-panel);
+}
+
+.profile-dashboard .cli-dim {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-module-cmd);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-dim);
+}
+
+.profile-dashboard .cli-cmd {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-module-cmd);
+  font-weight: var(--font-weight-medium);
+}
+
+.profile-dashboard .metrics-grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-5);
+  padding: var(--spacing-block-gutter);
+  gap: var(--spacing-grid-gap);
 }
 
-.pd-metric {
-  padding: var(--space-6);
-  background-color: rgba(26, 26, 26, 0.4);
-  border: 1px solid var(--color-border-subtle);
+.profile-dashboard .metric-cell {
+  background-color: var(--color-surface-elevated);
+  border: var(--divider-width) solid var(--color-divider-structural);
+  padding: var(--spacing-cell-padding);
+  min-height: var(--metric-cell-min-height);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.pd-metric-label {
-  font-size: 10px;
-  color: var(--color-text-muted);
-  letter-spacing: 0.1em;
-  margin-bottom: var(--space-3);
-  text-transform: uppercase;
-}
-
-.pd-metric-value {
-  font-size: 24px;
-  font-weight: 400;
+.profile-dashboard .metric-cell-value {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-metric-value);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-metric-value);
+  line-height: var(--line-height-metric-value);
   color: var(--color-text-primary);
-  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
 }
 
-.pd-metric-value.green {
-  color: var(--color-green);
+.profile-dashboard .metric-cell-value.go {
+  color: var(--color-status-go);
 }
 
-.pd-metric-value.orange {
-  color: var(--color-orange-primary);
+.profile-dashboard .metric-cell-value.warn {
+  color: var(--color-status-warn);
 }
 
-.pd-metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-6);
+.profile-dashboard .metric-cell-value.critical {
+  color: var(--color-status-critical);
 }
 
-.pd-metric-card {
-  padding: var(--space-8) var(--space-6);
-  background-color: rgba(26, 26, 26, 0.4);
-  border: 1px solid var(--color-border-subtle);
-  text-align: center;
-}
-
-.pd-card-value {
-  font-size: 36px;
-  font-weight: 300;
-  color: var(--color-text-primary);
-  margin-bottom: var(--space-3);
-  letter-spacing: -0.01em;
-}
-
-.pd-card-value.green {
-  color: var(--color-green);
-}
-
-.pd-card-label {
-  font-size: 10px;
-  color: var(--color-text-muted);
-  letter-spacing: 0.1em;
+.profile-dashboard .metric-cell-label {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-metric-label);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-metric-label);
+  line-height: var(--line-height-metric-label);
   text-transform: uppercase;
+  color: var(--color-text-dim);
 }
