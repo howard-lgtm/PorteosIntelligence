@@ -1,0 +1,107 @@
+.scaffold-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.scaffold-header {
+  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.scaffold-title {
+  font-size: var(--font-size-3xl);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-2);
+  color: var(--color-text-primary);
+}
+
+.scaffold-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.scaffold-status {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  padding: var(--space-6);
+  background-color: var(--color-bg-panel);
+  border: 1px solid var(--color-border-default);
+}
+
+.status-item {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.status-label {
+  color: var(--color-text-secondary);
+  min-width: 140px;
+}
+
+.status-value {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.status-value[data-profile='real-estate'] {
+  color: var(--color-profile-real-estate);
+}
+
+.status-value[data-profile='hospitality'] {
+  color: var(--color-profile-hospitality);
+}
+
+.status-value[data-profile='design'] {
+  color: var(--color-profile-design);
+}
+
+.status-value[data-profile='circular'] {
+  color: var(--color-profile-circular);
+}
+
+.status-value[data-profile='global'] {
+  color: var(--color-profile-global);
+}
+
+.scaffold-message {
+  margin-bottom: var(--space-8);
+  padding: var(--space-6);
+  background-color: var(--color-bg-elevated);
+  border-left: 3px solid var(--color-orange-primary);
+}
+
+.scaffold-message p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.scaffold-message p:last-child {
+  margin-bottom: 0;
+}
+
+.reset-button {
+  padding: var(--space-3) var(--space-6);
+  background-color: var(--color-orange-primary);
+  color: var(--color-text-inverse);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: var(--font-size-xs);
+  border: 1px solid var(--color-orange-primary);
+  transition: all var(--transition-fast);
+  min-height: 44px;
+}
+
+.reset-button:hover {
+  background-color: var(--color-orange-hover);
+  border-color: var(--color-orange-hover);
+}
+
+.reset-button:active {
+  transform: translateY(1px);
+}

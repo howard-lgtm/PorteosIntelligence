@@ -1,0 +1,80 @@
+:root {
+  /* Colors - Background */
+  --color-bg-app: #0a0a0a;
+  --color-bg-panel: #121212;
+  --color-bg-elevated: #1a1a1a;
+  --color-bg-hover: #242424;
+
+  /* Colors - Text */
+  --color-text-primary: #e8e8e8;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted: #666666;
+  --color-text-inverse: #0a0a0a;
+
+  /* Colors - Borders */
+  --color-border-default: #2a2a2a;
+  --color-border-subtle: #1e1e1e;
+  --color-border-focus: #ff6b35;
+
+  /* Colors - Status/Accent */
+  --color-orange-primary: #ff6b35;
+  --color-orange-hover: #ff8555;
+  --color-teal: #00d4aa;
+  --color-purple: #9d4edd;
+  --color-blue: #4895ef;
+  --color-cyan: #00b4d8;
+  --color-green: #06d6a0;
+  --color-yellow: #ffd166;
+  --color-red: #ef476f;
+
+  /* Colors - Profile Accents */
+  --color-profile-real-estate: var(--color-blue);
+  --color-profile-hospitality: var(--color-teal);
+  --color-profile-design: var(--color-purple);
+  --color-profile-circular: var(--color-green);
+  --color-profile-global: var(--color-cyan);
+
+  /* Spacing Scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Type Scale */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+
+  /* Font Families */
+  --font-mono: ui-monospace, 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
+
+  /* Line Heights */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-loose: 1.75;
+
+  /* Focus Ring */
+  --focus-ring: 0 0 0 2px var(--color-border-focus);
+
+  /* Z-Index Scale */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-overlay: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 350ms ease;
+}

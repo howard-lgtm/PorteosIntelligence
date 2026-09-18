@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+
+# Editor directories
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+
+# Test output
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Cache
+.cache/
