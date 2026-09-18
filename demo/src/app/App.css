@@ -1,32 +1,36 @@
+/* Main App Shell - Three Column Layout */
 .app-container {
   display: grid;
-  grid-template-columns: 240px 1fr 280px;
+  grid-template-columns: var(--nav-pane-width) 1fr var(--inspector-pane-width);
   height: 100vh;
   overflow: hidden;
-  background-color: var(--color-bg-app);
+  background-color: var(--color-canvas-base);
 }
 
 .main-workspace {
-  background-color: var(--color-bg-app);
+  background-color: var(--color-canvas-base);
   overflow-y: auto;
+  border-left: var(--divider-width) solid var(--color-divider-structural);
+  border-right: var(--divider-width) solid var(--color-divider-structural);
 }
 
+/* Modal System */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--z-modal);
+  z-index: var(--z-modal-overlay);
 }
 
 .modal-content {
-  background-color: var(--color-bg-panel);
-  border: 1px solid var(--color-border-default);
+  background-color: var(--color-surface-panel);
+  border: var(--divider-width) solid var(--color-divider-structural);
   width: 90%;
   max-width: 600px;
   max-height: 80vh;
@@ -42,26 +46,32 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-4);
-  border-bottom: 1px solid var(--color-border-default);
+  padding: var(--spacing-block-gutter);
+  border-bottom: var(--divider-width) solid var(--color-divider-structural);
+  height: var(--row-height-pane-bar);
 }
 
 .modal-header h2 {
-  font-size: var(--font-size-lg);
-  font-weight: 400;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-module-cmd);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-button-primary);
+  text-transform: uppercase;
   color: var(--color-text-primary);
+  margin: 0;
 }
 
 .modal-close {
   background: none;
   border: none;
-  color: var(--color-text-secondary);
-  font-size: 32px;
+  color: var(--color-text-dim);
+  font-size: 20px;
+  font-family: var(--font-mono);
   line-height: 1;
   cursor: pointer;
   padding: 0;
-  width: 32px;
-  height: 32px;
+  width: var(--row-height-button);
+  height: var(--row-height-button);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -72,9 +82,13 @@
 }
 
 .modal-body {
-  padding: var(--space-6);
+  padding: var(--spacing-block-gutter);
   overflow-y: auto;
   flex: 1;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-row-value);
+  line-height: var(--line-height-row-value);
+  color: var(--color-text-secondary);
 }
 
 .pdf-preview {
@@ -82,7 +96,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-default);
-  color: var(--color-text-muted);
+  background-color: var(--color-surface-elevated);
+  border: var(--divider-width) solid var(--color-divider-structural);
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-row-label);
 }

@@ -1,19 +1,24 @@
-body {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-normal);
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-app);
-}
+/* Load JetBrains Mono */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
-main {
-  min-height: 100vh;
-  padding: var(--space-8);
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-row-value);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-row-value);
+  color: var(--color-text-primary);
+  background-color: var(--color-canvas-base);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-variant-numeric: tabular-nums; /* Monospaced digits - terminal requirement */
 }
 
 button:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--color-accent-institutional-rust);
 }
 
 @media (prefers-reduced-motion: reduce) {

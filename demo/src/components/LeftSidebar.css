@@ -1,90 +1,122 @@
+/* Left Navigation Pane - Terminal Style */
 .left-sidebar {
-  width: 240px;
-  background-color: var(--color-bg-panel);
-  border-right: 1px solid var(--color-border-default);
+  width: var(--nav-pane-width);
+  background-color: var(--color-surface-panel);
   display: flex;
   flex-direction: column;
   height: 100vh;
   overflow-y: auto;
 }
 
+/* Header - PORTEOS@SYSTEM */
 .porteos-header {
-  padding: var(--space-4);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--color-border-default);
+  padding: var(--spacing-block-gutter);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-button-primary);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-button-primary);
+  text-transform: uppercase;
+  color: var(--color-accent-institutional-rust);
+  border-bottom: var(--divider-width) solid var(--color-divider-structural);
+  height: var(--row-height-pane-bar);
+  display: flex;
+  align-items: center;
 }
 
+/* Navigation Items */
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid var(--color-border-default);
+  border-bottom: var(--divider-width) solid var(--color-divider-structural);
 }
 
 .nav-item {
-  padding: var(--space-3) var(--space-4);
+  padding: var(--spacing-block) var(--spacing-block-gutter);
   text-align: left;
-  font-size: var(--font-size-xs);
-  letter-spacing: 0.05em;
-  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-row-label);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--tracking-row-label);
+  text-transform: uppercase;
+  color: var(--color-text-dim);
   border: none;
   background: none;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 150ms ease;
+  height: var(--row-height-data);
+  display: flex;
+  align-items: center;
 }
 
 .nav-item:hover {
-  background-color: var(--color-bg-hover);
+  background-color: var(--color-surface-elevated);
   color: var(--color-text-primary);
 }
 
 .nav-item.active {
-  background-color: var(--color-bg-elevated);
-  color: var(--color-orange-primary);
-  border-left: 2px solid var(--color-orange-primary);
+  background-color: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-bold);
+  border-left: var(--nav-selection-border) solid var(--color-accent-institutional-rust);
+  padding-left: calc(var(--spacing-block-gutter) - var(--nav-selection-border));
 }
 
+/* Deal Search & Filter Section */
 .sidebar-section {
-  padding: var(--space-4);
-  border-bottom: 1px solid var(--color-border-default);
+  padding: var(--spacing-block-gutter);
+  border-bottom: var(--divider-width) solid var(--color-divider-structural);
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-3);
-  font-size: var(--font-size-xs);
-  letter-spacing: 0.1em;
+  margin-bottom: var(--spacing-block);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
+  color: var(--color-text-dim);
 }
 
 .btn-icon {
   background: none;
   border: none;
-  color: var(--color-text-secondary);
+  color: var(--color-text-dim);
   cursor: pointer;
-  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-meta);
+  padding: 0;
 }
 
 .btn-icon:hover {
-  color: var(--color-orange-primary);
+  color: var(--color-accent-institutional-rust);
 }
 
 .search-input {
   width: 100%;
-  padding: var(--space-2) var(--space-3);
-  background-color: var(--color-bg-app);
-  border: 1px solid var(--color-border-default);
+  padding: var(--spacing-cell-padding);
+  background-color: var(--color-canvas-base);
+  border: var(--divider-width) solid var(--color-divider-structural);
   color: var(--color-text-primary);
   font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-row-label);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-row-label);
+  height: var(--row-height-data);
 }
 
 .search-input::placeholder {
-  color: var(--color-text-muted);
+  color: var(--color-text-dim);
 }
 
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-accent-institutional-rust);
+}
+
+/* Deals List */
 .deals-list {
   flex: 1;
   overflow-y: auto;
@@ -92,57 +124,78 @@
 
 .deal-item {
   width: 100%;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--spacing-cell-padding) var(--spacing-block-gutter);
   text-align: left;
   background: none;
   border: none;
-  border-bottom: 1px solid var(--color-border-subtle);
+  border-bottom: var(--divider-width) solid var(--color-divider-structural);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 150ms ease;
+  min-height: calc(var(--row-height-data) * 2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .deal-item:hover {
-  background-color: var(--color-bg-hover);
+  background-color: var(--color-surface-elevated);
 }
 
 .deal-item.selected {
-  background-color: var(--color-bg-elevated);
-  border-left: 2px solid var(--color-orange-primary);
+  background-color: var(--color-surface-elevated);
+  border-left: var(--nav-selection-border) solid var(--color-accent-institutional-rust);
+  padding-left: calc(var(--spacing-block-gutter) - var(--nav-selection-border));
 }
 
 .deal-name {
-  font-size: var(--font-size-sm);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-row-label);
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
-  margin-bottom: var(--space-1);
+  margin-bottom: 2px;
+}
+
+.deal-item.selected .deal-name {
+  font-weight: var(--font-weight-bold);
 }
 
 .deal-value {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-dim);
 }
 
+/* Footer Actions */
 .sidebar-footer {
-  padding: var(--space-4);
-  border-top: 1px solid var(--color-border-default);
+  padding: var(--spacing-block-gutter);
+  border-top: var(--divider-width) solid var(--color-divider-structural);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--spacing-block);
 }
 
 .btn-export,
 .btn-deals {
-  padding: var(--space-2) var(--space-3);
+  padding: 0 var(--spacing-block-gutter);
   background: none;
-  border: 1px solid var(--color-border-default);
-  color: var(--color-orange-primary);
+  border: var(--divider-width) solid var(--color-divider-structural);
+  color: var(--color-accent-institutional-rust);
   font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-button-primary);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-button-primary);
+  text-transform: uppercase;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 150ms ease;
+  height: var(--row-height-button);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-export:hover,
 .btn-deals:hover {
-  background-color: var(--color-bg-hover);
-  border-color: var(--color-orange-primary);
+  background-color: var(--color-surface-elevated);
+  border-color: var(--color-accent-institutional-rust);
 }

@@ -1,80 +1,161 @@
+/* 
+ * Porteos Intelligence Design Tokens V2.06_STABLE
+ * Source: PorteosIntelligence/Utilities/DesignTokens.swift
+ * Platform: Web (ported from macOS SwiftUI)
+ */
+
 :root {
-  /* Colors - Background */
-  --color-bg-app: #0a0a0a;
-  --color-bg-panel: #121212;
-  --color-bg-elevated: #1a1a1a;
-  --color-bg-hover: #242424;
+  /* ========================================
+     Shell (V2.06)
+     ======================================== */
+  --color-canvas-base: #0a0a0a; /* canvasBase - main window background */
+  --color-surface-panel: #111111; /* surfacePanel - nav, inspector panes */
+  --color-surface-elevated: #1a1a1a; /* surfaceElevated - metric cells, active nav */
+  --color-divider-structural: #333333; /* dividerStructural - all 1px dividers */
 
-  /* Colors - Text */
-  --color-text-primary: #e8e8e8;
-  --color-text-secondary: #a0a0a0;
-  --color-text-muted: #666666;
-  --color-text-inverse: #0a0a0a;
+  /* Legacy aliases */
+  --color-shell-bg: var(--color-canvas-base);
+  --color-shell-surface: var(--color-surface-panel);
+  --color-shell-elevated: var(--color-surface-elevated);
+  --color-shell-border: var(--color-divider-structural);
 
-  /* Colors - Borders */
-  --color-border-default: #2a2a2a;
-  --color-border-subtle: #1e1e1e;
-  --color-border-focus: #ff6b35;
+  /* ========================================
+     Text
+     ======================================== */
+  --color-text-primary: #f8f9fa; /* Values, active paths, headers */
+  --color-text-secondary: #94a3b8; /* Standard copy, secondary metrics */
+  --color-text-dim: #666666; /* Labels, prompts, inactive commands */
+  --color-text-tertiary: var(--color-text-dim);
+  --color-text-on-accent: #0a0a0a; /* Text on colored buttons */
 
-  /* Colors - Status/Accent */
-  --color-orange-primary: #ff6b35;
-  --color-orange-hover: #ff8555;
-  --color-teal: #00d4aa;
-  --color-purple: #9d4edd;
-  --color-blue: #4895ef;
-  --color-cyan: #00b4d8;
-  --color-green: #06d6a0;
-  --color-yellow: #ffd166;
-  --color-red: #ef476f;
+  /* ========================================
+     Semantic (Terminal Palette)
+     ======================================== */
+  --color-status-go: #27c93f; /* Optimal threshold, positive delta */
+  --color-status-warn: #ffbd2e; /* Caution threshold, watchlist */
+  --color-status-critical: #ff5f56; /* Fail threshold, reject, high risk */
+  --color-status-info: #3b82f6; /* Info tags, acquired status */
 
-  /* Colors - Profile Accents */
-  --color-profile-real-estate: var(--color-blue);
-  --color-profile-hospitality: var(--color-teal);
-  --color-profile-design: var(--color-purple);
-  --color-profile-circular: var(--color-green);
-  --color-profile-global: var(--color-cyan);
+  /* ========================================
+     Deal Status
+     ======================================== */
+  --color-status-pipeline: #64748b;
+  --color-status-review: #f59e0b;
+  --color-status-viable: #27c93f;
+  --color-status-rejected: #ff5f56;
+  --color-status-acquired: #3b82f6;
 
-  /* Spacing Scale */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
+  /* ========================================
+     Profile Accents (Identity Only)
+     ======================================== */
+  --color-accent-cmd-center: #94a3b8;
+  --color-accent-rust: #c25e30; /* Real Estate */
+  --color-accent-hospitality: #14b8a6; /* Hospitality */
+  --color-accent-design: #a855f7; /* Design */
+  --color-accent-circular: #3b82f6; /* Circular Economy */
+  --color-accent-pipeline: #f59e0b; /* Pipeline */
+  --color-accent-institutional-rust: #a34121; /* System wordmark, selection bar */
 
-  /* Type Scale */
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 2rem;
+  /* ========================================
+     Layout - Shell
+     ======================================== */
+  --nav-pane-width: 260px;
+  --inspector-pane-width: 280px;
+  --divider-width: 1px;
+  --nav-selection-border: 2px;
 
-  /* Font Families */
-  --font-mono: ui-monospace, 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
+  /* ========================================
+     Layout - Rows
+     ======================================== */
+  --row-height-data: 28px;
+  --row-height-nav-link: 24px;
+  --row-height-button: 32px;
+  --row-height-header: 36px;
+  --row-height-pane-bar: 40px;
+  --row-height-command-bar: 32px;
 
-  /* Line Heights */
-  --line-height-tight: 1.25;
-  --line-height-normal: 1.5;
-  --line-height-loose: 1.75;
+  /* ========================================
+     Layout - Grid & Blocks
+     ======================================== */
+  --spacing-block-gutter: 12px;
+  --spacing-block: 6px;
+  --spacing-grid-gap: 6px;
+  --spacing-cell-padding: 8px;
+  --spacing-metric-stack-gap: 4px;
 
-  /* Focus Ring */
-  --focus-ring: 0 0 0 2px var(--color-border-focus);
+  --metric-cell-min-height: 54px;
+  --hero-cell-min-height: 88px;
+  --hero-cell-padding: 12px;
+  --profile-cell-min-height: 72px;
+  --sparkline-height: 22px;
+  --sparkline-width: 56px;
 
-  /* Z-Index Scale */
-  --z-base: 0;
-  --z-dropdown: 100;
-  --z-overlay: 200;
-  --z-modal: 300;
-  --z-toast: 400;
+  --grid-column-count: 4;
+  --grid-wide-threshold: 900px;
 
-  /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-base: 250ms ease;
-  --transition-slow: 350ms ease;
+  /* ========================================
+     Typography - Font Family
+     ======================================== */
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* ========================================
+     Typography - Type Scale (V2.06 Phase A)
+     ======================================== */
+  /* Display */
+  --font-size-score-hero: 36px; /* scoreHero: 36pt bold */
+  --font-size-score-grade: 20px; /* scoreGrade: 20pt bold */
+
+  /* Data Display */
+  --font-size-metric-value: 16px; /* metricValue: 16pt semibold */
+  --font-size-metric-label: 11px; /* metricLabel: 11pt medium */
+  --font-size-row-value: 12px; /* rowValue: 12pt medium */
+  --font-size-row-label: 11px; /* rowLabel: 11pt regular */
+
+  /* UI Chrome */
+  --font-size-button-primary: 11px; /* buttonPrimary: 11pt bold */
+  --font-size-meta: 10px; /* meta: 10pt regular */
+  --font-size-cli-prompt: 11px; /* cliPrompt: 11pt regular */
+  --font-size-module-cmd: 11px; /* moduleCmd: 11pt medium */
+
+  /* Font Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ========================================
+     Typography - Tracking (Letter Spacing)
+     ======================================== */
+  --tracking-metric-value: -0.32px; /* -2% @ 16pt */
+  --tracking-metric-label: 0.22px; /* +2% @ 11pt */
+  --tracking-row-label: 0.22px; /* +2% @ 11pt */
+  --tracking-button-primary: 0.22px; /* +2% @ 11pt */
+  --tracking-meta: 0.4px; /* +4% @ 10pt */
+
+  /* ========================================
+     Typography - Line Heights
+     ======================================== */
+  --line-height-score-hero: 40px;
+  --line-height-score-grade: 24px;
+  --line-height-metric-value: 20px;
+  --line-height-metric-label: 14px;
+  --line-height-row-value: 16px;
+  --line-height-row-label: 14px;
+  --line-height-cli: 14px;
+  --line-height-button-primary: 14px;
+  --line-height-meta: 12px;
+
+  /* ========================================
+     Opacity
+     ======================================== */
+  --opacity-danger-tint: 0.05;
+  --opacity-warning-tint: 0.05;
+  --opacity-button-pressed: 0.7;
+
+  /* ========================================
+     Z-index
+     ======================================== */
+  --z-modal-overlay: 1000;
+  --z-modal-content: 1001;
 }
