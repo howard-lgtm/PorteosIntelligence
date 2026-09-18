@@ -1,10 +1,36 @@
-/* Main App Shell - Three Column Layout */
-.app-container {
-  display: grid;
-  grid-template-columns: var(--nav-pane-width) 1fr var(--inspector-pane-width);
+/* App Shell */
+.app-shell {
+  display: flex;
+  flex-direction: column;
   height: 100vh;
   overflow: hidden;
   background-color: var(--color-canvas-base);
+}
+
+/* Full-width top header row */
+.app-header {
+  display: grid;
+  grid-template-columns: var(--nav-pane-width) 1fr var(--inspector-pane-width);
+  flex-shrink: 0;
+  border-bottom: var(--divider-width) solid var(--color-divider-structural);
+}
+
+.app-header-left-pad {
+  background-color: var(--color-surface-panel);
+  border-right: var(--divider-width) solid var(--color-divider-structural);
+}
+
+.app-header-right-pad {
+  background-color: var(--color-surface-panel);
+  border-left: var(--divider-width) solid var(--color-divider-structural);
+}
+
+/* Three-column layout */
+.app-columns {
+  display: grid;
+  grid-template-columns: var(--nav-pane-width) 1fr var(--inspector-pane-width);
+  flex: 1;
+  overflow: hidden;
 }
 
 .main-workspace {
@@ -46,7 +72,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-block-gutter);
+  padding: 0 var(--spacing-block-gutter);
   border-bottom: var(--divider-width) solid var(--color-divider-structural);
   height: var(--row-height-pane-bar);
 }
@@ -56,8 +82,7 @@
   font-size: var(--font-size-module-cmd);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-button-primary);
-  text-transform: uppercase;
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
@@ -65,16 +90,11 @@
   background: none;
   border: none;
   color: var(--color-text-dim);
-  font-size: 20px;
   font-family: var(--font-mono);
-  line-height: 1;
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-bold);
   cursor: pointer;
   padding: 0;
-  width: var(--row-height-button);
-  height: var(--row-height-button);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .modal-close:hover {
@@ -85,14 +105,10 @@
   padding: var(--spacing-block-gutter);
   overflow-y: auto;
   flex: 1;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-row-value);
-  line-height: var(--line-height-row-value);
-  color: var(--color-text-secondary);
 }
 
 .pdf-preview {
-  min-height: 400px;
+  min-height: 300px;
   display: flex;
   align-items: center;
   justify-content: center;

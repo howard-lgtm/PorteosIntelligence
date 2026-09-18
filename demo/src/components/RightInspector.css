@@ -1,4 +1,4 @@
-/* Right Inspector Pane - Terminal Style */
+/* Right Inspector Pane */
 .right-inspector {
   width: var(--inspector-pane-width);
   background-color: var(--color-surface-panel);
@@ -8,18 +8,39 @@
   overflow-y: auto;
 }
 
-/* Inspector Tab Header */
-.inspector-header {
+/* Inspector Path Header */
+.inspector-path-bar {
+  height: var(--row-height-pane-bar);
+  padding: 0 var(--spacing-block-gutter);
   border-bottom: var(--divider-width) solid var(--color-divider-structural);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
+.inspector-path {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-row-label);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-row-label);
+  color: var(--color-text-secondary);
+}
+
+.inspector-path-icon {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-meta);
+  color: var(--color-text-dim);
+}
+
+/* Tab Bar */
 .inspector-tabs {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  height: var(--row-height-header);
+  border-bottom: var(--divider-width) solid var(--color-divider-structural);
 }
 
 .inspector-tab {
+  height: var(--row-height-header);
   padding: 0;
   background: none;
   border: none;
@@ -31,7 +52,6 @@
   letter-spacing: var(--tracking-meta);
   text-transform: uppercase;
   cursor: pointer;
-  transition: all 150ms ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -52,7 +72,7 @@
   border-bottom: var(--nav-selection-border) solid var(--color-accent-institutional-rust);
 }
 
-/* Inspector Content */
+/* Content */
 .inspector-content {
   padding: var(--spacing-block-gutter);
 }
@@ -63,43 +83,67 @@
   gap: var(--spacing-block);
 }
 
-.btn-action {
-  padding: 0 var(--spacing-block-gutter);
-  background: none;
-  border: var(--divider-width) solid var(--color-divider-structural);
-  color: var(--color-accent-institutional-rust);
+/* Primary Action Button — filled rust */
+.btn-action-filled {
+  width: 100%;
+  padding: 0;
+  height: var(--row-height-button);
+  background-color: var(--color-accent-institutional-rust);
+  border: none;
+  color: var(--color-text-primary);
   font-family: var(--font-mono);
   font-size: var(--font-size-button-primary);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-button-primary);
   text-transform: uppercase;
   cursor: pointer;
-  transition: all 150ms ease;
-  height: var(--row-height-button);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.btn-action:hover {
-  background-color: var(--color-surface-elevated);
-  border-color: var(--color-accent-institutional-rust);
+.btn-action-filled:hover {
+  background-color: #b84b28;
+}
+
+/* Secondary Action Button — outlined */
+.btn-action-outlined {
+  width: 100%;
+  padding: 0;
+  height: var(--row-height-button);
+  background: none;
+  border: var(--divider-width) solid var(--color-divider-structural);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-button-primary);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-button-primary);
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-action-outlined:hover {
+  border-color: var(--color-text-secondary);
+  color: var(--color-text-primary);
 }
 
 .section-divider {
   height: var(--divider-width);
   background-color: var(--color-divider-structural);
-  margin: var(--spacing-block-gutter) 0;
+  margin: var(--spacing-block) 0;
 }
 
-/* Profile Weights Display */
+/* Profile Weights */
 .profile-weights {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-.section-title {
+.weights-header {
   font-family: var(--font-mono);
   font-size: var(--font-size-meta);
   font-weight: var(--font-weight-bold);
@@ -111,18 +155,22 @@
 
 .weight-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-block) 0;
-  border-bottom: var(--divider-width) solid var(--color-divider-structural);
   height: var(--row-height-data);
+  border-bottom: var(--divider-width) solid var(--color-divider-structural);
+  gap: var(--spacing-cell-padding);
 }
 
-.weight-item.total {
+.weight-row-accent {
+  width: 3px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.weight-item.weight-total {
   border-top: var(--divider-width) solid var(--color-divider-structural);
   border-bottom: none;
-  margin-top: var(--spacing-block);
-  font-weight: var(--font-weight-bold);
+  margin-top: 2px;
 }
 
 .weight-label {
@@ -132,25 +180,65 @@
   letter-spacing: var(--tracking-row-label);
   text-transform: uppercase;
   color: var(--color-text-dim);
+  flex: 1;
 }
 
 .weight-value {
   font-family: var(--font-mono);
   font-size: var(--font-size-row-value);
   font-weight: var(--font-weight-medium);
-  line-height: var(--line-height-row-value);
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
 }
 
-/* Placeholder States */
-.intel-placeholder,
-.media-placeholder,
-.research-placeholder {
-  padding: var(--spacing-block-gutter) * 2;
-  text-align: center;
+.weight-total-value {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+/* Founder Lens */
+.founder-lens {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-block);
+}
+
+.founder-lens-label {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-dim);
+}
+
+.founder-lens-options {
+  display: flex;
+  gap: var(--spacing-block);
+}
+
+.lens-option {
+  background: none;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-dim);
+  cursor: pointer;
+  padding: 0;
+}
+
+.lens-option.active {
+  color: var(--color-status-warn);
+}
+
+.lens-option:hover {
+  color: var(--color-text-secondary);
+}
+
+/* Tab Placeholder States */
+.tab-placeholder {
   font-family: var(--font-mono);
   font-size: var(--font-size-row-label);
   line-height: var(--line-height-row-label);
+  color: var(--color-text-dim);
+  padding: var(--spacing-block-gutter) 0;
 }

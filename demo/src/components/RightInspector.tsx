@@ -10,63 +10,77 @@ interface Props {
 
 export function RightInspector({ activeTab, onTabChange, onEditData, onGeneratePdf }: Props) {
   const tabs: { id: InspectorTab; label: string }[] = [
-    { id: 'latest', label: 'LATEST' },
-    { id: 'intel', label: 'INTEL' },
+    { id: 'latest', label: 'WEIGHT...' },
+    { id: 'intel', label: 'VIBE' },
     { id: 'media', label: 'MEDIA' },
-    { id: 'research', label: 'RESEARCH…' },
+    { id: 'research', label: 'RESEAR...' },
   ]
 
   return (
     <aside className="right-inspector">
-      <div className="inspector-header">
-        <div className="inspector-tabs">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={`inspector-tab ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => {
-                onTabChange(tab.id)
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+      {/* Inspector Path Header */}
+      <div className="inspector-path-bar">
+        <span className="inspector-path">./INSPECTOR_V2</span>
+        <span className="inspector-path-icon">[ * ]</span>
+      </div>
+
+      {/* Tab Bar */}
+      <div className="inspector-tabs">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={`inspector-tab ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => { onTabChange(tab.id) }}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div className="inspector-content">
         {activeTab === 'latest' && (
           <div className="inspector-section">
-            <button className="btn-action" onClick={onEditData}>
+            {/* Primary Actions */}
+            <button className="btn-action-filled" onClick={onEditData}>
               [ EDIT DEAL DATA ]
             </button>
-            <button className="btn-action" onClick={onGeneratePdf}>
+            <button className="btn-action-outlined" onClick={onGeneratePdf}>
               [ PDF ]
             </button>
 
             <div className="section-divider" />
 
+            {/* Profile Weights */}
             <div className="profile-weights">
-              <div className="section-title">[ APPLY WEIGHTS FOR HOTEL ]</div>
-              <div className="weight-item">
-                <span className="weight-label">REAL ESTATE</span>
-                <span className="weight-value">25 %</span>
-              </div>
-              <div className="weight-item">
-                <span className="weight-label">HOSPITALITY</span>
-                <span className="weight-value">25 %</span>
-              </div>
-              <div className="weight-item">
-                <span className="weight-label">DESIGN</span>
-                <span className="weight-value">25 %</span>
-              </div>
-              <div className="weight-item">
-                <span className="weight-label">CIRCULAR ECONOMY</span>
-                <span className="weight-value">25 %</span>
-              </div>
-              <div className="weight-item total">
+              <div className="weights-header">[ APPLY WEIGHTS FOR HOTEL ]</div>
+              {[
+                { label: 'REAL ESTATE', value: '25 %', color: 'var(--color-accent-rust)' },
+                { label: 'HOSPITALITY', value: '25 %', color: 'var(--color-accent-hospitality)' },
+                { label: 'DESIGN', value: '25 %', color: 'var(--color-accent-design)' },
+                { label: 'CIRCULAR ECONOMY', value: '25 %', color: 'var(--color-accent-circular)' },
+              ].map(({ label, value, color }) => (
+                <div className="weight-item" key={label}>
+                  <div className="weight-row-accent" style={{ backgroundColor: color }} />
+                  <span className="weight-label">{label}</span>
+                  <span className="weight-value">{value}</span>
+                </div>
+              ))}
+              <div className="weight-item weight-total">
+                <div className="weight-row-accent" />
                 <span className="weight-label">TOTAL</span>
-                <span className="weight-value">100,0%</span>
+                <span className="weight-value weight-total-value">100,0%</span>
+              </div>
+            </div>
+
+            <div className="section-divider" />
+
+            {/* Founder Lens */}
+            <div className="founder-lens">
+              <div className="founder-lens-label">// FOUNDER_LENS</div>
+              <div className="founder-lens-options">
+                <button className="lens-option">[ ] LOW</button>
+                <button className="lens-option active">(+) MED</button>
+                <button className="lens-option">[ ] HIGH</button>
               </div>
             </div>
           </div>
@@ -74,25 +88,19 @@ export function RightInspector({ activeTab, onTabChange, onEditData, onGenerateP
 
         {activeTab === 'intel' && (
           <div className="inspector-section">
-            <div className="intel-placeholder">
-              <p>Intelligence feed placeholder</p>
-            </div>
+            <div className="tab-placeholder">// AI_VIBE_ANALYSIS<br />Run analysis to see signals.</div>
           </div>
         )}
 
         {activeTab === 'media' && (
           <div className="inspector-section">
-            <div className="media-placeholder">
-              <p>Media gallery placeholder</p>
-            </div>
+            <div className="tab-placeholder">// MEDIA_GALLERY<br />No media attached.</div>
           </div>
         )}
 
         {activeTab === 'research' && (
           <div className="inspector-section">
-            <div className="research-placeholder">
-              <p>Research links placeholder</p>
-            </div>
+            <div className="tab-placeholder">// RESEARCH_LINKS<br />No sources linked.</div>
           </div>
         )}
       </div>

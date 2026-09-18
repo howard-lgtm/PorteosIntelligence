@@ -1,0 +1,78 @@
+/* Top Header Bar - Terminal Path Display */
+.top-header-bar {
+  height: var(--row-height-pane-bar);
+  background-color: var(--color-surface-panel);
+  border-bottom: var(--divider-width) solid var(--color-divider-structural);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-block-gutter);
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.header-system {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-row-label);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-dim);
+  white-space: nowrap;
+}
+
+.header-path {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-row-label);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-asset {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-row-label);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-block-gutter);
+  flex-shrink: 0;
+}
+
+.header-http {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-meta);
+  white-space: nowrap;
+}
+
+.header-http.go {
+  color: var(--color-status-go);
+}
+
+.header-bracket {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-dim);
+  cursor: pointer;
+}
+
+.header-bracket:hover {
+  color: var(--color-text-secondary);
+}

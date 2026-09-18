@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "2650"
-   version = "1.7">
+   version = "1.8">
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES">
@@ -17,6 +17,20 @@
                BlueprintIdentifier = "2C1E3EE12FECB3F6000026A3"
                BuildableName = "PorteosIntelligence.app"
                BlueprintName = "PorteosIntelligence"
+               ReferencedContainer = "container:PorteosIntelligence.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "2C1E3EF02FECB3F9000026A3"
+               BuildableName = "PorteosIntelligenceTests.xctest"
+               BlueprintName = "PorteosIntelligenceTests"
                ReferencedContainer = "container:PorteosIntelligence.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>

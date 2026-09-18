@@ -1,0 +1,6 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project PorteosIntelligence.xcodeproj -scheme PorteosIntelligence -destination platform=macOS test
+
+2026-09-13 05:06:32.178 xcodebuild[67330:931710] Writing error result bundle to /var/folders/5h/3bd903x95csd0f4484g2kqcr0000gn/T/ResultBundle_2026-13-09_05-06-0032.xcresult
+xcodebuild: error: Scheme PorteosIntelligence is not currently configured for the test action.
+

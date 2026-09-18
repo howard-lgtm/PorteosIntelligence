@@ -1,0 +1,6 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project PorteosIntelligence.xcodeproj -scheme HandoverDay4Probe -destination platform=macOS test
+
+2026-09-11 01:49:43.556 xcodebuild[65971:3249900] Writing error result bundle to /var/folders/5h/3bd903x95csd0f4484g2kqcr0000gn/T/ResultBundle_2026-11-09_01-49-0043.xcresult
+xcodebuild: error: Scheme HandoverDay4Probe is not currently configured for the test action.
+

@@ -1,0 +1,5 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project PorteosIntelligence.xcodeproj -target PorteosIntelligenceTests -destination platform=macOS test
+
+2026-09-12 18:25:57.795 xcodebuild[21262:204424] Writing error result bundle to /var/folders/5h/3bd903x95csd0f4484g2kqcr0000gn/T/ResultBundle_2026-12-09_18-25-0057.xcresult
+xcodebuild: error: The test action requires that the name of a scheme in the project is provided using the "-scheme" option. The "-list" option can be used to find the names of the schemes in the project.

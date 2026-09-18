@@ -20,6 +20,9 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case 'SET_SEARCH':
       return { ...state, searchQuery: action.payload }
 
+    case 'SET_STATUS_FILTER':
+      return { ...state, statusFilter: action.payload }
+
     default:
       return state
   }

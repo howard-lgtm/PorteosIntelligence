@@ -1,0 +1,1002 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project PorteosIntelligence.xcodeproj -scheme PorteosIntelligence -destination platform=macOS build
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006021-000A60193C47401E, name:My Mac }
+{ platform:macOS, arch:x86_64, id:00006021-000A60193C47401E, name:My Mac }
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (1 target)
+    Target 'PorteosIntelligence' in project 'PorteosIntelligence' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 7333e97c64878e62258cc67a1c6d1a78
+Build description path: /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/XCBuildData/7333e97c64878e62258cc67a1c6d1a78.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk /Users/howardduffy/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.5-25F70-e082c4a02f00227109f4ed75e425c832.sdkstatcache
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -o /Users/howardduffy/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.5-25F70-e082c4a02f00227109f4ed75e425c832.sdkstatcache
+
+CreateBuildDirectory /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence.xcodeproj
+    builtin-create-build-directory /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products
+
+CreateBuildDirectory /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence.xcodeproj
+    builtin-create-build-directory /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex
+
+CreateBuildDirectory /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence.xcodeproj
+    builtin-create-build-directory /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug
+
+CreateBuildDirectory /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/ExplicitPrecompiledModules
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence.xcodeproj
+    builtin-create-build-directory /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+CreateBuildDirectory /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence.xcodeproj
+    builtin-create-build-directory /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+CreateBuildDirectory /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/EagerLinkingTBDs/Debug
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence.xcodeproj
+    builtin-create-build-directory /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/EagerLinkingTBDs/Debug
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence-01c0a867d31d8577a7210807f1b1404b-VFS/all-product-headers.yaml
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence.xcodeproj
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence-01c0a867d31d8577a7210807f1b1404b-VFS/all-product-headers.yaml
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence.hmap (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence.hmap
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/empty-PorteosIntelligence.plist (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/empty-PorteosIntelligence.plist
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-all-non-framework-target-headers.hmap (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-all-target-headers.hmap (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-all-target-headers.hmap
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-DebugDylibPath-normal-arm64.txt (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-DebugDylibPath-normal-arm64.txt
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-generated-files.hmap (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-generated-files.hmap
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-project-headers.hmap (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-project-headers.hmap
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-own-target-headers.hmap (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-own-target-headers.hmap
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence.DependencyStaticMetadataFileList (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence.DependencyMetadataFileList (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence.DependencyMetadataFileList
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-DebugDylibInstallName-normal-arm64.txt (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-DebugDylibInstallName-normal-arm64.txt
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.SwiftFileList (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.SwiftFileList
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.SwiftConstValuesFileList (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence_const_extract_protocols.json (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence_const_extract_protocols.json
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.LinkFileList (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.LinkFileList
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence-OutputFileMap.json (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence-OutputFileMap.json
+
+WriteAuxiliaryFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources/Entitlements.plist (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    write-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources/Entitlements.plist
+
+MkDir /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /bin/mkdir -p /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents
+
+MkDir /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /bin/mkdir -p /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS
+
+MkDir /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /bin/mkdir -p /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+MkDir /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /bin/mkdir -p /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app
+
+ProcessProductPackaging /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/PorteosIntelligence.entitlements /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence.app.xcent (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+    Entitlements:
+    
+    {
+    "com.apple.security.app-sandbox" = 1;
+    "com.apple.security.files.user-selected.read-write" = 1;
+    "com.apple.security.get-task-allow" = 1;
+    "com.apple.security.network.client" = 1;
+    "com.apple.security.network.server" = 1;
+}
+    
+    builtin-productPackagingUtility /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/PorteosIntelligence.entitlements -entitlements -format xml -o /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence.app.xcent
+
+ProcessProductPackagingDER /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence.app.xcent /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence.app.xcent.der (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /usr/bin/derq query -f xml -i /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence.app.xcent -o /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence.app.xcent.der --raw
+
+Ld /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS/__preview.dylib normal (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-macos14.6 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -O0 -L/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug -F/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug -install_name @rpath/PorteosIntelligence.debug.dylib -Xlinker -dead_strip -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence_dependency_info.dat -Xlinker -no_adhoc_codesign -o /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS/__preview.dylib
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/zero-defect-quality.mdc /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/.cursor/rules/zero-defect-quality.mdc (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/.cursor/rules/zero-defect-quality.mdc /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+GenerateAssetSymbols /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Assets.xcassets (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /Applications/Xcode.app/Contents/Developer/usr/bin/actool /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Assets.xcassets --compile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources --output-format human-readable-text --notices --warnings --export-dependency-info /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_dependencies --output-partial-info-plist /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_generated_info.plist --app-icon AppIcon --accent-color AccentColor --enable-on-demand-resources NO --development-region en --target-device mac --minimum-deployment-target 14.6 --platform macosx --bundle-identifier com.porteos.native.v2 --generate-swift-asset-symbols /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources/GeneratedAssetSymbols.swift --generate-objc-asset-symbols /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources/GeneratedAssetSymbols.h --generate-asset-symbol-index /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/* com.apple.actool.compilation-results */
+/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources/GeneratedAssetSymbols.h
+/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources/GeneratedAssetSymbols.swift
+
+
+MkDir /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_output/thinned (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /bin/mkdir -p /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_output/thinned
+
+MkDir /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_output/unthinned (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /bin/mkdir -p /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_output/unthinned
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/project-rules.mdc /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/.cursor/rules/project-rules.mdc (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/.cursor/rules/project-rules.mdc /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/build-prioritization.mdc /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/.cursor/rules/build-prioritization.mdc (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/.cursor/rules/build-prioritization.mdc /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/README.md /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/README.md (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/README.md /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/PORTEOS\ INTELLIGENCE\ v2.06\ —\ FONT\ SPECIFICATION.md /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/PORTEOS\ INTELLIGENCE\ v2.06\ —\ FONT\ SPECIFICATION.md (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/PORTEOS\ INTELLIGENCE\ v2.06\ —\ FONT\ SPECIFICATION.md /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/PACKAGE_v1_STATUS.md /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/PACKAGE_v1_STATUS.md (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/PACKAGE_v1_STATUS.md /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/PACKAGE_v1_PUNCHLIST.md /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/PACKAGE_v1_PUNCHLIST.md (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/PACKAGE_v1_PUNCHLIST.md /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/JetBrainsMono-SemiBold.ttf /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Fonts/JetBrainsMono-SemiBold.ttf (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Fonts/JetBrainsMono-SemiBold.ttf /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/JetBrainsMono-Regular.ttf /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Fonts/JetBrainsMono-Regular.ttf (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Fonts/JetBrainsMono-Regular.ttf /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/JetBrainsMono-Medium.ttf /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Fonts/JetBrainsMono-Medium.ttf (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Fonts/JetBrainsMono-Medium.ttf /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/JetBrainsMono-Bold.ttf /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Fonts/JetBrainsMono-Bold.ttf (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Fonts/JetBrainsMono-Bold.ttf /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/HANDOFFGUIDE.md /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/HANDOFFGUIDE.md (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/HANDOFFGUIDE.md /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/FIGMA_VISUAL_INDEX.md /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/FIGMA_VISUAL_INDEX.md (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/FIGMA_VISUAL_INDEX.md /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/FIGMA_PUNCHLIST.md /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/FIGMA_PUNCHLIST.md (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/FIGMA_PUNCHLIST.md /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/FIGMA_FRAME_INDEX.md /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/FIGMA_FRAME_INDEX.md (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/FIGMA_FRAME_INDEX.md /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/FIGMA_FONT_MAP.md /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/FIGMA_FONT_MAP.md (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/FIGMA_FONT_MAP.md /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/DISTRIBUTION.md /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/DISTRIBUTION.md (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/DISTRIBUTION.md /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/DEVELOPMENT_RULES.md /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/DEVELOPMENT_RULES.md (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/DEVELOPMENT_RULES.md /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/DESIGN_TOKENS.md /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/DESIGN_TOKENS.md (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/DESIGN_TOKENS.md /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/COMPONENT_SPECS.md /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/COMPONENT_SPECS.md (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Documentation/COMPONENT_SPECS.md /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/02_DATA_METRICS_AND_LOGIC.md /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/02_DATA_METRICS_AND_LOGIC.md (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/02_DATA_METRICS_AND_LOGIC.md /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/01_TERMINAL_DESIGN_SYSTEM.md /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/01_TERMINAL_DESIGN_SYSTEM.md (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/01_TERMINAL_DESIGN_SYSTEM.md /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CpResource /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/.gitkeep /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Resources/Splash/.gitkeep (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Resources/Splash/.gitkeep /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources
+
+CopyPNGFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/porteos_splash_000.png /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Resources/Splash/porteos_splash_000.png (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /Applications/Xcode.app/Contents/Developer/usr/bin/copypng /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Resources/Splash/porteos_splash_000.png /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/porteos_splash_000.png
+
+CompileAssetCatalogVariant thinned /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Assets.xcassets (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /Applications/Xcode.app/Contents/Developer/usr/bin/actool /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Assets.xcassets --compile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_output/thinned --output-format human-readable-text --notices --warnings --export-dependency-info /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_dependencies_thinned --output-partial-info-plist /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_generated_info.plist_thinned --app-icon AppIcon --accent-color AccentColor --enable-on-demand-resources NO --development-region en --target-device mac --minimum-deployment-target 14.6 --platform macosx
+/* com.apple.actool.compilation-results */
+/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_generated_info.plist_thinned
+/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_output/thinned/AppIcon.icns
+/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_output/thinned/Assets.car
+
+
+SwiftDriver PorteosIntelligence normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PorteosIntelligence -Onone @/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.SwiftFileList -DDEBUG -default-isolation\=MainActor -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -target arm64-apple-macos14.6 -g -module-cache-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug -F /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug -emit-localized-strings -emit-localized-strings-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64 -c -j12 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/howardduffy/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.5-25F70-e082c4a02f00227109f4ed75e425c832.sdkstatcache -output-file-map /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence_const_extract_protocols.json -Xcc -iquote -Xcc /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-generated-files.hmap -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-own-target-headers.hmap -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-all-target-headers.hmap -Xcc -iquote -Xcc /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-project-headers.hmap -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/include -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources-normal/arm64 -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources/arm64 -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence-Swift.h -working-directory /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence -experimental-emit-module-separately -disable-cmo
+
+SwiftCompile normal arm64 Compiling\ DealResearchImporter.swift,\ EmailIngestionService.swift,\ EmailMonitorService.swift,\ GeocodingService.swift,\ ListingEmailParser.swift,\ LLMAnalysisService.swift,\ NewsAggregatorService.swift,\ PDFReportGenerator.swift,\ QuickEntryParser.swift,\ TrendAnalyzer.swift,\ TrendRecorder.swift,\ UnitSystemService.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/DealResearchImporter.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/EmailIngestionService.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/EmailMonitorService.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/GeocodingService.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/ListingEmailParser.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/LLMAnalysisService.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/NewsAggregatorService.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/PDFReportGenerator.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/QuickEntryParser.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/TrendAnalyzer.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/TrendRecorder.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/UnitSystemService.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/DealResearchImporter.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/EmailIngestionService.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/EmailMonitorService.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/GeocodingService.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/ListingEmailParser.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/LLMAnalysisService.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/NewsAggregatorService.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/PDFReportGenerator.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+/Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/PDFReportGenerator.swift:528:14: warning: immutable value 'i' was never used; consider replacing with '_' or removing it
+        for (i, sc) in scenarios.enumerated() {
+             ^
+             _
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/QuickEntryParser.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/TrendAnalyzer.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/TrendRecorder.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/UnitSystemService.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 Compiling\ DealIngestionServerPanel.swift,\ DealMediaGalleryView.swift,\ DesignSensitivityBlock.swift,\ EditDealSheet.swift,\ EmailIngestionPanel.swift,\ GlobalCommandBar.swift,\ HospitalitySensitivityBlock.swift,\ IngestionToast.swift,\ MarketTrendGrid.swift,\ MarketTrendModule.swift,\ MetricGridCell.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/DealIngestionServerPanel.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/DealMediaGalleryView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/DesignSensitivityBlock.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/EditDealSheet.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/EmailIngestionPanel.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/GlobalCommandBar.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/HospitalitySensitivityBlock.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/IngestionToast.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/MarketTrendGrid.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/MarketTrendModule.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/MetricGridCell.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/DealIngestionServerPanel.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/DealMediaGalleryView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/DesignSensitivityBlock.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/EditDealSheet.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/EmailIngestionPanel.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/GlobalCommandBar.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/HospitalitySensitivityBlock.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/IngestionToast.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/MarketTrendGrid.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/MarketTrendModule.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/MetricGridCell.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 Compiling\ MetricWithTrend.swift,\ ModuleHeader.swift,\ PorteosScoreBlock.swift,\ RealEstateSensitivityModule.swift,\ ResearchChatView.swift,\ ScenarioManagerBlock.swift,\ SensitivityAnalysisBlock.swift,\ ServerStatusIndicator.swift,\ ShortcutsLegendView.swift,\ StatusBadge.swift,\ SystemLogBlock.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/MetricWithTrend.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/ModuleHeader.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/PorteosScoreBlock.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/RealEstateSensitivityModule.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/ResearchChatView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/ScenarioManagerBlock.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/SensitivityAnalysisBlock.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/ServerStatusIndicator.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/ShortcutsLegendView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/StatusBadge.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/SystemLogBlock.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/MetricWithTrend.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/ModuleHeader.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/PorteosScoreBlock.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/RealEstateSensitivityModule.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/ResearchChatView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/ScenarioManagerBlock.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/SensitivityAnalysisBlock.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/ServerStatusIndicator.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/ShortcutsLegendView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/StatusBadge.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/SystemLogBlock.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 Compiling\ WindowManager.swift,\ AppCommands.swift,\ Color+Hex.swift,\ DashboardHelpers.swift,\ DealExporter.swift,\ DesignTokens.swift,\ DisplayDensity.swift,\ ListingURLHelpers.swift,\ PorteosFontLoader.swift,\ PorteosTextStyle.swift,\ PorteosTypography.swift,\ TerminalButtonStyle.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/WindowManager.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/AppCommands.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/Color+Hex.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/DashboardHelpers.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/DealExporter.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/DesignTokens.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/DisplayDensity.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/ListingURLHelpers.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/PorteosFontLoader.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/PorteosTextStyle.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/PorteosTypography.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/TerminalButtonStyle.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/WindowManager.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/AppCommands.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/Color+Hex.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/DashboardHelpers.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/DealExporter.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/DesignTokens.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/DisplayDensity.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/ListingURLHelpers.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/PorteosFontLoader.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/PorteosTextStyle.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/PorteosTypography.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/TerminalButtonStyle.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 Compiling\ CircularEconomyCalculator.swift,\ DesignCalculator.swift,\ HospitalityCalculator.swift,\ PorteosScoreCalculator.swift,\ RealEstateCalculator.swift,\ DealPropertyTypes.swift,\ DealTemplates.swift,\ MarketBenchmarks.swift,\ MarketFeedRegistry.swift,\ PorteosGlossary.swift,\ DealFilters.swift,\ DealImage.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Calculators/CircularEconomyCalculator.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Calculators/DesignCalculator.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Calculators/HospitalityCalculator.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Calculators/PorteosScoreCalculator.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Calculators/RealEstateCalculator.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Data/DealPropertyTypes.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Data/DealTemplates.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Data/MarketBenchmarks.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Data/MarketFeedRegistry.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Data/PorteosGlossary.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/DealFilters.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/DealImage.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Calculators/CircularEconomyCalculator.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Calculators/DesignCalculator.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Calculators/HospitalityCalculator.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Calculators/PorteosScoreCalculator.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Calculators/RealEstateCalculator.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Data/DealPropertyTypes.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Data/DealTemplates.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Data/MarketBenchmarks.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Data/MarketFeedRegistry.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Data/PorteosGlossary.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/DealFilters.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/DealImage.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 Compiling\ TerminalSegmentBar.swift,\ TerminalSensitivityStyles.swift,\ TerminalSheetShell.swift,\ TerminalSparkline.swift,\ TerminalTagChip.swift,\ TopHeaderBar.swift,\ ValidationLogModule.swift,\ GeoAssetContextCard.swift,\ GeoGeocodePendingOverlay.swift,\ GeoPortfolioMapView.swift,\ GlobalIntelligenceCompsView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalSegmentBar.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalSensitivityStyles.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalSheetShell.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalSparkline.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalTagChip.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TopHeaderBar.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/ValidationLogModule.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/GeoAssetContextCard.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/GeoGeocodePendingOverlay.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/GeoPortfolioMapView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/GlobalIntelligenceCompsView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalSegmentBar.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalSensitivityStyles.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalSheetShell.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalSparkline.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalTagChip.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TopHeaderBar.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/ValidationLogModule.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/GeoAssetContextCard.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/GeoGeocodePendingOverlay.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/GeoPortfolioMapView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/GlobalIntelligenceCompsView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 Compiling\ BulkExportSheet.swift,\ EmailSetupSheet.swift,\ FirstLaunchSheet.swift,\ FullDealEditSheet.swift,\ GlossarySheet.swift,\ ImportDealSheet.swift,\ PDFReportSheet.swift,\ PreloadReviewSheet.swift,\ QuickAddSheet.swift,\ ServerConfigSheet.swift,\ SettingsView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/BulkExportSheet.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/EmailSetupSheet.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/FirstLaunchSheet.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/FullDealEditSheet.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/GlossarySheet.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/ImportDealSheet.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/PDFReportSheet.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/PreloadReviewSheet.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/QuickAddSheet.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/ServerConfigSheet.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/SettingsView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/BulkExportSheet.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/EmailSetupSheet.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/FirstLaunchSheet.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/FullDealEditSheet.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/GlossarySheet.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/ImportDealSheet.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/PDFReportSheet.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/PreloadReviewSheet.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/QuickAddSheet.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/ServerConfigSheet.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/SettingsView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ PorteosIntelligence (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+EmitSwiftModule normal arm64 (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 Compiling\ DealScenario.swift,\ EmailImportRecord.swift,\ MarketTrend.swift,\ ProfileType.swift,\ ProfileWindowValue.swift,\ PropertyDeal.swift,\ ResearchMessage.swift,\ AIAnalysisService.swift,\ DataValidator.swift,\ DealHistoryManager.swift,\ DealIngestionServer.swift,\ DealPreloader.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/DealScenario.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/EmailImportRecord.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/MarketTrend.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/ProfileType.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/ProfileWindowValue.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/PropertyDeal.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/ResearchMessage.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/AIAnalysisService.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/DataValidator.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/DealHistoryManager.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/DealIngestionServer.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/DealPreloader.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/DealScenario.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/EmailImportRecord.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/MarketTrend.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/ProfileType.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/ProfileWindowValue.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/PropertyDeal.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Models/ResearchMessage.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/AIAnalysisService.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/DataValidator.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/DealHistoryManager.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/DealIngestionServer.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Services/DealPreloader.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 Compiling\ GlobalIntelligenceDashboardView.swift,\ GlobalIntelligenceInspectorViews.swift,\ IntelBriefView.swift,\ MarketNewsFeedModule.swift,\ CircularEconomyDashboardView.swift,\ CmdCenterView.swift,\ ComparisonView.swift,\ DesignDashboardView.swift,\ HospitalityDashboardView.swift,\ RealEstateDashboardView.swift,\ BatchTriageView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/GlobalIntelligenceDashboardView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/GlobalIntelligenceInspectorViews.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/IntelBriefView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/MarketNewsFeedModule.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Profiles/CircularEconomyDashboardView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Profiles/CmdCenterView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Profiles/ComparisonView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Profiles/DesignDashboardView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Profiles/HospitalityDashboardView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Profiles/RealEstateDashboardView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/BatchTriageView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/GlobalIntelligenceDashboardView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/GlobalIntelligenceInspectorViews.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/IntelBriefView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/GlobalIntelligence/MarketNewsFeedModule.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Profiles/CircularEconomyDashboardView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Profiles/CmdCenterView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Profiles/ComparisonView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Profiles/DesignDashboardView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Profiles/HospitalityDashboardView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Profiles/RealEstateDashboardView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/BatchTriageView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 Compiling\ WindowStateManager.swift,\ PropertyDealViewModel.swift,\ AdvancedFilterPanel.swift,\ AIVibePanel.swift,\ BlinkingCursorView.swift,\ CircularScoreRing.swift,\ CircularSensitivityBlock.swift,\ CommandPalette.swift,\ CompactDealInspector.swift,\ DashboardCLIHeader.swift,\ DashboardHeroScore.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/WindowStateManager.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/ViewModels/PropertyDealViewModel.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/AdvancedFilterPanel.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/AIVibePanel.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/BlinkingCursorView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/CircularScoreRing.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/CircularSensitivityBlock.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/CommandPalette.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/CompactDealInspector.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/DashboardCLIHeader.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/DashboardHeroScore.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Utilities/WindowStateManager.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/ViewModels/PropertyDealViewModel.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/AdvancedFilterPanel.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/AIVibePanel.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/BlinkingCursorView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/CircularScoreRing.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/CircularSensitivityBlock.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/CommandPalette.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/CompactDealInspector.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/DashboardCLIHeader.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/DashboardHeroScore.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 Compiling\ TerminalAsciiGauge.swift,\ TerminalBlock.swift,\ TerminalButton.swift,\ TerminalCLIHeader.swift,\ TerminalComboboxField.swift,\ TerminalHeroMetricCell.swift,\ TerminalInputField.swift,\ TerminalKeyValueRow.swift,\ TerminalMetricCell.swift,\ TerminalMetricGrid.swift,\ TerminalMetricRow.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalAsciiGauge.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalBlock.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalButton.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalCLIHeader.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalComboboxField.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalHeroMetricCell.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalInputField.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalKeyValueRow.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalMetricCell.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalMetricGrid.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalMetricRow.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalAsciiGauge.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalBlock.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalButton.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalCLIHeader.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalComboboxField.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalHeroMetricCell.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalInputField.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalKeyValueRow.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalMetricCell.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalMetricGrid.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Components/TerminalMetricRow.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+LinkAssetCatalog /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Assets.xcassets (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-linkAssetCatalog --thinned /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_output/thinned --thinned-dependencies /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_dependencies_thinned --thinned-info-plist-content /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_generated_info.plist_thinned --unthinned /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_output/unthinned --unthinned-dependencies /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_dependencies_unthinned --unthinned-info-plist-content /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_generated_info.plist_unthinned --output /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources --plist-output /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_generated_info.plist
+note: Emplaced /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/Assets.car (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+note: Emplaced /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources/AppIcon.icns (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftDriverJobDiscovery normal arm64 Compiling WindowManager.swift, AppCommands.swift, Color+Hex.swift, DashboardHelpers.swift, DealExporter.swift, DesignTokens.swift, DisplayDensity.swift, ListingURLHelpers.swift, PorteosFontLoader.swift, PorteosTextStyle.swift, PorteosTypography.swift, TerminalButtonStyle.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftCompile normal arm64 Compiling\ TemplatePickerSheet.swift,\ AppShell.swift,\ BootSplashView.swift,\ DetachedPaneViews.swift,\ InspectorPane.swift,\ NavigationPane.swift,\ ProfileWindowView.swift,\ RootView.swift,\ SplashView.swift,\ PorteosIntelligenceApp.swift,\ GeneratedAssetSymbols.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/TemplatePickerSheet.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Shell/AppShell.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Shell/BootSplashView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Shell/DetachedPaneViews.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Shell/InspectorPane.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Shell/NavigationPane.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Shell/ProfileWindowView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Splash/RootView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Splash/SplashView.swift /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/PorteosIntelligenceApp.swift /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Sheets/TemplatePickerSheet.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Shell/AppShell.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Shell/BootSplashView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Shell/DetachedPaneViews.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Shell/InspectorPane.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Shell/NavigationPane.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Shell/ProfileWindowView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Splash/RootView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/Views/Splash/SplashView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence/PorteosIntelligence/PorteosIntelligenceApp.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+SwiftCompile normal arm64 /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+
+ProcessInfoPlistFile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Info.plist /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/empty-PorteosIntelligence.plist (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-infoPlistUtility /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/empty-PorteosIntelligence.plist -producttype com.apple.product-type.application -genpkginfo /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/PkgInfo -expandbuildsettings -platform macosx -additionalcontentfile /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/assetcatalog_generated_info.plist -o /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Info.plist
+
+SwiftDriverJobDiscovery normal arm64 Compiling CircularEconomyCalculator.swift, DesignCalculator.swift, HospitalityCalculator.swift, PorteosScoreCalculator.swift, RealEstateCalculator.swift, DealPropertyTypes.swift, DealTemplates.swift, MarketBenchmarks.swift, MarketFeedRegistry.swift, PorteosGlossary.swift, DealFilters.swift, DealImage.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftDriverJobDiscovery normal arm64 Compiling TerminalAsciiGauge.swift, TerminalBlock.swift, TerminalButton.swift, TerminalCLIHeader.swift, TerminalComboboxField.swift, TerminalHeroMetricCell.swift, TerminalInputField.swift, TerminalKeyValueRow.swift, TerminalMetricCell.swift, TerminalMetricGrid.swift, TerminalMetricRow.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for PorteosIntelligence (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftDriver\ Compilation\ Requirements PorteosIntelligence normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PorteosIntelligence -Onone @/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.SwiftFileList -DDEBUG -default-isolation\=MainActor -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -target arm64-apple-macos14.6 -g -module-cache-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug -F /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug -emit-localized-strings -emit-localized-strings-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64 -c -j12 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/howardduffy/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.5-25F70-e082c4a02f00227109f4ed75e425c832.sdkstatcache -output-file-map /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence_const_extract_protocols.json -Xcc -iquote -Xcc /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-generated-files.hmap -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-own-target-headers.hmap -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-all-target-headers.hmap -Xcc -iquote -Xcc /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-project-headers.hmap -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/include -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources-normal/arm64 -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources/arm64 -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence-Swift.h -working-directory /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence -experimental-emit-module-separately -disable-cmo
+
+SwiftMergeGeneratedHeaders /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources/PorteosIntelligence-Swift.h /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence-Swift.h (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-swiftHeaderTool -arch arm64 /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence-Swift.h -o /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources/PorteosIntelligence-Swift.h
+
+Copy /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.swiftmodule/arm64-apple-macos.swiftdoc /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.swiftdoc (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.swiftdoc /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.swiftmodule/arm64-apple-macos.swiftdoc
+
+Copy /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.swiftmodule/arm64-apple-macos.swiftmodule /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.swiftmodule (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.swiftmodule /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.swiftmodule/arm64-apple-macos.swiftmodule
+
+Copy /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.swiftmodule/arm64-apple-macos.abi.json /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.abi.json (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.abi.json /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.swiftmodule/arm64-apple-macos.abi.json
+
+Copy /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.swiftmodule/Project/arm64-apple-macos.swiftsourceinfo /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.swiftsourceinfo (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.swiftsourceinfo /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.swiftmodule/Project/arm64-apple-macos.swiftsourceinfo
+
+SwiftDriverJobDiscovery normal arm64 Compiling MetricWithTrend.swift, ModuleHeader.swift, PorteosScoreBlock.swift, RealEstateSensitivityModule.swift, ResearchChatView.swift, ScenarioManagerBlock.swift, SensitivityAnalysisBlock.swift, ServerStatusIndicator.swift, ShortcutsLegendView.swift, StatusBadge.swift, SystemLogBlock.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftDriverJobDiscovery normal arm64 Compiling TerminalSegmentBar.swift, TerminalSensitivityStyles.swift, TerminalSheetShell.swift, TerminalSparkline.swift, TerminalTagChip.swift, TopHeaderBar.swift, ValidationLogModule.swift, GeoAssetContextCard.swift, GeoGeocodePendingOverlay.swift, GeoPortfolioMapView.swift, GlobalIntelligenceCompsView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftDriverJobDiscovery normal arm64 Compiling DealIngestionServerPanel.swift, DealMediaGalleryView.swift, DesignSensitivityBlock.swift, EditDealSheet.swift, EmailIngestionPanel.swift, GlobalCommandBar.swift, HospitalitySensitivityBlock.swift, IngestionToast.swift, MarketTrendGrid.swift, MarketTrendModule.swift, MetricGridCell.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftDriverJobDiscovery normal arm64 Compiling DealResearchImporter.swift, EmailIngestionService.swift, EmailMonitorService.swift, GeocodingService.swift, ListingEmailParser.swift, LLMAnalysisService.swift, NewsAggregatorService.swift, PDFReportGenerator.swift, QuickEntryParser.swift, TrendAnalyzer.swift, TrendRecorder.swift, UnitSystemService.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftDriverJobDiscovery normal arm64 Compiling DealScenario.swift, EmailImportRecord.swift, MarketTrend.swift, ProfileType.swift, ProfileWindowValue.swift, PropertyDeal.swift, ResearchMessage.swift, AIAnalysisService.swift, DataValidator.swift, DealHistoryManager.swift, DealIngestionServer.swift, DealPreloader.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftDriverJobDiscovery normal arm64 Compiling WindowStateManager.swift, PropertyDealViewModel.swift, AdvancedFilterPanel.swift, AIVibePanel.swift, BlinkingCursorView.swift, CircularScoreRing.swift, CircularSensitivityBlock.swift, CommandPalette.swift, CompactDealInspector.swift, DashboardCLIHeader.swift, DashboardHeroScore.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftDriverJobDiscovery normal arm64 Compiling GlobalIntelligenceDashboardView.swift, GlobalIntelligenceInspectorViews.swift, IntelBriefView.swift, MarketNewsFeedModule.swift, CircularEconomyDashboardView.swift, CmdCenterView.swift, ComparisonView.swift, DesignDashboardView.swift, HospitalityDashboardView.swift, RealEstateDashboardView.swift, BatchTriageView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftDriverJobDiscovery normal arm64 Compiling TemplatePickerSheet.swift, AppShell.swift, BootSplashView.swift, DetachedPaneViews.swift, InspectorPane.swift, NavigationPane.swift, ProfileWindowView.swift, RootView.swift, SplashView.swift, PorteosIntelligenceApp.swift, GeneratedAssetSymbols.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftDriverJobDiscovery normal arm64 Compiling BulkExportSheet.swift, EmailSetupSheet.swift, FirstLaunchSheet.swift, FullDealEditSheet.swift, GlossarySheet.swift, ImportDealSheet.swift, PDFReportSheet.swift, PreloadReviewSheet.swift, QuickAddSheet.swift, ServerConfigSheet.swift, SettingsView.swift (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+SwiftDriver\ Compilation PorteosIntelligence normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PorteosIntelligence -Onone @/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.SwiftFileList -DDEBUG -default-isolation\=MainActor -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -target arm64-apple-macos14.6 -g -module-cache-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug -F /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug -emit-localized-strings -emit-localized-strings-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64 -c -j12 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/howardduffy/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/macosx26.5-25F70-e082c4a02f00227109f4ed75e425c832.sdkstatcache -output-file-map /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence_const_extract_protocols.json -Xcc -iquote -Xcc /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-generated-files.hmap -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-own-target-headers.hmap -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-all-target-headers.hmap -Xcc -iquote -Xcc /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-project-headers.hmap -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/include -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources-normal/arm64 -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources/arm64 -Xcc -I/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence-Swift.h -working-directory /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence -experimental-emit-module-separately -disable-cmo
+
+Ld /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS/PorteosIntelligence.debug.dylib normal (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-macos14.6 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -O0 -L/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/EagerLinkingTBDs/Debug -L/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug -F/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/EagerLinkingTBDs/Debug -F/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug -filelist /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.LinkFileList -install_name @rpath/PorteosIntelligence.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @executable_path/../Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.swiftmodule @/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence-linker-args.resp -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -Xlinker -no_adhoc_codesign -o /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS/PorteosIntelligence.debug.dylib
+
+ConstructStubExecutorLinkFileList /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-ExecutorLinkFileList-normal-arm64.txt (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    construct-stub-executor-link-file-list /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS/PorteosIntelligence.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+
+Ld /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS/PorteosIntelligence normal (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-macos14.6 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -O0 -L/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug -F/Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @executable_path/../Frameworks -rdynamic -Xlinker -no_deduplicate -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence-ExecutorLinkFileList-normal-arm64.txt /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS/PorteosIntelligence.debug.dylib -Xlinker -no_adhoc_codesign -o /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS/PorteosIntelligence
+
+CopySwiftLibs /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-swiftStdLibTool --copy --verbose --sign F018CBD8CC6407BDDE7EAB91A3278F00AB69266B --scan-executable /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS/PorteosIntelligence.debug.dylib --scan-folder /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Frameworks --scan-folder /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/PlugIns --scan-folder /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Library/SystemExtensions --scan-folder /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Extensions --platform macosx --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+
+ExtractAppIntentsMetadata (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name PorteosIntelligence --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk --xcode-version 17F113 --platform-family macOS --deployment-target 14.6 --bundle-identifier com.porteos.native.v2 --output /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/Resources --target-triple arm64-apple-macos14.6 --binary-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS/PorteosIntelligence --dependency-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence_dependency_info.dat --stringsdata-file /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.SwiftFileList --metadata-file-list /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence.DependencyMetadataFileList --static-metadata-file-list /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence.DependencyStaticMetadataFileList --swift-const-vals-list /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/Objects-normal/arm64/PorteosIntelligence.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-09-14 11:06:04.394 appintentsmetadataprocessor[92131:2233727] Starting appintentsmetadataprocessor export
+2026-09-14 11:06:04.398 appintentsmetadataprocessor[92131:2233727] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+CodeSign /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS/PorteosIntelligence.debug.dylib (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+    Signing Identity:     "Apple Development: Howard Duffy (LW7G49M28L)"
+    
+    /usr/bin/codesign --force --sign F018CBD8CC6407BDDE7EAB91A3278F00AB69266B -o runtime --timestamp\=none --generate-entitlement-der /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS/PorteosIntelligence.debug.dylib
+
+CodeSign /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS/__preview.dylib (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+    Signing Identity:     "Apple Development: Howard Duffy (LW7G49M28L)"
+    
+    /usr/bin/codesign --force --sign F018CBD8CC6407BDDE7EAB91A3278F00AB69266B -o runtime --timestamp\=none --generate-entitlement-der /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app/Contents/MacOS/__preview.dylib
+
+CodeSign /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    
+    Signing Identity:     "Apple Development: Howard Duffy (LW7G49M28L)"
+    
+    /usr/bin/codesign --force --sign F018CBD8CC6407BDDE7EAB91A3278F00AB69266B -o runtime --entitlements /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Intermediates.noindex/PorteosIntelligence.build/Debug/PorteosIntelligence.build/PorteosIntelligence.app.xcent --timestamp\=none --generate-entitlement-der /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app
+
+RegisterExecutionPolicyException /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-RegisterExecutionPolicyException /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app
+
+Validate /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    builtin-validationUtility /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app -no-validate-extension -infoplist-subpath Contents/Info.plist
+
+Touch /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /usr/bin/touch -c /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app
+
+RegisterWithLaunchServices /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app (in target 'PorteosIntelligence' from project 'PorteosIntelligence')
+    cd /Users/howardduffy/CascadeProjects/PorteosNative/PorteosIntelligence
+    /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister -f -R -trusted /Users/howardduffy/Library/Developer/Xcode/DerivedData/PorteosIntelligence-fsgddcpacwcibthicubwammzqkwc/Build/Products/Debug/PorteosIntelligence.app
+
+** BUILD SUCCEEDED **
+

@@ -7,4 +7,5 @@ export const initialAppState: AppState = {
   showDealModal: false,
   showPdfPreview: false,
   searchQuery: '',
+  statusFilter: 'ALL',
 }

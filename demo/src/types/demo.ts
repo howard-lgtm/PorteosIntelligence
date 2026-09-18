@@ -21,6 +21,7 @@ export interface AppState {
   showDealModal: boolean
   showPdfPreview: boolean
   searchQuery: string
+  statusFilter: string
 }
 
 export type AppAction =
@@ -30,3 +31,4 @@ export type AppAction =
   | { type: 'TOGGLE_DEAL_MODAL'; payload: boolean }
   | { type: 'TOGGLE_PDF_PREVIEW'; payload: boolean }
   | { type: 'SET_SEARCH'; payload: string }
+  | { type: 'SET_STATUS_FILTER'; payload: string }
