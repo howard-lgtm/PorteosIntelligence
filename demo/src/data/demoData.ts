@@ -3,8 +3,8 @@ import type { Deal } from '../types/demo'
 export const DEALS: Deal[] = [
   {
     id: 'deal-001',
-    name: 'Andrew Freedman Hotel',
-    location: 'New York, NY',
+    name: 'Marina Bay Resort',
+    location: 'San Diego, CA',
     type: 'Hospitality',
     value: 12300000,
     score: 80,

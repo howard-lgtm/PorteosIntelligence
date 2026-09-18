@@ -1,115 +1,147 @@
 .profile-dashboard {
-  padding: var(--space-6);
-  overflow-y: auto;
+  padding: var(--space-8) var(--space-10);
+  max-width: 1400px;
 }
 
-.profile-header {
+.pd-hero {
   display: flex;
-  gap: var(--space-6);
+  gap: var(--space-8);
   align-items: center;
-  margin-bottom: var(--space-8);
-  padding-bottom: var(--space-6);
+  margin-bottom: var(--space-10);
+  padding-bottom: var(--space-8);
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.score-hero {
+.score-display {
   display: flex;
   align-items: baseline;
   gap: var(--space-2);
 }
 
-.score-value {
-  font-size: 72px;
-  font-weight: 300;
+.score-number {
+  font-size: 96px;
+  font-weight: 200;
   color: var(--color-text-primary);
-  line-height: 1;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
 }
 
-.score-label {
-  font-size: var(--font-size-lg);
-  color: var(--color-text-secondary);
+.score-max {
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-muted);
+  font-weight: 300;
 }
 
-.deal-info {
+.deal-header {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-6);
+  flex: 1;
 }
 
-.deal-title {
-  font-size: var(--font-size-xl);
-  color: var(--color-text-primary);
-}
-
-.grade-badge {
-  padding: var(--space-2) var(--space-4);
-  border: 2px solid;
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  min-width: 48px;
-  text-align: center;
-}
-
-.dashboard-title {
+.deal-name {
   font-size: var(--font-size-2xl);
+  color: var(--color-text-primary);
   font-weight: 300;
-  margin-bottom: var(--space-6);
   letter-spacing: -0.01em;
 }
 
-.dashboard-grid {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
+.grade-box {
+  padding: var(--space-3) var(--space-5);
+  border: 2px solid;
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1;
+  min-width: 60px;
+  text-align: center;
+  letter-spacing: -0.02em;
 }
 
-.dashboard-section {
-  padding: var(--space-6);
-  background-color: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-default);
+.dashboard-header {
+  font-size: 36px;
+  font-weight: 300;
+  margin-bottom: var(--space-8);
+  letter-spacing: -0.02em;
 }
 
-.section-label {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
+.pd-section {
+  margin-bottom: var(--space-10);
+  padding-bottom: var(--space-8);
+  border-bottom: 1px solid rgba(42, 42, 42, 0.5);
+}
+
+.pd-section-title {
+  font-size: 10px;
+  color: var(--color-text-muted);
   letter-spacing: 0.1em;
-  margin-bottom: var(--space-4);
-}
-
-.section-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.metric-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--color-border-subtle);
-}
-
-.metric-row:last-child {
-  border-bottom: none;
-}
-
-.metric-key {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-  letter-spacing: 0.05em;
-}
-
-.metric-val {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
+  margin-bottom: var(--space-6);
   font-weight: 500;
+  text-transform: uppercase;
 }
 
-.metric-val.positive {
+.pd-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+}
+
+.pd-metric {
+  padding: var(--space-6);
+  background-color: rgba(26, 26, 26, 0.4);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.pd-metric-label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-3);
+  text-transform: uppercase;
+}
+
+.pd-metric-value {
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.pd-metric-value.green {
   color: var(--color-green);
 }
 
-.metric-val.warning {
-  color: var(--color-yellow);
+.pd-metric-value.orange {
+  color: var(--color-orange-primary);
+}
+
+.pd-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+.pd-metric-card {
+  padding: var(--space-8) var(--space-6);
+  background-color: rgba(26, 26, 26, 0.4);
+  border: 1px solid var(--color-border-subtle);
+  text-align: center;
+}
+
+.pd-card-value {
+  font-size: 36px;
+  font-weight: 300;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-3);
+  letter-spacing: -0.01em;
+}
+
+.pd-card-value.green {
+  color: var(--color-green);
+}
+
+.pd-card-label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }

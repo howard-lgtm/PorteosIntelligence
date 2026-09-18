@@ -39,7 +39,12 @@ export function App() {
       <main className="main-workspace">
         {state.viewMode === 'command-center' && <CommandCenter />}
         {state.viewMode !== 'command-center' && (
-          <ProfileDashboard profile={state.viewMode} dealName={selectedDeal?.name} />
+          <ProfileDashboard
+            profile={state.viewMode}
+            dealName={selectedDeal?.name}
+            dealScore={selectedDeal?.score}
+            dealGrade={selectedDeal?.grade}
+          />
         )}
       </main>
 

@@ -4,9 +4,11 @@ import './ProfileDashboard.css'
 interface Props {
   profile: ViewMode
   dealName?: string
+  dealScore?: number
+  dealGrade?: string
 }
 
-export function ProfileDashboard({ profile, dealName }: Props) {
+export function ProfileDashboard({ profile, dealName, dealScore = 80, dealGrade = 'B' }: Props) {
   const titles: Record<ViewMode, string> = {
     'command-center': 'Command Center',
     'real-estate': 'Real Estate Dashboard',
@@ -17,73 +19,73 @@ export function ProfileDashboard({ profile, dealName }: Props) {
   }
 
   const colors: Record<ViewMode, string> = {
-    'command-center': 'var(--color-orange-primary)',
-    'real-estate': 'var(--color-blue)',
-    hospitality: 'var(--color-teal)',
-    design: 'var(--color-purple)',
-    circular: 'var(--color-green)',
-    'global-intel': 'var(--color-cyan)',
+    'command-center': '#ff6b35',
+    'real-estate': '#4895ef',
+    hospitality: '#00d4aa',
+    design: '#9d4edd',
+    circular: '#06d6a0',
+    'global-intel': '#00b4d8',
   }
+
+  const accentColor = colors[profile]
 
   return (
     <div className="profile-dashboard">
       {dealName && (
-        <div className="profile-header">
-          <div className="score-hero">
-            <div className="score-value">80</div>
-            <div className="score-label">/ 100</div>
+        <div className="pd-hero">
+          <div className="score-display">
+            <div className="score-number">{dealScore}</div>
+            <div className="score-max">/ 100</div>
           </div>
-          <div className="deal-info">
-            <div className="deal-title">{dealName}</div>
-            <div className="grade-badge" style={{ borderColor: colors[profile] }}>
-              B
+          <div className="deal-header">
+            <div className="deal-name">{dealName}</div>
+            <div className="grade-box" style={{ borderColor: accentColor, color: accentColor }}>
+              {dealGrade}
             </div>
           </div>
         </div>
       )}
 
-      <div className="dashboard-title" style={{ color: colors[profile] }}>
+      <div className="dashboard-header" style={{ color: accentColor }}>
         {titles[profile]}
       </div>
 
-      <div className="dashboard-grid">
-        <div className="dashboard-section">
-          <div className="section-label">01 // MARKET_TRENDS</div>
-          <div className="section-content">
-            <div className="metric-row">
-              <span className="metric-key">LOCATION SCORE</span>
-              <span className="metric-val positive">+22 %</span>
-            </div>
-            <div className="metric-row">
-              <span className="metric-key">MARKET TIMING</span>
-              <span className="metric-val">–</span>
-            </div>
-            <div className="metric-row">
-              <span className="metric-key">CASH FLOW</span>
-              <span className="metric-val positive">+ 34%</span>
-            </div>
-            <div className="metric-row">
-              <span className="metric-key">RISK MEASURE</span>
-              <span className="metric-val warning">↑ HIGH</span>
-            </div>
+      <div className="pd-section">
+        <div className="pd-section-title">porteoSSystem → 01 // MARKET_TRENDS</div>
+        <div className="pd-metrics">
+          <div className="pd-metric">
+            <div className="pd-metric-label">LOCATION SCORE</div>
+            <div className="pd-metric-value green">+22 %</div>
+          </div>
+          <div className="pd-metric">
+            <div className="pd-metric-label">MARKET TIMING</div>
+            <div className="pd-metric-value">–</div>
+          </div>
+          <div className="pd-metric">
+            <div className="pd-metric-label">CASH FLOW</div>
+            <div className="pd-metric-value green">+ 34%</div>
+          </div>
+          <div className="pd-metric">
+            <div className="pd-metric-label">RISK MEASURE</div>
+            <div className="pd-metric-value orange">↑ HIGH</div>
           </div>
         </div>
+      </div>
 
-        <div className="dashboard-section">
-          <div className="section-label">02 // KEY_METRICS</div>
-          <div className="section-content">
-            <div className="metric-row">
-              <span className="metric-key">PRIMARY METRIC</span>
-              <span className="metric-val">85.0%</span>
-            </div>
-            <div className="metric-row">
-              <span className="metric-key">SECONDARY METRIC</span>
-              <span className="metric-val">42.5</span>
-            </div>
-            <div className="metric-row">
-              <span className="metric-key">TERTIARY METRIC</span>
-              <span className="metric-val positive">+12.3%</span>
-            </div>
+      <div className="pd-section">
+        <div className="pd-section-title">porteoSSystem → 02 // KEY_METRICS</div>
+        <div className="pd-metrics-grid">
+          <div className="pd-metric-card">
+            <div className="pd-card-value">85.0%</div>
+            <div className="pd-card-label">PRIMARY METRIC</div>
+          </div>
+          <div className="pd-metric-card">
+            <div className="pd-card-value">42.5</div>
+            <div className="pd-card-label">SECONDARY METRIC</div>
+          </div>
+          <div className="pd-metric-card">
+            <div className="pd-card-value green">+12.3%</div>
+            <div className="pd-card-label">TERTIARY METRIC</div>
           </div>
         </div>
       </div>
