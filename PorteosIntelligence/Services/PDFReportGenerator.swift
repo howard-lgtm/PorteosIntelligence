@@ -600,7 +600,12 @@ final class PDFReportGenerator {
     ) {
         guard !str.isEmpty else { return }
         let nsColor = NSColor(cgColor: c(color)) ?? .white
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: nsColor]
+        // Disable ligatures to prevent "//" rendering as corrupted glyphs in PDF
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: nsColor,
+            .ligature: 0  // 0 = no ligatures, prevents "//" corruption
+        ]
         let line = CTLineCreateWithAttributedString(NSAttributedString(string: str, attributes: attrs))
         var drawX = x
         if let rx = rightAlignTo {
@@ -624,7 +629,10 @@ final class PDFReportGenerator {
         let paraStyle = NSMutableParagraphStyle()
         paraStyle.lineSpacing = 2
         let attrs: [NSAttributedString.Key: Any] = [
-            .font: font, .foregroundColor: nsColor, .paragraphStyle: paraStyle
+            .font: font,
+            .foregroundColor: nsColor,
+            .paragraphStyle: paraStyle,
+            .ligature: 0  // Disable ligatures in wrapped text too
         ]
         let attrStr = NSAttributedString(string: str, attributes: attrs)
         let setter  = CTFramesetterCreateWithAttributedString(attrStr)
