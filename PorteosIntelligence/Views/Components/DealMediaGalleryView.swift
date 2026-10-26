@@ -19,6 +19,8 @@ struct DealMediaGalleryView: View {
     @State private var photosPickerItems:  [PhotosPickerItem] = []
     @State private var editingImage:       DealImage?         = nil
     @State private var isCapturingAerial:  Bool               = false
+    @State private var isDragOverHero:     Bool               = false
+    @State private var isDragOverGrid:     Bool               = false
 
     private let gridColumns = Array(repeating: GridItem(.fixed(80), spacing: 4), count: 3)
 
@@ -84,7 +86,7 @@ struct DealMediaGalleryView: View {
     private var heroSlot: some View {
         let hero = deal.images.first(where: { $0.isHero })
         return ZStack {
-            DesignTokens.canvasBase
+            isDragOverHero ? DesignTokens.accentRust.opacity(0.1) : DesignTokens.canvasBase
             if let h = hero, let img = NSImage(data: h.imageData) {
                 Image(nsImage: img)
                     .resizable()
@@ -101,22 +103,23 @@ struct DealMediaGalleryView: View {
                             .clipShape(Rectangle())
                             .padding(6)
                     }
+                    .opacity(isDragOverHero ? 0.5 : 1.0)
             } else {
                 VStack(spacing: 8) {
                     Text("+")
                         .font(.system(size: 28, weight: .ultraLight, design: .monospaced))
-                        .foregroundStyle(DesignTokens.textDim)
-                    Text("// DROP HERO IMAGE")
+                        .foregroundStyle(isDragOverHero ? DesignTokens.accentRust : DesignTokens.textDim)
+                    Text(isDragOverHero ? "// RELEASE TO SET HERO" : "// DROP HERO IMAGE")
                         .porteosMeta()
-                        .foregroundStyle(DesignTokens.textDim)
+                        .foregroundStyle(isDragOverHero ? DesignTokens.accentRust : DesignTokens.textDim)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .overlay(
                     Rectangle()
                         .strokeBorder(
-                            style: StrokeStyle(lineWidth: 1, dash: [6, 4])
+                            style: StrokeStyle(lineWidth: isDragOverHero ? 2 : 1, dash: [6, 4])
                         )
-                        .foregroundStyle(DesignTokens.dividerStructural)
+                        .foregroundStyle(isDragOverHero ? DesignTokens.accentRust : DesignTokens.dividerStructural)
                         .padding(8)
                 )
             }
@@ -124,6 +127,9 @@ struct DealMediaGalleryView: View {
         .frame(maxWidth: .infinity)
         .frame(height: 240)
         .clipShape(Rectangle())
+        .onDrop(of: [.fileURL], isTargeted: $isDragOverHero) { providers in
+            handleImageDrop(providers: providers, asHero: true)
+        }
     }
 
     // MARK: Label Filter Chips
@@ -175,14 +181,17 @@ struct DealMediaGalleryView: View {
         let shown = filteredImages
         if shown.isEmpty {
             HStack {
-                Text("// NO IMAGES")
+                Text(isDragOverGrid ? "// RELEASE TO ADD IMAGES" : "// NO IMAGES")
                     .porteosMeta()
-                    .foregroundStyle(DesignTokens.textDim)
+                    .foregroundStyle(isDragOverGrid ? DesignTokens.accentRust : DesignTokens.textDim)
                 Spacer()
             }
             .padding(.horizontal, DesignTokens.blockGutter)
             .padding(.vertical, 20)
-            .background(DesignTokens.surfacePanel)
+            .background(isDragOverGrid ? DesignTokens.accentRust.opacity(0.08) : DesignTokens.surfacePanel)
+            .onDrop(of: [.fileURL], isTargeted: $isDragOverGrid) { providers in
+                handleImageDrop(providers: providers, asHero: false)
+            }
         } else {
             ScrollView {
                 LazyVGrid(columns: gridColumns, spacing: 4) {
@@ -194,6 +203,10 @@ struct DealMediaGalleryView: View {
             }
             .padding(.horizontal, 8)
             .frame(minHeight: 80, maxHeight: 300)
+            .background(isDragOverGrid ? DesignTokens.accentRust.opacity(0.08) : Color.clear)
+            .onDrop(of: [.fileURL], isTargeted: $isDragOverGrid) { providers in
+                handleImageDrop(providers: providers, asHero: false)
+            }
         }
     }
 
@@ -370,6 +383,44 @@ struct DealMediaGalleryView: View {
             deal.images.append(di)
         }
         try? ctx.save()
+    }
+    
+    private func handleImageDrop(providers: [NSItemProvider], asHero: Bool) -> Bool {
+        for provider in providers {
+            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, error in
+                DispatchQueue.main.async {
+                    guard error == nil,
+                          let data = item as? Data,
+                          let url = URL(dataRepresentation: data, relativeTo: nil) else { return }
+                    
+                    // Validate image type
+                    let ext = url.pathExtension.lowercased()
+                    guard ["jpg", "jpeg", "png", "heic", "tiff", "tif"].contains(ext) else { return }
+                    
+                    let secured = url.startAccessingSecurityScopedResource()
+                    defer { if secured { url.stopAccessingSecurityScopedResource() } }
+                    
+                    guard let imageData = try? Data(contentsOf: url) else { return }
+                    
+                    let nextOrder = (self.deal.images.map(\.sortOrder).max() ?? -1) + 1
+                    let di = DealImage(
+                        imageData: imageData,
+                        label:     self.inferLabel(from: url.lastPathComponent),
+                        isHero:    asHero || self.deal.images.isEmpty,
+                        sortOrder: nextOrder
+                    )
+                    
+                    // If setting as hero, clear existing hero flag
+                    if asHero {
+                        for img in self.deal.images { img.isHero = false }
+                    }
+                    
+                    self.deal.images.append(di)
+                    try? self.ctx.save()
+                }
+            }
+        }
+        return true
     }
 
     // MARK: Photos Picker
