@@ -1,6 +1,6 @@
 # Porteos Intelligence — Punchlist
 
-**Last updated:** 10 September 2026  
+**Last updated:** 26 October 2026  
 **Build:** compiling  
 **Platform:** macOS (SwiftUI + SwiftData)  
 **Apple App Store:** approved — running locally
@@ -116,6 +116,58 @@ Fix directions (Week 3, pick one):
 - [ ] `tags` / `isFavorite` UI (model fields exist, no surface)
 - [ ] Wire global command bar input to command execution
 - [ ] Legacy sheet cleanup (`NewDealSheet`, `EditDealSheet`, `QuickAddDealSheet`)
+
+---
+
+## New Issues (Oct 26, 2026) — From Screenshots
+
+### HIGH PRIORITY
+
+| ID | Issue | Files | Tier | Est. | Status |
+|----|-------|-------|------|------|--------|
+| PL-01 | Unit system not coordinating with location | `UnitSystemService.swift`, `FullDealEditSheet.swift` | TIER 2 | 2h | ⬜ |
+| PL-02 | Market preload applying wrong region | `DealPreloader.swift`, `MarketBenchmarks.swift` | TIER 2 | 1-2h | ⬜ |
+| PL-03 | Profile selection state unclear in nav | `NavigationPane.swift` | TIER 2 | 1h | ⬜ |
+
+**Details:**
+- **PL-01:** DESIGN tab shows m² and € for USA properties. Should show ft² and $ based on deal country (USA = imperial, Europe = metric).
+- **PL-02:** Portugal property getting US-ATL market benchmarks. Preload logic not matching country to correct market region.
+- **PL-03:** Left sidebar doesn't clearly highlight which profile is active (Real Estate, Hospitality, etc.). Need distinct visual state.
+
+### MEDIUM PRIORITY
+
+| ID | Issue | Files | Tier | Est. | Status |
+|----|-------|-------|------|------|--------|
+| PL-04 | Circular metrics not auto-calculating | `CircularEconomyCalculator.swift`, `FullDealEditSheet.swift` | TIER 2 | 3-4h | ⬜ |
+| PL-05 | GEO map auto-switching profiles | `GeoPortfolioMapView.swift`, `AppShell.swift` | TIER 2 | 2h | ⬜ |
+| PL-06 | PDF export text overlap | `PDFReportGenerator.swift` | TIER 2 | 1-2h | ⬜ |
+
+**Details:**
+- **PL-04:** CIRCULAR tab fields (RECYCLED CONTENT, RENEWABLE CONTENT, CO2 EMBODIED, OPERATIONAL CARBON, BUILDING AREA) are independent. Should have dependencies and auto-update when related values change.
+- **PL-05:** Selecting a deal on GEO map returns user to Real Estate or CMD CENTER profile. Should stay on map unless user explicitly navigates.
+- **PL-06:** Financial indicators (NOI, CAP RATE, DISCRETION) overlapping in PDF KEY FINANCIAL INDICATORS section.
+
+### LOW PRIORITY (POLISH)
+
+| ID | Issue | Files | Tier | Est. | Status |
+|----|-------|-------|------|------|--------|
+| PL-07 | No drag-drop for CSV import | `ImportDealSheet.swift` | TIER 2 | 2-3h | ⬜ |
+| PL-08 | No drag-drop for media gallery | `DealMediaGalleryView.swift` | TIER 2 | 2-3h | ⬜ |
+
+**Details:**
+- **PL-07:** CSV import only has BROWSE button. No drag-drop zone for files (requires SwiftUI .onDrop modifier + file handling).
+- **PL-08:** Inspector MEDIA tab requires MANAGE / FROM FILES button. Should support drag-drop of images directly.
+
+**Total New Items:** 8 issues  
+**Total Estimated Effort:** 16-21 hours  
+**Cost Breakdown (at tier split):**
+- HIGH PRIORITY: 4-5 hours (TIER 2)
+- MEDIUM: 6-8 hours (TIER 2)
+- LOW: 4-6 hours (TIER 2)
+
+**All items are TIER 2 work** — Use `claude-4.5-sonnet-thinking`
+
+---
 
 ## Done recently
 
