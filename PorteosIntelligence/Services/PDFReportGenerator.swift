@@ -298,27 +298,33 @@ final class PDFReportGenerator {
         text(ctx, "// KEY FINANCIAL INDICATORS", x: M, y: metricsY, font: jm(8), color: tp3)
 
         let metY: CGFloat = metricsY - 22
-        // Increased spacing: cW / 2.6 instead of cW / 3 to prevent text overlap
-        // Each column now has ~198pt width instead of ~171pt
-        func kv(_ label: String, _ value: String, col: Int) {
-            let colWidth = cW / 2.6  // Increased from 2.8 to 2.6 for wider columns
+        // Use 2 columns instead of 3 for better spacing - prevents overlap entirely
+        // Each column gets cW / 2 = ~257pt width
+        func kv(_ label: String, _ value: String, col: Int, y: CGFloat) {
+            let colWidth = cW / 2  // Two columns, each gets half the content width
             let x = M + CGFloat(col) * colWidth
-            text(ctx, label, x: x, y: metY + 12, font: jm(7), color: tp3)  // Reduced label font to 7
-            text(ctx, value, x: x, y: metY,      font: jmB(10), color: tp1)  // Reduced value font to 10
+            text(ctx, label, x: x, y: y + 12, font: jm(7.5), color: tp3)
+            text(ctx, value, x: x, y: y,      font: jmB(10.5), color: tp1)
         }
-        kv("NOI",       currency(reM.netOperatingIncome),        col: 0)
-        kv("CAP RATE",  pct(reM.capRate),                        col: 1)
-        kv("DSCR",      "\(f2(reM.debtServiceCoverageRatio))×",  col: 2)
+        
+        // Row 1: NOI and CAP RATE
+        kv("NOI",       currency(reM.netOperatingIncome), col: 0, y: metY)
+        kv("CAP RATE",  pct(reM.capRate),                 col: 1, y: metY)
+        
+        // Row 2: DSCR and CFBT
+        let metY2: CGFloat = metY - 36
+        kv("DSCR",      "\(f2(reM.debtServiceCoverageRatio))×", col: 0, y: metY2)
+        kv("CFBT",      currency(reM.cashFlowBeforeTax),        col: 1, y: metY2)
+        
+        // Row 3: LTV and CoC
+        let metY3: CGFloat = metY2 - 36
+        kv("LTV",       pct(reM.loanToValue),        col: 0, y: metY3)
+        kv("CoC",       pct(reM.cashOnCashReturn),   col: 1, y: metY3)  // Abbreviated from "CoC RETURN"
 
-        let metY2: CGFloat = metY - 38  // Increased from 32 to 38 for more vertical space
-        kv("CFBT",      currency(reM.cashFlowBeforeTax),  col: 0)
-        kv("LTV",       pct(reM.loanToValue),              col: 1)
-        kv("CoC RETURN", pct(reM.cashOnCashReturn),        col: 2)
-
-        hline(ctx, x: M, y: metY2 - 16, width: cW, color: border)
+        hline(ctx, x: M, y: metY3 - 16, width: cW, color: border)
 
         // ── Metadata row ───────────────────────────────────────────────────────
-        let mdY: CGFloat = metY2 - 30
+        let mdY: CGFloat = metY3 - 30
         df.dateStyle = .medium
         df.timeStyle = .none
         text(ctx, "CREATED: \(df.string(from: deal.createdAt))  //  UPDATED: \(df.string(from: deal.updatedAt))",
