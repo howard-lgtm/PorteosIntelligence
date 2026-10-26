@@ -165,6 +165,7 @@ struct FullDealEditSheet: View {
             guard canPreload else { return }
             preloadEstimate = DealPreloader.estimate(
                 city:          deal.locationCity,
+                country:       deal.locationCountry,
                 area:          deal.totalArea,
                 landArea:      deal.landArea,
                 purchasePrice: deal.purchasePrice,
@@ -304,6 +305,7 @@ struct FullDealEditSheet: View {
             Button {
                 preloadEstimate = DealPreloader.estimate(
                     city:          deal.locationCity,
+                    country:       deal.locationCountry,
                     area:          deal.totalArea,
                     landArea:      deal.landArea,
                     purchasePrice: deal.purchasePrice,

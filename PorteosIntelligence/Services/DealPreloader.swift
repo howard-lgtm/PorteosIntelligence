@@ -191,9 +191,17 @@ struct DealPreloader {
     ) -> PreloadEstimate? {
         guard area > 0 else { return nil }
 
-        // Resolve benchmark
-        let searchCity = city.isEmpty ? country : city
-        guard let bm = MarketBenchmarks.benchmark(for: searchCity) else { return nil }
+        // Resolve benchmark — try city first, fall back to country if city lookup fails
+        let bm: CityMetrics? = {
+            if !city.isEmpty, let cityMatch = MarketBenchmarks.benchmark(for: city) {
+                return cityMatch
+            }
+            if !country.isEmpty, let countryMatch = MarketBenchmarks.benchmark(for: country) {
+                return countryMatch
+            }
+            return nil
+        }()
+        guard let bm = bm else { return nil }
 
         let type = propertyType.lowercased() + " " + propertyName.lowercased()
 
