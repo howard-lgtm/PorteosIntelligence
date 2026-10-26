@@ -461,8 +461,11 @@ struct NavigationPane: View {
                 if isChecked { pendingCompare.remove(deal.id) }
                 else         { pendingCompare.insert(deal.id) }
             } else {
-                selectedDeal  = deal
-                activeProfile = profileFor(deal)
+                selectedDeal = deal
+                // Only auto-switch profile if not on globalIntelligence (keep user on map)
+                if activeProfile != .globalIntelligence {
+                    activeProfile = profileFor(deal)
+                }
             }
         } label: {
             HStack(spacing: 0) {
