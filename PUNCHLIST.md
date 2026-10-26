@@ -151,8 +151,8 @@ Fix directions (Week 3, pick one):
 
 | ID | Issue | Files | Tier | Est. | Status |
 |----|-------|-------|------|------|--------|
-| PL-07 | No drag-drop for CSV import | `ImportDealSheet.swift` | TIER 2 | 2-3h | ⬜ |
-| PL-08 | No drag-drop for media gallery | `DealMediaGalleryView.swift` | TIER 2 | 2-3h | ⬜ |
+| PL-07 | No drag-drop for CSV import | `ImportDealSheet.swift` | TIER 2 | 2-3h | ✅ |
+| PL-08 | No drag-drop for media gallery | `DealMediaGalleryView.swift` | TIER 2 | 2-3h | ✅ |
 
 **Details:**
 - **PL-07:** CSV import only has BROWSE button. No drag-drop zone for files (requires SwiftUI .onDrop modifier + file handling).
