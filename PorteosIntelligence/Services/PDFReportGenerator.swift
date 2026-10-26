@@ -298,19 +298,19 @@ final class PDFReportGenerator {
         text(ctx, "// KEY FINANCIAL INDICATORS", x: M, y: metricsY, font: jm(8), color: tp3)
 
         let metY: CGFloat = metricsY - 22
-        // Increased spacing: cW / 2.8 instead of cW / 3 to prevent text overlap
-        // Each column now has ~183pt width instead of ~171pt
+        // Increased spacing: cW / 2.6 instead of cW / 3 to prevent text overlap
+        // Each column now has ~198pt width instead of ~171pt
         func kv(_ label: String, _ value: String, col: Int) {
-            let colWidth = cW / 2.8
+            let colWidth = cW / 2.6  // Increased from 2.8 to 2.6 for wider columns
             let x = M + CGFloat(col) * colWidth
-            text(ctx, label, x: x, y: metY + 12, font: jm(7.5), color: tp3)
-            text(ctx, value, x: x, y: metY,      font: jmB(10.5), color: tp1)  // Reduced from 11 to 10.5
+            text(ctx, label, x: x, y: metY + 12, font: jm(7), color: tp3)  // Reduced label font to 7
+            text(ctx, value, x: x, y: metY,      font: jmB(10), color: tp1)  // Reduced value font to 10
         }
         kv("NOI",       currency(reM.netOperatingIncome),        col: 0)
         kv("CAP RATE",  pct(reM.capRate),                        col: 1)
         kv("DSCR",      "\(f2(reM.debtServiceCoverageRatio))×",  col: 2)
 
-        let metY2: CGFloat = metY - 32
+        let metY2: CGFloat = metY - 38  // Increased from 32 to 38 for more vertical space
         kv("CFBT",      currency(reM.cashFlowBeforeTax),  col: 0)
         kv("LTV",       pct(reM.loanToValue),              col: 1)
         kv("CoC RETURN", pct(reM.cashOnCashReturn),        col: 2)
