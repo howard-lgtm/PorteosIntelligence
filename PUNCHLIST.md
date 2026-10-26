@@ -125,9 +125,9 @@ Fix directions (Week 3, pick one):
 
 | ID | Issue | Files | Tier | Est. | Status |
 |----|-------|-------|------|------|--------|
-| PL-01 | Unit system not coordinating with location | `UnitSystemService.swift`, `FullDealEditSheet.swift` | TIER 2 | 2h | ⬜ |
-| PL-02 | Market preload applying wrong region | `DealPreloader.swift`, `MarketBenchmarks.swift` | TIER 2 | 1-2h | ⬜ |
-| PL-03 | Profile selection state unclear in nav | `NavigationPane.swift` | TIER 2 | 1h | ⬜ |
+| PL-01 | Unit system not coordinating with location | `UnitSystemService.swift`, `FullDealEditSheet.swift` | TIER 2 | 2h | ✅ |
+| PL-02 | Market preload applying wrong region | `DealPreloader.swift`, `MarketBenchmarks.swift` | TIER 2 | 1-2h | ✅ |
+| PL-03 | Profile selection state unclear in nav | `NavigationPane.swift` | TIER 2 | 1h | ✅ |
 
 **Details:**
 - **PL-01:** DESIGN tab shows m² and € for USA properties. Should show ft² and $ based on deal country (USA = imperial, Europe = metric).
@@ -138,9 +138,9 @@ Fix directions (Week 3, pick one):
 
 | ID | Issue | Files | Tier | Est. | Status |
 |----|-------|-------|------|------|--------|
-| PL-04 | Circular metrics not auto-calculating | `CircularEconomyCalculator.swift`, `FullDealEditSheet.swift` | TIER 2 | 3-4h | ⬜ |
-| PL-05 | GEO map auto-switching profiles | `GeoPortfolioMapView.swift`, `AppShell.swift` | TIER 2 | 2h | ⬜ |
-| PL-06 | PDF export text overlap | `PDFReportGenerator.swift` | TIER 2 | 1-2h | ⬜ |
+| PL-04 | Circular metrics not auto-calculating | `CircularEconomyCalculator.swift`, `FullDealEditSheet.swift` | TIER 2 | 3-4h | ✅ |
+| PL-05 | GEO map auto-switching profiles | `GeoPortfolioMapView.swift`, `AppShell.swift` | TIER 2 | 2h | ✅ |
+| PL-06 | PDF export text overlap | `PDFReportGenerator.swift` | TIER 2 | 1-2h | ✅ |
 
 **Details:**
 - **PL-04:** CIRCULAR tab fields (RECYCLED CONTENT, RENEWABLE CONTENT, CO2 EMBODIED, OPERATIONAL CARBON, BUILDING AREA) are independent. Should have dependencies and auto-update when related values change.
