@@ -298,10 +298,13 @@ final class PDFReportGenerator {
         text(ctx, "// KEY FINANCIAL INDICATORS", x: M, y: metricsY, font: jm(8), color: tp3)
 
         let metY: CGFloat = metricsY - 22
+        // Increased spacing: cW / 2.8 instead of cW / 3 to prevent text overlap
+        // Each column now has ~183pt width instead of ~171pt
         func kv(_ label: String, _ value: String, col: Int) {
-            let x = M + CGFloat(col) * (cW / 3)
+            let colWidth = cW / 2.8
+            let x = M + CGFloat(col) * colWidth
             text(ctx, label, x: x, y: metY + 12, font: jm(7.5), color: tp3)
-            text(ctx, value, x: x, y: metY,      font: jmB(11), color: tp1)
+            text(ctx, value, x: x, y: metY,      font: jmB(10.5), color: tp1)  // Reduced from 11 to 10.5
         }
         kv("NOI",       currency(reM.netOperatingIncome),        col: 0)
         kv("CAP RATE",  pct(reM.capRate),                        col: 1)
