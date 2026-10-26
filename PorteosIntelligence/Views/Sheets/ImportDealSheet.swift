@@ -20,6 +20,7 @@ struct ImportDealSheet: View {
     @State private var mapPurchasePrice = ""
     @State private var mapLocation      = ""
     @State private var mapPropertyType  = ""
+    @State private var isDragOver       = false
 
     private var hasFile: Bool { !parsedRows.isEmpty }
 
@@ -77,17 +78,20 @@ struct ImportDealSheet: View {
             VStack(spacing: 10) {
                 Text("CSV")
                     .porteosMeta()
-                    .foregroundStyle(DesignTokens.textDim)
+                    .foregroundStyle(isDragOver ? DesignTokens.accentRust : DesignTokens.textDim)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .background(DesignTokens.surfaceElevated)
+                    .background(isDragOver ? DesignTokens.accentRust.opacity(0.15) : DesignTokens.surfaceElevated)
                     .overlay {
-                        Rectangle().strokeBorder(DesignTokens.dividerStructural, lineWidth: DesignTokens.dividerWidth)
+                        Rectangle().strokeBorder(
+                            isDragOver ? DesignTokens.accentRust : DesignTokens.dividerStructural,
+                            lineWidth: DesignTokens.dividerWidth
+                        )
                     }
 
-                Text("DROP CSV FILE OR CLICK TO BROWSE")
+                Text(isDragOver ? "RELEASE TO IMPORT" : "DROP CSV FILE OR CLICK TO BROWSE")
                     .porteosButtonPrimary()
-                    .foregroundStyle(DesignTokens.textSecondary)
+                    .foregroundStyle(isDragOver ? DesignTokens.accentRust : DesignTokens.textSecondary)
 
                 Text(selectedFile.isEmpty
                      ? "Supports .csv and .json • Maximum 10 MB"
@@ -99,17 +103,20 @@ struct ImportDealSheet: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
-            .background(DesignTokens.surfacePanel)
+            .background(isDragOver ? DesignTokens.accentRust.opacity(0.08) : DesignTokens.surfacePanel)
             .overlay {
                 Rectangle()
                     .strokeBorder(
-                        DesignTokens.dividerStructural,
-                        style: StrokeStyle(lineWidth: DesignTokens.dividerWidth, dash: [6, 4])
+                        isDragOver ? DesignTokens.accentRust : DesignTokens.dividerStructural,
+                        style: StrokeStyle(lineWidth: isDragOver ? 2 : DesignTokens.dividerWidth, dash: [6, 4])
                     )
             }
         }
         .buttonStyle(.plain)
         .padding(DesignTokens.blockGutter)
+        .onDrop(of: [.fileURL], isTargeted: $isDragOver) { providers in
+            handleDrop(providers: providers)
+        }
     }
 
     // MARK: Preview
@@ -336,6 +343,58 @@ struct ImportDealSheet: View {
                 errorMessage = "Read failed: \(error.localizedDescription)"
             }
         }
+    }
+    
+    private func handleDrop(providers: [NSItemProvider]) -> Bool {
+        guard let provider = providers.first else { return false }
+        
+        errorMessage = nil
+        parsedRows   = []
+        headers      = []
+        resetMappings()
+        
+        provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    self.errorMessage = "Drop failed: \(error.localizedDescription)"
+                    return
+                }
+                
+                guard let data = item as? Data,
+                      let url = URL(dataRepresentation: data, relativeTo: nil) else {
+                    self.errorMessage = "Invalid file drop"
+                    return
+                }
+                
+                // Validate file type
+                let ext = url.pathExtension.lowercased()
+                guard ext == "csv" || ext == "json" else {
+                    self.errorMessage = "Only .csv and .json files are supported"
+                    return
+                }
+                
+                // Validate file size (10 MB max)
+                if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
+                   let size = attrs[.size] as? Int64,
+                   size > 10_485_760 {
+                    self.errorMessage = "File too large (max 10 MB)"
+                    return
+                }
+                
+                let secured = url.startAccessingSecurityScopedResource()
+                defer { if secured { url.stopAccessingSecurityScopedResource() } }
+                
+                do {
+                    let raw = try String(contentsOf: url, encoding: .utf8)
+                    self.selectedFile = url.lastPathComponent
+                    self.parseCSV(raw)
+                } catch {
+                    self.errorMessage = "Read failed: \(error.localizedDescription)"
+                }
+            }
+        }
+        
+        return true
     }
 
     private func parseCSV(_ content: String) {
