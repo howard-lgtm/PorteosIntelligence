@@ -19,6 +19,12 @@ struct DealTemplate: Identifiable {
             .trimmingCharacters(in: .whitespaces) ?? defaultLocation
     }
 
+    /// Second component of defaultLocation, used as locationCountry on the deal.
+    var locationCountry: String {
+        let parts = defaultLocation.components(separatedBy: ",")
+        return parts.count > 1 ? parts[1].trimmingCharacters(in: .whitespaces) : ""
+    }
+
     /// 2–3 headline metric pairs shown in the picker card.
     var keyMetrics: [(label: String, value: String)] {
         let m = defaultMetrics
@@ -91,10 +97,11 @@ struct DealTemplate: Identifiable {
         let m = defaultMetrics
         let d = PropertyDeal()
 
-        d.propertyName = customName ?? name
-        d.locationCity = locationCity
-        d.address      = defaultLocation
-        d.propertyType = resolvedPropertyType
+        d.propertyName     = customName ?? name
+        d.locationCity     = locationCity
+        d.locationCountry  = locationCountry
+        d.address          = defaultLocation
+        d.propertyType     = resolvedPropertyType
 
         // ── Real Estate ────────────────────────────────────────────────────────
         d.purchasePrice           = m["purchasePrice"]           ?? 0

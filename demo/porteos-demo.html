@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Porteos Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   PORTEOS INTELLIGENCE — V2.06_STABLE
+   Source of truth: DesignTokens.swift
+   ================================================================ */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --canvas:#0a0a0a; --surface:#111111; --elevated:#1a1a1a; --border:#333333;
+  --tp:#f8f9fa; --ts:#94a3b8; --td:#666666;
+  --go:#27c93f; --warn:#ffbd2e; --crit:#ff5f56; --info:#3b82f6;
+  --rust:#c25e30; --irust:#a34121;
+  --re:#c25e30; --hosp:#14b8a6; --des:#a855f7; --circ:#3b82f6; --slate:#94a3b8;
+  --nav:260px; --insp:280px;
+  --row:28px; --bar:40px; --hdr:36px; --btn:32px; --nav-lnk:24px;
+  --g:12px; --gap:6px; --cell-pad:8px;
+}
+html,body{height:100%;overflow:hidden;background:var(--canvas)}
+body{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--tp);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+button{font-family:inherit;cursor:pointer;background:none;border:none;color:inherit;font-size:inherit}
+input{font-family:inherit;background:none;border:none;color:var(--tp);outline:none;font-size:11px}
+
+/* ── SHELL ─────────────────────────────────────────────────────── */
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+#top-bar{display:grid;grid-template-columns:var(--nav) 1fr var(--insp);height:var(--bar);flex-shrink:0;border-bottom:1px solid var(--border)}
+#cols{display:grid;grid-template-columns:var(--nav) 1fr var(--insp);flex:1;overflow:hidden;min-height:0}
+
+/* top-bar cells */
+.tb-left{background:var(--surface);border-right:1px solid var(--border);display:flex;align-items:center;padding:0 var(--g)}
+.tb-left span{font-size:11px;font-weight:700;color:var(--ts);letter-spacing:.08em;text-transform:uppercase}
+.tb-mid{background:var(--canvas);display:flex;align-items:center;justify-content:space-between;padding:0 var(--g);overflow:hidden}
+.tb-path{display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap;font-size:11px}
+.tb-path .prompt{color:var(--td)}.tb-path .cmd{color:var(--ts);font-weight:500}.tb-path .asset{color:var(--td)}
+.tb-right-info{display:flex;align-items:center;gap:var(--g);flex-shrink:0;font-size:10px}
+.http-ok{color:var(--go)}.tb-bracket{color:var(--td)}
+.tb-insp-pad{background:var(--surface);border-left:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;padding:0 var(--g)}
+.tb-insp-pad span{font-size:10px;color:var(--td)}
+
+/* ── LEFT NAV ──────────────────────────────────────────────────── */
+#nav{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100%;overflow:hidden}
+.nav-wordmark{height:var(--bar);padding:0 var(--g);display:flex;align-items:center;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--ts);letter-spacing:.08em;text-transform:uppercase;flex-shrink:0}
+.nav-profiles{border-bottom:1px solid var(--border);flex-shrink:0}
+.nav-lnk{display:flex;align-items:center;justify-content:space-between;width:100%;height:var(--row);padding:0 0 0 var(--g);border:none;border-left:2px solid transparent;background:none;text-align:left;cursor:pointer;font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:.04em}
+.nav-lnk span.arrow{padding:0 var(--g);font-size:10px;color:var(--td)}
+.nav-lnk:hover{background:var(--elevated);color:var(--ts)}
+.nav-lnk.active{background:var(--elevated);color:var(--tp);font-weight:700;border-left-color:var(--irust)}
+.nav-lnk.active span.arrow{color:var(--irust)}
+.nav-actions{display:flex;border-bottom:1px solid var(--border);height:var(--row);flex-shrink:0}
+.na-btn{flex:1;font-size:10px;font-weight:700;color:var(--td);letter-spacing:.08em;text-transform:uppercase;border-right:1px solid var(--border)}
+.na-btn:last-child{border-right:none}
+.na-btn:hover{background:var(--elevated);color:var(--tp)}
+.status-tabs{display:flex;border-bottom:1px solid var(--border);height:var(--row);flex-shrink:0;overflow-x:auto}
+.st{flex-shrink:0;padding:0 7px;font-size:10px;color:var(--td);text-transform:uppercase;border-right:1px solid var(--border);letter-spacing:.06em;border-bottom:2px solid transparent}
+.st:last-child{border-right:none}
+.st:hover{color:var(--tp)}
+.st.active{color:var(--tp);font-weight:700;background:var(--elevated);border-bottom-color:var(--tp)}
+.search-row{display:flex;align-items:center;height:var(--row);padding:0 var(--g);gap:5px;border-bottom:1px solid var(--border);background:var(--canvas);flex-shrink:0}
+.search-prompt-sym{color:var(--irust);font-weight:700}
+.search-row input::placeholder{color:var(--td)}
+.deals-list{flex:1;overflow-y:auto;min-height:0}
+.deal-row{display:flex;align-items:center;width:100%;height:var(--row);padding:0;border:none;border-bottom:1px solid var(--border);background:none;text-align:left;cursor:pointer;border-left:4px solid transparent}
+.deal-row:hover{background:var(--elevated)}
+.deal-row.active{background:var(--elevated);border-left-color:var(--irust)}
+.deal-row .dn{flex:1;font-size:11px;color:var(--ts);padding-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
+.deal-row.active .dn{color:var(--tp);font-weight:700}
+.deal-row .dm{font-size:10px;padding-right:var(--g);color:var(--td);flex-shrink:0}
+.nav-footer{border-top:1px solid var(--border);flex-shrink:0}
+.footer-bulk{display:flex;justify-content:space-between;padding:0 var(--g);height:var(--row);align-items:center}
+.fl{font-size:10px;color:var(--td);text-transform:uppercase}
+.fl:hover{color:var(--ts)}
+.footer-import{display:flex;align-items:center;width:100%;height:var(--row);padding:0 var(--g);font-size:11px;color:var(--ts);border-top:1px solid var(--border);border-bottom:1px solid var(--border);text-transform:uppercase}
+.footer-import:hover{color:var(--tp)}
+.footer-new{display:block;width:calc(100% - 24px);margin:8px var(--g);height:var(--btn);background:var(--irust);color:var(--tp);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.footer-new:hover{background:#b84b28}
+.footer-cli{padding:8px var(--g) 10px;background:var(--canvas);border-top:1px solid var(--border);display:flex;align-items:center;gap:5px;font-size:10px;color:var(--td)}
+.cursor-blk{width:7px;height:12px;background:rgba(248,249,250,.85);animation:blink 1s step-end infinite}
+@keyframes blink{0%,100%{opacity:.85}50%{opacity:0}}
+
+/* ── CENTER PANE ───────────────────────────────────────────────── */
+#center{background:var(--canvas);border-left:1px solid var(--border);border-right:1px solid var(--border);overflow-y:auto;height:100%}
+.view{display:none}.view.active{display:block}
+
+/* CLI breadcrumb */
+.cli-bc{height:var(--hdr);padding:0 var(--g);display:flex;align-items:center;gap:6px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.cli-bc .p{color:var(--td)}.cli-bc .c{color:var(--ts);font-weight:500}.cli-bc .a{color:var(--td)}
+
+/* Score block — PorteosScoreBlock */
+.score-block{display:flex;margin:var(--g);border:1px solid var(--border)}
+.score-accent{width:4px;flex-shrink:0}
+.score-body{flex:1;display:flex;align-items:center;justify-content:space-between;padding:var(--g) var(--g) var(--g) 12px;background:var(--surface)}
+.score-num{font-size:36px;font-weight:700;line-height:1.1}
+.score-right{text-align:right}
+.score-lbl{font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.score-grade{font-size:20px;font-weight:700;margin-top:2px}
+.gA{color:var(--go)}.gB{color:var(--warn)}.gC{color:var(--tp)}.gD{color:var(--warn)}.gF{color:var(--crit)}
+
+/* Terminal block */
+.tb{border-bottom:1px solid var(--border)}
+.tb-hdr{height:var(--row);padding:0 var(--g);display:flex;align-items:center;gap:4px;background:var(--surface);border-bottom:1px solid var(--border)}
+.tb-hdr .p{color:var(--td)}.tb-hdr .c{font-weight:500}.tb-hdr .m{color:var(--td)}
+
+/* Metric grids */
+.mg{display:grid;gap:var(--gap);padding:var(--g)}
+.mg.c2{grid-template-columns:repeat(2,1fr)}
+.mg.c3{grid-template-columns:repeat(3,1fr)}
+.mg.c4{grid-template-columns:repeat(4,1fr)}
+.mg.c5{grid-template-columns:repeat(5,1fr)}
+.mc{background:var(--elevated);border:1px solid var(--border);padding:var(--cell-pad);min-height:54px;display:flex;flex-direction:column;justify-content:space-between}
+.mc-v{font-size:16px;font-weight:600;letter-spacing:-.02em;line-height:1.25}
+.mc-l{font-size:11px;font-weight:500;color:var(--td);text-transform:uppercase;letter-spacing:.02em}
+.mc-v.go{color:var(--go)}.mc-v.warn{color:var(--warn)}.mc-v.crit{color:var(--crit)}
+
+/* Hero strip (cmd center top) */
+.hero-strip{display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;background:var(--surface);border-bottom:1px solid var(--border)}
+.hero-cell{padding:var(--g) 16px}
+.hero-div{background:var(--border)}
+.hero-lbl{font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;font-weight:500}
+.hero-val{font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.hero-sub{font-size:10px;color:var(--td);margin-top:2px}
+.hero-grade{font-size:12px;font-weight:500;margin-top:2px}
+
+/* CRM / activity table */
+.crm-table{margin:var(--g);border:1px solid var(--border)}
+.crm-hdr,.crm-row{display:flex;align-items:center;height:36px;padding:0 var(--cell-pad)}
+.crm-hdr{background:var(--surface);border-bottom:1px solid var(--border)}
+.crm-row{background:var(--elevated);border-bottom:1px solid var(--border)}
+.crm-row:last-child{border-bottom:none}
+.ch{font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:.06em}
+.cv{font-size:12px;font-weight:500;color:var(--tp)}
+.cv.dim{color:var(--ts);font-size:11px;font-weight:400}
+.cv.go{color:var(--go)}.cv.warn{color:var(--warn)}.cv.crit{color:var(--crit)}
+.col-deal{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.col-city{width:88px;flex-shrink:0}
+.col-val{width:100px;text-align:right;flex-shrink:0}
+.col-status{width:80px;text-align:center;flex-shrink:0}
+.col-touch{width:90px;text-align:right;flex-shrink:0}
+
+/* Profile health / distribution rows */
+.ph-section,.dist-section{padding:var(--g)}
+.ph-row,.dist-row{display:flex;align-items:center;gap:8px;height:44px;background:var(--elevated);border:1px solid var(--border);padding:0 8px;margin-bottom:var(--gap)}
+.dist-row{height:36px}
+.ph-lbl,.dist-lbl{font-size:11px;font-weight:500;color:var(--ts);text-transform:uppercase;letter-spacing:.02em;width:110px;flex-shrink:0}
+.ph-sub{font-size:10px;color:var(--td);width:80px;flex-shrink:0}
+.bar-track{flex:1;height:8px;background:var(--canvas);border:1px solid var(--border);overflow:hidden}
+.bar-fill{height:100%;transition:width .4s ease}
+.ph-val,.dist-val{font-size:12px;font-weight:500;width:48px;text-align:right;flex-shrink:0}
+
+/* Leverage gauge rows */
+.lev-section{padding:var(--g);display:flex;flex-direction:column;gap:var(--gap)}
+.lev-row{display:flex;align-items:center;gap:10px;height:54px;background:var(--elevated);border:1px solid var(--border);padding:var(--cell-pad)}
+.lev-lbl{font-size:11px;font-weight:500;color:var(--td);text-transform:uppercase;width:48px;flex-shrink:0}
+.lev-val{font-size:16px;font-weight:600;width:70px;text-align:right;flex-shrink:0}
+
+/* System status rows */
+.sys-table{margin:var(--g);border:1px solid var(--border)}
+.sys-row{display:flex;align-items:center;height:32px;padding:0 var(--cell-pad);background:var(--elevated);border-bottom:1px solid var(--border);gap:8px}
+.sys-row:last-child{border-bottom:none}
+.sys-lbl{font-size:11px;color:var(--td);width:140px;flex-shrink:0;text-transform:uppercase}
+.sys-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sys-detail{font-size:12px;font-weight:500;flex:1}
+
+/* Validation log */
+.val-log{padding:var(--g);display:flex;flex-direction:column;gap:var(--gap)}
+.val-msg{display:flex;align-items:flex-start;gap:6px;padding:6px 8px;background:var(--elevated);border:1px solid var(--border);font-size:10px}
+.val-msg .icon{flex-shrink:0;font-weight:700}
+.val-msg .text{color:var(--ts);line-height:1.4}
+
+/* Sensitivity block */
+.sens-block{padding:var(--g);background:var(--elevated);border:1px solid var(--border);margin:var(--g);font-size:11px;color:var(--td)}
+.sens-title{color:var(--ts);font-weight:600;margin-bottom:6px;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.sens-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)}
+.sens-row:last-child{border-bottom:none}
+.sens-scenario{color:var(--td)}.sens-noi{font-weight:500}.sens-irr{font-weight:500}
+
+/* Empty state */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:8px;color:var(--td);font-size:11px}
+
+/* ── RIGHT INSPECTOR ───────────────────────────────────────────── */
+#inspector{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;height:100%;overflow:hidden}
+.insp-path-bar{height:var(--hdr);padding:0 var(--g);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0}
+.insp-path{font-size:11px;font-weight:500;color:var(--ts);letter-spacing:.02em}
+.insp-icon{font-size:10px;color:var(--td)}
+.insp-tabs{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);flex-shrink:0}
+.it{height:var(--hdr);font-size:10px;font-weight:700;color:var(--td);letter-spacing:.06em;text-transform:uppercase;border-right:1px solid var(--border);border-bottom:2px solid transparent}
+.it:last-child{border-right:none}
+.it:hover{background:var(--elevated);color:var(--tp)}
+.it.active{background:var(--elevated);color:var(--irust);border-bottom-color:var(--irust)}
+.insp-actions{padding:10px var(--g);display:flex;flex-direction:column;gap:var(--gap);border-bottom:1px solid var(--border);flex-shrink:0}
+.btn-edit{height:var(--row);background:var(--irust);color:var(--tp);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;width:100%}
+.btn-edit:hover{background:#b84b28}
+.btn-pdf{height:var(--row);background:rgba(163,65,33,.08);border:1px solid rgba(163,65,33,.45);color:var(--irust);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;width:100%}
+.btn-pdf:hover{background:rgba(163,65,33,.15)}
+.insp-body{flex:1;overflow-y:auto}
+.w-preset-btn{display:block;width:calc(100% - 24px);margin:10px var(--g) 4px;height:var(--btn);background:rgba(163,65,33,.08);border:1px solid rgba(163,65,33,.45);color:var(--irust);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.w-preset-btn:hover{background:rgba(163,65,33,.15)}
+.w-preset-hint{font-size:10px;color:var(--td);padding:0 var(--g) 8px;line-height:1.4}
+.insp-div{height:1px;background:var(--border)}
+.insp-div.inset{margin:0 var(--g)}
+.w-row{display:flex;flex-direction:column;gap:var(--gap);padding:var(--g)}
+.w-top{display:flex;justify-content:space-between;align-items:center}
+.w-lbl{font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.w-val{font-size:16px;font-weight:600;color:var(--tp)}
+.w-bar{height:2px;background:var(--border);position:relative;margin-top:2px}
+.w-bar-fill{height:100%;position:absolute;top:0;left:0;transition:width .3s ease}
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:12px var(--g);height:40px}
+.total-lbl{font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.total-val{font-size:16px;font-weight:600;color:var(--tp)}
+.founder{padding:var(--g)}
+.founder-lbl{font-size:10px;color:var(--td);margin-bottom:8px}
+.founder-opts{display:flex;gap:16px}
+.fo{font-size:11px;color:var(--td)}.fo.active{color:var(--warn)}
+.insp-placeholder{padding:var(--g);font-size:11px;color:var(--td);line-height:1.7}
+.insp-history{height:var(--row);display:flex;align-items:center;justify-content:space-between;padding:0 var(--g);background:var(--canvas);border-top:1px solid var(--border);flex-shrink:0}
+.hist-btn{font-size:11px;font-weight:700;color:var(--td)}.hist-btn:hover{color:var(--ts)}
+
+/* ── MODALS ────────────────────────────────────────────────────── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal-box{background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;max-height:85vh}
+.modal-hdr{height:var(--bar);display:flex;align-items:center;justify-content:space-between;padding:0 var(--g);border-bottom:1px solid var(--border);flex-shrink:0}
+.modal-hdr span{font-size:11px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.08em}
+.modal-hdr button{font-size:11px;font-weight:700;color:var(--td)}
+.modal-hdr button:hover{color:var(--tp)}
+.modal-body{padding:var(--g);overflow-y:auto;flex:1;font-size:11px;color:var(--td);line-height:1.7}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TOP HEADER BAR -->
+  <div id="top-bar">
+    <div class="tb-left"><span>PORTEOS@SYSTEM</span></div>
+    <div class="tb-mid">
+      <div class="tb-path">
+        <span class="prompt">porteos@system ~ %</span>
+        <span class="cmd" id="hdr-cmd">./dashboard --portfolio=overview --profiles=6</span>
+        <span class="asset" id="hdr-asset"></span>
+      </div>
+      <div class="tb-right-info">
+        <span class="http-ok">● HTTP:0 200</span>
+        <span class="tb-bracket">[ ! ]</span>
+        <span class="tb-bracket">[ ? ]</span>
+      </div>
+    </div>
+    <div class="tb-insp-pad"><span>[ * ]</span></div>
+  </div>
+
+  <!-- THREE-COLUMN LAYOUT -->
+  <div id="cols">
+
+    <!-- ── LEFT NAV ─────────────────────────────────────────────── -->
+    <div id="nav">
+      <div class="nav-wordmark">PORTEOS@SYSTEM</div>
+      <div class="nav-profiles">
+        <button class="nav-lnk" data-p="cmd" onclick="gotoProfile('cmd')"><span>CMD CENTER</span></button>
+        <button class="nav-lnk" data-p="re" onclick="gotoProfile('re')"><span>REAL ESTATE</span><span class="arrow">[ ↗ ]</span></button>
+        <button class="nav-lnk" data-p="hosp" onclick="gotoProfile('hosp')"><span>HOSPITALITY</span><span class="arrow">[ ↗ ]</span></button>
+        <button class="nav-lnk" data-p="des" onclick="gotoProfile('des')"><span>DESIGN</span><span class="arrow">[ ↗ ]</span></button>
+        <button class="nav-lnk" data-p="circ" onclick="gotoProfile('circ')"><span>CIRCULAR</span><span class="arrow">[ ↗ ]</span></button>
+        <button class="nav-lnk" data-p="gi" onclick="gotoProfile('gi')"><span>GLOBAL INTELLIGENCE</span></button>
+      </div>
+      <div class="nav-actions">
+        <button class="na-btn">[ FILTER ]</button>
+        <button class="na-btn">[ TRIAGE ]</button>
+        <button class="na-btn">[ CMP ]</button>
+      </div>
+      <div class="status-tabs">
+        <button class="st active" onclick="setStatus(this,'ALL')">ALL</button>
+        <button class="st" onclick="setStatus(this,'PIPELINE')">PIPELINE</button>
+        <button class="st" onclick="setStatus(this,'REVIEW')">REVIEW</button>
+        <button class="st" onclick="setStatus(this,'VIABLE')">VIABLE</button>
+        <button class="st" onclick="setStatus(this,'REJECTED')">REJECTED</button>
+      </div>
+      <div class="search-row">
+        <span class="search-prompt-sym">/</span>
+        <input type="text" id="srch" placeholder="search deals..." oninput="renderDeals()">
+      </div>
+      <div class="deals-list" id="deals-list"></div>
+      <div class="nav-footer">
+        <div class="footer-bulk">
+          <button class="fl">./BULK_EXPORT…</button>
+          <button class="fl" style="color:var(--crit)">./BULK_DELETE…</button>
+        </div>
+        <div style="height:1px;background:var(--border)"></div>
+        <button class="footer-import">./IMPORT_DEALS</button>
+        <button class="footer-new" onclick="openModal('edit')">[ ./NEW_DEAL ]</button>
+        <div class="footer-cli">
+          <span>porteos@system ~ %</span><div class="cursor-blk"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CENTER PANE ───────────────────────────────────────────── -->
+    <div id="center">
+
+      <!-- CMD CENTER -->
+      <div id="view-cmd" class="view active">
+        <div class="cli-bc"><span class="p">porteos@system ~ %</span><span class="c">./dashboard --portfolio=overview --profiles=6</span></div>
+
+        <!-- Hero KPI strip -->
+        <div class="hero-strip">
+          <div class="hero-cell">
+            <div class="hero-lbl">TOTAL PORTFOLIO VALUE</div>
+            <div class="hero-val">€ 20 800 000</div>
+          </div>
+          <div class="hero-div"></div>
+          <div class="hero-cell">
+            <div class="hero-lbl">TOTAL DEALS</div>
+            <div class="hero-val">2</div>
+            <div class="hero-sub">IN PORTFOLIO</div>
+          </div>
+          <div class="hero-div"></div>
+          <div class="hero-cell">
+            <div class="hero-lbl">AVG PORTEOS SCORE</div>
+            <div class="hero-val gA">84</div>
+            <div class="hero-grade gA">GRADE A</div>
+          </div>
+        </div>
+
+        <!-- Validation log -->
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--slate)"> //  VALIDATION_LOG</span></div>
+          <div class="val-log">
+            <div class="val-msg"><span class="icon" style="color:var(--warn)">~</span><span class="text">CARBON_COVER: 2/2 profiles lack carbon assessment data</span></div>
+          </div>
+        </div>
+
+        <!-- MKT // MARKET_TRENDS -->
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--slate)"> MKT // MARKET_TRENDS</span></div>
+          <div class="mg c4">
+            <div class="mc"><div class="mc-v go">+8.2 %</div><div class="mc-l">DEAL FLOW YOY</div></div>
+            <div class="mc"><div class="mc-v">€ 42M</div><div class="mc-l">AVG DEAL SIZE</div></div>
+            <div class="mc"><div class="mc-v warn">↑ 340bps</div><div class="mc-l">BASE RATE</div></div>
+            <div class="mc"><div class="mc-v warn">WARM</div><div class="mc-l">PORTFOLIO HEAT</div></div>
+          </div>
+        </div>
+
+        <!-- 01 // DEAL_PIPELINE -->
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--slate)"> 01 // DEAL_PIPELINE</span></div>
+          <div class="mg c5">
+            <div class="mc"><div class="mc-v">0</div><div class="mc-l">PIPELINE</div></div>
+            <div class="mc"><div class="mc-v warn">1</div><div class="mc-l">UNDER REVIEW</div></div>
+            <div class="mc"><div class="mc-v go">1</div><div class="mc-l">VIABLE</div></div>
+            <div class="mc"><div class="mc-v">0</div><div class="mc-l">ACQUIRED</div></div>
+            <div class="mc"><div class="mc-v">0</div><div class="mc-l">REJECTED</div></div>
+          </div>
+        </div>
+
+        <!-- 02 // PROFILE_HEALTH -->
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--slate)"> 02 // PROFILE_HEALTH</span><span class="m"> [avg score per profile]</span></div>
+          <div class="ph-section">
+            <div class="ph-row"><span class="ph-lbl">REAL ESTATE</span><span class="ph-sub">2 DEALS · /100</span><div class="bar-track"><div class="bar-fill" style="width:72.1%;background:var(--re)"></div></div><span class="ph-val warn">72.1</span></div>
+            <div class="ph-row"><span class="ph-lbl">HOSPITALITY</span><span class="ph-sub">2 DEALS · /100</span><div class="bar-track"><div class="bar-fill" style="width:96.4%;background:var(--hosp)"></div></div><span class="ph-val go">96.4</span></div>
+            <div class="ph-row"><span class="ph-lbl">DESIGN</span><span class="ph-sub">2 DEALS · /100</span><div class="bar-track"><div class="bar-fill" style="width:59%;background:var(--des)"></div></div><span class="ph-val warn">59.0</span></div>
+            <div class="ph-row"><span class="ph-lbl">CIRCULAR</span><span class="ph-sub">2 DEALS · /100</span><div class="bar-track"><div class="bar-fill" style="width:48%;background:var(--circ)"></div></div><span class="ph-val crit">48.0</span></div>
+          </div>
+        </div>
+
+        <!-- 03 // PROFILE_DISTRIBUTION -->
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--slate)"> 03 // PROFILE_DISTRIBUTION</span></div>
+          <div class="dist-section">
+            <div class="dist-row"><span class="dist-lbl">REAL ESTATE</span><div class="bar-track"><div class="bar-fill" style="width:32.5%;background:var(--re)"></div></div><span class="dist-val" style="color:var(--re)">32.5%</span></div>
+            <div class="dist-row"><span class="dist-lbl">HOSPITALITY</span><div class="bar-track"><div class="bar-fill" style="width:42.5%;background:var(--hosp)"></div></div><span class="dist-val" style="color:var(--hosp)">42.5%</span></div>
+            <div class="dist-row"><span class="dist-lbl">DESIGN</span><div class="bar-track"><div class="bar-fill" style="width:15%;background:var(--des)"></div></div><span class="dist-val" style="color:var(--des)">15.0%</span></div>
+            <div class="dist-row"><span class="dist-lbl">CIRCULAR</span><div class="bar-track"><div class="bar-fill" style="width:10%;background:var(--circ)"></div></div><span class="dist-val" style="color:var(--circ)">10.0%</span></div>
+          </div>
+        </div>
+
+        <!-- 04 // PIPELINE_CRM -->
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--slate)"> 04 // PIPELINE_CRM</span><span class="m"> [active outreach]</span></div>
+          <div class="crm-table">
+            <div class="crm-hdr"><span class="ch col-deal">DEAL</span><span class="ch col-city">MARKET</span><span class="ch col-val">VALUE</span><span class="ch col-status">STATUS</span><span class="ch col-touch">LAST TOUCH</span></div>
+            <div class="crm-row"><span class="cv col-deal">Riverside Plaza</span><span class="cv dim col-city">PORTLAND</span><span class="cv col-val">€ 8,500,000</span><span class="cv warn col-status">REVIEW</span><span class="cv dim col-touch">2D AGO</span></div>
+          </div>
+        </div>
+
+        <!-- 05 // RECENT_ACTIVITY -->
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--slate)"> 05 // RECENT_ACTIVITY</span><span class="m"> [last 5]</span></div>
+          <div class="crm-table">
+            <div class="crm-row"><span class="cv col-deal">Marina Bay Resort</span><span class="cv go col-status">VIABLE</span><span class="cv dim col-touch">TODAY</span></div>
+            <div class="crm-row"><span class="cv col-deal">Riverside Plaza</span><span class="cv warn col-status">REVIEW</span><span class="cv dim col-touch">2D AGO</span></div>
+          </div>
+        </div>
+
+        <!-- 06 // SYSTEM_STATUS -->
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--circ)"> 06 // SYSTEM_STATUS</span></div>
+          <div class="sys-table">
+            <div class="sys-row"><span class="sys-lbl">INGESTION_SERVER</span><div class="sys-dot" style="background:var(--td)"></div><span class="sys-detail" style="color:var(--td)">STOPPED</span></div>
+            <div class="sys-row"><span class="sys-lbl">EMAIL_MONITOR</span><div class="sys-dot" style="background:var(--td)"></div><span class="sys-detail" style="color:var(--td)">NOT_CONFIGURED</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REAL ESTATE DASHBOARD -->
+      <div id="view-re" class="view">
+        <div class="cli-bc"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--re)">./profile --type=real_estate</span><span class="a" id="re-asset"></span></div>
+        <div id="re-score"></div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--re)"> //  VALIDATION_LOG</span></div>
+          <div class="val-log"><div class="val-msg"><span class="icon" style="color:var(--go)">✓</span><span class="text">All required real estate fields populated.</span></div></div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--re)"> MKT // MARKET_TRENDS</span></div>
+          <div class="mg c4">
+            <div class="mc"><div class="mc-v go">+6.4 %</div><div class="mc-l">YIELD TREND YOY</div></div>
+            <div class="mc"><div class="mc-v">€ 3,850/m²</div><div class="mc-l">MKT PRICE/M²</div></div>
+            <div class="mc"><div class="mc-v warn">↑ 340bps</div><div class="mc-l">BASE RATE</div></div>
+            <div class="mc"><div class="mc-v warn">WARM</div><div class="mc-l">MKT HEAT</div></div>
+          </div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--re)"> 01 // CORE_FINANCIALS_REVENUE</span></div>
+          <div class="mg c2">
+            <div class="mc"><div class="mc-v">€ 680,000</div><div class="mc-l">GPI</div></div>
+            <div class="mc"><div class="mc-v go">€ 406,480</div><div class="mc-l">NOI</div></div>
+            <div class="mc"><div class="mc-v go">4.2 %</div><div class="mc-l">VACANCY</div></div>
+            <div class="mc"><div class="mc-v">€ 24,000</div><div class="mc-l">OTHER INCOME</div></div>
+            <div class="mc"><div class="mc-v">€ 3,500 /m²</div><div class="mc-l">PRICE / M²</div></div>
+          </div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--re)"> 02 // EXPENSE_AUDIT_OPEX</span></div>
+          <div class="mg c4">
+            <div class="mc"><div class="mc-v">€ 48,000</div><div class="mc-l">MGMT</div></div>
+            <div class="mc"><div class="mc-v">€ 38,000</div><div class="mc-l">MAINTENANCE</div></div>
+            <div class="mc"><div class="mc-v">€ 22,000</div><div class="mc-l">INSURANCE</div></div>
+            <div class="mc"><div class="mc-v">€ 137,520</div><div class="mc-l">OTHER OPEX</div></div>
+          </div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--re)"> 03 // PROFITABILITY_TELEMETRY</span></div>
+          <div class="mg c2">
+            <div class="mc"><div class="mc-v warn">4.78 %</div><div class="mc-l">CAP RATE</div></div>
+            <div class="mc"><div class="mc-v go">1.29 x</div><div class="mc-l">DSCR</div></div>
+            <div class="mc"><div class="mc-v">3.06 %</div><div class="mc-l">CASH-ON-CASH</div></div>
+            <div class="mc"><div class="mc-v go">59.8 %</div><div class="mc-l">NOI MARGIN</div></div>
+          </div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--re)"> 04 // LEVERAGE_ENGINE</span></div>
+          <div class="lev-section">
+            <div class="lev-row"><span class="lev-lbl">LTV</span><div class="bar-track" style="flex:1;height:12px"><div class="bar-fill" style="width:64.7%;background:var(--re)"></div></div><span class="lev-val go">64.7 %</span></div>
+            <div class="lev-row"><span class="lev-lbl">DSCR</span><div class="bar-track" style="flex:1;height:12px"><div class="bar-fill" style="width:64.5%;background:var(--warn)"></div></div><span class="lev-val go">1.29 x</span></div>
+          </div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--re)"> 05 // RETURN_METRICS</span><span class="m"> [5yr hold]</span></div>
+          <div class="mg c4">
+            <div class="mc"><div class="mc-v warn">8.2 %</div><div class="mc-l">IRR</div></div>
+            <div class="mc"><div class="mc-v warn">1.6 x</div><div class="mc-l">EQUITY MULT.</div></div>
+            <div class="mc"><div class="mc-v">—</div><div class="mc-l">NPV</div></div>
+            <div class="mc"><div class="mc-v">5 yr</div><div class="mc-l">HOLD PERIOD</div></div>
+          </div>
+        </div>
+        <div style="padding:0 var(--g) var(--g)">
+          <div class="sens-block">
+            <div class="sens-title">// SENSITIVITY_ANALYSIS — EXIT CAP RATE vs NOI</div>
+            <div class="sens-row"><span class="sens-scenario">Bear  (vacancy +5%, rate +50bps)</span><span class="sens-noi" style="color:var(--crit)">NOI €361K</span><span class="sens-irr" style="color:var(--crit)">IRR 5.1%</span></div>
+            <div class="sens-row"><span class="sens-scenario">Base  (current)</span><span class="sens-noi">NOI €406K</span><span class="sens-irr" style="color:var(--warn)">IRR 8.2%</span></div>
+            <div class="sens-row"><span class="sens-scenario">Bull  (vacancy −2%, NRI +8%)</span><span class="sens-noi" style="color:var(--go)">NOI €471K</span><span class="sens-irr" style="color:var(--go)">IRR 12.4%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOSPITALITY DASHBOARD -->
+      <div id="view-hosp" class="view">
+        <div class="cli-bc"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--hosp)">./profile --type=hospitality</span><span class="a" id="hosp-asset"></span></div>
+        <div id="hosp-score"></div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--hosp)"> //  VALIDATION_LOG</span></div>
+          <div class="val-log"><div class="val-msg"><span class="icon" style="color:var(--go)">✓</span><span class="text">All hospitality fields populated. Strong RevPAR index detected.</span></div></div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--hosp)"> MKT // MARKET_TRENDS</span></div>
+          <div class="mg c4">
+            <div class="mc"><div class="mc-v go">+11.4 %</div><div class="mc-l">REVPAR GROWTH YOY</div></div>
+            <div class="mc"><div class="mc-v go">82.1 %</div><div class="mc-l">MARKET OCC. RATE</div></div>
+            <div class="mc"><div class="mc-v warn">↑ 340bps</div><div class="mc-l">BASE RATE</div></div>
+            <div class="mc"><div class="mc-v warn">HOT</div><div class="mc-l">MKT HEAT</div></div>
+          </div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--hosp)"> 01 // OPERATIONAL_STATS</span></div>
+          <div class="mg c2">
+            <div class="mc"><div class="mc-v">€ 224</div><div class="mc-l">ADR</div></div>
+            <div class="mc"><div class="mc-v go">83.4 %</div><div class="mc-l">OCCUPANCY</div></div>
+            <div class="mc"><div class="mc-v go">€ 187</div><div class="mc-l">REVPAR</div></div>
+            <div class="mc"><div class="mc-v go">€ 241</div><div class="mc-l">TREVPAR</div></div>
+          </div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--hosp)"> 02 // PROFITABILITY_MATRIX</span></div>
+          <div class="mg c2">
+            <div class="mc"><div class="mc-v go">€ 5.3M</div><div class="mc-l">GOP</div></div>
+            <div class="mc"><div class="mc-v go">42.1 %</div><div class="mc-l">GOP MARGIN</div></div>
+            <div class="mc"><div class="mc-v go">€ 78.92</div><div class="mc-l">GOPPAR</div></div>
+            <div class="mc"><div class="mc-v go">€ 4.5M</div><div class="mc-l">EBITDA</div></div>
+          </div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--hosp)"> 03 // DISTRIBUTION_LOG</span></div>
+          <div class="mg c2">
+            <div class="mc"><div class="mc-v go">54.0 %</div><div class="mc-l">DIRECT BOOKING</div></div>
+            <div class="mc"><div class="mc-v">34.0 %</div><div class="mc-l">OTA MIX</div></div>
+            <div class="mc"><div class="mc-v">€ 978 / rm</div><div class="mc-l">DISTRIB. COST</div></div>
+            <div class="mc"><div class="mc-v">€ 1.18</div><div class="mc-l">CAC</div></div>
+          </div>
+        </div>
+        <div style="padding:0 var(--g) var(--g)">
+          <div class="sens-block">
+            <div class="sens-title">// SENSITIVITY_ANALYSIS — OCCUPANCY vs RevPAR</div>
+            <div class="sens-row"><span class="sens-scenario">Bear  (occ −10%, ADR −15%)</span><span class="sens-noi" style="color:var(--crit)">RevPAR €135</span><span class="sens-irr" style="color:var(--crit)">GOP 31.2%</span></div>
+            <div class="sens-row"><span class="sens-scenario">Base  (current)</span><span class="sens-noi">RevPAR €187</span><span class="sens-irr" style="color:var(--go)">GOP 42.1%</span></div>
+            <div class="sens-row"><span class="sens-scenario">Bull  (occ 90%, ADR +10%)</span><span class="sens-noi" style="color:var(--go)">RevPAR €222</span><span class="sens-irr" style="color:var(--go)">GOP 48.3%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESIGN DASHBOARD -->
+      <div id="view-des" class="view">
+        <div class="cli-bc"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--des)">./profile --type=design</span><span class="a" id="des-asset"></span></div>
+        <div id="des-score"></div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--des)"> 01 // SPACE_EFFICIENCY</span></div>
+          <div class="mg c4">
+            <div class="mc"><div class="mc-v go">84.2 %</div><div class="mc-l">NET-TO-GROSS RATIO</div></div>
+            <div class="mc"><div class="mc-v go">78.4 %</div><div class="mc-l">SPACE UTILISATION</div></div>
+            <div class="mc"><div class="mc-v go">72.1 %</div><div class="mc-l">DAYLIGHTING INDEX</div></div>
+            <div class="mc"><div class="mc-v warn">840ppm</div><div class="mc-l">CO₂ PPM</div></div>
+          </div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--des)"> 02 // WELLNESS_ENVIRONMENT</span></div>
+          <div class="mg c4">
+            <div class="mc"><div class="mc-v go">22.4 ACH</div><div class="mc-l">AIR CHANGES/HR</div></div>
+            <div class="mc"><div class="mc-v go">88.0 %</div><div class="mc-l">THERMAL COMFORT</div></div>
+            <div class="mc"><div class="mc-v go">81.0 %</div><div class="mc-l">ACOUSTIC COMFORT</div></div>
+            <div class="mc"><div class="mc-v go">7</div><div class="mc-l">BIOPHILIC ELEMENTS</div></div>
+          </div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--des)"> 03 // ADAPTABILITY_INDEX</span></div>
+          <div class="mg c4">
+            <div class="mc"><div class="mc-v go">68.0 %</div><div class="mc-l">MOVABLE PARTITIONS</div></div>
+            <div class="mc"><div class="mc-v go">4</div><div class="mc-l">MULTI-USE SPACES</div></div>
+            <div class="mc"><div class="mc-v go">72.0</div><div class="mc-l">ADAPTABILITY SCORE</div></div>
+            <div class="mc"><div class="mc-v go">44.2 %</div><div class="mc-l">NATURAL MATERIALS</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CIRCULAR ECONOMY DASHBOARD -->
+      <div id="view-circ" class="view">
+        <div class="cli-bc"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--circ)">./profile --type=circular_economy</span><span class="a" id="circ-asset"></span></div>
+        <div id="circ-score"></div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--circ)"> 01 // MATERIALS_FLOWS</span></div>
+          <div class="mg c4">
+            <div class="mc"><div class="mc-v go">68.0 %</div><div class="mc-l">RECYCLED CONTENT</div></div>
+            <div class="mc"><div class="mc-v go">44.2 %</div><div class="mc-l">RENEWABLE CONTENT</div></div>
+            <div class="mc"><div class="mc-v go">91.4 %</div><div class="mc-l">WASTE DIVERTED</div></div>
+            <div class="mc"><div class="mc-v warn">12,400 kg</div><div class="mc-l">WASTE GENERATED</div></div>
+          </div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--circ)"> 02 // CARBON_TELEMETRY</span></div>
+          <div class="mg c4">
+            <div class="mc"><div class="mc-v go">38.2 kg/m²</div><div class="mc-l">EMBODIED CARBON</div></div>
+            <div class="mc"><div class="mc-v go">24.1 kg/m²</div><div class="mc-l">OPERATIONAL CARBON</div></div>
+            <div class="mc"><div class="mc-v go">A+</div><div class="mc-l">ENERGY EFFICIENCY</div></div>
+            <div class="mc"><div class="mc-v go">GOLD</div><div class="mc-l">CERT LEVEL</div></div>
+          </div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--circ)"> 03 // ESG_COMPOSITE</span></div>
+          <div class="mg c4">
+            <div class="mc"><div class="mc-v go">74 / 100</div><div class="mc-l">ESG SCORE</div></div>
+            <div class="mc"><div class="mc-v go">62.0 %</div><div class="mc-l">REPURPOSED MAT.</div></div>
+            <div class="mc"><div class="mc-v go">82.4 %</div><div class="mc-l">WATER RECYCLING</div></div>
+            <div class="mc"><div class="mc-v go">+8 YRS</div><div class="mc-l">LIFETIME EXT.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GLOBAL INTELLIGENCE -->
+      <div id="view-gi" class="view">
+        <div class="cli-bc"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--circ)">./global_intelligence --map=true</span></div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--circ)"> 01 // MACRO_INDICATORS</span></div>
+          <div class="mg c4">
+            <div class="mc"><div class="mc-v go">+2.8 %</div><div class="mc-l">GLOBAL GDP</div></div>
+            <div class="mc"><div class="mc-v warn">3.1 %</div><div class="mc-l">INFLATION</div></div>
+            <div class="mc"><div class="mc-v warn">4.0 %</div><div class="mc-l">BASE RATE</div></div>
+            <div class="mc"><div class="mc-v">185bps</div><div class="mc-l">CREDIT SPREAD</div></div>
+          </div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--circ)"> 02 // REGIONAL_OVERVIEW</span></div>
+          <div class="mg c4">
+            <div class="mc"><div class="mc-v">STABLE</div><div class="mc-l">EU SENTIMENT</div></div>
+            <div class="mc"><div class="mc-v go">POSITIVE</div><div class="mc-l">US SENTIMENT</div></div>
+            <div class="mc"><div class="mc-v warn">WATCH</div><div class="mc-l">APAC OUTLOOK</div></div>
+            <div class="mc"><div class="mc-v warn">42 / 100</div><div class="mc-l">RISK INDEX</div></div>
+          </div>
+        </div>
+        <div class="tb"><div class="tb-hdr"><span class="p">porteos@system ~ %</span><span class="c" style="color:var(--circ)"> 03 // DEAL_MARKET_CONTEXT</span></div>
+          <div class="mg c4">
+            <div class="mc"><div class="mc-v go">€ 3,850/m²</div><div class="mc-l">AVG YIELD PORTLAND</div></div>
+            <div class="mc"><div class="mc-v go">€ 187 REVPAR</div><div class="mc-l">HOSP INDEX SAN DIEGO</div></div>
+            <div class="mc"><div class="mc-v warn">+15.4 %</div><div class="mc-l">RE PRICE GROWTH YOY</div></div>
+            <div class="mc"><div class="mc-v go">FAVOURABLE</div><div class="mc-l">DEAL TIMING</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- #center -->
+
+    <!-- ── RIGHT INSPECTOR ───────────────────────────────────────── -->
+    <div id="inspector">
+      <div class="insp-path-bar">
+        <span class="insp-path">./INSPECTOR_V2</span>
+        <span class="insp-icon">[ * ]</span>
+      </div>
+      <div class="insp-tabs">
+        <button class="it active" onclick="setInspTab(this,'weights')">[WEIGHTS]</button>
+        <button class="it" onclick="setInspTab(this,'vibe')">[VIBE]</button>
+        <button class="it" onclick="setInspTab(this,'media')">[MEDIA]</button>
+        <button class="it" onclick="setInspTab(this,'research')">[RESEARCH]</button>
+      </div>
+      <div class="insp-actions">
+        <button class="btn-edit" onclick="openModal('edit')">[ EDIT DEAL DATA ]</button>
+        <button class="btn-pdf" onclick="openModal('pdf')">[ PDF ]</button>
+      </div>
+      <div class="insp-body" id="insp-body"></div>
+      <div class="insp-history">
+        <button class="hist-btn">[ UNDO ]</button>
+        <button class="hist-btn">[ REDO ]</button>
+      </div>
+    </div>
+
+  </div><!-- #cols -->
+</div><!-- #app -->
+
+<!-- EDIT MODAL -->
+<div id="modal-edit" class="modal-bg" onclick="if(event.target===this)closeModal('edit')">
+  <div class="modal-box" style="width:min(600px,92%)">
+    <div class="modal-hdr"><span>// EDIT_DEAL_DATA</span><button onclick="closeModal('edit')">[ X ]</button></div>
+    <div class="modal-body">Deal editing interface — this is a usability demo.<br><br><em>In the live app, all deal parameters (financials, hospitality stats, design metrics, circular data) are editable here.</em><br><br>porteos@system ~ % _</div>
+  </div>
+</div>
+
+<!-- PDF MODAL -->
+<div id="modal-pdf" class="modal-bg" onclick="if(event.target===this)closeModal('pdf')">
+  <div class="modal-box" style="width:min(860px,92%);height:70vh">
+    <div class="modal-hdr"><span>// PDF_REPORT_PREVIEW</span><button onclick="closeModal('pdf')">[ X ]</button></div>
+    <div class="modal-body" style="display:flex;align-items:center;justify-content:center;background:var(--elevated);margin:var(--g);border:1px solid var(--border);flex:1">
+      porteos@system ~ % generating report…
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   DEMO DATA — fictional, no backend
+   ================================================================ */
+const DEALS = [
+  { id:'mbr', name:'Marina Bay Resort', city:'SAN DIEGO', type:'hosp', status:'VIABLE',
+    value:12300000, capRate:null, score:96.4, grade:'A',
+    wRE:20,wHo:50,wDe:20,wCi:10 },
+  { id:'rvp', name:'Riverside Plaza', city:'PORTLAND', type:'re', status:'REVIEW',
+    value:8500000, capRate:4.78, score:72.1, grade:'B',
+    wRE:65,wHo:5,wDe:20,wCi:10 },
+];
+
+const PROFILE_MAP = {
+  cmd:{view:'cmd',cmd:'./dashboard --portfolio=overview --profiles=6',color:'var(--slate)'},
+  re: {view:'re', cmd:'./profile --type=real_estate',      color:'var(--re)'},
+  hosp:{view:'hosp',cmd:'./profile --type=hospitality',   color:'var(--hosp)'},
+  des: {view:'des', cmd:'./profile --type=design',         color:'var(--des)'},
+  circ:{view:'circ',cmd:'./profile --type=circular_economy',color:'var(--circ)'},
+  gi:  {view:'gi',  cmd:'./global_intelligence --map=true',color:'var(--circ)'},
+};
+
+const DEAL_PROFILES = { mbr:'hosp', rvp:'re' }; // auto-route on select
+
+let state = { profile:'cmd', deal:null, status:'ALL', inspTab:'weights' };
+
+/* ── INIT ──────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  renderDeals(); setNavActive('cmd'); renderInsp(); injectScores();
+});
+
+/* ── NAVIGATION ────────────────────────────────────────────────── */
+function gotoProfile(p) {
+  state.profile = p;
+  setNavActive(p);
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-'+PROFILE_MAP[p].view).classList.add('active');
+  const cfg = PROFILE_MAP[p];
+  document.getElementById('hdr-cmd').textContent = cfg.cmd;
+  updateAsset();
+  renderInsp();
+}
+
+function setNavActive(p) {
+  document.querySelectorAll('.nav-lnk').forEach(b => b.classList.toggle('active', b.dataset.p === p));
+}
+
+function updateAsset() {
+  const d = DEALS.find(x => x.id === state.deal);
+  const txt = d ? ` --asset="${d.name}"` : '';
+  document.getElementById('hdr-asset').textContent = txt;
+  ['re','hosp','des','circ'].forEach(k => {
+    const el = document.getElementById(k+'-asset');
+    if(el) el.textContent = txt;
+  });
+}
+
+/* ── DEAL LIST ─────────────────────────────────────────────────── */
+function renderDeals() {
+  const q = document.getElementById('srch').value.toLowerCase();
+  const filtered = DEALS.filter(d => {
+    const ms = state.status==='ALL' || d.status===state.status;
+    const mq = d.name.toLowerCase().includes(q);
+    return ms && mq;
+  });
+  const c = document.getElementById('deals-list');
+  if(!filtered.length){c.innerHTML='<div style="padding:var(--g);color:var(--td);font-size:11px">no deals found</div>';return;}
+  c.innerHTML = filtered.map(d => {
+    const metric = d.capRate !== null ? d.capRate.toFixed(2)+'%' : d.score.toFixed(1);
+    return `<button class="deal-row${state.deal===d.id?' active':''}" onclick="selectDeal('${d.id}')">
+      <span class="dn">${d.name}</span><span class="dm">${metric}</span>
+    </button>`;
+  }).join('');
+}
+
+function selectDeal(id) {
+  state.deal = id;
+  const p = DEAL_PROFILES[id];
+  if(p) gotoProfile(p);
+  else { updateAsset(); renderDeals(); renderInsp(); }
+  renderDeals(); renderInsp(); injectScores();
+}
+
+function setStatus(btn, s) {
+  state.status = s;
+  document.querySelectorAll('.st').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDeals();
+}
+
+/* ── SCORE BLOCKS (PorteosScoreBlock) ──────────────────────────── */
+function scoreBlockHTML(score, grade, accentCssVar) {
+  const gc = 'g'+grade;
+  return `<div class="score-block">
+    <div class="score-accent" style="background:${accentCssVar}"></div>
+    <div class="score-body">
+      <div class="score-num ${gc}">${Math.round(score)}</div>
+      <div class="score-right">
+        <div class="score-lbl">PORTEOS SCORE</div>
+        <div class="score-grade ${gc}">${grade}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function injectScores() {
+  const d = DEALS.find(x => x.id === state.deal);
+  const defs = {
+    re:  { id:'re-score',   deal: d?.type==='re'   ? d : DEALS.find(x=>x.type==='re'),   accent:'var(--re)'   },
+    hosp:{ id:'hosp-score', deal: d?.type==='hosp' ? d : DEALS.find(x=>x.type==='hosp'), accent:'var(--hosp)' },
+    des: { id:'des-score',  deal: d,  accent:'var(--des)'  },
+    circ:{ id:'circ-score', deal: d,  accent:'var(--circ)' },
+  };
+  Object.values(defs).forEach(({id,deal,accent}) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.innerHTML = deal ? scoreBlockHTML(deal.score, deal.grade, accent) : '';
+  });
+}
+
+/* ── INSPECTOR ─────────────────────────────────────────────────── */
+function setInspTab(btn, tab) {
+  state.inspTab = tab;
+  document.querySelectorAll('.it').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderInsp();
+}
+
+function renderInsp() {
+  const d = DEALS.find(x => x.id === state.deal);
+  const el = document.getElementById('insp-body');
+  if(state.inspTab === 'weights') {
+    if(!d){el.innerHTML='<div class="insp-placeholder">// Select a deal to view and adjust profile weights</div>';return;}
+    const ws = [{l:'REAL ESTATE',v:d.wRE,c:'var(--re)'},{l:'HOSPITALITY',v:d.wHo,c:'var(--hosp)'},{l:'DESIGN',v:d.wDe,c:'var(--des)'},{l:'CIRCULAR ECONOMY',v:d.wCi,c:'var(--circ)'}];
+    const total = ws.reduce((s,w)=>s+w.v,0);
+    const tColor = Math.abs(total-100)<0.1?'var(--tp)':'var(--crit)';
+    el.innerHTML = `
+      <button class="w-preset-btn">[ APPLY WEIGHTS FOR ${d.type==='hosp'?'HOTEL':'COMMERCIAL'} ]</button>
+      <div class="w-preset-hint">// resets weights to recommended defaults for this asset class</div>
+      <div class="insp-div"></div>
+      ${ws.map(w=>`
+        <div class="w-row">
+          <div class="w-top"><span class="w-lbl">${w.l}</span><span class="w-val">${w.v} %</span></div>
+          <div class="w-bar"><div class="w-bar-fill" style="width:${w.v}%;background:${w.c}"></div></div>
+        </div>
+        <div class="insp-div inset"></div>
+      `).join('')}
+      <div class="total-row">
+        <span class="total-lbl">TOTAL</span>
+        <span class="total-val" style="color:${tColor}">${total.toFixed(1)}%</span>
+      </div>
+      <div class="insp-div"></div>
+      <div class="founder">
+        <div class="founder-lbl">// FOUNDER_LENS</div>
+        <div class="founder-opts">
+          <span class="fo">( ) LOW</span>
+          <span class="fo active">(•) MED</span>
+          <span class="fo">( ) HIGH</span>
+        </div>
+      </div>`;
+  } else if(state.inspTab==='vibe') {
+    el.innerHTML = `<div class="insp-placeholder">// AI_VIBE_ANALYSIS<br><br>${d?'Run analysis to generate narrative signals for <strong style="color:var(--ts)">'+d.name+'</strong>.':'Select a deal first.'}</div>`;
+  } else if(state.inspTab==='media') {
+    el.innerHTML = `<div class="insp-placeholder">// MEDIA_GALLERY<br><br>${d?'No media attached to '+d.name+'.':'Select a deal first.'}</div>`;
+  } else {
+    el.innerHTML = `<div class="insp-placeholder">// RESEARCH_LINKS<br><br>${d?'No research sources linked for '+d.name+'.':'Select a deal first.'}</div>`;
+  }
+}
+
+/* ── MODALS ────────────────────────────────────────────────────── */
+function openModal(id){ document.getElementById('modal-'+id).classList.add('open') }
+function closeModal(id){ document.getElementById('modal-'+id).classList.remove('open') }
+document.addEventListener('keydown', e => { if(e.key==='Escape') { closeModal('edit'); closeModal('pdf'); } });
+</script>
+</body>
+</html>
