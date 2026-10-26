@@ -163,9 +163,10 @@ struct NavigationPane: View {
                 activeProfile = profile
             } label: {
                 HStack(spacing: 0) {
+                    // Use profile accent color for active border
                     Rectangle()
-                        .fill(isActive ? textPrimary : Color.clear)
-                        .frame(width: DesignTokens.navSelectionBorder)
+                        .fill(isActive ? profile.accentColor : Color.clear)
+                        .frame(width: DesignTokens.navSelectionBorder * 1.5) // 3px instead of 2px
 
                     Text(profile.shellNavLabel)
                         .porteosTextStyle(.shellNav(isActive: isActive))
@@ -173,9 +174,21 @@ struct NavigationPane: View {
                         .padding(.leading, 12)
 
                     Spacer()
+                    
+                    // Active indicator
+                    if isActive {
+                        Text("●")
+                            .font(.system(size: 6))
+                            .foregroundStyle(profile.accentColor)
+                            .padding(.trailing, 8)
+                    }
                 }
                 .frame(height: DesignTokens.rowHeightNavLink)
-                .background(isActive ? shellElevated : Color.clear)
+                .background(
+                    isActive 
+                    ? profile.accentColor.opacity(0.08) 
+                    : Color.clear
+                )
                 .clipShape(Rectangle())
             }
             .buttonStyle(.plain)
