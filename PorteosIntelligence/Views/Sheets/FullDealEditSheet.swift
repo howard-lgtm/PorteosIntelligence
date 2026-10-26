@@ -718,16 +718,82 @@ struct FullDealEditSheet: View {
             TerminalInputField(label: "Kg Materials Used",        placeholder: "0", prefix: nil,  suffix: "kg", text: numStr($deal.circularKgMaterialsUsed)).focused($focusedField, equals: .kgMaterialsUsed)
             TerminalInputField(label: "Kg Materials Returned",    placeholder: "0", prefix: nil,  suffix: "kg", text: numStr($deal.circularKgMaterialsReturned)).focused($focusedField, equals: .kgMaterialsReturned)
             TerminalInputField(label: "Kg Materials Disposed",    placeholder: "0", prefix: nil,  suffix: "kg", text: numStr($deal.circularKgMaterialsDisposed)).focused($focusedField, equals: .kgMaterialsDisposed)
+            
+            // Derived: Recovery Rate
+            if circularRecoveryRate > 0 {
+                derivedMetric("Recovery Rate", "\(Int(circularRecoveryRate))%", color: accentBlue)
+            }
+            
             TerminalInputField(label: "Waste Generated",          placeholder: "0", prefix: nil,  suffix: "kg", text: numStr($deal.circularWasteGenerated)).focused($focusedField, equals: .wasteGenerated)
             TerminalInputField(label: "Recycled Content",         placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.circularRecycledContentPct, formatter: Self.percentFormatter).focused($focusedField, equals: .recycledContent)
             TerminalInputField(label: "Renewable Content",        placeholder: "0.0", prefix: nil, suffix: "%", value: $deal.circularRenewableContentPct, formatter: Self.percentFormatter).focused($focusedField, equals: .renewableContent)
+            
+            // Derived: Virgin Material Input
+            if circularVirginMaterialKg > 0 {
+                derivedMetric("Virgin Material (calculated)", "\(Int(circularVirginMaterialKg)) kg", color: accentBlue)
+            }
 
             sectionLabel("CARBON", color: accentBlue)
             TerminalInputField(label: "CO2 Embodied",         placeholder: "0",   prefix: nil, suffix: "kg",        text: numStr($deal.circularCO2Embodied)).focused($focusedField, equals: .co2Embodied)
             TerminalInputField(label: "Operational Carbon",   placeholder: "0.00", prefix: nil, suffix: "tCO2e/yr",  value: $deal.circularOperationalCarbon, formatter: Self.carbonFormatter).focused($focusedField, equals: .operationalCarbon)
+            
+            // Derived: 30-year lifecycle carbon
+            if circularLifecycle30Y > 0 {
+                derivedMetric("30-Year Lifecycle", String(format: "%.1f tCO2e", circularLifecycle30Y), color: accentBlue)
+            }
+            
             TerminalInputField(label: "Building Area",        placeholder: "0",   prefix: nil, suffix: "m²",        text: numStr($deal.circularBuildingAreaM2)).focused($focusedField, equals: .buildingArea)
+            
+            // Derived: Carbon Intensity
+            if circularCarbonIntensity > 0 {
+                derivedMetric("Carbon Intensity", String(format: "%.2f tCO2e/m²", circularCarbonIntensity), color: accentBlue)
+            }
+            
             TerminalInputField(label: "Water Recycling Rate", placeholder: "0.0", prefix: nil, suffix: "%",         value: $deal.circularWaterRecyclingRate, formatter: Self.percentFormatter).focused($focusedField, equals: .waterRecyclingRate)
         }
+    }
+    
+    // MARK: Circular Computed Metrics
+    
+    private var circularRecoveryRate: Double {
+        let total = deal.circularKgMaterialsReturned + deal.circularKgMaterialsDisposed
+        guard total > 0 else { return 0 }
+        return (deal.circularKgMaterialsReturned / total) * 100
+    }
+    
+    private var circularVirginMaterialKg: Double {
+        let recycledKg = deal.circularKgMaterialsUsed * (deal.circularRecycledContentPct / 100)
+        let renewableKg = deal.circularKgMaterialsUsed * (deal.circularRenewableContentPct / 100)
+        return max(0, deal.circularKgMaterialsUsed - recycledKg - renewableKg)
+    }
+    
+    private var circularLifecycle30Y: Double {
+        let embodiedTCO2e = deal.circularCO2Embodied / 1_000
+        return embodiedTCO2e + (deal.circularOperationalCarbon * 30)
+    }
+    
+    private var circularCarbonIntensity: Double {
+        guard deal.circularBuildingAreaM2 > 0 else { return 0 }
+        return circularLifecycle30Y / deal.circularBuildingAreaM2
+    }
+    
+    private func derivedMetric(_ label: String, _ value: String, color: Color) -> some View {
+        HStack(spacing: 8) {
+            Text("→")
+                .porteosMeta()
+                .foregroundStyle(color.opacity(0.6))
+            Text(label.uppercased())
+                .porteosRowLabel()
+                .foregroundStyle(textSecondary)
+            Spacer()
+            Text(value)
+                .porteosRowValue()
+                .foregroundStyle(color)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(color.opacity(0.06))
+        .clipShape(Rectangle())
     }
 
     // ─────────────────────────────────────────────────────────────────────────
